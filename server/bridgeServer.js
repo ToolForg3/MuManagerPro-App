@@ -8,6 +8,10 @@
  * Panel de Monitoreo Web: http://localhost:3001/admin
  */
 
+try {
+  require('dotenv').config();
+} catch (_) {}
+
 const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
@@ -6460,12 +6464,15 @@ app.post('/api/auth/register', async (req, res) => {
   addAuditLog('REGISTER_INIT', hwid, clientIp, `Registro iniciado: ${cleanUser} (${cleanEmail})`);
 
   if (!emailSent) {
+    const isDev = process.env.NODE_ENV !== 'production';
     console.log(`[SMTP DEV MODE] Servidor de correo no disponible. Código de verificación para ${cleanEmail}: [ ${code} ]`);
     return res.json({
       success: true,
       pendingSmtp: true,
-      devCode: code,
-      message: `Código de activación generado: [ ${code} ] (SMTP pendiente de configurar en Panel).`
+      devCode: isDev ? code : undefined,
+      message: isDev
+        ? `Código de activación generado: [ ${code} ] (Modo desarrollo).`
+        : 'Código de activación generado. Revisa tu bandeja de entrada o contacta al administrador.'
     });
   }
 
@@ -6576,12 +6583,15 @@ app.post('/api/auth/resend-verification', async (req, res) => {
 
   const emailSent = await sendEmailDirect(cleanEmail, 'Nuevo Código de Activación - Mu Manager PRO', emailHtml);
   if (!emailSent) {
+    const isDev = process.env.NODE_ENV !== 'production';
     console.log(`[SMTP DEV MODE] Código de reenvío para ${cleanEmail}: [ ${code} ]`);
     return res.json({
       success: true,
       pendingSmtp: true,
-      devCode: code,
-      message: `Nuevo código generado: [ ${code} ]`
+      devCode: isDev ? code : undefined,
+      message: isDev
+        ? `Nuevo código generado: [ ${code} ] (Modo desarrollo).`
+        : 'Nuevo código de activación generado. Revisa tu correo o contacta al administrador.'
     });
   }
 
@@ -6803,9 +6813,9 @@ async function sendEmailNotification({ to, subject, html, text }) {
         host: emailCfg.smtp.host,
         port: parseInt(emailCfg.smtp.port, 10) || 465,
         secure: emailCfg.smtp.secure !== false,
-        user: emailCfg.smtp.user,
-        pass: emailCfg.smtp.pass,
-        from: emailCfg.from || emailCfg.smtp.user,
+        user: (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || emailCfg.smtp.user,
+        pass: (process.env.SMTP_PASS && process.env.SMTP_PASS.trim()) || emailCfg.smtp.pass,
+        from: emailCfg.from || (process.env.SMTP_USER && process.env.SMTP_USER.trim()) || emailCfg.smtp.user,
         to,
         subject,
         html,
@@ -6897,7 +6907,7 @@ app.post('/api/auth/forgot-password/request', async (req, res) => {
       : `Código generado. Si aún no configuraste SMTP, puedes ver el código en el Log de Auditoría del Panel Administrativo o en WhatsApp.`,
     emailSent: emailResult.success,
     pendingSmtp: !emailResult.success,
-    devCode: !emailResult.success ? code : undefined,
+    devCode: (!emailResult.success && process.env.NODE_ENV !== 'production') ? code : undefined,
     deliveryMethod: emailResult.sentVia || 'PANEL_AUDIT_LOG'
   });
 });
@@ -8628,7 +8638,7 @@ app.post('/api/admin/email/settings', (req, res) => {
       port: smtp && smtp.port ? parseInt(smtp.port, 10) : 465,
       secure: smtp && smtp.secure !== undefined ? !!smtp.secure : true,
       user: smtp && smtp.user ? String(smtp.user).trim() : '',
-      pass: smtp && smtp.pass ? String(smtp.pass).trim() : (settings.email?.smtp?.pass || '')
+      pass: smtp && smtp.pass ? String(smtp.pass).trim() : (process.env.SMTP_PASS || settings.email?.smtp?.pass || '')
     }
   };
 

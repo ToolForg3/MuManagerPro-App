@@ -187,15 +187,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           error: data.message || 'Tu cuenta está pendiente de verificación.',
         };
       } else if (!res.ok) {
-        const isLocalUser = cleanUser.toLowerCase() === 'cris' ||
-                            cleanUser.toLowerCase() === 'admin' ||
-                            cleanUser.toLowerCase() === 'thecristhian05@gmail.com';
-        if (!isLocalUser) {
-          return {
-            success: false,
-            error: data.error || 'Usuario o contraseña incorrectos.',
-          };
-        }
+        return {
+          success: false,
+          error: data.error || 'Usuario o contraseña incorrectos.',
+        };
       }
     } catch (e) {
       console.warn('Remote login error, checking local password', e);
@@ -212,11 +207,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         )
       : false;
 
-    const isLocalTestUser = cleanUser.toLowerCase() === 'cris' || 
-                            cleanUser.toLowerCase() === 'admin' ||
-                            cleanUser.toLowerCase() === 'thecristhian05@gmail.com';
-
-    if (remoteSuccess || isConfiguredKey || isLocalTestUser) {
+    if (remoteSuccess || isConfiguredKey) {
       if (!remoteToken) {
         const existingToken = await SqlClient.getSessionToken();
         if (!existingToken) {

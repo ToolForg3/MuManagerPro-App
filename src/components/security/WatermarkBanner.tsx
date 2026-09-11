@@ -17,12 +17,13 @@ export const WatermarkBanner: React.FC<WatermarkBannerProps> = ({ onPressActivat
 
   if (status.isBlocked) {
     return (
-      <View style={styles.blockedBanner}>
+      <TouchableOpacity style={styles.blockedBanner} onPress={onPressActivate} activeOpacity={0.85}>
         <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFFFFF" />
         <Text style={styles.blockedText}>
-          DISPOSITIVO BLOQUEADO • Contacte al Administrador
+          DISPOSITIVO BLOQUEADO • Toque para Soporte
         </Text>
-      </View>
+        <MaterialCommunityIcons name="chevron-right" size={16} color="#FF6B6B" />
+      </TouchableOpacity>
     );
   }
 

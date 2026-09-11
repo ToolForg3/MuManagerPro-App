@@ -1,11 +1,11 @@
 {
-    "version":  "1.7.5",
+    "version":  "1.7.6",
     "minRequiredVersion":  "1.5.8",
-    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.5",
-    "publishedAt":  "2026-09-11T21:30:00.000Z",
+    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.6",
+    "publishedAt":  "2026-09-11T22:35:00.000Z",
     "downloadUrl":  "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build":  77,
+    "build":  78,
     "forceUpdate":  true,
-    "changelog":  "MuManager PRO v1.7.5 (Build 77):\n• Catálogo Integral de Sockets Season 6: Decodificación y codificación matemática exacta de Seed Spheres para Louis y MSPro (opciones de Fuego, Agua, Hielo, Viento, Rayo y Tierra en Niveles 1 al 5), coincidiendo al 100% con los textos y bonificaciones oficiales del juego cliente.\n• Purga Total de Colores Remanentes en Sockets y Baúl: Eliminación completa de switches morados, etiquetas azules y botones cyan, unificando todos los selectores bajo la estética Season 6 piedra (#1E1A16), oro (#E8C86A), brasa (#E2703A) y jade (#3FCF8E).\n• Compatibilidad Dual MSPro Nativa: Soporte para RuudToken y AccountCharacter.ExtWarehouse en el gateway y en el servidor local sin alterar Louis.\n• Ergonomía y Scrolling Universal: Compatibilidad garantizada en todas las resoluciones móviles sin cortes de interfaz."
+    "changelog":  "MuManager PRO v1.7.6 (Build 78):\n• Canales Oficiales y Soporte Integrado: Nuevo acceso directo ergonómico a Telegram ToolForg3 y WhatsApp Soporte Técnico en Configuración, con indicador en vivo de estado de pasarela Vercel.\n• Asistencia en Dispositivo Bloqueado: Inclusión de botones interactivos directos a WhatsApp y Telegram en la pantalla de bloqueo y barra de alerta, permitiendo contactar a soporte al instante con el ID de celular (HWID) precargado.\n• Optimización de Rendimiento y Despliegue: Infraestructura Vercel Serverless afinada con CDN distribuida y consumo cero de ancho de banda en descargas."
 }
 

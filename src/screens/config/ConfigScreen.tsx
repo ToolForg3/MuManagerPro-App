@@ -1291,16 +1291,32 @@ export const ConfigScreen = () => {
               <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.textSecondary} />
             </TouchableOpacity>
 
-            {/* Telegram ToolForg3 & Producido por ToolForg3 Footer */}
+            {/* Canales Oficiales y Soporte ToolForg3 */}
             <View style={styles.brandingFooterConfig}>
-              <TouchableOpacity
-                style={styles.telegramButtonConfig}
-                activeOpacity={0.8}
-                onPress={() => Linking.openURL('https://t.me/ToolForg3').catch(() => Alert.alert('Telegram', 'Canal oficial: https://t.me/ToolForg3'))}
-              >
-                <MaterialCommunityIcons name={"send" as any} size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.telegramButtonTextConfig}>Telegram ToolForg3</Text>
-              </TouchableOpacity>
+              <View style={styles.officialChannelsRow}>
+                <TouchableOpacity
+                  style={styles.telegramButtonConfig}
+                  activeOpacity={0.8}
+                  onPress={() => Linking.openURL('https://t.me/ToolForg3').catch(() => Alert.alert('Telegram', 'Canal oficial: https://t.me/ToolForg3'))}
+                >
+                  <MaterialCommunityIcons name={"send" as any} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.telegramButtonTextConfig}>Telegram ToolForg3</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.whatsappButtonConfig}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    const hwidCode = licenseStatus.hwid || 'N/A';
+                    const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).\n\nHWID: ${hwidCode}`;
+                    const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+                    Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
+                  }}
+                >
+                  <MaterialCommunityIcons name={"whatsapp" as any} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.whatsappButtonTextConfig}>WhatsApp Soporte</Text>
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -1308,15 +1324,18 @@ export const ConfigScreen = () => {
                 style={styles.versionFooterBox}
               >
                 <View style={styles.producedByBadge}>
-                  <MaterialCommunityIcons name="code-tags" size={14} color={THEME.colors.primaryOrange} style={{ marginRight: 4 }} />
+                  <MaterialCommunityIcons name="code-tags" size={14} color="#E8C86A" style={{ marginRight: 5 }} />
                   <Text style={styles.producedByBadgeText}>PRODUCIDO POR TOOLFORG3</Text>
                 </View>
                 <Text style={styles.brandingFooterVersionText}>
                   Mu Manager PRO v{APP_VERSION} • Build {APP_BUILD} Oficial
                 </Text>
-                <Text style={styles.versionSubFooterText}>
-                  Season 6 Update 40 • Gateway Vercel
-                </Text>
+                <View style={styles.liveStatusRow}>
+                  <View style={styles.liveStatusDot} />
+                  <Text style={styles.versionSubFooterText}>
+                    Gateway Vercel en Línea • Season 6 Update 40
+                  </Text>
+                </View>
               </TouchableOpacity>
             </View>
           </>
@@ -2219,65 +2238,107 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     gap: 12,
   },
+  officialChannelsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
   telegramButtonConfig: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0088cc',
+    backgroundColor: '#0088CC',
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     borderRadius: THEME.borderRadius.md,
     borderWidth: 1,
-    borderColor: '#29b6f6',
-    width: '100%',
-    shadowColor: '#0088cc',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 4,
+    borderColor: '#29B6F6',
+    minHeight: 46,
+    shadowColor: '#0088CC',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   telegramButtonTextConfig: {
     color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 13,
+    letterSpacing: 0.3,
+  },
+  whatsappButtonConfig: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1E7E34',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: THEME.borderRadius.md,
+    borderWidth: 1,
+    borderColor: '#3FCF8E',
+    minHeight: 46,
+    shadowColor: '#1E7E34',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  whatsappButtonTextConfig: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 13,
     letterSpacing: 0.3,
   },
   versionFooterBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: THEME.borderRadius.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: '#1E1A16',
+    borderWidth: 1.2,
+    borderColor: '#4A3B2C',
     width: '100%',
   },
   producedByBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 87, 34, 0.12)',
+    backgroundColor: 'rgba(232, 200, 106, 0.12)',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 4,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 87, 34, 0.25)',
+    borderColor: 'rgba(232, 200, 106, 0.35)',
   },
   producedByBadgeText: {
-    color: THEME.colors.primaryOrange,
+    color: '#E8C86A',
     fontSize: 11,
     fontWeight: 'bold',
     letterSpacing: 0.8,
   },
   brandingFooterVersionText: {
-    color: THEME.colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#EDE4D3',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  liveStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  liveStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#3FCF8E',
   },
   versionSubFooterText: {
-    color: THEME.colors.textMuted,
-    fontSize: 10,
-    marginTop: 2,
+    color: '#9C9182',
+    fontSize: 11,
+    fontWeight: '500',
   },
 });
