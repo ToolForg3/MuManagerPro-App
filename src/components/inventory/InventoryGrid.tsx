@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { THEME } from '../../constants/theme';
 import { ParsedItem } from '../../types/item';
@@ -13,7 +13,7 @@ interface InventoryGridProps {
   movingSlot?: number | null;
 }
 
-export const InventoryGrid: React.FC<InventoryGridProps> = ({
+export const InventoryGrid: React.FC<InventoryGridProps> = memo(({
   startSlot,
   rows = 4,
   cols = 8,
@@ -211,7 +211,7 @@ export const InventoryGrid: React.FC<InventoryGridProps> = ({
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

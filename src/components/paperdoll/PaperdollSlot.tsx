@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
@@ -14,7 +14,7 @@ interface PaperdollSlotProps {
   height?: number;
 }
 
-export const PaperdollSlot: React.FC<PaperdollSlotProps> = ({
+export const PaperdollSlot: React.FC<PaperdollSlotProps> = memo(({
   definition,
   item,
   onPress,
@@ -115,7 +115,7 @@ export const PaperdollSlot: React.FC<PaperdollSlotProps> = ({
       )}
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   slot: {

@@ -1397,6 +1397,10 @@ export const AccountsScreen = () => {
         data={filtered}
         keyExtractor={(item, index) => `${item.memb___id || 'account'}_${index}`}
         contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(32, insets.bottom + 24) }]}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews={Platform.OS === 'android'}
         refreshControl={
           <RefreshControl
             refreshing={loading}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { View, Image, StyleSheet, StyleProp, ImageStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ParsedItem } from '../../types/item';
@@ -45,7 +45,7 @@ export const getItemImageUrl = (rawName?: string, group?: number, index?: number
   return '';
 };
 
-export const ItemImage: React.FC<ItemImageProps> = ({
+export const ItemImage: React.FC<ItemImageProps> = memo(({
   item,
   itemName,
   size = 32,
@@ -127,7 +127,7 @@ export const ItemImage: React.FC<ItemImageProps> = ({
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

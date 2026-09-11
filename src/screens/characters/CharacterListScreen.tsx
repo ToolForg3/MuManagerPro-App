@@ -375,6 +375,10 @@ export const CharacterListScreen = () => {
         keyExtractor={(item) => item.Name}
         renderItem={renderCharacterCard}
         contentContainerStyle={[styles.listContent, { paddingBottom: 32 + insets.bottom }]}
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'android'}
         refreshControl={
           <RefreshControl
             refreshing={loading}
