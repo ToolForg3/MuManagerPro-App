@@ -1,0 +1,104 @@
+name: Publish Official APK Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'public/**'
+      - 'data/settings.json'
+      - 'package.json'
+      - '.github/workflows/release-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release with APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare Assets & Release Notes
+        id: prep
+        run: |
+          VERSION=$(node -e "
+            try {
+              const s = require('./data/settings.json');
+              console.log((s.latestVersion || '1.3.7').replace(/^v/i, '').trim());
+            } catch(_) {
+              console.log('1.3.7');
+            }
+          ")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+          node -e "
+            const fs = require('fs');
+            let notes = '### 🎮 Mu Manager PRO Oficial\n\n';
+            try {
+              const s = require('./data/settings.json');
+              notes += (s.updateChangelog || s.broadcastAnnouncement || 'Actualización de Mu Manager PRO');
+            } catch(_) {
+              notes += 'Versión oficial de Mu Manager PRO';
+            }
+            fs.writeFileSync('RELEASE_NOTES.md', notes, 'utf8');
+          "
+
+          mkdir -p release_assets
+          SOURCE_APK=""
+          for f in "public/MuManagerPro-v${VERSION}.apk" "public/MuManagerPro.apk" "public/MuManagerPro-latest.apk"; do
+            if [ -f "$f" ]; then
+              SOURCE_APK="$f"
+              break
+            fi
+          done
+
+          if [ -z "$SOURCE_APK" ]; then
+            SOURCE_APK=$(find public -name "*.apk" | head -n 1)
+          fi
+
+          if [ -z "$SOURCE_APK" ] || [ ! -f "$SOURCE_APK" ]; then
+            echo "::error::No se encontró ningún binario APK en public/"
+            exit 1
+          fi
+
+          echo "Binario APK encontrado: $SOURCE_APK ($(ls -lh "$SOURCE_APK" | awk '{print $5}'))"
+          cp "$SOURCE_APK" "release_assets/MuManagerPro.apk"
+          cp "$SOURCE_APK" "release_assets/MuManagerPro-latest.apk"
+          cp "$SOURCE_APK" "release_assets/MuManagerPro-v${VERSION}.apk"
+          ls -lh release_assets/
+
+      - name: Deploy to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.prep.outputs.version }}"
+          TAG="v${VERSION}"
+          TITLE="Mu Manager PRO v${VERSION} Oficial"
+
+          echo "Creando o actualizando Release con Tag: latest y $TAG..."
+
+          # 1. Crear o actualizar release con tag 'latest'
+          if gh release view latest >/dev/null 2>&1; then
+            echo "Actualizando assets en release 'latest'..."
+            gh release upload latest release_assets/* --clobber
+            gh release edit latest --title "$TITLE" --notes-file RELEASE_NOTES.md
+          else
+            echo "Creando nueva release 'latest'..."
+            gh release create latest release_assets/* --title "$TITLE" --notes-file RELEASE_NOTES.md
+          fi
+
+          # 2. Crear también la release con tag versionado (v${VERSION})
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Actualizando assets en release '$TAG'..."
+            gh release upload "$TAG" release_assets/* --clobber
+          else
+            echo "Creando nueva release '$TAG'..."
+            gh release create "$TAG" release_assets/* --title "$TITLE" --notes-file RELEASE_NOTES.md
+          fi
+          echo "¡Release publicada exitosamente en GitHub!"

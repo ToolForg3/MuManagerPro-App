@@ -1,0 +1,11 @@
+{
+    "version":  "1.7.5",
+    "minRequiredVersion":  "1.5.8",
+    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.5",
+    "publishedAt":  "2026-09-11T21:30:00.000Z",
+    "downloadUrl":  "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
+    "build":  77,
+    "forceUpdate":  true,
+    "changelog":  "MuManager PRO v1.7.5 (Build 77):\n• Catálogo Integral de Sockets Season 6: Decodificación y codificación matemática exacta de Seed Spheres para Louis y MSPro (opciones de Fuego, Agua, Hielo, Viento, Rayo y Tierra en Niveles 1 al 5), coincidiendo al 100% con los textos y bonificaciones oficiales del juego cliente.\n• Purga Total de Colores Remanentes en Sockets y Baúl: Eliminación completa de switches morados, etiquetas azules y botones cyan, unificando todos los selectores bajo la estética Season 6 piedra (#1E1A16), oro (#E8C86A), brasa (#E2703A) y jade (#3FCF8E).\n• Compatibilidad Dual MSPro Nativa: Soporte para RuudToken y AccountCharacter.ExtWarehouse en el gateway y en el servidor local sin alterar Louis.\n• Ergonomía y Scrolling Universal: Compatibilidad garantizada en todas las resoluciones móviles sin cortes de interfaz."
+}
+

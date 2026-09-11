@@ -1,0 +1,15 @@
+{
+  "name": "mumanager-gateway",
+  "version": "1.0.0",
+  "description": "Mu Manager PRO Cloud Gateway and Remote Kill-Switch",
+  "main": "bridgeServer.js",
+  "scripts": {
+    "start": "node bridgeServer.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jimp": "^0.22.12",
+    "mssql": "^10.0.2"
+  }
+}

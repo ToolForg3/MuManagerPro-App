@@ -1,0 +1,57 @@
+{
+    "expo":  {
+                 "name":  "Mu Manager PRO",
+                 "slug":  "mumanager-pro",
+                 "version":  "1.7.5",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/icon.png",
+                 "userInterfaceStyle":  "dark",
+                 "jsEngine":  "hermes",
+                 "scheme":  "mumanager",
+                 "splash":  {
+                                "image":  "./assets/splash.png",
+                                "resizeMode":  "contain",
+                                "backgroundColor":  "#0D0D0D"
+                            },
+                 "assetBundlePatterns":  [
+                                             "assets/*"
+                                         ],
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "jsEngine":  "hermes"
+                         },
+                 "android":  {
+                                 "package":  "com.mumanager.pro",
+                                 "versionCode":  77,
+                                 "jsEngine":  "hermes",
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/adaptive-icon.png",
+                                                      "backgroundColor":  "#0D0D0D"
+                                                  },
+                                 "permissions":  [
+                                                     "android.permission.INTERNET",
+                                                     "android.permission.ACCESS_NETWORK_STATE"
+                                                 ]
+                             },
+                 "web":  {
+                             "favicon":  "./assets/favicon.png"
+                         },
+                 "extra":  {
+                               "eas":  {
+                                           "projectId":  "8096a356-f233-46bc-b3c6-33aabe839c69"
+                                       }
+                           },
+                 "owner":  "eliaaacj",
+                 "plugins":  [
+                                 [
+                                     "expo-build-properties",
+                                     {
+                                         "android":  {
+                                                         "enableShrinkResourcesInReleaseBuilds":  true,
+                                                         "enableProguardInReleaseBuilds":  true
+                                                     }
+                                     }
+                                 ]
+                             ]
+             }
+}

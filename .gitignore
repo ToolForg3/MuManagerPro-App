@@ -1,0 +1,38 @@
+﻿# Archivos de entorno y credenciales
+.env
+.env.*
+*.key
+*.pem
+*.jks
+*.keystore
+
+# Datos sensibles de usuarios y telemetría de dispositivos (Anti-Leak)
+data/users.json
+data/devices.json
+data/devices.json.bak
+data/tombstones.json
+server/data/users.json
+server/data/devices.json
+server/data/devices.json.bak
+server/data/tombstones.json
+
+# Binarios APK: ÚNICAMENTE se permite el APK canónico oficial en la raíz
+*.apk
+*.aab
+!MuManagerPro.apk
+
+# Logs y temporales
+*.log
+*.tmp
+*.bak
+*.orig.*
+
+# Node & Build caches
+node_modules/
+server/node_modules/
+.expo/
+dist/
+build/
+android/app/build/
+android/.gradle/
+.gradle/

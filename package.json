@@ -1,0 +1,53 @@
+{
+  "name": "apk-editor-mu",
+  "version": "1.7.5",
+  "author": "ToolForg3",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "ts:check": "tsc --noEmit",
+    "test": "node tests/muItemParser.test.js && node tests/securityService.test.js && node tests/serverAuth.test.js && node tests/itemCatalog.test.js && node tests/ancientCatalog.test.js && node tests/vaultExpansionSql.test.js && node tests/vaultS6Update40.test.js && node tests/msproCompatibility.test.js && node tests/socketCatalog.test.js",
+    "test:parser": "node tests/muItemParser.test.js",
+    "server": "node server/bridgeServer.js",
+    "web:portal": "node server/webPortalServer.js",
+    "release": "node scripts/release-update.js"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~4.0.1",
+    "@expo/vector-icons": "~14.0.4",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "^6.10.1",
+    "cors": "^2.8.6",
+    "expo": "~52.0.0",
+    "expo-application": "~6.0.2",
+    "expo-asset": "~11.0.5",
+    "expo-build-properties": "^57.0.17",
+    "expo-clipboard": "~7.0.1",
+    "expo-constants": "~17.0.3",
+    "expo-document-picker": "~13.0.1",
+    "expo-file-system": "~18.0.4",
+    "expo-font": "~13.0.4",
+    "expo-status-bar": "~2.0.0",
+    "express": "^5.2.1",
+    "mssql": "^12.7.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0",
+    "react-native-web": "~0.19.13"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.3.12",
+    "javascript-obfuscator": "^5.7.0",
+    "obfuscator-io-metro-plugin": "^2.2.1",
+    "typescript": "^5.3.3"
+  },
+  "private": true
+}

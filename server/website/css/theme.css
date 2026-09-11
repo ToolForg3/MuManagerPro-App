@@ -1,0 +1,252 @@
+/* ==========================================================================
+   Mu Manager PRO - Design System & Variables (theme.css)
+   Inspirado en MU Online, Dark Cyberpunk y Modern Enterprise
+   ========================================================================== */
+
+:root {
+  /* Paleta Base - Oscuridad Profunda / Obsidiana */
+  --bg-deep: #07080c;
+  --bg-surface-1: #0d1017;
+  --bg-surface-2: #141824;
+  --bg-surface-3: #1a2130;
+  
+  /* Glassmorphism & Transparencias */
+  --glass-bg: rgba(14, 18, 28, 0.72);
+  --glass-bg-hover: rgba(22, 28, 44, 0.85);
+  --glass-card: rgba(17, 22, 35, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-blur: blur(18px);
+
+  /* Acentos MU Online - Dorado Legendario & Joyas */
+  --gold-primary: #f5b335;
+  --gold-light: #fce07a;
+  --gold-dark: #b87a14;
+  --gold-glow: rgba(245, 179, 53, 0.28);
+  --gold-gradient: linear-gradient(135deg, #ffe082 0%, #f5b335 50%, #b87a14 100%);
+  --gold-gradient-subtle: linear-gradient(135deg, rgba(245, 179, 53, 0.15) 0%, rgba(184, 122, 20, 0.05) 100%);
+
+  /* MU Item Grades & Lore Colors */
+  --mu-excellent: #2ecc71;
+  --mu-ancient: #00e5ff;
+  --mu-socket: #b388ff;
+  --mu-harmony: #ffb74d;
+  --mu-luck: #80d8ff;
+  --mu-item-box-bg: rgba(6, 8, 14, 0.94);
+  --mu-item-border: rgba(245, 179, 53, 0.35);
+
+  /* Acentos Cyberpunk & Seguridad */
+  --cyan-primary: #00d2ff;
+  --cyan-glow: rgba(0, 210, 255, 0.28);
+  --cyan-gradient: linear-gradient(135deg, #80e5ff 0%, #00d2ff 100%);
+  
+  --green-verified: #00e676;
+  --green-glow: rgba(0, 230, 118, 0.28);
+  --green-gradient: linear-gradient(135deg, #69f0ae 0%, #00e676 100%);
+
+  --red-alert: #ff3366;
+  --red-glow: rgba(255, 51, 102, 0.28);
+
+  --purple-accent: #9d4edd;
+  --purple-glow: rgba(157, 78, 221, 0.3);
+
+  /* Tipografía & Textos */
+  --text-white: #ffffff;
+  --text-main: #e6ebf5;
+  --text-secondary: #94a3b8;
+  --text-dimmed: #64748b;
+  --text-gold: #f7be4a;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+
+  /* Elevación & Sombras */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.7);
+  --shadow-gold: 0 8px 32px rgba(245, 179, 53, 0.25);
+  --shadow-cyan: 0 8px 32px rgba(0, 210, 255, 0.25);
+  --shadow-runic: 0 0 25px rgba(245, 179, 53, 0.35);
+
+  /* Bordes & Radios */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* Transiciones Suaves */
+  --trans-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-normal: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Reset y Normalización */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+  font-size: 16px;
+  background-color: var(--bg-deep);
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  background-color: var(--bg-deep);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(245, 179, 53, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 85% 30%, rgba(0, 210, 255, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(157, 78, 221, 0.03) 0%, transparent 50%);
+  background-attachment: fixed;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Selección de Texto */
+::selection {
+  background: rgba(245, 179, 53, 0.3);
+  color: var(--gold-light);
+}
+
+/* Barra de Desplazamiento */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface-3);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-dark);
+}
+
+/* Enlaces y Botones */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--trans-fast);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   ANIMACIONES & EFECTOS VISUALES MODERNOS
+   ========================================================================== */
+
+/* 1. Pulso de Resplandor Dorado */
+@keyframes goldGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(245, 179, 53, 0.25), 0 0 30px rgba(245, 179, 53, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(245, 179, 53, 0.5), 0 0 50px rgba(245, 179, 53, 0.25);
+  }
+}
+
+/* 2. Flotación Suave (Levitación) */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* 3. Barrido de Luz Holográfica */
+@keyframes holoScan {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 4. Radar Ping */
+@keyframes radarPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  75%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* 5. Gradiente Animado de Borde */
+@keyframes borderGradientRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Clases de Utilidad de Efectos */
+.fx-float {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.fx-gold-pulse {
+  animation: goldGlowPulse 3s ease-in-out infinite;
+}
+
+.fx-glass-panel {
+  background: rgba(14, 18, 28, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(245, 179, 53, 0.2);
+  border-radius: var(--radius-lg);
+  transition: all var(--trans-normal);
+}
+
+.fx-glass-panel:hover {
+  border-color: rgba(245, 179, 53, 0.55);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(245, 179, 53, 0.22);
+  transform: translateY(-4px);
+}
+
+.fx-neon-gold {
+  color: var(--gold-light);
+  text-shadow: 0 0 10px rgba(245, 179, 53, 0.6), 0 0 20px rgba(245, 179, 53, 0.3);
+}
+
+.fx-neon-cyan {
+  color: #80e5ff;
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.6), 0 0 20px rgba(0, 210, 255, 0.3);
+}
+
+.fx-neon-green {
+  color: #69f0ae;
+  text-shadow: 0 0 10px rgba(0, 230, 118, 0.6), 0 0 20px rgba(0, 230, 118, 0.3);
+}
+

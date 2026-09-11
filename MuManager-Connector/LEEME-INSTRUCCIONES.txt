@@ -1,0 +1,36 @@
+================================================================
+  MU MANAGER PRO - GUIA DE INSTALACION DEL CONECTOR (VPS / PC)
+================================================================
+
+Este conector permite que tu aplicacion movil "Mu Manager PRO"
+se conecte de forma directa y 100% real a tu base de datos SQL Server (MuOnline).
+
+PASO 1:
+Copia esta carpeta "MuManager-Connector" en el VPS o computadora
+donde tienes instalado tu servidor de MU Online y SQL Server.
+
+PASO 2:
+Haz doble clic en:
+👉 "Iniciar-Conector.bat"
+(Se abrira una ventana que dejara el conector activo en el puerto 3001).
+
+PASO 3 (Opcional - Si necesitas cuentas de prueba):
+Si quieres tener cuentas de test creadas al instante en tu servidor:
+- Opcion A: En este directorio ejecuta el archivo "CREAR-CUENTAS-DE-TEST.sql" 
+  en SQL Server Management Studio (SSMS).
+- Opcion B: Directamente desde el APK en la pestaña "Cuentas", toca el boton "Test".
+Esto creara:
+  * testadmin (Clave: test1234, Nivel: VIP/GM)
+  * testuser  (Clave: test1234, Nivel: Normal)
+
+PASO 4:
+Abre la app "Mu Manager PRO" en tu celular Android:
+1. Ve a la pestaña "Config" (el engranaje).
+2. En "IP del Servidor" coloca la IP de tu VPS o computadora.
+3. En "Puerto" coloca 1433 y Base "MuOnline".
+4. En "Usuario" coloca "sa" (o tu usuario SQL).
+5. En "Contraseña" coloca tu clave de SQL Server.
+6. Presiona "Guardar y Probar Conexión".
+
+¡Listo! Ya tienes el control total de tu servidor MU Online en tu celular.
+================================================================
