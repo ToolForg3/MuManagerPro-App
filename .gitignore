@@ -1,4 +1,4 @@
-﻿# Archivos de entorno y credenciales
+# Archivos de entorno y credenciales
 .env
 .env.*
 *.key
@@ -18,8 +18,10 @@ server/data/tombstones.json
 
 # Binarios APK: ÚNICAMENTE se permite el APK canónico oficial en la raíz
 *.apk
-*.aab
-!MuManagerPro.apk
+*/*.apk
+*/*/*.apk
+*/*/*/*.apk
+!/MuManagerPro.apk
 
 # Logs y temporales
 *.log
