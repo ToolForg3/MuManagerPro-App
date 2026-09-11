@@ -462,15 +462,28 @@ export const ToolsScreen = () => {
     }
   };
 
-  const handleScanDupes = async () => {
+  const handleScanDupes = async (forceFreshParam?: boolean | any) => {
+    const forceFresh = forceFreshParam === true;
     try {
       setIsScanningDupes(true);
       setSearchResults([]);
-      const res = await SqlClient.scanDupes();
+      const res = await SqlClient.scanDupes(forceFresh);
       if (res.success) {
         setDupesResults(res.dupes);
         setHasScannedDupes(true);
-        if (res.dupes.length === 0) {
+        if (res.fromCache) {
+          Alert.alert(
+            res.dupes.length === 0 ? 'Servidor Limpio (Caché)' : 'Alerta de Dupeo (Caché)',
+            (res.dupes.length === 0
+              ? 'No se detectó ningún serial clonado o duplicado en el servidor.'
+              : `Se encontraron ${res.dupes.length} grupos de seriales duplicados en el servidor.`) +
+              `\n\n(Datos obtenidos de caché reciente de hace ${res.cachedSecondsAgo || 0} segundos).`,
+            [
+              { text: 'Aceptar' },
+              { text: 'Forzar Re-Escaneo', onPress: () => handleScanDupes(true) }
+            ]
+          );
+        } else if (res.dupes.length === 0) {
           Alert.alert('Servidor Limpio', 'No se detectó ningún serial clonado o duplicado.');
         } else {
           Alert.alert(
@@ -478,6 +491,8 @@ export const ToolsScreen = () => {
             `Se encontraron ${res.dupes.length} grupos de seriales duplicados en el servidor.`
           );
         }
+      } else if (res.busy) {
+        Alert.alert('Escaneo en Curso', res.message || 'Ya hay un escaneo de dupeos en curso por otro administrador. Por favor aguarda unos momentos.');
       } else {
         Alert.alert('Error', res.message || 'Error al escanear dupeos');
       }
@@ -1232,35 +1247,75 @@ export const ToolsScreen = () => {
       return;
     }
 
-    try {
-      setDeliveringKit(true);
-      const bonus = {
-        zen: zenVal,
-        gcoins: gcoinsVal,
-        wCoinP: wcoinPVal,
-        goblinPoints: gpVal,
-        ruud: ruudVal,
-      };
-      const res = await SqlClient.deliverKitToWarehouse(acc, itemsToDeliver, bonus, kitWarehouseIndex);
-      if (res.success) {
-        const parts: string[] = [];
-        if (kitIncludeItems && itemsToDeliver.length > 0) parts.push(`${itemsToDeliver.length} ítems`);
-        if (zenVal > 0) parts.push(`${zenVal.toLocaleString()} Zen`);
-        if (gcoinsVal > 0) parts.push(`${gcoinsVal} WCoinC`);
-        if (wcoinPVal > 0) parts.push(`${wcoinPVal} WCoinP`);
-        if (gpVal > 0) parts.push(`${gpVal} GP`);
-        if (ruudVal > 0) parts.push(`${ruudVal} Ruud`);
-        const targetDesc = kitWarehouseIndex === 0 ? 'Baúl Principal' : `Baúl #${kitWarehouseIndex}`;
-        await logAdminAction('KIT_ENTREGADO', `Entregado a '${acc}' en ${targetDesc}: ${parts.join(', ') || 'Kit'}`);
-        Alert.alert('¡Kit Entregado!', `Se entregó exitosamente el Starter Kit a '${acc}' en ${targetDesc}.\n\nContenido entregado:\n${parts.map(p => '• ' + p).join('\n')}`);
-      } else {
-        Alert.alert('Error al Entregar Kit', res.message);
+    const doDeliverKit = async () => {
+      try {
+        setDeliveringKit(true);
+        const bonus = {
+          zen: zenVal,
+          gcoins: gcoinsVal,
+          wCoinP: wcoinPVal,
+          goblinPoints: gpVal,
+          ruud: ruudVal,
+        };
+        const res = await SqlClient.deliverKitToWarehouse(acc, itemsToDeliver, bonus, kitWarehouseIndex);
+        if (res.success) {
+          const parts: string[] = [];
+          if (kitIncludeItems && itemsToDeliver.length > 0) parts.push(`${itemsToDeliver.length} ítems`);
+          if (zenVal > 0) parts.push(`${zenVal.toLocaleString()} Zen`);
+          if (gcoinsVal > 0) parts.push(`${gcoinsVal} WCoinC`);
+          if (wcoinPVal > 0) parts.push(`${wcoinPVal} WCoinP`);
+          if (gpVal > 0) parts.push(`${gpVal} GP`);
+          if (ruudVal > 0) parts.push(`${ruudVal} Ruud`);
+          const targetDesc = kitWarehouseIndex === 0 ? 'Baúl Principal' : `Baúl #${kitWarehouseIndex}`;
+          await logAdminAction('KIT_ENTREGADO', `Entregado a '${acc}' en ${targetDesc}: ${parts.join(', ') || 'Kit'}`);
+          Alert.alert('¡Kit Entregado!', `Se entregó exitosamente el Starter Kit a '${acc}' en ${targetDesc}.\n\nContenido entregado:\n${parts.map(p => '• ' + p).join('\n')}`);
+        } else {
+          Alert.alert('Error al Entregar Kit', res.message);
+        }
+      } catch (e: any) {
+        Alert.alert('Error', e.message);
+      } finally {
+        setDeliveringKit(false);
       }
-    } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setDeliveringKit(false);
+    };
+
+    // Verificación si la cuenta está online para evitar sobreescritura del baúl
+    let isOnline = false;
+    try {
+      isOnline = await SqlClient.isAccountConnected(acc);
+    } catch (_) {}
+
+    if (isOnline) {
+      Alert.alert(
+        'Jugador Conectado en el Juego',
+        'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Desconectar y Guardar',
+            style: 'destructive',
+            onPress: async () => {
+              setDeliveringKit(true);
+              try {
+                await SqlClient.disconnectAccount(acc);
+                await new Promise((r) => setTimeout(r, 1000));
+                await doDeliverKit();
+              } catch (err: any) {
+                Alert.alert('Error', err.message || 'Error al desconectar');
+                setDeliveringKit(false);
+              }
+            },
+          },
+          {
+            text: 'Entregar de Todos Modos',
+            onPress: () => doDeliverKit(),
+          },
+        ]
+      );
+      return;
     }
+
+    await doDeliverKit();
   };
 
   // ==========================================
@@ -2992,7 +3047,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                 <TouchableOpacity
                   style={[styles.scanDupesBtn, { flex: 1 }]}
-                  onPress={handleScanDupes}
+                  onPress={() => handleScanDupes(false)}
                   disabled={isScanningDupes}
                 >
                   {isScanningDupes ? (
@@ -3027,6 +3082,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       : 'Todos los seriales registrados en baúles e inventarios son únicos.'}
                   </Text>
                 </View>
+                <TouchableOpacity
+                  onPress={() => handleScanDupes(true)}
+                  disabled={isScanningDupes}
+                  style={{ padding: 6, justifyContent: 'center', alignItems: 'center' }}
+                  accessibilityLabel="Forzar Re-Escaneo"
+                >
+                  <MaterialCommunityIcons name="refresh" size={22} color={dupesResults.length > 0 ? '#E2703A' : '#3FCF8E'} />
+                </TouchableOpacity>
               </View>
             )}
 

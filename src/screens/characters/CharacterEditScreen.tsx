@@ -143,13 +143,28 @@ export const CharacterEditScreen = () => {
   };
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [editorLockWarning, setEditorLockWarning] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (charName) {
       loadCharacter();
+      // Adquirir candado suave multi-admin para este personaje
+      SqlClient.acquireEditorLock(`Character:${charName}`).then((res) => {
+        if (isMounted && res && res.locked && res.holder) {
+          setEditorLockWarning(`⚠️ ${charName} está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s`);
+        }
+      }).catch(() => {});
     } else {
       setLoading(false);
     }
+
+    return () => {
+      isMounted = false;
+      if (charName) {
+        SqlClient.releaseEditorLock(`Character:${charName}`).catch(() => {});
+      }
+    };
   }, [charName]);
 
   const loadCharacter = async (silent: boolean = false) => {
@@ -1099,11 +1114,19 @@ export const CharacterEditScreen = () => {
               <MaterialCommunityIcons name="refresh" size={22} color={THEME.colors.textPrimary} />
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-            <MaterialCommunityIcons name="close" size={24} color={THEME.colors.textPrimary} />
-          </TouchableOpacity>
         </View>
       </View>
+
+      {/* Banner de Aviso de Soft-Lock Colaborativo Multi-Admin */}
+      {editorLockWarning ? (
+        <View style={styles.lockWarningBanner}>
+          <MaterialCommunityIcons name="shield-alert" size={18} color="#FFD54F" />
+          <Text style={styles.lockWarningText}>{editorLockWarning}</Text>
+          <TouchableOpacity onPress={() => setEditorLockWarning(null)}>
+            <MaterialCommunityIcons name="close" size={16} color="#FFE082" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* Tabs Navigation Bar */}
       <View style={styles.tabBarWrapper}>
@@ -3517,5 +3540,24 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: THEME.colors.jade,
     letterSpacing: 1,
+  },
+  lockWarningBanner: {
+    backgroundColor: 'rgba(255, 179, 0, 0.16)',
+    borderColor: '#FFB300',
+    borderWidth: 1,
+    borderRadius: THEME.shapes.radioEsquina,
+    marginHorizontal: 12,
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  lockWarningText: {
+    flex: 1,
+    color: '#FFE082',
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

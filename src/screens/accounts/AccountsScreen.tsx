@@ -147,6 +147,7 @@ export const AccountsScreen = () => {
   const [unlockingVaults, setUnlockingVaults] = useState<boolean>(false);
   const [showUnlockModal, setShowUnlockModal] = useState<boolean>(false);
   const [unlockCountInput, setUnlockCountInput] = useState<string>('20');
+  const [warehouseLockWarning, setWarehouseLockWarning] = useState<string | null>(null);
 
   // Vista y Pestañas del Warehouse (Capturas 1 a 5)
   const [warehouseViewTab, setWarehouseViewTab] = useState<'items' | 'warehouse' | 'vault_ext'>('warehouse');
@@ -470,11 +471,28 @@ export const AccountsScreen = () => {
     }
   };
 
+  const handleCloseWarehouseModal = () => {
+    if (warehouseAccount) {
+      SqlClient.releaseEditorLock(`Warehouse:${warehouseAccount}`).catch(() => {});
+    }
+    setWarehouseLockWarning(null);
+    setWarehouseModalVisible(false);
+  };
+
   const openWarehouseForAccount = async (accountId: string, initialTab: 'items' | 'warehouse' | 'vault_ext' = 'warehouse') => {
     setWarehouseAccount(accountId);
     setWarehouseViewTab(initialTab);
     setVaultSubTab(initialTab === 'vault_ext' ? 'ext' : 'main');
     setWarehouseModalVisible(true);
+    // Adquirir candado suave multi-admin para este baúl
+    SqlClient.acquireEditorLock(`Warehouse:${accountId}`).then((res) => {
+      if (res && res.locked && res.holder) {
+        setWarehouseLockWarning(`⚠️ El baúl de "${accountId}" está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s`);
+        Alert.alert('Aviso de Concurrencia', `El baúl de "${accountId}" está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s.`);
+      } else {
+        setWarehouseLockWarning(null);
+      }
+    }).catch(() => {});
     await loadVaultData(accountId, 0);
   };
 
@@ -1290,6 +1308,22 @@ export const AccountsScreen = () => {
       );
       return;
     }
+
+    const doSaveVault = async (hexToSave: string) => {
+      setSavingWarehouse(true);
+      try {
+        const res = await SqlClient.saveAccountWarehouse(warehouseAccount, activeVaultIndex, hexToSave, vaultMoney);
+        if (res.success) {
+          setWarehouseData((prev: any) => ({ ...prev, ItemsHex: hexToSave, Money: vaultMoney }));
+          Alert.alert('Baúl Guardado', `Los 240 slots (Baúl Normal + Bóveda Expandida) y el Zen del Baúl #${activeVaultIndex} se sincronizaron con éxito en SQL Server.`);
+        } else {
+          Alert.alert('Error al guardar', res.message);
+        }
+      } finally {
+        setSavingWarehouse(false);
+      }
+    };
+
     setSavingWarehouse(true);
     try {
       const newHex = MuItemParser.rebuildInventoryHex(warehouseItems, 240, warehouseData?.ItemsHex);
@@ -1297,44 +1331,45 @@ export const AccountsScreen = () => {
         Alert.alert('Error de Integridad', 'El búfer hexadecimal generado es inválido. Operación cancelada para proteger el baúl.');
         return;
       }
-      const res = await SqlClient.saveAccountWarehouse(warehouseAccount, activeVaultIndex, newHex, vaultMoney);
-      if (res.success) {
-        setWarehouseData((prev: any) => ({ ...prev, ItemsHex: newHex, Money: vaultMoney }));
-        Alert.alert('Baúl Guardado', `Los 240 slots (Baúl Normal + Bóveda Expandida) y el Zen del Baúl #${activeVaultIndex} se sincronizaron con éxito en SQL Server.`);
-      } else {
-        if (res.message && res.message.toLowerCase().includes('conectad')) {
-          Alert.alert(
-            'Jugador Conectado en el Juego',
-            'La cuenta está en línea en el servidor. Para proteger la integridad de los ítems y evitar sobreescrituras al cambiar de baúl (/ware), el jugador debe desconectarse.\n\n¿Deseas forzar la desconexión del jugador y guardar inmediatamente?',
-            [
-              { text: 'Cancelar', style: 'cancel' },
-              {
-                text: 'Desconectar y Guardar',
-                style: 'destructive',
-                onPress: async () => {
-                  setSavingWarehouse(true);
-                  try {
-                    await SqlClient.disconnectAccount(warehouseAccount);
-                    const retryRes = await SqlClient.saveAccountWarehouse(warehouseAccount, activeVaultIndex, newHex, vaultMoney);
-                    if (retryRes.success) {
-                      setWarehouseData((prev: any) => ({ ...prev, ItemsHex: newHex, Money: vaultMoney }));
-                      Alert.alert('Baúl Guardado', `La sesión del jugador fue liberada y el Baúl #${activeVaultIndex} se guardó exitosamente en SQL Server.`);
-                    } else {
-                      Alert.alert('Error al guardar', retryRes.message);
-                    }
-                  } catch (e: any) {
-                    Alert.alert('Error', e.message || 'Error al desconectar');
-                  } finally {
-                    setSavingWarehouse(false);
-                  }
-                },
+
+      // Verificación preventiva en tiempo real si el jugador está conectado
+      let isOnline = false;
+      try {
+        isOnline = await SqlClient.isAccountConnected(warehouseAccount);
+      } catch (_) {}
+
+      if (isOnline) {
+        setSavingWarehouse(false);
+        Alert.alert(
+          'Jugador Conectado en el Juego',
+          'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+              text: 'Desconectar y Guardar',
+              style: 'destructive',
+              onPress: async () => {
+                setSavingWarehouse(true);
+                try {
+                  await SqlClient.disconnectAccount(warehouseAccount);
+                  await new Promise((r) => setTimeout(r, 1000));
+                  await doSaveVault(newHex);
+                } catch (e: any) {
+                  Alert.alert('Error', e.message || 'Error al desconectar');
+                  setSavingWarehouse(false);
+                }
               },
-            ]
-          );
-        } else {
-          Alert.alert('Error al guardar', res.message);
-        }
+            },
+            {
+              text: 'Guardar de Todos Modos',
+              onPress: () => doSaveVault(newHex),
+            },
+          ]
+        );
+        return;
       }
+
+      await doSaveVault(newHex);
     } finally {
       setSavingWarehouse(false);
     }
@@ -1952,13 +1987,13 @@ export const AccountsScreen = () => {
         visible={warehouseModalVisible}
         transparent={false}
         animationType="slide"
-        onRequestClose={() => setWarehouseModalVisible(false)}
+        onRequestClose={handleCloseWarehouseModal}
       >
         <View style={[styles.whScreenContainer, { paddingTop: topInset }]}>
           {/* Header Superior (Capturas 1, 2, 3) */}
           <View style={styles.whHeader}>
             <TouchableOpacity
-              onPress={() => setWarehouseModalVisible(false)}
+              onPress={handleCloseWarehouseModal}
               style={styles.whBackBtn}
               activeOpacity={0.7}
             >
@@ -1984,6 +2019,17 @@ export const AccountsScreen = () => {
               <MaterialCommunityIcons name="sync" size={20} color="#78909C" />
             </TouchableOpacity>
           </View>
+
+          {/* Banner de Aviso de Soft-Lock Colaborativo Multi-Admin */}
+          {warehouseLockWarning ? (
+            <View style={styles.whLockWarningBanner}>
+              <MaterialCommunityIcons name="shield-alert" size={18} color="#FFD54F" />
+              <Text style={styles.whLockWarningText}>{warehouseLockWarning}</Text>
+              <TouchableOpacity onPress={() => setWarehouseLockWarning(null)}>
+                <MaterialCommunityIcons name="close" size={16} color="#FFE082" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           {/* VISTA 1: TAB ITEMS - EDITOR COMPLETO (ITEM MAKER PARA WAREHOUSE) */}
           {warehouseViewTab === 'items' && (
@@ -5590,5 +5636,25 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: THEME.colors.oroClaro,
     marginTop: -2,
+  },
+  whLockWarningBanner: {
+    backgroundColor: 'rgba(255, 179, 0, 0.16)',
+    borderColor: '#FFB300',
+    borderWidth: 1,
+    borderRadius: 6,
+    marginHorizontal: 12,
+    marginTop: 6,
+    marginBottom: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  whLockWarningText: {
+    flex: 1,
+    color: '#FFE082',
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

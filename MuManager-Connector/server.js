@@ -1227,32 +1227,93 @@ function isForbiddenHost(host) {
   return false;
 }
 
-// Aislamiento de Conexiones SQL (Hallazgo 1) & Prevención SSRF
+// Aislamiento de Conexiones SQL & Pool Singleton Reutilizable (Optimización de Concurrencia)
+const sqlPoolsCache = new Map();
+const sqlPoolConnectingPromises = new Map();
+
+async function getOrCreatePool(config) {
+  const host = config.server || config.host || 'localhost';
+  const port = config.port || 1433;
+  const poolKey = `${config.user}:${config.password}@${host}:${port}/${config.database}`;
+
+  let pool = sqlPoolsCache.get(poolKey);
+  if (pool && pool.connected && !pool.closed) {
+    return pool;
+  }
+
+  // Si ya hay una promesa de conexión activa para esta clave, esperarla para evitar conexiones duplicadas
+  if (sqlPoolConnectingPromises.has(poolKey)) {
+    return await sqlPoolConnectingPromises.get(poolKey);
+  }
+
+  if (pool) {
+    try { if (typeof pool.close === 'function') await pool.close(); } catch (_) {}
+    sqlPoolsCache.delete(poolKey);
+  }
+
+  const poolOptions = {
+    ...config,
+    pool: {
+      max: 15,
+      min: 1,
+      idleTimeoutMillis: 30000,
+      acquireTimeoutMillis: 10000,
+    },
+  };
+
+  const connectPromise = (async () => {
+    try {
+      let p;
+      if (typeof sql.ConnectionPool === 'function') {
+        p = new sql.ConnectionPool(poolOptions);
+        await p.connect();
+      } else {
+        p = await sql.connect(poolOptions);
+      }
+
+      if (p && typeof p.on === 'function') {
+        p.on('error', (err) => {
+          console.warn('[SQL Pool Warning]', err.message);
+          try { if (typeof p.close === 'function') p.close(); } catch (_) {}
+          sqlPoolsCache.delete(poolKey);
+        });
+      }
+
+      sqlPoolsCache.set(poolKey, p);
+      return p;
+    } finally {
+      sqlPoolConnectingPromises.delete(poolKey);
+    }
+  })();
+
+  sqlPoolConnectingPromises.set(poolKey, connectPromise);
+  return await connectPromise;
+}
+
 async function executeSql(configInput, callback) {
   const targetHost = (configInput && (configInput.host || configInput.server)) || 'localhost';
   if (isForbiddenHost(targetHost)) {
     throw new Error('HOST_PROHIBIDO: Conexión rechazada por políticas de protección SSRF.');
   }
   const config = getDbConfig(configInput || {});
+  if (!sql) throw new Error('mssql package not installed');
+
+  const host = config.server || config.host || 'localhost';
+  const port = config.port || 1433;
+  const poolKey = `${config.user}:${config.password}@${host}:${port}/${config.database}`;
   let pool;
-  let isCustom = false;
-  if (typeof sql.ConnectionPool === 'function') {
-    pool = new sql.ConnectionPool(config);
-    await pool.connect();
-    isCustom = true;
-  } else {
-    pool = await sql.connect(config);
-  }
   try {
+    pool = await getOrCreatePool(config);
     return await callback(pool, config);
-  } finally {
-    try {
-      if (isCustom && pool && typeof pool.close === 'function') {
-        await pool.close();
-      } else if (typeof sql.close === 'function') {
-        await sql.close();
-      }
-    } catch (_) {}
+  } catch (err) {
+    if (sqlPoolsCache.has(poolKey)) {
+      try {
+        const p = sqlPoolsCache.get(poolKey);
+        if (p && typeof p.close === 'function') await p.close();
+      } catch (_) {}
+      sqlPoolsCache.delete(poolKey);
+    }
+    throw err;
   }
 }
 
@@ -3835,33 +3896,66 @@ app.post('/api/tools/search-items', async (req, res) => {
   }
 });
 
-// 3. Escáner de Dupeos (Anti-Dupe Tracker Sin Falsos Positivos)
+// 3. Escáner de Dupeos (Anti-Dupe Tracker Optimizado con NOLOCK, Mutex y Caché)
+let isDupeScanning = false;
+let dupeScanCache = null;
+let dupeScanCacheTime = 0;
+
 app.post('/api/tools/scan-dupes', async (req, res) => {
   try {
     if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const forceFresh = req.body?.forceFresh === true;
+    const now = Date.now();
+
+    if (!forceFresh && dupeScanCache && (now - dupeScanCacheTime < 60000)) {
+      return res.json({
+        success: true,
+        fromCache: true,
+        cachedSecondsAgo: Math.round((now - dupeScanCacheTime) / 1000),
+        count: dupeScanCache.count,
+        dupes: dupeScanCache.dupes,
+      });
+    }
+
+    if (isDupeScanning) {
+      if (dupeScanCache) {
+        return res.json({
+          success: true,
+          fromCache: true,
+          isBusyRefresing: true,
+          count: dupeScanCache.count,
+          dupes: dupeScanCache.dupes,
+          message: 'Hay un escaneo en curso por otro administrador. Se muestran los últimos datos registrados.',
+        });
+      }
+      return res.status(429).json({
+        success: false,
+        busy: true,
+        message: 'Ya hay un escaneo de dupeos en curso ejecutado por otro administrador. Por favor aguarda unos momentos.',
+      });
+    }
+
+    isDupeScanning = true;
 
     const dupes = await executeSql(req.body.config, async (pool) => {
       const serialMap = new Map();
 
       const indexItem = (chunk, locInfo) => {
         if (!chunk || chunk.length < 32) return;
-        // En MU Online: 0xFF en primer byte, o todos F, o todos 0 representan slot vacío
         if (/^F{32}$/i.test(chunk) || /^0{32}$/.test(chunk)) return;
         const byte0 = parseInt(chunk.substring(0, 2), 16);
-        if (byte0 === 0xFF) return; // Slot vacío
+        if (byte0 === 0xFF) return;
 
         const parsed = decodeItemBasic(chunk);
         if (!parsed) return;
 
-        // 1. Excluir ítems no serializados de MU Online (Joyería básica/consumibles, pergaminos, flechas, etc.)
         if (parsed.group === 14 || parsed.group === 15) return;
         if (parsed.group === 4 && (parsed.index === 7 || parsed.index === 15)) return;
         if (parsed.group === 13 && (parsed.index === 14 || parsed.index === 15 || (parsed.index >= 29 && parsed.index <= 31))) return;
 
-        // 2. Excluir seriales nulos, inválidos, ceros o comunes de NPC shop (<= 100 o FFFFFFFF)
         if (!parsed.serial || parsed.serial <= 100 || parsed.serial === 0xFFFFFFFF) return;
 
-        // 3. Agrupar por Ítem + Serial (un ítem clonado real tiene el mismo serial Y es el mismo ítem)
         const itemKey = `${parsed.serial}_${parsed.group}_${parsed.index}`;
         if (!serialMap.has(itemKey)) {
           serialMap.set(itemKey, []);
@@ -3879,8 +3973,8 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
         });
       };
 
-      // 1. Warehouse (Baúl 0)
-      const whQuery = await pool.request().query('SELECT AccountID, Items FROM warehouse WHERE Items IS NOT NULL;');
+      // 1. Warehouse (Baúl 0) con WITH (NOLOCK) para no bloquear ni generar lag al juego
+      const whQuery = await pool.request().query('SELECT AccountID, Items FROM warehouse WITH (NOLOCK) WHERE Items IS NOT NULL;');
       for (const row of whQuery.recordset) {
         const buf = row.Items;
         if (!buf || !Buffer.isBuffer(buf)) continue;
@@ -3895,11 +3989,11 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
         }
       }
 
-      // 2. ExtWarehouse (Baúles 1, 2, 3... IMPORTANTE: Excluir Number = 0 para no duplicar Baúl #0)
+      // 2. ExtWarehouse (Baúles 1, 2, 3... con WITH (NOLOCK))
       try {
-        const extCheck = await pool.request().query("SELECT 1 FROM sys.tables WHERE name = 'ExtWarehouse';");
+        const extCheck = await pool.request().query("SELECT 1 FROM sys.tables WITH (NOLOCK) WHERE name = 'ExtWarehouse';");
         if (extCheck.recordset && extCheck.recordset.length > 0) {
-          const extWhQuery = await pool.request().query('SELECT AccountID, Number, Items FROM ExtWarehouse WHERE Items IS NOT NULL AND Number > 0;');
+          const extWhQuery = await pool.request().query('SELECT AccountID, Number, Items FROM ExtWarehouse WITH (NOLOCK) WHERE Items IS NOT NULL AND Number > 0;');
           for (const row of extWhQuery.recordset) {
             const buf = row.Items;
             if (!buf || !Buffer.isBuffer(buf)) continue;
@@ -3918,13 +4012,12 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
         console.warn('Dupe scan in ExtWarehouse warning:', e.message);
       }
 
-      // 3. Character.Inventory (Equipo, Inventario, Mochilas, Store - Clampeado a 172 slots de Season 6)
-      const charQuery = await pool.request().query('SELECT AccountID, Name, Inventory FROM Character WHERE Inventory IS NOT NULL;');
+      // 3. Character.Inventory (con WITH (NOLOCK) y clampeado a 172 slots Season 6)
+      const charQuery = await pool.request().query('SELECT AccountID, Name, Inventory FROM Character WITH (NOLOCK) WHERE Inventory IS NOT NULL;');
       for (const row of charQuery.recordset) {
         const buf = row.Inventory;
         if (!buf || !Buffer.isBuffer(buf)) continue;
         const hex = buf.toString('hex').toUpperCase();
-        // Season 6: 12 equipo + 64 inv + 32 store + 32 ext1 + 32 ext2 = 172 slots
         const totalSlots = Math.min(Math.floor(hex.length / 32), 172);
         for (let s = 0; s < totalSlots; s++) {
           let slotLabel = `Slot ${s}`;
@@ -3946,7 +4039,6 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
       const duplicateGroups = [];
       for (const [itemKey, items] of serialMap.entries()) {
         if (items.length > 1) {
-          // Descartar si todas las ocurrencias corresponden al mismo slot en la misma ubicación
           const uniqueSlots = new Set(items.map(i => `${i.accountId}_${i.location}_${i.slot}`));
           if (uniqueSlots.size > 1) {
             const first = items[0];
@@ -3965,7 +4057,117 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
       return duplicateGroups;
     });
 
+    dupeScanCache = { count: dupes.length, dupes };
+    dupeScanCacheTime = Date.now();
     res.json({ success: true, count: dupes.length, dupes });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    isDupeScanning = false;
+  }
+});
+
+// =========================================================================
+// SISTEMA DE CANDADOS SUAVES EN MEMORIA (SOFT-LOCK MULTI-ADMIN)
+// =========================================================================
+const activeEditorLocks = new Map();
+
+function cleanupExpiredLocks() {
+  const now = Date.now();
+  for (const [target, info] of activeEditorLocks.entries()) {
+    if (now > info.expiresAt) {
+      activeEditorLocks.delete(target);
+    }
+  }
+}
+
+app.post('/api/editor/lock', (req, res) => {
+  try {
+    cleanupExpiredLocks();
+    const { target, adminName, deviceHwid } = req.body || {};
+    if (!target) return res.status(400).json({ success: false, error: 'target requerido' });
+
+    const cleanTarget = target.trim();
+    const cleanAdmin = (adminName || 'Otro Administrador').trim();
+    const cleanDevice = (deviceHwid || '').trim();
+    const now = Date.now();
+
+    const existing = activeEditorLocks.get(cleanTarget);
+    if (existing && existing.deviceHwid && cleanDevice && existing.deviceHwid !== cleanDevice && now < existing.expiresAt) {
+      const remainingSec = Math.max(1, Math.round((existing.expiresAt - now) / 1000));
+      const elapsedSec = Math.max(0, Math.round((now - existing.acquiredAt) / 1000));
+      return res.json({
+        success: true,
+        locked: true,
+        holder: existing.adminName,
+        elapsedSec,
+        remainingSec,
+        message: `${cleanTarget} está siendo editado por ${existing.adminName} (hace ${elapsedSec}s).`,
+      });
+    }
+
+    const lockInfo = {
+      target: cleanTarget,
+      adminName: cleanAdmin,
+      deviceHwid: cleanDevice,
+      acquiredAt: existing ? existing.acquiredAt : now,
+      expiresAt: now + 120000,
+    };
+    activeEditorLocks.set(cleanTarget, lockInfo);
+
+    res.json({
+      success: true,
+      locked: false,
+      expiresInSec: 120,
+      lockInfo,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/editor/unlock', (req, res) => {
+  try {
+    const { target, deviceHwid } = req.body || {};
+    if (!target) return res.status(400).json({ success: false, error: 'target requerido' });
+
+    const cleanTarget = target.trim();
+    const cleanDevice = (deviceHwid || '').trim();
+    const existing = activeEditorLocks.get(cleanTarget);
+
+    if (existing) {
+      if (!cleanDevice || existing.deviceHwid === cleanDevice) {
+        activeEditorLocks.delete(cleanTarget);
+      }
+    }
+
+    res.json({ success: true, message: 'Candado liberado.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/editor/status', (req, res) => {
+  try {
+    cleanupExpiredLocks();
+    const target = (req.query.target || '').trim();
+    if (!target) return res.status(400).json({ success: false, error: 'target requerido' });
+
+    const existing = activeEditorLocks.get(target);
+    const now = Date.now();
+    if (existing && now < existing.expiresAt) {
+      const remainingSec = Math.max(1, Math.round((existing.expiresAt - now) / 1000));
+      const elapsedSec = Math.max(0, Math.round((now - existing.acquiredAt) / 1000));
+      return res.json({
+        success: true,
+        locked: true,
+        holder: existing.adminName,
+        elapsedSec,
+        remainingSec,
+      });
+    }
+
+    res.json({ success: true, locked: false });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -6721,10 +6923,10 @@ app.post('/api/admin/test-sql', async (req, res) => {
   try {
     if (!sql) return res.status(500).json({ success: false, error: 'Módulo mssql no instalado en el servidor.' });
     const config = getDbConfig(req.body);
-    const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT @@VERSION AS version, DB_NAME() AS db;');
+    const result = await executeSql(req.body, async (pool) => {
+      return await pool.request().query('SELECT @@VERSION AS version, DB_NAME() AS db;');
+    });
     const latency = Date.now() - start;
-    await pool.close();
     const ver = result.recordset[0].version.split('\n')[0].trim();
     addAuditLog('SQL_TEST', 'ADMIN', clientIp, `Prueba SQL exitosa contra ${config.server}:${config.port} (${latency}ms)`);
     res.json({
