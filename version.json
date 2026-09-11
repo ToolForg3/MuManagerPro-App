@@ -1,11 +1,11 @@
 {
-    "version":  "1.7.6",
+    "version":  "1.7.7",
     "minRequiredVersion":  "1.5.8",
-    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.6",
-    "publishedAt":  "2026-09-11T22:35:00.000Z",
+    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.7",
+    "publishedAt":  "2026-09-11T23:00:00.000Z",
     "downloadUrl":  "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build":  78,
+    "build":  79,
     "forceUpdate":  true,
-    "changelog":  "MuManager PRO v1.7.6 (Build 78):\n• Canales Oficiales y Soporte Integrado: Nuevo acceso directo ergonómico a Telegram ToolForg3 y WhatsApp Soporte Técnico en Configuración, con indicador en vivo de estado de pasarela Vercel.\n• Asistencia en Dispositivo Bloqueado: Inclusión de botones interactivos directos a WhatsApp y Telegram en la pantalla de bloqueo y barra de alerta, permitiendo contactar a soporte al instante con el ID de celular (HWID) precargado.\n• Optimización de Rendimiento y Despliegue: Infraestructura Vercel Serverless afinada con CDN distribuida y consumo cero de ancho de banda en descargas."
+    "changelog":  "MuManager PRO v1.7.7 (Build 79):\n• Optimización de Rendimiento en UI: Memoización de componentes de renderizado masivo (ItemImage, InventoryGrid, PaperdollSlot) y virtualización eficiente en listas de cuentas y personajes para navegación fluida y sin lag.\n• Canales Oficiales y Soporte Integrado: Acceso directo a Telegram ToolForg3 y WhatsApp Soporte Técnico en Configuración, con indicador en vivo de estado de pasarela Vercel.\n• Asistencia en Dispositivo Bloqueado: Botones interactivos directos a WhatsApp y Telegram en pantalla de bloqueo y barra de alerta, permitiendo contactar a soporte al instante con el HWID precargado."
 }
 
