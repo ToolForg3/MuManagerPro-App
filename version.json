@@ -1,11 +1,11 @@
 {
-    "version":  "1.7.8",
-    "minRequiredVersion":  "1.5.8",
-    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.8",
-    "publishedAt":  "2026-09-12T00:05:00.000Z",
+    "version":  "1.7.9",
+    "minRequiredVersion":  "1.7.9",
+    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.9",
+    "publishedAt":  "2026-09-12T00:35:00.000Z",
     "downloadUrl":  "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build":  80,
+    "build":  81,
     "forceUpdate":  true,
-    "changelog":  "MuManager PRO v1.7.8 (Build 80):\n• Blindaje de Concurrencia y Pool SQL: Conexiones persistentes y reutilizables en memoria (1 a 15 pools) sin caídas ni bloqueos.\n• Anti-Dupe No Bloqueante: Escaneo masivo con WITH (NOLOCK) en baúles e inventarios, semáforo Mutex y caché en RAM de 60s con refresco instantáneo.\n• Candados Suaves Colaborativos: Bloqueo no obstructivo multi-administrador en personajes y baúles para evitar sobreescrituras simultáneas.\n• Auto-Kick Preventivo en RAM: Detección en tiempo real de jugadores online con desconexión segura previa para evitar desincronización del GameServer."
+    "changelog":  "MuManager PRO v1.7.9 (Build 81) - Parche Crítico de Seguridad:\n• Blindaje Criptográfico de Licencias: Renovación total del protocolo de cifrado y rotación de salt maestro.\n• Refuerzo Anti-Fuerza Bruta: Rate limiting estricto de 5 intentos en autenticación y protección HSTS.\n• Purga de Credenciales: Eliminación de accesos por defecto y seguridad Zero-Trust en endpoints.\n• Rendimiento: Mantenimiento de estabilidad en concurrencia y pools SQL persistentes."
 }
 
