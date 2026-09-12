@@ -900,6 +900,73 @@ export class SqlClient {
   }
 
   /**
+   * 9e. Adquirir o renovar candado suave en memoria para evitar colisiones multi-admin
+   */
+  static async acquireEditorLock(target: string, adminName?: string): Promise<{
+    success: boolean;
+    locked: boolean;
+    holder?: string;
+    elapsedSec?: number;
+    remainingSec?: number;
+    message?: string;
+  }> {
+    try {
+      const hwid = await SecurityService.getDeviceHwid();
+      const user = adminName || this.getActiveUser() || 'Admin';
+      const res = await this.sendSecureRequest('/api/editor/lock', {
+        target: target.trim(),
+        adminName: user,
+        deviceHwid: hwid,
+      }, 4000);
+      if (!res.ok) return { success: false, locked: false };
+      return await this.safeJson(res);
+    } catch {
+      return { success: false, locked: false };
+    }
+  }
+
+  /**
+   * 9f. Liberar candado suave en memoria al cerrar la pantalla
+   */
+  static async releaseEditorLock(target: string): Promise<boolean> {
+    try {
+      const hwid = await SecurityService.getDeviceHwid();
+      const res = await this.sendSecureRequest('/api/editor/unlock', {
+        target: target.trim(),
+        deviceHwid: hwid,
+      }, 4000);
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 9g. Consultar estado del candado suave
+   */
+  static async getEditorLockStatus(target: string): Promise<{
+    locked: boolean;
+    holder?: string;
+    elapsedSec?: number;
+    remainingSec?: number;
+  }> {
+    try {
+      const bridgeUrl = this.getBridgeUrl();
+      const res = await fetch(`${bridgeUrl}/api/editor/status?target=${encodeURIComponent(target.trim())}`);
+      if (!res.ok) return { locked: false };
+      const data = await this.safeJson(res);
+      return {
+        locked: !!data.locked,
+        holder: data.holder,
+        elapsedSec: data.elapsedSec,
+        remainingSec: data.remainingSec,
+      };
+    } catch {
+      return { locked: false };
+    }
+  }
+
+  /**
    * 7b. Obtener Personajes de una Cuenta específica (MEMB_INFO -> Character)
    */
   static async getCharactersByAccount(accountId: string): Promise<CharacterSummary[]> {
@@ -1381,19 +1448,38 @@ export class SqlClient {
   /**
    * 14. Escáner de Dupeos (Anti-Dupe Tracker)
    */
-  static async scanDupes(): Promise<{ success: boolean; count: number; dupes: any[]; message?: string }> {
+  static async scanDupes(forceFresh: boolean = false): Promise<{
+    success: boolean;
+    count: number;
+    dupes: any[];
+    fromCache?: boolean;
+    cachedSecondsAgo?: number;
+    busy?: boolean;
+    message?: string;
+  }> {
     const startTime = Date.now();
     try {
       const res = await this.sendSecureRequest('/api/tools/scan-dupes', {
+        forceFresh,
         config: this.config,
       }, 20000);
 
       const data = await this.safeJson(res);
+      if (res.status === 429 || data.busy) {
+        return { success: false, busy: true, count: 0, dupes: [], message: data.message || 'Escaneo en curso por otro administrador.' };
+      }
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
       const duration = Date.now() - startTime;
       this.logQuery('SCAN_DUPES', duration, true, data.count || 0);
-      return { success: true, count: data.count || 0, dupes: data.dupes || [] };
+      return {
+        success: true,
+        count: data.count || 0,
+        dupes: data.dupes || [],
+        fromCache: !!data.fromCache,
+        cachedSecondsAgo: data.cachedSecondsAgo,
+        message: data.message,
+      };
     } catch (e: any) {
       const duration = Date.now() - startTime;
       this.logQuery('SCAN_DUPES', duration, false, 0, e.message);

@@ -1,11 +1,11 @@
 {
-    "version":  "1.7.7",
+    "version":  "1.7.8",
     "minRequiredVersion":  "1.5.8",
-    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.7",
-    "publishedAt":  "2026-09-11T23:00:00.000Z",
+    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.8",
+    "publishedAt":  "2026-09-12T00:05:00.000Z",
     "downloadUrl":  "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build":  79,
+    "build":  80,
     "forceUpdate":  true,
-    "changelog":  "MuManager PRO v1.7.7 (Build 79):\n• Optimización de Rendimiento en UI: Memoización de componentes de renderizado masivo (ItemImage, InventoryGrid, PaperdollSlot) y virtualización eficiente en listas de cuentas y personajes para navegación fluida y sin lag.\n• Canales Oficiales y Soporte Integrado: Acceso directo a Telegram ToolForg3 y WhatsApp Soporte Técnico en Configuración, con indicador en vivo de estado de pasarela Vercel.\n• Asistencia en Dispositivo Bloqueado: Botones interactivos directos a WhatsApp y Telegram en pantalla de bloqueo y barra de alerta, permitiendo contactar a soporte al instante con el HWID precargado."
+    "changelog":  "MuManager PRO v1.7.8 (Build 80):\n• Blindaje de Concurrencia y Pool SQL: Conexiones persistentes y reutilizables en memoria (1 a 15 pools) sin caídas ni bloqueos.\n• Anti-Dupe No Bloqueante: Escaneo masivo con WITH (NOLOCK) en baúles e inventarios, semáforo Mutex y caché en RAM de 60s con refresco instantáneo.\n• Candados Suaves Colaborativos: Bloqueo no obstructivo multi-administrador en personajes y baúles para evitar sobreescrituras simultáneas.\n• Auto-Kick Preventivo en RAM: Detección en tiempo real de jugadores online con desconexión segura previa para evitar desincronización del GameServer."
 }
 

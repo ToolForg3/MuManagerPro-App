@@ -47,20 +47,27 @@ const SETTINGS_FILE = path.join(__dirname, 'data', 'settings.json');
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const PRO_REQUESTS_FILE = path.join(__dirname, 'data', 'proRequests.json');
 const SECURITY_LOGS_FILE = path.join(__dirname, 'data', 'securityLogs.json');
-const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || 'MUMANAGER_PRO_SECURITY_SALT_2026_V1_SECRET_KEY';
+// [SEC-01] MASTER_SECURITY_SALT — NUNCA hardcodear. En producción es obligatorio.
+if (!process.env.MASTER_SECURITY_SALT) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('\x1b[31m[FATAL SECURITY] MASTER_SECURITY_SALT es obligatorio en producción. Configura la variable de entorno y reinicia.\x1b[0m');
+    process.exit(1);
+  } else {
+    console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT no configurada en desarrollo. Usando salt efímero aleatorio. Las licencias NO serán válidas entre reinicios.\x1b[0m');
+  }
+}
+const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || crypto.randomBytes(32).toString('hex');
 const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.5.1/MuManagerPro-v1.5.1.apk';
 
 // [H02/H05] Verificación de variables de entorno críticas al arranque del conector
 if (!process.env.JWT_SECRET) {
-  console.warn('\x1b[33m[⚠ SECURITY] JWT_SECRET env var no configurada en el conector. El secreto JWT está usando el fallback interno. Configura JWT_SECRET en producción.\x1b[0m');
+  console.warn('\x1b[33m[⚠ SECURITY] JWT_SECRET env var no configurada en el conector. Configura JWT_SECRET en producción.\x1b[0m');
 }
 if (!process.env.ADMIN_KEY) {
-  console.warn('\x1b[33m[⚠ SECURITY] ADMIN_KEY env var no configurada en el conector. Se usará la clave por defecto. Configura ADMIN_KEY en producción.\x1b[0m');
-}
-if (!process.env.MASTER_SECURITY_SALT) {
-  console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT env var no configurada en el conector. Usando salt interno. Configura MASTER_SECURITY_SALT en producción.\x1b[0m');
+  console.warn('\x1b[33m[⚠ SECURITY] ADMIN_KEY env var no configurada en el conector. Se usará la clave efímera aleatoria de desarrollo. Configura ADMIN_KEY en producción.\x1b[0m');
 }
 
+// [SEC-02] Clave admin efímera — aleatoria en cada arranque en DEV, nunca hardcodeada.
 let devEphemeralAdminKey = null;
 function getActiveAdminKey() {
   if (process.env.ADMIN_KEY && typeof process.env.ADMIN_KEY === 'string' && process.env.ADMIN_KEY.trim().length >= 8) {
@@ -76,7 +83,8 @@ function getActiveAdminKey() {
     return null; // En producción NUNCA permitir una clave administrativa por defecto
   }
   if (!devEphemeralAdminKey) {
-    devEphemeralAdminKey = 'MuAdmin2026!';
+    devEphemeralAdminKey = crypto.randomBytes(20).toString('hex');
+    console.warn(`\x1b[33m[DEV ADMIN KEY] Clave de administrador efímera para esta sesión: \x1b[1m${devEphemeralAdminKey}\x1b[0m\x1b[33m (válida solo hasta reiniciar)\x1b[0m`);
   }
   return devEphemeralAdminKey;
 }

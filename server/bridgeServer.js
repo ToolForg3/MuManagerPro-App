@@ -88,7 +88,16 @@ const USERS_FILE = path.join(BASE_DATA_DIR, 'users.json');
 const PRO_REQUESTS_FILE = path.join(BASE_DATA_DIR, 'proRequests.json');
 const SECURITY_LOGS_FILE = path.join(BASE_DATA_DIR, 'securityLogs.json');
 const TOMBSTONES_FILE = path.join(BASE_DATA_DIR, 'tombstones.json');
-const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || 'MUMANAGER_PRO_SECURITY_SALT_2026_V1_SECRET_KEY';
+// [SEC-01] MASTER_SECURITY_SALT — NUNCA hardcodear. En producción es obligatorio.
+if (!process.env.MASTER_SECURITY_SALT) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('\x1b[31m[FATAL SECURITY] MASTER_SECURITY_SALT es obligatorio en producción. Configura la variable de entorno y reinicia.\x1b[0m');
+    process.exit(1);
+  } else {
+    console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT no configurada en desarrollo. Usando salt efímero aleatorio. Las licencias generadas en esta sesión NO serán válidas entre reinicios.\x1b[0m');
+  }
+}
+const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || crypto.randomBytes(32).toString('hex');
 const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.5.1/MuManagerPro-v1.5.1.apk';
 
 // [H05/N03/H02] Verificación de variables de entorno críticas al arranque
@@ -96,12 +105,11 @@ if (!process.env.JWT_SECRET) {
   console.warn('\x1b[33m[⚠ SECURITY] JWT_SECRET env var no configurada. El secreto JWT está usando el fallback interno. Configura JWT_SECRET en producción.\x1b[0m');
 }
 if (!process.env.ADMIN_KEY) {
-  console.warn('\x1b[33m[⚠ SECURITY] ADMIN_KEY env var no configurada. Se usará la clave por defecto. Configura ADMIN_KEY en producción.\x1b[0m');
-}
-if (!process.env.MASTER_SECURITY_SALT) {
-  console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT env var no configurada. Usando salt interno. Configura MASTER_SECURITY_SALT en producción.\x1b[0m');
+  console.warn('\x1b[33m[⚠ SECURITY] ADMIN_KEY env var no configurada. Se usará la clave efímera aleatoria de desarrollo. Configura ADMIN_KEY en producción.\x1b[0m');
 }
 
+// [SEC-02] Clave admin efímera — se genera aleatoriamente en cada arranque del servidor en DEV.
+// En producción SIEMPRE se usa process.env.ADMIN_KEY y nunca hay fallback hardcodeado.
 let devEphemeralAdminKey = null;
 function getActiveAdminKey() {
   if (process.env.ADMIN_KEY && typeof process.env.ADMIN_KEY === 'string' && process.env.ADMIN_KEY.trim().length >= 8) {
@@ -117,7 +125,8 @@ function getActiveAdminKey() {
     return null; // En producción NUNCA permitir una clave administrativa por defecto
   }
   if (!devEphemeralAdminKey) {
-    devEphemeralAdminKey = 'MuAdmin2026!';
+    devEphemeralAdminKey = crypto.randomBytes(20).toString('hex'); // 40 chars hex — impredecible
+    console.warn(`\x1b[33m[DEV ADMIN KEY] Clave de administrador efímera para esta sesión: \x1b[1m${devEphemeralAdminKey}\x1b[0m\x1b[33m (válida solo hasta reiniciar el servidor)\x1b[0m`);
   }
   return devEphemeralAdminKey;
 }
@@ -845,6 +854,14 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  // [SEC-05] HSTS: fuerza HTTPS durante 1 año en producción
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  // Evita que el navegador filtre la URL de referencia a terceros
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Restringe APIs de navegador potencialmente peligrosas
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   if (req.path.startsWith('/admin') || req.path === '/' || req.path.endsWith('.html')) {
     res.setHeader(
       'Content-Security-Policy',
@@ -863,10 +880,38 @@ function getClientIp(req) {
   return req.socket ? (req.socket.remoteAddress || '127.0.0.1') : '127.0.0.1';
 }
 
-// Rate Limiting seguro en memoria (H28)
+// Rate Limiting global seguro en memoria (H28)
 const requestCounts = new Map();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 120;
+
+// [SEC-04] Rate limit estricto para endpoints de autenticación y activación de licencias
+// Previene ataques de fuerza bruta sobre login, registro y OTP
+const authRateCounts = new Map();
+const AUTH_RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutos
+const AUTH_MAX_ATTEMPTS = 5;
+
+function authRateLimitMiddleware(req, res, next) {
+  const clientIp = getClientIp(req);
+  const key = `auth:${clientIp}`;
+  const now = Date.now();
+  let record = authRateCounts.get(key);
+  if (!record || now - record.startTime > AUTH_RATE_WINDOW_MS) {
+    record = { count: 1, startTime: now };
+    authRateCounts.set(key, record);
+  } else {
+    record.count++;
+    if (record.count > AUTH_MAX_ATTEMPTS) {
+      const retryAfterSec = Math.ceil((AUTH_RATE_WINDOW_MS - (now - record.startTime)) / 1000);
+      res.set('Retry-After', String(retryAfterSec));
+      return res.status(429).json({
+        success: false,
+        error: `Demasiados intentos. Espera ${Math.ceil(retryAfterSec / 60)} minuto(s) antes de intentar nuevamente.`
+      });
+    }
+  }
+  next();
+}
 
 // Purga periódica de entradas expiradas para prevenir fugas de memoria
 if (typeof setInterval === 'function') {
@@ -875,6 +920,11 @@ if (typeof setInterval === 'function') {
     for (const [ip, record] of requestCounts.entries()) {
       if (now - record.startTime > RATE_LIMIT_WINDOW_MS * 2) {
         requestCounts.delete(ip);
+      }
+    }
+    for (const [key, record] of authRateCounts.entries()) {
+      if (now - record.startTime > AUTH_RATE_WINDOW_MS * 2) {
+        authRateCounts.delete(key);
       }
     }
   }, 5 * 60 * 1000);
@@ -1008,11 +1058,12 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
 });
 
 // BUG-17: Protección estricta de rutas administrativas /api/admin/*
+// [SEC-03] La clave admin SOLO se acepta en el header X-Admin-Key (nunca en el body para evitar logs)
 app.use('/api/admin', (req, res, next) => {
   if (req.path === '/storage/status') {
     return next();
   }
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key']; // [SEC-03] Header solamente, no body
   if (isValidAdminKey(adminKey)) {
     return next();
   }
@@ -1063,7 +1114,8 @@ app.use((req, res, next) => {
   }
 
   // 2. Validación de Clave Administrativa X-Admin-Key O Token de Sesión Firmado (H01, H02, H04, P05)
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  // [SEC-03] Admin key SOLO via header — nunca desde body (evita que quede en logs de proxies)
+  const adminKey = req.headers['x-admin-key'];
   let isAuthorized = false;
   let authUser = null;
 
@@ -6601,7 +6653,7 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 
 const emailVerificationStore = new Map(); // cleanEmail -> { code, expiresAt, attempts, createdAt }
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
   const { email, password, username, hwid } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
@@ -6615,8 +6667,8 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ success: false, error: 'El nombre de usuario debe tener al menos 3 caracteres.' });
   }
 
-  if (cleanPass.length < 4) {
-    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 4 caracteres.' });
+  if (cleanPass.length < 8) {
+    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres.' });
   }
 
   const users = loadUsers();
@@ -6823,7 +6875,7 @@ app.post('/api/auth/resend-verification', async (req, res) => {
 
 const failedLogins = new Map();
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
   const { email, username, password, hwid } = req.body;
   const rawIdentifier = username || email;
   if (!rawIdentifier || !password) {
@@ -7054,7 +7106,7 @@ async function sendEmailNotification({ to, subject, html, text }) {
 }
 
 // Solicitar código OTP para recuperación de contraseña
-app.post('/api/auth/forgot-password/request', async (req, res) => {
+app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, error: 'Correo electrónico requerido.' });
@@ -7194,8 +7246,8 @@ app.post('/api/auth/forgot-password/reset', (req, res) => {
   const cleanCode = String(code).trim();
   const cleanPass = String(newPassword).trim();
 
-  if (cleanPass.length < 4) {
-    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 4 caracteres.' });
+  if (cleanPass.length < 8) {
+    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
   }
 
   const record = passwordResetStore.get(cleanEmail);
@@ -7486,8 +7538,8 @@ app.post('/api/admin/user/create', (req, res) => {
   }
   const cleanEmail = String(email).trim().toLowerCase();
   const cleanPass = String(password).trim();
-  if (cleanPass.length < 4) {
-    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 4 caracteres' });
+  if (cleanPass.length < 8) {
+    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres' });
   }
   const users = loadUsers();
   if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
@@ -7513,8 +7565,8 @@ app.post('/api/admin/user/create', (req, res) => {
 // Modificar contraseña de usuario desde el panel
 app.post('/api/admin/user/reset-password', (req, res) => {
   const { id, email, newPassword } = req.body;
-  if (!newPassword || String(newPassword).trim().length < 4) {
-    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 4 caracteres' });
+  if (!newPassword || String(newPassword).trim().length < 8) {
+    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres' });
   }
   const users = loadUsers();
   const user = users.find(u => (id && u.id === id) || (email && u.email.toLowerCase() === String(email).toLowerCase()));
