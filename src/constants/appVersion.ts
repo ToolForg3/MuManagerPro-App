@@ -4,12 +4,12 @@ import * as Application from 'expo-application';
 export const APP_VERSION =
   Constants.expoConfig?.version ||
   Application.nativeApplicationVersion ||
-  '1.8.3';
+  '1.8.5';
 
 export const APP_BUILD =
   String(Constants.expoConfig?.android?.versionCode || '') ||
   Application.nativeBuildVersion ||
-  '85';
+  '87';
 
 export const APP_DISPLAY_VERSION = 'v' + APP_VERSION + ' (Build ' + APP_BUILD + ')';
 export const PRODUCED_BY = 'ToolForg3';

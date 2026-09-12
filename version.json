@@ -1,10 +1,10 @@
 {
-    "version": "1.8.4",
-    "minRequiredVersion": "1.8.4",
-    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.4",
-    "publishedAt": "2026-09-12T20:50:00.000Z",
+    "version": "1.8.5",
+    "minRequiredVersion": "1.8.5",
+    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.5",
+    "publishedAt": "2026-09-12T21:14:58.937Z",
     "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build": 86,
+    "build": 87,
     "forceUpdate": true,
-    "changelog": "MuManager PRO v1.8.4 (Build 86) - Actualización Oficial:\n• Monitoreo de Estado Online en Vivo: Píldora e indicador en cabecera que muestra en tiempo real si el personaje está [EN LÍNEA] o [OFFLINE].\n• Detección Automática sin Interferencia: Sondeo de estado cada 4s y botón de verificación instantánea sin recargar ni alterar inventario o datos.\n• Política de Seguridad Estricta: Bloqueo de guardado mientras el jugador está en el juego para prevenir sobreescrituras del GameServer RAM.\n• Corrección de Falso Online en S6/MSPro: Eliminación de lectura residual de GameIDC en MEMB_STAT.\n• Escudo Protector de Ranuras: Protección total de ítems modificados contra sobreescrituras de temporizadores."
+    "changelog": "MuManager PRO v1.8.5 (Build 87) - Actualización Oficial:\n• Blindaje Criptográfico de HWID: Identificador de hardware inmutable y permanente basado en constantes de placa base. Consistencia total a través de reinstalaciones y actualizaciones.\n• Panel de Control Zero-Flicker: Eliminación completa del parpadeo visual en Celulares, Licencias y Cuentas mediante actualizaciones quirúrgicas en el DOM.\n• Historial Permanente de Celulares: Módulo rediseñado con registro histórico estático sin saltos de filas al conectar o desconectar.\n• Control de Auto-Refresco: Interruptor manual para pausar o activar el refresco automático de 15 segundos en el panel web."
 }
