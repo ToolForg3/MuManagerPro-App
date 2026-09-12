@@ -2606,7 +2606,6 @@ app.post('/api/character/update-stats', async (req, res) => {
             VALUES (@CharName, ISNULL(@MasterLevel, 1), ISNULL(@MasterPoint, 0), 0);
           END
         END
-
         SELECT 1 AS CharacterFound;
       `);
     });
@@ -2621,26 +2620,29 @@ app.post('/api/character/update-stats', async (req, res) => {
   }
 });
 
+// Endpoint para actualizar Inventario del Personaje (Louis S6 & MSPro)
 app.post('/api/character/update-inventory', async (req, res) => {
   try {
-    const { charName, inventoryHex, config } = req.body;
+    const { charName, inventoryHex, forceOnline, config } = req.body;
     if (!sql) return res.status(500).json({ error: 'mssql package not installed' });
     if (!charName) return res.status(400).json({ success: false, error: 'Nombre de personaje requerido' });
 
-    // H06: Validar que inventoryHex sea un string hexadecimal válido
+    // Validar que inventoryHex sea un string hexadecimal válido
     if (!inventoryHex || typeof inventoryHex !== 'string' || !/^[0-9A-Fa-f]+$/.test(inventoryHex.trim())) {
       return res.status(400).json({ success: false, error: 'Inventario hexadecimal inválido o vacío' });
     }
 
     const cleanHex = inventoryHex.trim().toUpperCase();
 
-    // H06: Mínimo 76 slots (equipamiento + 64 slots de inventario base = 2432 hex) y múltiplo estricto de 32 hex (16 bytes por slot)
+    // Mínimo 76 slots (equipamiento + 64 slots de inventario base = 2432 hex) y múltiplo estricto de 32 hex (16 bytes por slot)
     if (cleanHex.length < 2432 || cleanHex.length % 32 !== 0) {
       return res.status(400).json({
         success: false,
         error: `Longitud de inventario inválida (${cleanHex.length} caracteres hex). Se requiere alineación exacta de slots de 32 caracteres hexadecimales (mínimo 2432 hex para 76 slots).`
       });
     }
+
+    const isForce = forceOnline === true || forceOnline === 1 || forceOnline === 'true';
 
     const result = await executeSql(config, async (pool) => {
       // Auto-expand Character.Inventory si es menor a 3776 bytes
@@ -2662,6 +2664,7 @@ app.post('/api/character/update-inventory', async (req, res) => {
       return await pool.request()
         .input('CharName', sql.VarChar, charName.trim())
         .input('InventoryHex', sql.VarChar, cleanHex)
+        .input('Force', sql.Int, isForce ? 1 : 0)
         .query(`
           DECLARE @Acc VARCHAR(20);
           SELECT TOP 1 @Acc = AccountID FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;
@@ -2672,8 +2675,8 @@ app.post('/api/character/update-inventory', async (req, res) => {
             RETURN;
           END
 
-          -- H06: Bloquear escritura si la cuenta está actualmente conectada en el juego
-          IF EXISTS (SELECT 1 FROM MEMB_STAT WHERE (LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc) AND ConnectStat = 1)
+          -- Bloquear escritura si la cuenta está actualmente conectada en el juego, a menos que @Force = 1
+          IF @Force = 0 AND EXISTS (SELECT 1 FROM MEMB_STAT WHERE (LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc) AND ConnectStat = 1)
           BEGIN
             SELECT 1 AS CharacterFound, 1 AS IsConnected;
             RETURN;
@@ -2682,6 +2685,12 @@ app.post('/api/character/update-inventory', async (req, res) => {
           UPDATE Character 
           SET Inventory = CONVERT(VARBINARY(MAX), @InventoryHex, 2)
           WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;
+
+          -- Si fue forzado, liberar ConnectStat a 0 para destrabar estado residual
+          IF @Force = 1
+          BEGIN
+            UPDATE MEMB_STAT SET ConnectStat = 0 WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
+          END
 
           SELECT 1 AS CharacterFound, 0 AS IsConnected;
         `);
@@ -2711,8 +2720,6 @@ app.post('/api/character/update-skills', async (req, res) => {
     const { charName, magicListHex, config } = req.body;
     if (!sql) return res.status(500).json({ error: 'mssql package not installed' });
     if (!charName) return res.status(400).json({ success: false, error: 'Nombre de personaje requerido' });
-
-    // Validar formato hexadecimal
     let cleanHex = (magicListHex || '').trim().toUpperCase().replace(/^0X/, '');
     if (!cleanHex || !/^[0-9A-F]+$/i.test(cleanHex)) {
       cleanHex = 'FFFF00'.repeat(60); // 180 bytes vacíos si viene vacío
@@ -3118,13 +3125,6 @@ app.post('/api/account/status', async (req, res) => {
                OR memb___id = @User;
           END
 
-          -- Doble confirmación con AccountCharacter.GameIDC (si ConnectStat quedó desfasado)
-          IF @IsOnline = 0 AND OBJECT_ID('AccountCharacter', 'U') IS NOT NULL
-          BEGIN
-            SELECT TOP 1 @IsOnline = CASE WHEN GameIDC IS NOT NULL AND LEN(LTRIM(RTRIM(GameIDC))) > 0 THEN 1 ELSE 0 END
-            FROM AccountCharacter
-            WHERE LOWER(LTRIM(RTRIM(Id))) = LOWER(LTRIM(RTRIM(@FoundAcc))) OR Id = @FoundAcc;
-          END
 
           SELECT @IsOnline AS ConnectStat, ISNULL(@FoundAcc, @User) AS AccountID;
         `);

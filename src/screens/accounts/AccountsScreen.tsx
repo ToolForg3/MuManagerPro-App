@@ -1436,21 +1436,13 @@ export const AccountsScreen = () => {
                 try {
                   await SqlClient.disconnectAccount(warehouseAccount);
                   await new Promise((r) => setTimeout(r, 1000));
-                  Alert.alert(
-                    'Traba SQL Liberada',
-                    'Se ha restablecido ConnectStat = 0 en la base de datos. Pídele al jugador que cierre el juego o salga antes de guardar el baúl.'
-                  );
+                  await doSaveVault(newHex);
                 } catch (e: any) {
                   Alert.alert('Error', e.message || 'Error al actualizar estado en SQL');
                 } finally {
                   setSavingWarehouse(false);
                 }
               },
-            },
-            {
-              text: 'Guardar de Todos Modos (Riesgo)',
-              style: 'destructive',
-              onPress: () => doSaveVault(newHex),
             },
           ]
         );

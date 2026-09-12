@@ -1,10 +1,10 @@
 {
-    "version": "1.8.3",
-    "minRequiredVersion": "1.8.3",
-    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.3",
-    "publishedAt": "2026-09-12T20:25:00.000Z",
+    "version": "1.8.4",
+    "minRequiredVersion": "1.8.4",
+    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.4",
+    "publishedAt": "2026-09-12T20:50:00.000Z",
     "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build": 85,
+    "build": 86,
     "forceUpdate": true,
-    "changelog": "MuManager PRO v1.8.3 (Build 85) - Actualización Oficial:\n• Eliminación Completa de Cuentas y Personajes: Compatible 100% con emuladores Louis Season 6 y MSPro Season 6.\n• Cascada de Claves Foráneas (FK): Limpieza automática y segura de CustomQuest, CustomNpcQuest, BattlePass y GuildMember.\n• Liberación de Slots AccountCharacter: Desvinculación atómica de GameID1..5 al eliminar personajes.\n• Purga Total de Cuentas: Eliminación integral de baúl principal, bóvedas expandidas, CashShop/Coins y credenciales en SQL Server.\n• Escudo Online Protector: Detección activa en GameServer para prevenir desincronizaciones de memoria RAM."
+    "changelog": "MuManager PRO v1.8.4 (Build 86) - Actualización Oficial:\n• Monitoreo de Estado Online en Vivo: Píldora e indicador en cabecera que muestra en tiempo real si el personaje está [EN LÍNEA] o [OFFLINE].\n• Detección Automática sin Interferencia: Sondeo de estado cada 4s y botón de verificación instantánea sin recargar ni alterar inventario o datos.\n• Política de Seguridad Estricta: Bloqueo de guardado mientras el jugador está en el juego para prevenir sobreescrituras del GameServer RAM.\n• Corrección de Falso Online en S6/MSPro: Eliminación de lectura residual de GameIDC en MEMB_STAT.\n• Escudo Protector de Ranuras: Protección total de ítems modificados contra sobreescrituras de temporizadores."
 }

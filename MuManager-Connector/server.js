@@ -2027,7 +2027,7 @@ app.post('/api/character/update-stats', async (req, res) => {
 
 app.post('/api/character/update-inventory', async (req, res) => {
   try {
-    const { charName, inventoryHex, config } = req.body;
+    const { charName, inventoryHex, forceOnline, config } = req.body;
     if (!sql) return res.status(500).json({ error: 'mssql package not installed' });
     if (!charName) return res.status(400).json({ success: false, error: 'Nombre de personaje requerido' });
 
@@ -2066,9 +2066,15 @@ app.post('/api/character/update-inventory', async (req, res) => {
       return await pool.request()
         .input('CharName', sql.VarChar, charName.trim())
         .input('InventoryHex', sql.VarChar, cleanHex)
+        .input('Force', sql.Int, (forceOnline === true || forceOnline === 1 || forceOnline === 'true') ? 1 : 0)
         .query(`
           DECLARE @Acc VARCHAR(20);
           SELECT TOP 1 @Acc = AccountID FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;
+
+          IF @Force = 1
+          BEGIN
+            UPDATE MEMB_STAT SET ConnectStat = 0 WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
+          END
 
           IF @Acc IS NULL
           BEGIN
@@ -2077,7 +2083,7 @@ app.post('/api/character/update-inventory', async (req, res) => {
           END
 
           -- H06: Bloquear escritura si la cuenta está actualmente conectada en el juego
-          IF EXISTS (SELECT 1 FROM MEMB_STAT WHERE (LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc) AND ConnectStat = 1)
+          IF @Force = 0 AND EXISTS (SELECT 1 FROM MEMB_STAT WHERE (LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc) AND ConnectStat = 1)
           BEGIN
             SELECT 1 AS CharacterFound, 1 AS IsConnected;
             RETURN;

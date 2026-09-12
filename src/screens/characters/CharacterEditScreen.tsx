@@ -108,6 +108,7 @@ export const CharacterEditScreen = () => {
 
   // Inventory parsed items & Equipment Picker
   const [parsedItems, setParsedItems] = useState<ParsedItem[]>([]);
+  const [hasUnsavedInventory, setHasUnsavedInventory] = useState(false);
   const [modalItem, setModalItem] = useState<ParsedItem | null>(null);
   const [modalSlot, setModalSlot] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState(false);
@@ -144,6 +145,34 @@ export const CharacterEditScreen = () => {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDeletingChar, setIsDeletingChar] = useState(false);
+  const [isCharacterOnline, setIsCharacterOnline] = useState<boolean>(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState<boolean>(false);
+
+  const checkLiveOnlineStatus = useCallback(async (silent: boolean = false) => {
+    const acc = (character?.AccountID || '').trim();
+    if (!acc && !charName) return;
+    if (!silent) setIsCheckingStatus(true);
+    try {
+      const online = await SqlClient.isAccountConnected(acc, charName);
+      setIsCharacterOnline(online);
+      if (character && character.ConnectStat !== (online ? 1 : 0)) {
+        setCharacter(prev => prev ? { ...prev, ConnectStat: online ? 1 : 0 } : prev);
+      }
+    } catch (err) {
+      console.warn('Error checking live status:', err);
+    } finally {
+      if (!silent) setIsCheckingStatus(false);
+    }
+  }, [character, charName]);
+
+  // Sondeo liviano del estado de conexión cada 4 segundos (sin recargar inventario ni inputs)
+  useEffect(() => {
+    if (!charName) return;
+    const interval = setInterval(() => {
+      checkLiveOnlineStatus(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [charName, checkLiveOnlineStatus]);
   const [editorLockWarning, setEditorLockWarning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -180,6 +209,7 @@ export const CharacterEditScreen = () => {
       const data = await SqlClient.getCharacterDetail(charName);
       if (data && data.Name) {
         setCharacter(data);
+        setIsCharacterOnline(data.ConnectStat === 1);
         if (!silent) {
           setStr(String(data.Strength));
           setAgi(String(data.Dexterity));
@@ -217,9 +247,21 @@ export const CharacterEditScreen = () => {
         }
 
         // Parse Inventory Hex
-        if (data.Inventory && (!silent || (!modalVisible && !pickerVisible && !actionModalVisible && !saving))) {
-          const items = MuItemParser.parseInventory(data.Inventory);
-          setParsedItems(items);
+        if (data.Inventory) {
+          if (!silent) {
+            const items = MuItemParser.parseInventory(data.Inventory);
+            setParsedItems(items);
+            setHasUnsavedInventory(false);
+          } else {
+            setParsedItems((currentItems) => {
+              const hasModifications = hasUnsavedInventory || currentItems.some(i => i.isModified);
+              if (hasModifications || modalVisible || pickerVisible || actionModalVisible || saving) {
+                // Proteger cambios locales no guardados: NO sobreescribir con SQL en refresco silencioso
+                return currentItems;
+              }
+              return MuItemParser.parseInventory(data.Inventory);
+            });
+          }
         }
 
         // Parse Skills Hex (MagicList)
@@ -294,18 +336,19 @@ export const CharacterEditScreen = () => {
     }
   };
 
-  // Auto-refresco en vivo del inventario y estado del personaje (cada 3.5 segundos)
+  // Auto-refresco en vivo del inventario y estado del personaje (cada 15 segundos)
   useEffect(() => {
     if (!charName || activeTab !== 'Inventario') return;
 
     const timer = setInterval(() => {
-      if (!modalVisible && !pickerVisible && !actionModalVisible && !saving && !isRefreshing) {
+      const hasUnsaved = hasUnsavedInventory || parsedItems.some(i => i.isModified);
+      if (!hasUnsaved && !modalVisible && !pickerVisible && !actionModalVisible && !saving && !isRefreshing) {
         loadCharacter(true);
       }
-    }, 3500);
+    }, 15000);
 
     return () => clearInterval(timer);
-  }, [charName, activeTab, modalVisible, pickerVisible, actionModalVisible, saving, isRefreshing]);
+  }, [charName, activeTab, modalVisible, pickerVisible, actionModalVisible, saving, isRefreshing, hasUnsavedInventory, parsedItems]);
 
   const [movingLocation, setMovingLocation] = useState(false);
 
@@ -316,7 +359,7 @@ export const CharacterEditScreen = () => {
    */
   const executeWithOnlineCheck = useCallback(async (
     actionName: string,
-    actionFn: () => Promise<void>
+    actionFn: (forceOnline?: boolean) => Promise<void>
   ) => {
     const accountId = (character?.AccountID || '').trim();
 
@@ -336,8 +379,8 @@ export const CharacterEditScreen = () => {
 
       if (isOnline) {
         Alert.alert(
-          'Personaje en Línea en el Juego',
-          `El personaje "${charName}" ${accountId ? `(Cuenta: "${accountId}")` : ''} está actualmente conectado al servidor.\n\n⚠️ AVISO TÉCNICO: Desde la conexión SQL directa no es posible cerrar la ventana de juego del usuario (la sesión activa vive en la memoria RAM del GameServer).\n\nSi guardas cambios mientras el jugador está dentro del juego, el GameServer SOBREESCRIBIRÁ tus modificaciones tan pronto como el jugador camine, cambie de mapa o desconecte.\n\n¿Cómo deseas proceder para ${actionName.toLowerCase()}?`,
+          'Desconexión Requerida para Guardar',
+          `El personaje "${charName}" ${accountId ? `(Cuenta: "${accountId}")` : ''} está actualmente CONECTADO en el servidor de juego.\n\n⚠️ BLOQUEO DE SEGURIDAD: Mientras el personaje esté dentro del juego, el GameServer controla los datos en la memoria RAM del GameServer y SOBREESCRIBIRÁ tus modificaciones tan pronto como el jugador camine, cambie de mapa o desconecte.\n\nPara guardar cambios en ${actionName.toLowerCase()}, el jugador debe salir a la pantalla de selección de personajes ("Cambiar de Personaje") o cerrar el juego.\n\n💡 Tus modificaciones permanecen intactas en la pantalla; no se perderán. Presiona "${actionName}" nuevamente en cuanto el jugador haya salido.`,
           [
             {
               text: 'Esperar a que salga',
@@ -353,23 +396,16 @@ export const CharacterEditScreen = () => {
                     if (character) {
                       setCharacter({ ...character, ConnectStat: 0 });
                     }
-                    Alert.alert(
-                      'Traba SQL Liberada',
-                      'Se ha restablecido ConnectStat = 0 en la base de datos (útil si el servidor se cayó o el jugador ya cerró el juego). Si el jugador sigue con el juego abierto, pídele que salga a la pantalla de personajes antes de guardar.'
-                    );
+                    // Si el jugador ya había cerrado el juego y era una traba zombi, guardar inmediatamente
+                    await actionFn(true);
                   } else {
                     Alert.alert('Aviso', discRes.message || 'No se pudo actualizar el estado en SQL.');
                   }
+                } catch (e: any) {
+                  Alert.alert('Error', e.message || 'Error al guardar tras liberar traba SQL.');
                 } finally {
                   setSaving(false);
                 }
-              },
-            },
-            {
-              text: 'Guardar de Todos Modos (Riesgo)',
-              style: 'destructive',
-              onPress: async () => {
-                await actionFn();
               },
             },
           ]
@@ -380,7 +416,7 @@ export const CharacterEditScreen = () => {
       console.warn('Error al verificar ConnectStat:', err);
     }
 
-    await actionFn();
+    await actionFn(false);
   }, [character, charName]);
 
   const doSaveStats = useCallback(async () => {
@@ -497,7 +533,7 @@ export const CharacterEditScreen = () => {
 
   const handleMoveToLorencia = () => handleSaveLocation(0, 125, 125);
 
-  const doSaveInventory = async () => {
+  const doSaveInventory = async (forceOnline: boolean = false) => {
     // Hallazgo 8: Impedir guardado si el personaje no está cargado
     if (!character || loadError) {
       Alert.alert('Error', 'No es posible guardar el inventario: el personaje no se cargó correctamente.');
@@ -521,10 +557,12 @@ export const CharacterEditScreen = () => {
     try {
       const targetSlots = INVENTORY_CONSTANTS.TOTAL_SEASON6_SLOTS;
       const newHex = MuItemParser.rebuildInventoryHex(parsedItems, targetSlots, character?.Inventory);
-      const res = await SqlClient.updateCharacterInventory(charName, newHex);
+      const res = await SqlClient.updateCharacterInventory(charName, newHex, forceOnline);
       if (res.success) {
         // Hallazgo 7: Actualizar la referencia original del inventario para futuras operaciones
-        setCharacter({ ...character, Inventory: newHex });
+        setParsedItems(prev => prev.map(item => ({ ...item, isModified: false })));
+        setHasUnsavedInventory(false);
+        setCharacter({ ...character, Inventory: newHex, ConnectStat: forceOnline ? 0 : character.ConnectStat });
         Alert.alert('Inventario', 'Los cambios en el inventario fueron guardados exitosamente.');
       } else {
         Alert.alert('Error', res.message);
@@ -570,6 +608,7 @@ export const CharacterEditScreen = () => {
             const storeStart = INVENTORY_CONSTANTS.STORE_INVENTORY_START;
             const storeEnd = storeStart + INVENTORY_CONSTANTS.STORE_INVENTORY_SLOTS;
             setParsedItems(prev => prev.filter(i => i.slot < storeStart || i.slot >= storeEnd));
+            setHasUnsavedInventory(true);
             Alert.alert(
               'Tienda Personal Vaciada',
               'Los 32 slots de la Tienda Personal han sido vaciados en la vista. Presiona "Guardar Inventario" para aplicar los cambios a SQL Server.'
@@ -767,6 +806,7 @@ export const CharacterEditScreen = () => {
     };
     const updated = [...parsedItems.filter((i) => i.slot !== slotIdx), newItem];
     setParsedItems(updated);
+    setHasUnsavedInventory(true);
 
     // Abrir automáticamente el editor para este nuevo ítem
     setTimeout(() => {
@@ -914,10 +954,12 @@ export const CharacterEditScreen = () => {
     const newItems = parsedItems.filter((i) => i.slot !== targetSlot && i.slot !== updated.slot);
     newItems.push(withModified);
     setParsedItems(newItems);
+    setHasUnsavedInventory(true);
   };
 
   const handleItemDelete = (slotIdx: number) => {
     setParsedItems(parsedItems.filter((i) => i.slot !== slotIdx));
+    setHasUnsavedInventory(true);
     Alert.alert('Eliminado', `El ítem en el slot #${slotIdx} ha sido removido.`);
   };
 
@@ -937,6 +979,7 @@ export const CharacterEditScreen = () => {
     };
     const nextItems = [...parsedItems.filter((i) => i.slot !== slotIndex), updated];
     setParsedItems(nextItems);
+    setHasUnsavedInventory(true);
     Alert.alert('Full Exc +15 Aplicado', `"${updated.name}" ahora es +15 +28 Full Exc. Presiona "Guardar Inventario" para sincronizar.`);
   };
 
@@ -960,6 +1003,7 @@ export const CharacterEditScreen = () => {
       isModified: true,
     };
     setParsedItems([...parsedItems, duplicated]);
+    setHasUnsavedInventory(true);
     Alert.alert('Ítem Duplicado', `"${duplicated.name}" duplicado al slot #${targetSlot}. Presiona "Guardar Inventario" para sincronizar.`);
   };
 
@@ -1146,7 +1190,32 @@ export const CharacterEditScreen = () => {
         <View style={styles.headerLeft}>
           <ClassAvatar classId={character?.Class || 0} size={42} showBadge={false} />
           <View style={styles.headerTextCol}>
-            <Text style={styles.headerName}>{character?.Name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+              <Text style={styles.headerName}>{character?.Name}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.headerStatusPill,
+                  isCharacterOnline ? styles.headerStatusPillOnline : styles.headerStatusPillOffline
+                ]}
+                activeOpacity={0.7}
+                onPress={() => checkLiveOnlineStatus(false)}
+              >
+                <View
+                  style={[
+                    styles.statusDot,
+                    { width: 7, height: 7, backgroundColor: isCharacterOnline ? '#FF5252' : '#00E676' }
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.headerStatusPillText,
+                    { color: isCharacterOnline ? '#FF5252' : '#00E676' }
+                  ]}
+                >
+                  {isCharacterOnline ? 'EN LÍNEA' : 'OFFLINE'}
+                </Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.headerClass}>
               {classInfo.name} • Lv {level} ({(character?.ResetCount ?? 0)}R)
             </Text>
@@ -1182,6 +1251,42 @@ export const CharacterEditScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Indicador de Estado de Conexión en Vivo (Online / Offline) */}
+      <TouchableOpacity
+        style={[
+          styles.connectionStatusBanner,
+          isCharacterOnline ? styles.connectionStatusOnline : styles.connectionStatusOffline
+        ]}
+        activeOpacity={0.7}
+        onPress={() => checkLiveOnlineStatus(false)}
+      >
+        <View
+          style={[
+            styles.statusDot,
+            { backgroundColor: isCharacterOnline ? '#FF5252' : '#00E676' }
+          ]}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.statusBannerTitle, { color: isCharacterOnline ? '#FF7043' : '#00E676' }]}>
+            {isCharacterOnline ? '🔴 PERSONAJE EN JUEGO (EN LÍNEA)' : '🟢 DESCONECTADO (OFFLINE) • SEGURO'}
+          </Text>
+          <Text style={styles.statusBannerSubtitle}>
+            {isCharacterOnline
+              ? 'El jugador está conectado. Pídele salir a "Cambiar de Personaje" para guardar. Toca para re-verificar.'
+              : 'El jugador está fuera del servidor. Puedes guardar cambios con total tranquilidad.'}
+          </Text>
+        </View>
+        {isCheckingStatus ? (
+          <ActivityIndicator size="small" color={isCharacterOnline ? '#FF7043' : '#00E676'} />
+        ) : (
+          <MaterialCommunityIcons
+            name={isCharacterOnline ? 'alert-circle-outline' : 'shield-check'}
+            size={20}
+            color={isCharacterOnline ? '#FF7043' : '#00E676'}
+          />
+        )}
+      </TouchableOpacity>
 
       {/* Banner de Aviso de Soft-Lock Colaborativo Multi-Admin */}
       {editorLockWarning ? (
@@ -3698,5 +3803,60 @@ const styles = StyleSheet.create({
     color: '#FFE082',
     fontSize: 11,
     fontWeight: '600',
+  },
+  connectionStatusBanner: {
+    marginHorizontal: 12,
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  connectionStatusOnline: {
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderColor: '#FF5252',
+  },
+  connectionStatusOffline: {
+    backgroundColor: 'rgba(0, 230, 118, 0.10)',
+    borderColor: '#00E676',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  statusBannerTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  statusBannerSubtitle: {
+    fontSize: 10,
+    color: '#AAA',
+    marginTop: 1,
+  },
+  headerStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 4,
+  },
+  headerStatusPillOnline: {
+    backgroundColor: 'rgba(255, 82, 82, 0.15)',
+    borderColor: '#FF5252',
+  },
+  headerStatusPillOffline: {
+    backgroundColor: 'rgba(0, 230, 118, 0.15)',
+    borderColor: '#00E676',
+  },
+  headerStatusPillText: {
+    fontSize: 9,
+    fontWeight: '800',
   },
 });

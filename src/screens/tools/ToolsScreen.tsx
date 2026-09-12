@@ -1301,21 +1301,13 @@ export const ToolsScreen = () => {
               try {
                 await SqlClient.disconnectAccount(acc);
                 await new Promise((r) => setTimeout(r, 1000));
-                Alert.alert(
-                  'Traba SQL Liberada',
-                  'Se ha restablecido ConnectStat = 0 en la base de datos. Pídele al jugador que cierre el juego o salga antes de entregar el kit.'
-                );
+                await doDeliverKit();
               } catch (err: any) {
                 Alert.alert('Error', err.message || 'Error al actualizar estado en SQL');
               } finally {
                 setDeliveringKit(false);
               }
             },
-          },
-          {
-            text: 'Entregar de Todos Modos (Riesgo)',
-            style: 'destructive',
-            onPress: () => doDeliverKit(),
           },
         ]
       );

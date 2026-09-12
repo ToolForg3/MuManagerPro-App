@@ -556,14 +556,15 @@ export class SqlClient {
    */
   static async updateCharacterInventory(
     charName: string,
-    inventoryHex: string
+    inventoryHex: string,
+    forceOnline: boolean = false
   ): Promise<{ success: boolean; message: string }> {
     const startTime = Date.now();
 
     try {
       const res = await this.sendSecureRequest(
         '/api/character/update-inventory',
-        { charName, inventoryHex, config: this.config },
+        { charName, inventoryHex, forceOnline, config: this.config },
         10000
       );
       const data = await this.safeJson(res);
