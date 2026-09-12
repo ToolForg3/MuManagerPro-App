@@ -36,7 +36,7 @@ export const InventoryGrid: React.FC<InventoryGridProps> = memo(({
     if (item.level >= 13) return THEME.colors.itemPlus15;
     if (item.option380) return THEME.colors.item380;
     if (item.harmonyType && item.harmonyType > 0) return THEME.colors.itemHarmony;
-    return '#FF8F00';
+    return THEME.colors.itemNormal;
   };
 
   // Mapeo de ocupación multi-slot
@@ -217,11 +217,11 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#080C14',
+    backgroundColor: THEME.colors.superficie,
     padding: 7,
-    borderRadius: 8,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1.5,
-    borderColor: '#222E42',
+    borderColor: THEME.colors.borde,
     alignSelf: 'center',
     elevation: 6,
     shadowColor: '#000',
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   movingBadge: {
     position: 'absolute',
     top: 2,
-    backgroundColor: '#FFD700',
+    backgroundColor: THEME.colors.oroClaro,
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   movingBadgeText: {
     fontSize: 7,
     fontWeight: '900',
-    color: '#070A0F',
+    color: THEME.colors.textoOscuro,
     letterSpacing: 0.4,
   },
   multiSlotCard: {

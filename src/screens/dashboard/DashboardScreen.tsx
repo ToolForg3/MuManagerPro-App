@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   },
   accountRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#161F2E',
+    borderBottomColor: THEME.colors.borde,
   },
   accountLeft: {
     flexDirection: 'row',
@@ -781,20 +781,17 @@ const styles = StyleSheet.create({
   accAvatar: {
     width: 34,
     height: 34,
-    borderRadius: 4,
-    backgroundColor: '#0D121B',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderTopColor: '#4C607A',
-    borderLeftColor: '#4C607A',
-    borderBottomColor: '#030508',
-    borderRightColor: '#030508',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
   },
   accountIdText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     letterSpacing: 0.4,
   },
   accStatusRow: {
@@ -835,7 +832,7 @@ const styles = StyleSheet.create({
   },
   emptyLogsText: {
     fontSize: 11,
-    color: '#6A7D96',
+    color: THEME.colors.textoSecundario,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
@@ -854,17 +851,17 @@ const styles = StyleSheet.create({
   logActionText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     letterSpacing: 0.4,
   },
   logTimeText: {
     fontSize: 10,
-    color: '#7D8DA5',
+    color: THEME.colors.textoSecundario,
     fontWeight: '700',
   },
   logDetailText: {
     fontSize: 11,
-    color: '#A0B0C8',
+    color: THEME.colors.textoSecundario,
     marginTop: 2,
     fontWeight: '600',
   },

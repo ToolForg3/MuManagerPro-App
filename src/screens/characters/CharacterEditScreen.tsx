@@ -1952,31 +1952,34 @@ export const CharacterEditScreen = () => {
               <Text style={styles.fieldLabel}>Nivel de PK / Estado:</Text>
               <View style={styles.pkPillRow}>
                 {[
-                  { level: 1, label: 'Héroe 2', color: '#1E88E5' },
-                  { level: 2, label: 'Héroe 1', color: '#42A5F5' },
-                  { level: 3, label: 'Común (3)', color: '#EEEEEE' },
-                  { level: 4, label: 'Warning (4)', color: '#FFA726' },
-                  { level: 5, label: 'Asesino (5)', color: '#E53935' },
-                  { level: 6, label: 'Phono (6)', color: '#B71C1C' },
-                ].map((pk) => (
-                  <TouchableOpacity
-                    key={pk.level}
-                    style={[
-                      styles.pkPill,
-                      pkLevel === pk.level && { backgroundColor: pk.color, borderColor: pk.color }
-                    ]}
-                    onPress={() => setPkLevel(pk.level)}
-                  >
-                    <Text
+                  { level: 1, label: 'Héroe 2', color: THEME.colors.arcano, bg: 'rgba(91, 141, 239, 0.2)' },
+                  { level: 2, label: 'Héroe 1', color: THEME.colors.arcano, bg: 'rgba(91, 141, 239, 0.2)' },
+                  { level: 3, label: 'Común (3)', color: THEME.colors.oroClaro, bg: 'rgba(232, 200, 106, 0.2)' },
+                  { level: 4, label: 'Warning (4)', color: THEME.colors.brasa, bg: 'rgba(226, 112, 58, 0.2)' },
+                  { level: 5, label: 'Asesino (5)', color: '#FF5252', bg: 'rgba(255, 82, 82, 0.2)' },
+                  { level: 6, label: 'Phono (6)', color: '#B71C1C', bg: 'rgba(183, 28, 28, 0.25)' },
+                ].map((pk) => {
+                  const isSelected = pkLevel === pk.level;
+                  return (
+                    <TouchableOpacity
+                      key={pk.level}
                       style={[
-                        styles.pkPillText,
-                        pkLevel === pk.level && { color: pk.level === 3 ? '#000' : '#FFF', fontWeight: 'bold' }
+                        styles.pkPill,
+                        isSelected && { backgroundColor: pk.bg, borderColor: pk.color, borderWidth: 1.5 }
                       ]}
+                      onPress={() => setPkLevel(pk.level)}
                     >
-                      {pk.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.pkPillText,
+                          isSelected && { color: pk.color, fontWeight: 'bold' }
+                        ]}
+                      >
+                        {pk.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
               <View style={styles.grid2}>
@@ -2172,11 +2175,11 @@ export const CharacterEditScreen = () => {
                   return (
                     <TouchableOpacity
                       key={key}
-                      style={[styles.raceChipBtn, { borderColor: p.color }]}
+                      style={styles.raceChipBtn}
                       onPress={() => handleQuickSendSkills(key)}
                     >
                       <MaterialCommunityIcons name={p.icon as any} size={14} color={p.color} />
-                      <Text style={[styles.raceChipText, { color: p.color }]}>{p.code}</Text>
+                      <Text style={styles.raceChipText}>{p.code}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -2869,10 +2872,10 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#0F1522',
-    borderRadius: 8,
-    borderWidth: 1.2,
-    borderColor: '#1E2B3E',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     padding: THEME.spacing.md,
     marginBottom: THEME.spacing.md,
     elevation: 4,
@@ -2884,7 +2887,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: THEME.spacing.md,
@@ -2900,28 +2903,28 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 11,
-    color: '#A0B0C8',
+    color: THEME.colors.textoSecundario,
     marginBottom: 4,
     fontWeight: '700',
     letterSpacing: 0.4,
   },
   fieldStaticVal: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: THEME.colors.texto,
     fontWeight: '800',
-    backgroundColor: '#090D14',
+    backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#1D283A',
+    borderColor: THEME.colors.borde,
   },
   fieldInput: {
-    backgroundColor: '#090D14',
-    color: '#FFFFFF',
-    borderWidth: 1.2,
-    borderColor: '#24344B',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    color: THEME.colors.texto,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 15,
@@ -2933,7 +2936,7 @@ const styles = StyleSheet.create({
   rankBadge: {
     paddingVertical: 8,
     paddingHorizontal: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     borderWidth: 1,
   },
@@ -2942,13 +2945,13 @@ const styles = StyleSheet.create({
     borderColor: '#FFA000',
   },
   rankPlayer: {
-    backgroundColor: '#090D14',
-    borderColor: '#1E2A3C',
+    backgroundColor: THEME.colors.casillaFondo,
+    borderColor: THEME.colors.borde,
   },
   rankBadgeText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: THEME.colors.texto,
   },
   bottomBtn: {
     marginVertical: THEME.spacing.md,
@@ -2968,23 +2971,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     gap: 5,
-    backgroundColor: '#0B0F17',
+    backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
-    borderColor: '#1E2A3C',
+    borderColor: THEME.colors.borde,
   },
   subTabPillActive: {
-    backgroundColor: '#C8960C',
-    borderColor: '#FFD700',
+    backgroundColor: THEME.colors.oro,
+    borderColor: THEME.colors.oroClaro,
   },
   subTabText: {
     fontSize: 11,
-    color: '#8293AB',
+    color: THEME.colors.textoSecundario,
     fontWeight: '700',
   },
   subTabTextActive: {
-    color: '#070A0F',
+    color: THEME.colors.textoOscuro,
     fontWeight: '900',
   },
   gridWrapper: {
@@ -2992,7 +2995,7 @@ const styles = StyleSheet.create({
   },
   gridHeaderTitle: {
     fontSize: 11,
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     fontWeight: '800',
     marginBottom: 8,
     letterSpacing: 1,
@@ -3002,16 +3005,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.border,
+    borderBottomColor: THEME.colors.borde,
   },
   questTitle: {
     fontSize: 13,
     fontWeight: THEME.typography.weightBold,
-    color: THEME.colors.textPrimary,
+    color: THEME.colors.texto,
   },
   questStatus: {
     fontSize: 11,
-    color: THEME.colors.accentGreenBright,
+    color: THEME.colors.jade,
     marginTop: 2,
   },
   sectionHeaderRow: {
@@ -3024,15 +3027,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
     borderWidth: 1,
-    borderColor: THEME.colors.accentGreenBright,
+    borderColor: THEME.colors.jade,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   quickPkBtnText: {
-    color: THEME.colors.accentGreenBright,
+    color: THEME.colors.jade,
     fontSize: 10,
     fontWeight: THEME.typography.weightBold,
   },
@@ -3044,15 +3047,15 @@ const styles = StyleSheet.create({
   stepperSmallBtn: {
     width: 32,
     height: 36,
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
-    borderRadius: THEME.borderRadius.sm,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperText: {
-    color: THEME.colors.textPrimary,
+    color: THEME.colors.oroClaro,
     fontSize: 16,
     fontWeight: THEME.typography.weightBold,
   },
@@ -3062,21 +3065,21 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   quickStepBtn: {
-    backgroundColor: '#222',
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: THEME.colors.borde,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   quickStepText: {
-    color: THEME.colors.textSecondary,
+    color: THEME.colors.textoSecundario,
     fontSize: 10,
     fontWeight: THEME.typography.weightBold,
   },
   divider: {
     height: 1,
-    backgroundColor: THEME.colors.border,
+    backgroundColor: THEME.colors.borde,
     marginVertical: 12,
   },
   pkPillRow: {
@@ -3088,18 +3091,18 @@ const styles = StyleSheet.create({
   pkPill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderColor: THEME.colors.borde,
   },
   pkPillText: {
     fontSize: 11,
-    color: THEME.colors.textSecondary,
+    color: THEME.colors.textoSecundario,
   },
   fieldSubtitle: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: THEME.colors.textoSecundario,
     marginBottom: 8,
   },
   raceScrollContainer: {
@@ -3109,20 +3112,20 @@ const styles = StyleSheet.create({
   raceChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
-    borderRadius: 20,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
   },
   raceChipActive: {
-    backgroundColor: 'rgba(255, 107, 0, 0.12)',
-    borderColor: THEME.colors.primaryOrange,
+    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    borderColor: THEME.colors.oroClaro,
   },
   raceChipText: {
-    color: THEME.colors.textSecondary,
+    color: THEME.colors.textoSecundario,
     fontSize: 12,
     fontWeight: THEME.typography.weightMedium,
   },
@@ -3136,15 +3139,15 @@ const styles = StyleSheet.create({
   classTierCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
-    borderRadius: THEME.borderRadius.sm,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 10,
   },
   classTierCardActive: {
-    borderColor: THEME.colors.primaryOrange,
-    backgroundColor: 'rgba(255, 107, 0, 0.08)',
+    borderColor: THEME.colors.oroClaro,
+    backgroundColor: 'rgba(232, 200, 106, 0.15)',
   },
   classTierName: {
     color: THEME.colors.textPrimary,
@@ -3303,11 +3306,12 @@ const styles = StyleSheet.create({
   raceChipBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
+    borderColor: THEME.colors.borde,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: THEME.shapes.radioEsquina,
     gap: 6,
   },
   emptySkillsContainer: {
@@ -3497,10 +3501,10 @@ const styles = StyleSheet.create({
   // ESTILOS CLÁSICOS MU ONLINE SEASON 6 (CAPTURAS)
   // ==========================================
   muCharWindow: {
-    backgroundColor: '#070A0F',
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: '#C5A059',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     padding: 12,
     marginBottom: 16,
     elevation: 6,
@@ -3514,13 +3518,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#263345',
+    borderBottomColor: THEME.colors.borde,
     marginBottom: 10,
   },
   muCharName: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: THEME.colors.oroClaro,
+    fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.8,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 1, height: 1 },
@@ -3529,7 +3534,7 @@ const styles = StyleSheet.create({
   muCharClass: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#FFD700',
+    color: THEME.colors.brasa,
     marginTop: 2,
   },
   muLevelRow: {
@@ -3538,36 +3543,33 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#1A2333',
+    borderBottomColor: THEME.colors.borde,
     marginBottom: 10,
   },
   muLevelText: {
     fontSize: 11,
-    color: '#FFD700',
+    color: THEME.colors.textoSecundario,
     fontWeight: '800',
     lineHeight: 18,
   },
   muYellowVal: {
-    color: '#FFE066',
+    color: THEME.colors.oroClaro,
     fontWeight: '900',
   },
   muStonePlusBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 2,
-    backgroundColor: '#161D29',
-    borderWidth: 1.5,
-    borderTopColor: '#53647C',
-    borderLeftColor: '#53647C',
-    borderBottomColor: '#05080E',
-    borderRightColor: '#05080E',
+    width: 32,
+    height: 32,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
   },
   muStonePlusText: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     marginTop: -2,
   },
   muStatSection: {
@@ -3584,25 +3586,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     height: 36,
-    borderRadius: 3,
-    backgroundColor: '#04060A',
-    borderWidth: 1.5,
-    borderTopColor: '#45556D',
-    borderLeftColor: '#45556D',
-    borderBottomColor: '#030508',
-    borderRightColor: '#030508',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     paddingHorizontal: 12,
   },
   muStatLabel: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     letterSpacing: 0.8,
   },
   muStatInput: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.texto,
     textAlign: 'right',
     minWidth: 80,
     paddingVertical: 0,
@@ -3615,13 +3614,13 @@ const styles = StyleSheet.create({
   muCyanSubText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#00D2FF',
+    color: THEME.colors.arcano,
     letterSpacing: 0.3,
   },
   muWhiteSubText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#E0E8F5',
+    color: THEME.colors.textoSecundario,
     letterSpacing: 0.3,
   },
   muZenRowWrap: {
@@ -3634,10 +3633,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#04060A',
-    borderRadius: 3,
-    borderWidth: 1.5,
-    borderColor: '#C5A059',
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     paddingHorizontal: 8,
     height: 36,
   },
@@ -3662,30 +3661,30 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#263345',
+    borderTopColor: THEME.colors.borde,
   },
   muFooterBtn: {
     width: 38,
     height: 38,
-    borderRadius: 2,
-    backgroundColor: '#121824',
-    borderWidth: 1.5,
-    borderColor: '#C5A059',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
   },
   muFooterBtnGoldText: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
   },
   muFooterBtnSave: {
     flex: 1,
     height: 38,
-    borderRadius: 2,
-    backgroundColor: '#FFD700',
-    borderWidth: 1.5,
-    borderColor: '#FFF2A8',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.oro,
+    borderWidth: 1,
+    borderColor: THEME.colors.oroClaro,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -3694,21 +3693,21 @@ const styles = StyleSheet.create({
   muFooterBtnSaveText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#000000',
+    color: THEME.colors.textoOscuro,
     letterSpacing: 0.6,
   },
   muSkillBarContainer: {
-    backgroundColor: '#070A0F',
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: '#C5A059',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     padding: 10,
     marginBottom: 12,
   },
   muSkillBarTitle: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#FFD700',
+    color: THEME.colors.oroClaro,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
@@ -3720,24 +3719,17 @@ const styles = StyleSheet.create({
   muSkillSlotFrame: {
     width: 42,
     height: 42,
-    borderRadius: 2,
-    backgroundColor: '#090C12',
-    borderWidth: 1.5,
-    borderTopColor: '#45556D',
-    borderLeftColor: '#45556D',
-    borderBottomColor: '#030508',
-    borderRightColor: '#030508',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   muSkillSlotSelected: {
-    borderColor: '#FFC107',
-    borderTopColor: '#FFE082',
-    borderLeftColor: '#FFE082',
-    borderBottomColor: '#FF8F00',
-    borderRightColor: '#FF8F00',
-    shadowColor: '#FFC107',
+    borderColor: THEME.colors.oroClaro,
+    shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 5,
@@ -3746,7 +3738,7 @@ const styles = StyleSheet.create({
   muSkillSlotEmpty: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#040609',
+    backgroundColor: THEME.colors.casillaFondo,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3754,7 +3746,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderWidth: 1,
-    borderColor: '#18202B',
+    borderColor: THEME.colors.borde,
   },
   muInvZenRow: {
     flexDirection: 'row',

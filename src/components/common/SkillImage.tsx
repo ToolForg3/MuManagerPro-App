@@ -3,6 +3,7 @@ import { View, Image, StyleSheet, StyleProp, ImageStyle, ViewStyle } from 'react
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SqlClient } from '../../services/database/sqlClient';
 import { getSkillById } from '../../constants/muSkills';
+import { THEME } from '../../constants/theme';
 
 interface SkillImageProps {
   skillId: number;
@@ -41,25 +42,21 @@ export const SkillImage: React.FC<SkillImageProps> = ({
   const fallbackIcon = (skillDef?.icon || 'star') as any;
 
   // Frame colors based on skill category
-  let borderColor = '#5A6578';
-  let bgColor = '#0F131A';
+  let borderColor = THEME.colors.borde;
+  let bgColor = THEME.colors.casillaFondo;
   if (skillDef?.category === 'Magia') {
-    borderColor = '#42A5F5';
-    bgColor = '#091322';
+    borderColor = THEME.colors.arcano;
   } else if (skillDef?.category === 'Buff') {
-    borderColor = '#66BB6A';
-    bgColor = '#0E1F14';
+    borderColor = THEME.colors.jade;
   } else if (skillDef?.category === 'Invocación') {
-    borderColor = '#AB47BC';
-    bgColor = '#1C0D20';
+    borderColor = THEME.colors.oroClaro;
   } else if (skillDef?.category === 'Especial') {
-    borderColor = '#FFB700';
-    bgColor = '#1F1707';
+    borderColor = THEME.colors.brasa;
   }
 
   // Si está seleccionado (como en la barra de MU Online), resaltar con marco dorado brillante
   if (isSelected) {
-    borderColor = '#FFC107';
+    borderColor = THEME.colors.oroClaro;
   }
 
   const imageUrl = getSkillImageUrl(skillId);
@@ -115,25 +112,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 3,
     elevation: 4,
-    borderTopColor: '#535F74',
-    borderLeftColor: '#535F74',
-    borderBottomColor: '#0A0E15',
-    borderRightColor: '#0A0E15',
+    borderRadius: THEME.shapes.radioEsquina,
+    borderColor: THEME.colors.borde,
+    backgroundColor: THEME.colors.casillaFondo,
   },
   selectedGlow: {
-    borderColor: '#FFC107',
-    borderTopColor: '#FFE082',
-    borderLeftColor: '#FFE082',
-    borderBottomColor: '#FF8F00',
-    borderRightColor: '#FF8F00',
-    shadowColor: '#FFC107',
+    borderColor: THEME.colors.oroClaro,
+    shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
     shadowRadius: 6,
     elevation: 8,
   },
   image: {
-    backgroundColor: '#000000',
+    backgroundColor: THEME.colors.casillaFondo,
   },
   fallbackWrapper: {
     justifyContent: 'center',

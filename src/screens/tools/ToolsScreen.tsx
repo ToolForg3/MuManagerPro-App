@@ -5456,9 +5456,9 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFF' }}>
                     Jugadores Conectados ({playersList.length})
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#064E3B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: '#059669' }}>
-                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#10B981' }} />
-                    <Text style={{ fontSize: 11, color: '#34D399', fontWeight: 'bold' }}>Auto-sync (5s)</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(63, 207, 142, 0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.jade }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: THEME.colors.jade }} />
+                    <Text style={{ fontSize: 11, color: THEME.colors.jade, fontWeight: 'bold' }}>Auto-sync (5s)</Text>
                   </View>
                 </View>
 
@@ -6866,23 +6866,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#181820',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
-    borderColor: '#2A2A35',
+    borderColor: THEME.colors.borde,
     gap: 6,
   },
   itemPillActive: {
-    borderColor: '#FF9800',
-    backgroundColor: 'rgba(255, 152, 0, 0.15)',
+    borderColor: THEME.colors.bordeBrillante,
+    backgroundColor: 'rgba(232, 200, 106, 0.15)',
   },
   itemPillText: {
     fontSize: 12,
-    color: '#CCC',
+    color: THEME.colors.textoSecundario,
     maxWidth: 120,
   },
   itemPillTextActive: {
-    color: '#FF9800',
+    color: THEME.colors.oroClaro,
     fontWeight: 'bold',
   },
   previewCard: {
@@ -6961,7 +6961,7 @@ const styles = StyleSheet.create({
   },
   controlLabel: {
     fontSize: 12,
-    color: '#DDD',
+    color: THEME.colors.texto,
   },
   counterWrap: {
     flexDirection: 'row',
@@ -6969,20 +6969,22 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   counterBtn: {
-    backgroundColor: '#333',
+    backgroundColor: THEME.colors.superficie,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     width: 32,
     height: 32,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     justifyContent: 'center',
     alignItems: 'center',
   },
   counterBtnText: {
-    color: '#FFF',
+    color: THEME.colors.oroClaro,
     fontSize: 14,
     fontWeight: 'bold',
   },
   counterValue: {
-    color: '#FFF',
+    color: THEME.colors.texto,
     fontSize: 14,
     fontWeight: 'bold',
     minWidth: 34,
@@ -6995,15 +6997,15 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   excQuickBtn: {
-    backgroundColor: '#262630',
+    backgroundColor: THEME.colors.superficie,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: THEME.colors.borde,
   },
   excQuickBtnText: {
-    color: '#FF9800',
+    color: THEME.colors.oroClaro,
     fontSize: 10,
     fontWeight: 'bold',
   },
@@ -7016,26 +7018,26 @@ const styles = StyleSheet.create({
   excChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14141A',
+    backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#2C2C38',
+    borderColor: THEME.colors.borde,
     gap: 6,
     width: '48%',
   },
   excChipActive: {
-    borderColor: '#00E676',
-    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    borderColor: THEME.colors.jade,
+    backgroundColor: 'rgba(63, 207, 142, 0.12)',
   },
   excChipText: {
     fontSize: 11,
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     flex: 1,
   },
   excChipTextActive: {
-    color: '#3FCF8E',
+    color: THEME.colors.jade,
     fontWeight: '700',
   },
   socketRow: {

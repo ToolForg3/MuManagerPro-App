@@ -1,10 +1,10 @@
 {
-    "version": "1.8.5",
-    "minRequiredVersion": "1.8.5",
-    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.5",
-    "publishedAt": "2026-09-12T21:14:58.937Z",
+    "version": "1.8.6",
+    "minRequiredVersion": "1.8.6",
+    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.6",
+    "publishedAt": "2026-09-12T21:30:10.741Z",
     "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build": 87,
+    "build": 88,
     "forceUpdate": true,
-    "changelog": "MuManager PRO v1.8.5 (Build 87) - Actualización Oficial:\n• Blindaje Criptográfico de HWID: Identificador de hardware inmutable y permanente basado en constantes de placa base. Consistencia total a través de reinstalaciones y actualizaciones.\n• Panel de Control Zero-Flicker: Eliminación completa del parpadeo visual en Celulares, Licencias y Cuentas mediante actualizaciones quirúrgicas en el DOM.\n• Historial Permanente de Celulares: Módulo rediseñado con registro histórico estático sin saltos de filas al conectar o desconectar.\n• Control de Auto-Refresco: Interruptor manual para pausar o activar el refresco automático de 15 segundos en el panel web."
+    "changelog": "MuManager PRO v1.8.6 (Build 88) - Actualización Oficial:\n• Purga y Unificación Visual Total: Migración completa de todas las pantallas al Sistema Oficial Season 6 Piedra y Oro (#191512, #2B2521, #6B5533, #A8894D, #E8C86A).\n• CharacterEditScreen Renovado: Pestañas de Stats, Progreso, Skills y Quest sin remanentes azules ni biseles pizarra. Rediseño medieval del selector de estado PK eliminando el botón blanco plano.\n• Baúl / Warehouse Unificado: Purgados estilos azul marino y adaptados al marco noble de piedra grabada.\n• Componentes e Inventario: Marcos de InventoryGrid, SkillImage y avatares de Dashboard sincronizados con el radio de esquina estricto de 6px y tokens canónicos."
 }
