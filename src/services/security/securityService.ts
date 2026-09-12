@@ -132,15 +132,18 @@ export class SecurityService {
       }
     }
 
-    // 2. Collect fallback physical device traits (orientation-agnostic dimensions)
-    const { width, height, scale } = Dimensions.get('screen');
-    const [minDim, maxDim] = [Math.round(width || 0), Math.round(height || 0)].sort((a, b) => a - b);
-    const os = Platform.OS;
-    const version = String(Platform.Version || '1.0');
-    const fallbackSeed = `${os}-${version}-${minDim}x${maxDim}-${scale || 1}`;
+    // 2. Collect permanent, immutable physical motherboard traits from system Build properties
+    const c: any = Platform.constants || {};
+    const brand = String(c.Brand || c.brand || Platform.OS).trim().toLowerCase();
+    const model = String(c.Model || c.model || 'device').trim().toLowerCase();
+    const manufacturer = String(c.Manufacturer || c.manufacturer || '').trim().toLowerCase();
+    const hardware = String(c.Hardware || c.hardware || '').trim().toLowerCase();
+    const board = String(c.Board || c.board || '').trim().toLowerCase();
+    const fingerprint = String(c.Fingerprint || c.fingerprint || '').trim().toLowerCase();
+    const hardwareSeed = `${Platform.OS}-${brand}-${model}-${manufacturer}-${hardware}-${board}-${fingerprint}`;
 
     // 3. Cryptographically hash the unique mobile hardware signature with the master salt
-    const mobileEntropy = `MOBILE_PHONE_HW_${androidId || fallbackSeed}_${MASTER_SECURITY_SALT}`;
+    const mobileEntropy = `MOBILE_PHONE_HW_${androidId || hardwareSeed}_${MASTER_SECURITY_SALT}`;
     const hash = sha256(mobileEntropy).toUpperCase();
 
     // 4. Format clean, friendly cell phone code: CEL-XXXX-XXXX-XXXX

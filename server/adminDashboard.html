@@ -1226,6 +1226,7 @@
         <span id="bridge-status">Pasarela Sincronizada</span>
       </div>
       <button class="btn btn-green btn-sm" onclick="forceSyncNow()" title="Sincronizar y verificar estado inmediatamente">🔄 Sincronizar Ahora</button>
+      <button class="btn btn-dark btn-sm" id="btn-toggle-autorefresh" onclick="toggleAutoRefresh()" title="Pausar o reanudar el auto-refresco en segundo plano">⏸️ Auto (15s)</button>
       <button class="btn btn-dark btn-sm" onclick="downloadBackupJSON()" title="Descargar copia de seguridad en JSON de usuarios y dispositivos">💾 Backup</button>
       <button class="btn btn-dark btn-sm" onclick="openChangeAdminKeyModal()" title="Cambiar la clave maestra de acceso al panel">🔑 Clave Maestra</button>
       <button class="btn btn-dark btn-sm" onclick="logoutAdmin()">🔒 Salir</button>
@@ -1371,7 +1372,7 @@
 
     <!-- Submódulos Módulo 1: Celulares & Licencias -->
     <div class="submodule-group" id="subgroup-mod-devices" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; align-items: center;">
-      <button class="submodule-pill active" data-tab="tab-devices" onclick="switchTab('tab-devices')">📱 Celulares Conectados</button>
+      <button class="submodule-pill active" data-tab="tab-devices" onclick="switchTab('tab-devices')">📱 Historial de Celulares</button>
       <button class="submodule-pill" data-tab="tab-all-licenses" onclick="switchTab('tab-all-licenses')">📋 Licencias Emitidas & Exclusiones</button>
       <button class="submodule-pill" data-tab="tab-keygen" onclick="switchTab('tab-keygen')">🔑 Generador Licencias PRO</button>
       <button class="submodule-pill" data-tab="tab-pro-requests" onclick="switchTab('tab-pro-requests')">⭐ Solicitudes PRO <span id="pro-badge" class="badge" style="background:#FF5722; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
@@ -1410,9 +1411,9 @@
     <div class="main-section">
       <div class="section-header">
         <div class="section-title" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          📱 Celulares Registrados
+          📱 Historial Permanente de Celulares Registrados
           <span class="badge" style="background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
-            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #00E676; margin-right: 4px;"></span>En Vivo (Auto-sync 3s)
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #00E676; margin-right: 4px;"></span>Registro Histórico (En Vivo)
           </span>
           <span id="storage-status-badge" class="badge" style="background: rgba(33, 150, 243, 0.15); color: #64B5F6; border: 1px solid rgba(33, 150, 243, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600; cursor: pointer;" onclick="openCloudStorageModal()" title="Ver estado del Backend y Base de Datos">
             ☁️ Backend: Verificando...
@@ -1425,14 +1426,17 @@
       <!-- Subtabs: Clientes vs Pruebas & Acciones Rápidas -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; flex-wrap: wrap;">
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button id="view-btn-clients" class="btn btn-dark active" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('clients')">
-            📱 Celulares de Clientes <span id="count-clients" class="badge" style="background: rgba(0, 230, 118, 0.2); color: #00E676; margin-left: 6px; font-weight: 700;">0</span>
+          <button id="view-btn-all" class="btn btn-dark active" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('all')">
+            🌐 Historial Completo <span id="count-all" class="badge" style="background: rgba(255, 255, 255, 0.15); color: #FFF; margin-left: 6px; font-weight: 700;">0</span>
+          </button>
+          <button id="view-btn-online" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('online')">
+            🟢 Conectados Ahora <span id="count-online" class="badge" style="background: rgba(0, 230, 118, 0.2); color: #00E676; margin-left: 6px; font-weight: 700;">0</span>
+          </button>
+          <button id="view-btn-clients" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('clients')">
+            👤 Clientes Reales <span id="count-clients" class="badge" style="background: rgba(41, 182, 246, 0.2); color: #29B6F6; margin-left: 6px; font-weight: 700;">0</span>
           </button>
           <button id="view-btn-tests" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('tests')">
             🧪 Pruebas & Tests <span id="count-tests" class="badge" style="background: rgba(255, 152, 0, 0.2); color: #FFB74D; margin-left: 6px; font-weight: 700;">0</span>
-          </button>
-          <button id="view-btn-all" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('all')">
-            🌐 Todos <span id="count-all" class="badge" style="background: rgba(255, 255, 255, 0.1); color: #FFF; margin-left: 6px; font-weight: 700;">0</span>
           </button>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -2670,10 +2674,12 @@
         tbody.innerHTML = '';
       }
 
-      // Orden determinista
+      // Orden determinista y ESTÁTICO (por fecha de registro o usuario, sin saltos por online/offline)
       const sorted = [...list].sort((a, b) => {
-        if (b.isOnline !== a.isOnline) return b.isOnline ? 1 : -1;
-        return (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0);
+        const timeA = Date.parse(a.createdAt) || 0;
+        const timeB = Date.parse(b.createdAt) || 0;
+        if (timeB !== timeA) return timeB - timeA;
+        return String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''));
       });
 
       const activeUserIds = new Set();
@@ -3035,11 +3041,11 @@
       }
     }
 
-    let currentDeviceView = 'clients';
+    let currentDeviceView = 'all';
 
     function setDeviceView(view) {
       currentDeviceView = view;
-      ['clients', 'tests', 'all'].forEach(v => {
+      ['all', 'online', 'clients', 'tests'].forEach(v => {
         const b = document.getElementById(`view-btn-${v}`);
         if (b) {
           if (v === view) b.classList.add('active');
@@ -3110,7 +3116,6 @@
         dev.mode || '',
         dev.blocked ? '1' : '0',
         isExpired ? '1' : '0',
-        dev.isOnline ? '1' : '0',
         dev.currentUser || '',
         dev.note || '',
         dev.isEmulator ? '1' : '0',
@@ -3120,9 +3125,7 @@
         dev.country || '',
         dev.city || '',
         dev.expiresAt || '',
-        dev.timeRemainingFormatted || '',
-        dev.daysRemaining !== undefined ? dev.daysRemaining : '',
-        dev.totalPings || 1
+        dev.licenseKey || ''
       ].join('§');
     }
 
@@ -3163,7 +3166,7 @@
                 📅 ${expDate.toLocaleDateString()} ${expDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                 <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px;" data-action="expiration" title="Modificar vigencia o convertir a vitalicio">✏️</button>
                </div>
-               <div style="font-size:11px; margin-top:2px;"><span class="badge" style="background:rgba(0,230,118,0.15); color:#00E676; border:1px solid rgba(0,230,118,0.3); padding:1px 6px; font-weight:700;">⏱️ ${remainingStr}</span></div>`;
+               <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(0,230,118,0.15); color:#00E676; border:1px solid rgba(0,230,118,0.3); padding:1px 6px; font-weight:700;">⏱️ ${remainingStr}</span></div>`;
         } else {
           expText = `<span style="display:inline-flex; align-items:center; gap:4px; color:#00E676; font-weight:800; font-size:11px; background:rgba(0,230,118,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(0,230,118,0.3);">
             ♾️ VITALICIA
@@ -3178,15 +3181,16 @@
           expText = isPast 
             ? '<span style="color:#FF5252; font-weight:700;">⛔ Prueba Vencida</span>' 
             : `<div style="color:#FFB300; font-weight:700; font-size:12px;">⏳ ${expDate.toLocaleDateString()} ${expDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-               <div style="font-size:11px; margin-top:2px;"><span class="badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid rgba(255,179,0,0.3); padding:1px 6px; font-weight:700;">⚡ Restan: ${remainingStr}</span></div>`;
+               <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid rgba(255,179,0,0.3); padding:1px 6px; font-weight:700;">⚡ Restan: ${remainingStr}</span></div>`;
         } else {
           expText = '<span style="color:#FFB300;">Prueba Ilimitada</span>';
         }
       }
 
-      const onlineBadge = isOnline 
-        ? `<div style="display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#00E676; box-shadow:0 0 6px #00E676;"></span><strong style="color:#00E676; font-size:11px;">EN LÍNEA AHORA</strong></div>`
-        : `<div style="display:flex; align-items:center; gap:5px; margin-top:5px;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#666;"></span><span style="color:#777; font-size:11px;">Desconectado</span></div>`;
+      const onlineBadge = `<div class="dev-online-indicator" data-online="${isOnline ? '1' : '0'}" style="display:flex; align-items:center; gap:5px; margin-top:5px;">${isOnline 
+        ? '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#00E676; box-shadow:0 0 6px #00E676;"></span><strong style="color:#00E676; font-size:11px;">EN LÍNEA AHORA</strong>'
+        : '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#666;"></span><span style="color:#777; font-size:11px;">Desconectado</span>'
+      }</div>`;
 
       return `
         <td>
@@ -3225,7 +3229,7 @@
           </div>
           <small style="color: #777;">IP: ${safeIp}</small>
         </td>
-        <td>v${safeAppVersion}<br><small style="color:#666;">${dev.totalPings || 1} pings</small></td>
+        <td>v${safeAppVersion}<br><small style="color:#666;" class="dev-pings-text">${dev.totalPings || 1} pings</small></td>
         <td>
           <div style="font-weight: 700; font-size: 12px; color: ${isExpired ? '#FF5252' : (dev.mode === 'PRO' ? '#00E676' : '#FFB300')};">
             ${expText}
@@ -3263,11 +3267,13 @@
 
       let countClients = 0;
       let countTests = 0;
+      let countOnline = 0;
       let countAll = list.length;
 
       list.forEach(d => {
         if (d.isTest) countTests++;
         else countClients++;
+        if (d.isOnline) countOnline++;
 
         const isExp = d.expiresAt && new Date(d.expiresAt) < new Date();
         if (d.blocked || isExp) blocked++;
@@ -3281,6 +3287,7 @@
       updateTextIfDifferent('metric-blocked', blocked);
       updateTextIfDifferent('count-clients', countClients);
       updateTextIfDifferent('count-tests', countTests);
+      updateTextIfDifferent('count-online', countOnline);
       updateTextIfDifferent('count-all', countAll);
 
       let displayList = list;
@@ -3288,17 +3295,21 @@
         displayList = list.filter(d => !d.isTest);
       } else if (currentDeviceView === 'tests') {
         displayList = list.filter(d => !!d.isTest);
+      } else if (currentDeviceView === 'online') {
+        displayList = list.filter(d => !!d.isOnline);
       }
 
       const tbody = document.getElementById('devices-body');
       if (!tbody) return;
 
       if (displayList.length === 0) {
-        let emptyMsg = 'Aún no hay celulares registrados.';
+        let emptyMsg = 'Aún no hay celulares registrados en el historial.';
         if (currentDeviceView === 'tests') {
           emptyMsg = '🎉 No hay dispositivos de prueba registrados. ¡Tu lista de tests está limpia!';
         } else if (currentDeviceView === 'clients') {
           emptyMsg = 'No hay celulares de clientes registrados en este momento.';
+        } else if (currentDeviceView === 'online') {
+          emptyMsg = 'No hay celulares conectados activamente en este instante.';
         }
         if (!tbody.querySelector('.empty-devices-cell') || tbody.dataset.emptyView !== currentDeviceView) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-devices-cell" style="text-align:center; padding: 28px; color: var(--muted);">${emptyMsg}</td></tr>`;
@@ -3313,19 +3324,14 @@
         delete tbody.dataset.emptyView;
       }
 
-      // Orden determinista
+      // Orden determinista y 100% ESTÁTICO (por fecha de registro original firstSeen o HWID)
+      // Garantiza que ninguna fila salte arriba o abajo frente a los ojos del usuario al cambiar de estado
       const sorted = [...displayList].sort((a, b) => {
-        // 1º En línea primero
-        if (a.isOnline !== b.isOnline) {
-          return (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0);
-        }
-        // 2º Más reciente por lastSeen
-        const timeA = Date.parse(a.lastSeen) || 0;
-        const timeB = Date.parse(b.lastSeen) || 0;
+        const timeA = Date.parse(a.firstSeen) || Date.parse(a.lastSeen) || 0;
+        const timeB = Date.parse(b.firstSeen) || Date.parse(b.lastSeen) || 0;
         if (timeB !== timeA) {
           return timeB - timeA;
         }
-        // 3º Desempate HWID
         return String(a.hwid || '').localeCompare(String(b.hwid || ''));
       });
 
@@ -3335,20 +3341,47 @@
         const hwid = String(dev.hwid || '');
         activeHwids.add(hwid);
 
+        const isOnline = !!dev.isOnline;
         const isExpired = dev.expiresAt && new Date(dev.expiresAt) < new Date();
         const sig = getDevStateSignature(dev);
         const dateStr = new Date(dev.lastSeen).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) + ' (' + new Date(dev.lastSeen).toLocaleDateString() + ')';
 
         let tr = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
         if (tr) {
-          // Si el estado no cambió: actualizar ÚNICAMENTE el texto de última actividad sin tocar el DOM
+          // Si el estado estructural no cambió: actualizar ÚNICAMENTE los textos dinámicos de forma quirúrgica sin tocar el DOM
           if (tr.dataset.stateSignature === sig) {
+            // 1. Actualizar última actividad
             const timeText = tr.querySelector('.dev-last-seen-text');
             if (timeText && timeText.innerText !== dateStr) {
               timeText.innerText = dateStr;
+              timeText.style.color = isOnline ? '#00E676' : 'inherit';
+              timeText.style.fontWeight = isOnline ? '600' : 'normal';
+            }
+            // 2. Actualizar pings
+            const pingsText = tr.querySelector('.dev-pings-text');
+            const pingsVal = `${dev.totalPings || 1} pings`;
+            if (pingsText && pingsText.innerText !== pingsVal) {
+              pingsText.innerText = pingsVal;
+            }
+            // 3. Actualizar indicador online/offline en vivo
+            const onlineInd = tr.querySelector('.dev-online-indicator');
+            if (onlineInd && onlineInd.dataset.online !== (isOnline ? '1' : '0')) {
+              onlineInd.dataset.online = isOnline ? '1' : '0';
+              onlineInd.innerHTML = isOnline
+                ? '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#00E676; box-shadow:0 0 6px #00E676;"></span><strong style="color:#00E676; font-size:11px;">EN LÍNEA AHORA</strong>'
+                : '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#666;"></span><span style="color:#777; font-size:11px;">Desconectado</span>';
+            }
+            // 4. Actualizar tiempo restante si aplica
+            const remBadge = tr.querySelector('.dev-remaining-badge');
+            if (remBadge && dev.timeRemainingFormatted) {
+              const remVal = dev.timeRemainingFormatted;
+              const expectedText = (dev.mode === 'PRO') ? `⏱️ ${remVal}` : `⚡ Restan: ${remVal}`;
+              if (remBadge.innerText !== expectedText) {
+                remBadge.innerText = expectedText;
+              }
             }
           } else {
-            // El estado visual cambió (activó PRO, bloqueado, cambió de test a cliente, etc.): actualizar silenciosamente solo esta fila
+            // El estado estructural cambió (modo PRO, bloqueo, notas, etc.): actualizar silenciosamente solo esta fila
             tr.innerHTML = generateDeviceRowHtml(dev, isExpired, dateStr);
             tr.dataset.stateSignature = sig;
             tr.dataset.currentUser = dev.currentUser || '';
@@ -5164,54 +5197,43 @@
       }
     }
 
+    function generateLicenseRowInnerHtml(l) {
+      const safeHwid = escapeHtml(l.hwid);
+      const safeKey = escapeHtml(l.licenseKey);
+      const safeUser = escapeHtml(l.currentUser || 'N/A');
+      const safeDev = escapeHtml(l.deviceBrand ? `${l.deviceBrand} ${l.deviceModel || ''}` : (l.deviceModel || 'N/A'));
+      
+      let planBadge = l.mode === 'PRO' ? '<span class="badge badge-pro">PRO</span>' : '<span class="badge badge-demo">DEMO</span>';
+      let remVal = l.timeRemainingFormatted || (l.daysRemaining !== null ? l.daysRemaining + ' días' : 'Por tiempo');
+      let vigBadge = l.isLifetime 
+        ? '<span style="color:#00E676; font-weight:800; font-size:11px;">♾️ VITALICIA</span>'
+        : `<span style="color:#29B6F6; font-weight:700; font-size:11px;">⏱️ <span class="lic-remaining-text">${escapeHtml(remVal)}</span></span>`;
+
+      let expText = l.isLifetime 
+        ? '<span style="color:#AAA;">Sin vencimiento</span>'
+        : (l.expiresAt ? (l.isExpired ? '<span style="color:#FF5252; font-weight:bold;">⛔ EXPIRADA</span>' : `<span style="color:#EEE;">${new Date(l.expiresAt).toLocaleDateString()} ${new Date(l.expiresAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`) : '<span style="color:#AAA;">N/A</span>');
+
+      return `
+        <td><span class="hwid-code" style="font-size:11px;">${safeHwid}</span></td>
+        <td>${planBadge}</td>
+        <td><code style="background:rgba(0,0,0,0.4); padding:3px 6px; border-radius:4px; color:#FFD54F; font-size:11px;">${safeKey}</code></td>
+        <td>${vigBadge}</td>
+        <td>${expText}</td>
+        <td><strong>${safeUser}</strong></td>
+        <td><small style="color:#AAA;">${safeDev}</small></td>
+        <td>
+          <div style="display:flex; gap:4px;">
+            <button class="btn btn-dark btn-sm" style="font-size:11px; padding:3px 7px;" data-action="license-exp" data-hwid="${safeHwid}" title="Modificar vigencia o convertir a vitalicio/días">⏱️ Vigencia</button>
+            ${l.mode === 'PRO' ? `<button class="btn btn-warning btn-sm" style="font-size:11px; padding:3px 7px;" data-action="license-downgrade" data-hwid="${safeHwid}" title="Quitar modo PRO y volver a DEMO">Quitar PRO</button>` : ''}
+            <button class="btn btn-red btn-sm" style="font-size:11px; padding:3px 7px;" data-action="license-delete" data-hwid="${safeHwid}" data-key="${safeKey}" title="Eliminar y revocar permanentemente esta licencia">🗑️ Eliminar</button>
+          </div>
+        </td>
+      `;
+    }
+
     function renderLicensesTable(list) {
       const tbody = document.getElementById('licenses-table-body');
       if (!tbody) return;
-
-      const sig = (list.length > 0)
-        ? list.map(l => `${l.hwid}_${l.licenseKey}_${l.mode}_${l.expiresAt}_${l.timeRemainingFormatted || ''}`).join(';')
-        : 'empty';
-      if (tbody.dataset.renderedSig === sig) return;
-      tbody.dataset.renderedSig = sig;
-
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">No hay licencias emitidas registradas en este momento.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = list.map(l => {
-        const safeHwid = escapeHtml(l.hwid);
-        const safeKey = escapeHtml(l.licenseKey);
-        const safeUser = escapeHtml(l.currentUser || 'N/A');
-        const safeDev = escapeHtml(l.deviceBrand ? `${l.deviceBrand} ${l.deviceModel}` : (l.deviceModel || 'N/A'));
-        
-        let planBadge = l.mode === 'PRO' ? '<span class="badge badge-pro">PRO</span>' : '<span class="badge badge-demo">DEMO</span>';
-        let vigBadge = l.isLifetime 
-          ? '<span style="color:#00E676; font-weight:800; font-size:11px;">♾️ VITALICIA</span>'
-          : `<span style="color:#29B6F6; font-weight:700; font-size:11px;">⏱️ ${l.timeRemainingFormatted || (l.daysRemaining !== null ? l.daysRemaining + ' días' : 'Por tiempo')}</span>`;
-
-        let expText = l.isLifetime 
-          ? '<span style="color:#AAA;">Sin vencimiento</span>'
-          : (l.expiresAt ? (l.isExpired ? '<span style="color:#FF5252; font-weight:bold;">⛔ EXPIRADA</span>' : `<span style="color:#EEE;">${new Date(l.expiresAt).toLocaleDateString()} ${new Date(l.expiresAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`) : '<span style="color:#AAA;">N/A</span>');
-
-        return `
-          <tr>
-            <td><span class="hwid-code" style="font-size:11px;">${safeHwid}</span></td>
-            <td>${planBadge}</td>
-            <td><code style="background:rgba(0,0,0,0.4); padding:3px 6px; border-radius:4px; color:#FFD54F; font-size:11px;">${safeKey}</code></td>
-            <td>${vigBadge}</td>
-            <td>${expText}</td>
-            <td><strong>${safeUser}</strong></td>
-            <td><small style="color:#AAA;">${safeDev}</small></td>
-            <td>
-              <div style="display:flex; gap:4px;">
-                <button class="btn btn-dark btn-sm" style="font-size:11px; padding:3px 7px;" data-action="license-exp" data-hwid="${safeHwid}" title="Modificar vigencia o convertir a vitalicio/días">⏱️ Vigencia</button>
-                ${l.mode === 'PRO' ? `<button class="btn btn-warning btn-sm" style="font-size:11px; padding:3px 7px;" data-action="license-downgrade" data-hwid="${safeHwid}" title="Quitar modo PRO y volver a DEMO">Quitar PRO</button>` : ''}
-                <button class="btn btn-red btn-sm" style="font-size:11px; padding:3px 7px;" data-action="license-delete" data-hwid="${safeHwid}" data-key="${safeKey}" title="Eliminar y revocar permanentemente esta licencia">🗑️ Eliminar</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
 
       if (!tbody.dataset.delegated) {
         tbody.dataset.delegated = 'true';
@@ -5226,6 +5248,61 @@
           else if (action === 'license-delete') deleteLicense(hwid, btn.dataset.key);
         });
       }
+
+      if (list.length === 0) {
+        if (!tbody.querySelector('.empty-licenses-cell')) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty-licenses-cell" style="text-align:center; padding:20px; color:var(--muted);">No hay licencias emitidas registradas en este momento.</td></tr>';
+        }
+        return;
+      }
+
+      if (tbody.querySelector('.empty-licenses-cell')) {
+        tbody.innerHTML = '';
+      }
+
+      const activeKeys = new Set();
+      list.forEach(l => {
+        const licId = `${l.hwid}_${l.licenseKey || 'NOKEY'}`;
+        activeKeys.add(licId);
+
+        const rowSig = [
+          l.hwid || '',
+          l.licenseKey || '',
+          l.mode || '',
+          l.expiresAt || '',
+          l.isLifetime ? '1' : '0',
+          l.isExpired ? '1' : '0',
+          l.currentUser || '',
+          l.deviceModel || ''
+        ].join('§');
+
+        let tr = tbody.querySelector(`tr[data-lic-id="${CSS.escape(licId)}"]`);
+        if (tr) {
+          if (tr.dataset.licSig === rowSig) {
+            const remEl = tr.querySelector('.lic-remaining-text');
+            const remVal = l.timeRemainingFormatted || (l.daysRemaining !== null ? l.daysRemaining + ' días' : 'Por tiempo');
+            if (remEl && remEl.innerText !== remVal) {
+              remEl.innerText = remVal;
+            }
+          } else {
+            tr.innerHTML = generateLicenseRowInnerHtml(l);
+            tr.dataset.licSig = rowSig;
+          }
+        } else {
+          tr = document.createElement('tr');
+          tr.dataset.licId = licId;
+          tr.dataset.licSig = rowSig;
+          tr.innerHTML = generateLicenseRowInnerHtml(l);
+          tbody.appendChild(tr);
+        }
+      });
+
+      Array.from(tbody.children).forEach(row => {
+        const id = row.dataset.licId;
+        if (id && !activeKeys.has(id)) {
+          row.remove();
+        }
+      });
     }
 
     async function deleteLicense(hwid, licenseKey) {
@@ -5858,10 +5935,32 @@
       refreshAllData();
     }
 
-    // Auto-actualizar presencia y listas en tiempo real cada 15 segundos (silencioso, sin visual flickering)
+    // Control de Auto-Actualización en Tiempo Real
     let _isPolling = false;
+    let _autoRefreshEnabled = true;
+
+    function toggleAutoRefresh() {
+      _autoRefreshEnabled = !_autoRefreshEnabled;
+      const btn = document.getElementById('btn-toggle-autorefresh');
+      if (btn) {
+        if (_autoRefreshEnabled) {
+          btn.innerHTML = '⏸️ Auto (15s)';
+          btn.className = 'btn btn-dark btn-sm';
+          btn.title = 'Clic para pausar el auto-refresco en segundo plano';
+          showToast('▶️ Auto-refresco en segundo plano activado (cada 15s)');
+        } else {
+          btn.innerHTML = '▶️ Reanudar (Pausado)';
+          btn.className = 'btn btn-warning btn-sm';
+          btn.title = 'El auto-refresco está pausado. Clic para reanudar';
+          showToast('⏸️ Auto-refresco pausado. El panel permanecerá 100% estático');
+        }
+      }
+    }
+
+    // Auto-actualizar presencia y listas en tiempo real cada 15 segundos (silencioso, sin visual flickering)
     setInterval(async () => {
       if (!getAdminKey()) return;
+      if (!_autoRefreshEnabled) return; // Pausado por el administrador
       if (_isPolling) return; // evitar solapamiento de polls
       _isPolling = true;
       try {
