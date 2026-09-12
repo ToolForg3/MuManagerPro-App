@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { ParsedItem } from '../../types/item';
 import { PaperdollSlotDefinition } from '../../constants/muConstants';
 import { ItemImage } from '../common/ItemImage';
+import { EQUIP_SLOT_ASSETS } from '../../constants/equipAssets';
 
 interface PaperdollSlotProps {
   definition: PaperdollSlotDefinition;
@@ -103,14 +104,28 @@ export const PaperdollSlot: React.FC<PaperdollSlotProps> = memo(({
           </View>
         </View>
       ) : (
-        /* Silueta clásica tallada en piedra sin textos */
+        /* Silueta canónica oficial Season 6 con fallback no destructivo a iconos vectoriales */
         <View style={styles.emptyContent}>
-          <MaterialCommunityIcons
-            name={getSilhouetteIcon() as any}
-            size={height * 0.44}
-            color="#282017"
-            style={styles.silhouetteIcon}
-          />
+          {EQUIP_SLOT_ASSETS[definition.slot] ? (
+            <Image
+              source={EQUIP_SLOT_ASSETS[definition.slot]}
+              style={[
+                styles.silhouetteImage,
+                {
+                  width: width * 0.58,
+                  height: height * 0.58,
+                },
+              ]}
+              resizeMode="contain"
+            />
+          ) : (
+            <MaterialCommunityIcons
+              name={getSilhouetteIcon() as any}
+              size={height * 0.44}
+              color="#282017"
+              style={styles.silhouetteIcon}
+            />
+          )}
         </View>
       )}
     </TouchableOpacity>
@@ -143,6 +158,10 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(107, 85, 51, 0.35)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
+  },
+  silhouetteImage: {
+    opacity: 0.65,
+    tintColor: '#6B5533',
   },
   occupiedContent: {
     alignItems: 'center',

@@ -1,10 +1,10 @@
 {
-  "version": "1.8.8",
-  "minRequiredVersion": "1.8.8",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.8",
-  "publishedAt": "2026-09-12T23:25:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.8/MuManagerPro.apk",
-  "build": 90,
+  "version": "1.8.9",
+  "minRequiredVersion": "1.8.9",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.9",
+  "publishedAt": "2026-09-12T23:55:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.9/MuManagerPro.apk",
+  "build": 91,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v1.8.8 (Build 90) - Habilidades Canónicas Oficiales Season 6:\n• Texturas Reales del Cliente: Integración de 86 habilidades con sus texturas originales extraídas de newui_skill.OZJ, newui_skill2.OZJ, newui_command.OZJ y newui_statusicon.OZJ.\n• Empaquetado Local Offline: Las habilidades quedan compiladas directamente dentro del APK para carga instantánea y sin consumo de red.\n• Formato 32x32 Canónico: Casillas adaptadas con marco y fondo gótico #0D0D11 respetando la proporción original.\n• Rage Fighter Completo: Iconos oficiales de Fitness (Aumento de Vida), Defensa Éxito (Aumento de Bloqueo) y Carga.\n• Integridad 100%: Cero errores de TypeScript y suite de pruebas unitarias 100% aprobada."
+  "changelog": "MuManager PRO v1.8.9 (Build 91) - Interfaz Canónica Oficial Season 6:\n• Siluetas de Equipamiento Reales: Reemplazo total de iconos genéricos de ranuras vacías por las 12 texturas canónicas de armaduras, botas, casco, guantes, armas, alas, pendientes y anillos extraídas de newui_item_*.OZT.\n• Zen Oficial del Cliente: Moneda de oro auténtica de 24x24 integrada en barras de Zen de stats, inventario y baúl.\n• Candados Góticos de Seguridad: Botones de liberación de mochilas y personal store con candado medieval oficial de MU.\n• Insignias de PK Canónicas: Distintivo oficial en el selector de rango asesino/héroe y botón PK CLEAR.\n• Cero Riesgo / Fallback Total: Conservación al 100% de la lógica SQL, inventarios y compatibilidad Louis S6."
 }
