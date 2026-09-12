@@ -178,7 +178,7 @@ const DEFAULT_SETTINGS = {
   broadcastAnnouncement: '',
   minRequiredVersion: '1.5.8',
   latestVersion: '1.6.7',
-  latestApkUrl: 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk',
+  latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk',
   updateChangelog: '🔒 MuManager PRO v1.6.7 (Build 69):\n• 🛡️ Blindaje avanzado de seguridad (ProGuard/R8) activo en APK de release.\n• 🔒 Telemetria segura: la asociacion de identidad requiere sesion autenticada.\n• ⚠️ Verificacion de vars de entorno criticas al arranque (JWT_SECRET, ADMIN_KEY).\n• 🛡️ Validacion estricta de licencia PRO en el conector SQL.\n• 🔐 Eliminacion de metadatos sensibles en bytecode del APK.\n🚀 MuManager PRO v1.6.5 (Build 67):\n• 👑 Nueva Categoria Oficial Ancient y Box of Kundun +1 a +5.\n• 📢 Selector de Cantidades: x1, x10, x30, x50, x100, x255.\n• 🧩 Asignacion 2D sin colisiones en baul y boveda expandida.\n• 🔍 Filtros predictivos con autocompletado y chips de cuentas recientes.',
   forceUpdate: true,
   whitelistOnly: false,
@@ -1107,7 +1107,7 @@ function getLatestApkInfo() {
 }
 
 /// Redirección permanente a GitHub CDN para descarga del APK (0 consumo de ancho de banda en Render)
-const GITHUB_APK_CDN = process.env.GITHUB_APK_CDN || 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk';
+const GITHUB_APK_CDN = process.env.GITHUB_APK_CDN || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk';
 
 app.get([
   '/download/MuManagerPro.apk',
@@ -7129,7 +7129,7 @@ app.post('/api/telemetry/ping', (req, res) => {
   const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
   const dynamicApkUrl = (isRollback && settings.rollback?.targetApkUrl)
     ? settings.rollback.targetApkUrl
-    : (settings.latestApkUrl || 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk');
+    : (settings.latestApkUrl || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk');
 
   const updateInfo = {
     hasUpdate,

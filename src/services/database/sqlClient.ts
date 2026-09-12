@@ -1372,7 +1372,7 @@ export class SqlClient {
         currentVersion: APP_VERSION,
         latestVersion: remoteVer,
         minRequiredVersion: data.minRequiredVersion || '1.0.0',
-        apkUrl: data.downloadUrl || 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk',
+        apkUrl: data.downloadUrl || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk',
         changelog: data.changelog || '• Nueva versión disponible en el canal oficial.',
         forceUpdate: !!data.forceUpdate,
       };

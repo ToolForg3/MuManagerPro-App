@@ -5,6 +5,8 @@ on:
     branches:
       - main
     paths:
+      - 'MuManagerPro.apk'
+      - 'version.json'
       - 'public/**'
       - 'data/settings.json'
       - 'package.json'
@@ -29,10 +31,14 @@ jobs:
         run: |
           VERSION=$(node -e "
             try {
+              const v = require('./version.json');
+              if (v.version) { console.log(v.version.replace(/^v/i, '').trim()); process.exit(0); }
+            } catch(_) {}
+            try {
               const s = require('./data/settings.json');
-              console.log((s.latestVersion || '1.3.7').replace(/^v/i, '').trim());
+              console.log((s.latestVersion || '1.8.6').replace(/^v/i, '').trim());
             } catch(_) {
-              console.log('1.3.7');
+              console.log('1.8.6');
             }
           ")
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
@@ -41,17 +47,23 @@ jobs:
             const fs = require('fs');
             let notes = '### 🎮 Mu Manager PRO Oficial\n\n';
             try {
+              const v = require('./version.json');
+              if (v.changelog) {
+                notes += v.changelog + '\n\n';
+              }
+            } catch(_) {}
+            try {
               const s = require('./data/settings.json');
-              notes += (s.updateChangelog || s.broadcastAnnouncement || 'Actualización de Mu Manager PRO');
-            } catch(_) {
-              notes += 'Versión oficial de Mu Manager PRO';
-            }
+              if (s.updateChangelog && !notes.includes(s.updateChangelog)) {
+                notes += s.updateChangelog;
+              }
+            } catch(_) {}
             fs.writeFileSync('RELEASE_NOTES.md', notes, 'utf8');
           "
 
           mkdir -p release_assets
           SOURCE_APK=""
-          for f in "public/MuManagerPro-v${VERSION}.apk" "public/MuManagerPro.apk" "public/MuManagerPro-latest.apk"; do
+          for f in "MuManagerPro.apk" "MuManagerPro-v${VERSION}.apk" "public/MuManagerPro-v${VERSION}.apk" "public/MuManagerPro.apk" "public/MuManagerPro-latest.apk"; do
             if [ -f "$f" ]; then
               SOURCE_APK="$f"
               break
@@ -59,11 +71,11 @@ jobs:
           done
 
           if [ -z "$SOURCE_APK" ]; then
-            SOURCE_APK=$(find public -name "*.apk" | head -n 1)
+            SOURCE_APK=$(find . -maxdepth 2 -name "*.apk" | head -n 1)
           fi
 
           if [ -z "$SOURCE_APK" ] || [ ! -f "$SOURCE_APK" ]; then
-            echo "::error::No se encontró ningún binario APK en public/"
+            echo "::error::No se encontró ningún binario APK en el repositorio"
             exit 1
           fi
 
@@ -81,24 +93,25 @@ jobs:
           TAG="v${VERSION}"
           TITLE="Mu Manager PRO v${VERSION} Oficial"
 
-          echo "Creando o actualizando Release con Tag: latest y $TAG..."
+          echo "Creando o actualizando Release con Tag: $TAG y latest..."
 
-          # 1. Crear o actualizar release con tag 'latest'
+          # 1. Crear o actualizar release versionada (v${VERSION})
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Actualizando assets en release '$TAG'..."
+            gh release upload "$TAG" release_assets/* --clobber
+            gh release edit "$TAG" --title "$TITLE" --notes-file RELEASE_NOTES.md --latest
+          else
+            echo "Creando nueva release '$TAG'..."
+            gh release create "$TAG" release_assets/* --title "$TITLE" --notes-file RELEASE_NOTES.md --latest
+          fi
+
+          # 2. Crear o actualizar release con tag 'latest'
           if gh release view latest >/dev/null 2>&1; then
             echo "Actualizando assets en release 'latest'..."
             gh release upload latest release_assets/* --clobber
             gh release edit latest --title "$TITLE" --notes-file RELEASE_NOTES.md
           else
             echo "Creando nueva release 'latest'..."
-            gh release create latest release_assets/* --title "$TITLE" --notes-file RELEASE_NOTES.md
+            gh release create latest release_assets/* --title "$TITLE" --notes-file RELEASE_NOTES.md || true
           fi
-
-          # 2. Crear también la release con tag versionado (v${VERSION})
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Actualizando assets en release '$TAG'..."
-            gh release upload "$TAG" release_assets/* --clobber
-          else
-            echo "Creando nueva release '$TAG'..."
-            gh release create "$TAG" release_assets/* --title "$TITLE" --notes-file RELEASE_NOTES.md
-          fi
-          echo "¡Release publicada exitosamente en GitHub!"
+          echo "¡Release publicada exitosamente en GitHub Releases (AWS S3)!"

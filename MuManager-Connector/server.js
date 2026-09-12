@@ -111,7 +111,7 @@ const DEFAULT_SETTINGS = {
   broadcastAnnouncement: '',
   minRequiredVersion: '1.5.8',
   latestVersion: '1.6.9',
-  latestApkUrl: 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk',
+  latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk',
   updateChangelog: '• Versión 1.0.0 oficial\n• Auto-registro de cuentas de usuario\n• Compatibilidad Louis Season 6 Update 40\n• Alertas de seguridad en tiempo real',
   forceUpdate: false,
   whitelistOnly: false,
@@ -749,7 +749,7 @@ function getLatestApkInfo() {
 }
 
 /// Redirección permanente a GitHub CDN para descarga del APK (0 consumo de ancho de banda en Render)
-const GITHUB_APK_CDN = process.env.GITHUB_APK_CDN || 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk';
+const GITHUB_APK_CDN = process.env.GITHUB_APK_CDN || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk';
 
 app.get([
   '/download/MuManagerPro.apk',
@@ -6357,7 +6357,7 @@ app.post('/api/telemetry/ping', (req, res) => {
   const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
   const dynamicApkUrl = (isRollback && settings.rollback?.targetApkUrl)
     ? settings.rollback.targetApkUrl
-    : (settings.latestApkUrl || 'https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk');
+    : (settings.latestApkUrl || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk');
 
   const updateInfo = {
     hasUpdate,

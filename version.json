@@ -1,10 +1,10 @@
 {
-    "version": "1.8.6",
-    "minRequiredVersion": "1.8.6",
-    "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.6",
-    "publishedAt": "2026-09-12T21:30:10.741Z",
-    "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build": 88,
-    "forceUpdate": true,
-    "changelog": "MuManager PRO v1.8.6 (Build 88) - Actualización Oficial:\n• Purga y Unificación Visual Total: Migración completa de todas las pantallas al Sistema Oficial Season 6 Piedra y Oro (#191512, #2B2521, #6B5533, #A8894D, #E8C86A).\n• CharacterEditScreen Renovado: Pestañas de Stats, Progreso, Skills y Quest sin remanentes azules ni biseles pizarra. Rediseño medieval del selector de estado PK eliminando el botón blanco plano.\n• Baúl / Warehouse Unificado: Purgados estilos azul marino y adaptados al marco noble de piedra grabada.\n• Componentes e Inventario: Marcos de InventoryGrid, SkillImage y avatares de Dashboard sincronizados con el radio de esquina estricto de 6px y tokens canónicos."
+  "version": "1.8.6",
+  "minRequiredVersion": "1.8.6",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.6",
+  "publishedAt": "2026-09-12T21:30:10.741Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.6/MuManagerPro.apk",
+  "build": 88,
+  "forceUpdate": true,
+  "changelog": "MuManager PRO v1.8.6 (Build 88) - Actualización Oficial:\n• Purga y Unificación Visual Total: Migración completa de todas las pantallas al Sistema Oficial Season 6 Piedra y Oro (#191512, #2B2521, #6B5533, #A8894D, #E8C86A).\n• CharacterEditScreen Renovado: Pestañas de Stats, Progreso, Skills y Quest sin remanentes azules ni biseles pizarra. Rediseño medieval del selector de estado PK eliminando el botón blanco plano.\n• Baúl / Warehouse Unificado: Purgados estilos azul marino y adaptados al marco noble de piedra grabada.\n• Componentes e Inventario: Marcos de InventoryGrid, SkillImage y avatares de Dashboard sincronizados con el radio de esquina estricto de 6px y tokens canónicos."
 }
