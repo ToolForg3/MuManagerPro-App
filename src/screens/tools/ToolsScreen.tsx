@@ -1290,27 +1290,31 @@ export const ToolsScreen = () => {
 
     if (isOnline) {
       Alert.alert(
-        'Jugador Conectado en el Juego',
-        'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?',
+        'Jugador en Línea en el Juego',
+        'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?\n\n⚠️ AVISO TÉCNICO: Desde la conexión SQL directa no es posible cerrar el cliente de juego (la sesión activa vive en la memoria RAM del GameServer).',
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Esperar a que salga', style: 'cancel' },
           {
-            text: 'Desconectar y Guardar',
-            style: 'destructive',
+            text: 'Liberar Traba SQL',
             onPress: async () => {
               setDeliveringKit(true);
               try {
                 await SqlClient.disconnectAccount(acc);
                 await new Promise((r) => setTimeout(r, 1000));
-                await doDeliverKit();
+                Alert.alert(
+                  'Traba SQL Liberada',
+                  'Se ha restablecido ConnectStat = 0 en la base de datos. Pídele al jugador que cierre el juego o salga antes de entregar el kit.'
+                );
               } catch (err: any) {
-                Alert.alert('Error', err.message || 'Error al desconectar');
+                Alert.alert('Error', err.message || 'Error al actualizar estado en SQL');
+              } finally {
                 setDeliveringKit(false);
               }
             },
           },
           {
-            text: 'Entregar de Todos Modos',
+            text: 'Entregar de Todos Modos (Riesgo)',
+            style: 'destructive',
             onPress: () => doDeliverKit(),
           },
         ]

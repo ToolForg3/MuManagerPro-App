@@ -285,16 +285,15 @@ export const CharacterEditScreen = () => {
 
       if (isOnline) {
         Alert.alert(
-          'Personaje Conectado al Juego',
-          `El personaje "${charName}" ${accountId ? `(Cuenta: "${accountId}")` : ''} está actualmente en línea en el juego.\n\nPara que los cambios se guarden con éxito en SQL Server y el GameServer no los sobrescriba en memoria, debes desconectarlo.\n\n¿Deseas desconectarlo ahora y proceder con ${actionName.toLowerCase()}?`,
+          'Personaje en Línea en el Juego',
+          `El personaje "${charName}" ${accountId ? `(Cuenta: "${accountId}")` : ''} está actualmente conectado al servidor.\n\n⚠️ AVISO TÉCNICO: Desde la conexión SQL directa no es posible cerrar la ventana de juego del usuario (la sesión activa vive en la memoria RAM del GameServer).\n\nSi guardas cambios mientras el jugador está dentro del juego, el GameServer SOBREESCRIBIRÁ tus modificaciones tan pronto como el jugador camine, cambie de mapa o desconecte.\n\n¿Cómo deseas proceder para ${actionName.toLowerCase()}?`,
           [
             {
-              text: 'Cancelar',
+              text: 'Esperar a que salga',
               style: 'cancel',
             },
             {
-              text: 'Desconectar y Guardar',
-              style: 'destructive',
+              text: 'Liberar Traba SQL',
               onPress: async () => {
                 setSaving(true);
                 try {
@@ -303,21 +302,23 @@ export const CharacterEditScreen = () => {
                     if (character) {
                       setCharacter({ ...character, ConnectStat: 0 });
                     }
-                    await new Promise((r) => setTimeout(r, 1000));
-                    await actionFn();
-                  } else {
                     Alert.alert(
-                      'Aviso de Desconexión',
-                      `No se pudo forzar la desconexión: ${discRes.message}\n\n¿Deseas intentar guardar de todas formas?`,
-                      [
-                        { text: 'Cancelar', style: 'cancel' },
-                        { text: 'Guardar de Todos Modos', onPress: () => actionFn() },
-                      ]
+                      'Traba SQL Liberada',
+                      'Se ha restablecido ConnectStat = 0 en la base de datos (útil si el servidor se cayó o el jugador ya cerró el juego). Si el jugador sigue con el juego abierto, pídele que salga a la pantalla de personajes antes de guardar.'
                     );
+                  } else {
+                    Alert.alert('Aviso', discRes.message || 'No se pudo actualizar el estado en SQL.');
                   }
                 } finally {
                   setSaving(false);
                 }
+              },
+            },
+            {
+              text: 'Guardar de Todos Modos (Riesgo)',
+              style: 'destructive',
+              onPress: async () => {
+                await actionFn();
               },
             },
           ]

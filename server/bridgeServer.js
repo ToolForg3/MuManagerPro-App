@@ -1860,7 +1860,7 @@ app.post('/api/accounts/ban', async (req, res) => {
         SELECT 
           CASE 
             WHEN OBJECT_ID('MEMB_INFO', 'U') IS NOT NULL THEN 'MEMB_INFO'
-            WHEN OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_INFO'
+            WHEN DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_INFO'
             WHEN OBJECT_ID('MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'MuOnline.dbo.MEMB_INFO'
             ELSE 'MEMB_INFO'
           END AS MembTable;
@@ -1898,7 +1898,7 @@ app.post('/api/accounts/unban', async (req, res) => {
         SELECT 
           CASE 
             WHEN OBJECT_ID('MEMB_INFO', 'U') IS NOT NULL THEN 'MEMB_INFO'
-            WHEN OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_INFO'
+            WHEN DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_INFO'
             WHEN OBJECT_ID('MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'MuOnline.dbo.MEMB_INFO'
             ELSE 'MEMB_INFO'
           END AS MembTable;
@@ -1985,7 +1985,7 @@ app.post('/api/characters', async (req, res) => {
       const statCheck = await pool.request().query(`
         SELECT 
           OBJECT_ID('MEMB_STAT', 'U') AS HasMembStat,
-          OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') AS HasMeMembStat,
+          CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') ELSE NULL END AS HasMeMembStat,
           OBJECT_ID('GuildMember', 'U') AS HasGuildMember,
           (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken'))) AS AcRuudCol,
           (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'wcoinr'))) AS CsRuudCol,
@@ -2012,13 +2012,13 @@ app.post('/api/characters', async (req, res) => {
       const q = pool.request();
       let queryStr = `
         SELECT 
-          c.Name, 
+          RTRIM(c.Name) AS Name, 
           ISNULL(c.cLevel, 1) AS cLevel, 
           ISNULL(c.Class, 0) AS Class, 
           ${resetExpr} AS ResetCount, 
           ${moneyExpr} AS Money, 
           ${ruudExpr} AS Ruud,
-          c.AccountID,
+          RTRIM(c.AccountID) AS AccountID,
           ${hasMr ? 'ISNULL(c.MasterResetCount, 0)' : '0'} AS MasterResetCount,
           ${hasMapNum ? 'ISNULL(c.MapNumber, 0)' : '0'} AS MapNumber,
           ${hasMapPosX ? 'ISNULL(c.MapPosX, 125)' : '125'} AS MapPosX,
@@ -2136,107 +2136,171 @@ app.post('/api/character/create', async (req, res) => {
         throw new Error(`El nombre de personaje '${cleanName}' ya está en uso.`);
       }
 
-      // 3. Verificar / Crear registro en AccountCharacter y buscar slot libre
-      const hasAccCharTable = await pool.request().query(`
-        SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AccountCharacter';
-      `);
-      let targetSlot = 1;
-      if (hasAccCharTable.recordset && hasAccCharTable.recordset.length > 0) {
-        const accCharRes = await pool.request()
-          .input('Acc', sql.VarChar, cleanAccountId)
+      // 3. Creación de personaje: Detección canónica de WZ_CreateCharacter (Louis Season 6 y Webzen)
+      const hasWzSp = await pool.request().query("SELECT OBJECT_ID('WZ_CreateCharacter', 'P') AS HasWz;");
+      const useWzSp = !!(hasWzSp.recordset && hasWzSp.recordset[0] && hasWzSp.recordset[0].HasWz);
+
+      if (useWzSp) {
+        // Ejecución nativa del SP oficial de MuOnline S6 para inicializar MagicList, Quest e Inventory válidos
+        const wzRes = await pool.request()
+          .input('Acc', sql.VarChar(10), cleanAccountId)
+          .input('Name', sql.VarChar(10), cleanName)
+          .input('Class', sql.TinyInt, cleanClass)
           .query(`
-            IF NOT EXISTS (SELECT 1 FROM AccountCharacter WHERE Id = @Acc)
-              INSERT INTO AccountCharacter (Id) VALUES (@Acc);
-            SELECT GameID1, GameID2, GameID3, GameID4, GameID5 FROM AccountCharacter WHERE Id = @Acc;
+            DECLARE @ret INT;
+            EXEC @ret = WZ_CreateCharacter @Acc, @Name, @Class;
+            SELECT @ret AS RetCode;
           `);
-        const row = accCharRes.recordset && accCharRes.recordset[0];
-        if (row) {
-          if (!row.GameID1 || row.GameID1.trim() === '') targetSlot = 1;
-          else if (!row.GameID2 || row.GameID2.trim() === '') targetSlot = 2;
-          else if (!row.GameID3 || row.GameID3.trim() === '') targetSlot = 3;
-          else if (!row.GameID4 || row.GameID4.trim() === '') targetSlot = 4;
-          else if (!row.GameID5 || row.GameID5.trim() === '') targetSlot = 5;
-          else {
-            throw new Error(`La cuenta '${cleanAccountId}' ya tiene el máximo permitido de 5 personajes.`);
+        const retCode = wzRes.recordset && wzRes.recordset[0] && wzRes.recordset[0].RetCode;
+        if (retCode === 1) {
+          throw new Error(`El nombre de personaje '${cleanName}' ya está en uso.`);
+        } else if (retCode === 2) {
+          throw new Error(`La cuenta '${cleanAccountId}' ya tiene el máximo permitido de 5 personajes.`);
+        } else if (retCode !== 0 && retCode !== null && retCode !== undefined && retCode !== -1) {
+          throw new Error(`No se pudo crear el personaje mediante WZ_CreateCharacter (Código: ${retCode}).`);
+        }
+
+        // Actualizar estadísticas personalizadas definidas por el administrador en la app
+        const colsRes = await pool.request().query("SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('Character');");
+        const charCols = new Set((colsRes.recordset || []).map(r => r.name.toLowerCase()));
+
+        const updParts = [
+          'cLevel = @cLevel',
+          'LevelUpPoint = @LevelUpPoint',
+          'Money = @Money'
+        ];
+        const updReq = pool.request()
+          .input('Name', sql.VarChar(10), cleanName)
+          .input('cLevel', sql.SmallInt, cleanLevel)
+          .input('LevelUpPoint', sql.Int, cleanPoints)
+          .input('Money', sql.BigInt, cleanZen);
+
+        if (charCols.has('resetcount')) {
+          updParts.push('ResetCount = @ResetCount');
+          updReq.input('ResetCount', sql.Int, cleanResets);
+        } else if (charCols.has('resets')) {
+          updParts.push('Resets = @Resets');
+          updReq.input('Resets', sql.Int, cleanResets);
+        }
+        if (charCols.has('leadership') && cmd > 0) {
+          updParts.push('Leadership = @Leadership');
+          updReq.input('Leadership', sql.SmallInt, cmd);
+        }
+
+        await updReq.query(`
+          UPDATE Character 
+          SET ${updParts.join(', ')}
+          WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;
+        `);
+      } else {
+        // Fallback dinámico para bases de datos personalizadas sin WZ_CreateCharacter
+        const hasAccCharTable = await pool.request().query(`
+          SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AccountCharacter';
+        `);
+        let targetSlot = 1;
+        if (hasAccCharTable.recordset && hasAccCharTable.recordset.length > 0) {
+          const accCharRes = await pool.request()
+            .input('Acc', sql.VarChar(10), cleanAccountId)
+            .query(`
+              IF NOT EXISTS (SELECT 1 FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc)
+                INSERT INTO AccountCharacter (Id) VALUES (@Acc);
+              SELECT GameID1, GameID2, GameID3, GameID4, GameID5 FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
+            `);
+          const row = accCharRes.recordset && accCharRes.recordset[0];
+          if (row) {
+            if (!row.GameID1 || row.GameID1.trim() === '') targetSlot = 1;
+            else if (!row.GameID2 || row.GameID2.trim() === '') targetSlot = 2;
+            else if (!row.GameID3 || row.GameID3.trim() === '') targetSlot = 3;
+            else if (!row.GameID4 || row.GameID4.trim() === '') targetSlot = 4;
+            else if (!row.GameID5 || row.GameID5.trim() === '') targetSlot = 5;
+            else {
+              throw new Error(`La cuenta '${cleanAccountId}' ya tiene el máximo permitido de 5 personajes.`);
+            }
           }
+        }
+
+        const colsRes = await pool.request().query(`
+          SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('Character');
+        `);
+        const charCols = new Set((colsRes.recordset || []).map(r => r.name.toLowerCase()));
+
+        const insertCols = ['AccountID', 'Name', 'cLevel', 'LevelUpPoint', 'Class', 'Strength', 'Dexterity', 'Vitality', 'Energy', 'Money', 'Life', 'MaxLife', 'Mana', 'MaxMana', 'MapNumber', 'MapPosX', 'MapPosY', 'MapDir', 'PkCount', 'PkLevel', 'PkTime'];
+        const insertVals = ['@Acc', '@Name', '@cLevel', '@LevelUpPoint', '@Class', '@Strength', '@Dexterity', '@Vitality', '@Energy', '@Money', '@Life', '@MaxLife', '@Mana', '@MaxMana', '@MapNumber', '@MapPosX', '@MapPosY', '0', '0', '3', '0'];
+
+        const q = pool.request()
+          .input('Acc', sql.VarChar(10), cleanAccountId)
+          .input('Name', sql.VarChar(10), cleanName)
+          .input('cLevel', sql.SmallInt, cleanLevel)
+          .input('LevelUpPoint', sql.Int, cleanPoints)
+          .input('Class', sql.TinyInt, cleanClass)
+          .input('Strength', sql.SmallInt, str)
+          .input('Dexterity', sql.SmallInt, agi)
+          .input('Vitality', sql.SmallInt, vit)
+          .input('Energy', sql.SmallInt, ene)
+          .input('Money', sql.BigInt, cleanZen)
+          .input('Life', sql.Real, life)
+          .input('MaxLife', sql.Real, life)
+          .input('Mana', sql.Real, mana)
+          .input('MaxMana', sql.Real, mana)
+          .input('MapNumber', sql.SmallInt, map)
+          .input('MapPosX', sql.SmallInt, x)
+          .input('MapPosY', sql.SmallInt, y);
+
+        if (charCols.has('leadership')) {
+          insertCols.push('Leadership');
+          insertVals.push('@Leadership');
+          q.input('Leadership', sql.SmallInt, cmd);
+        }
+        if (charCols.has('resetcount')) {
+          insertCols.push('ResetCount');
+          insertVals.push('@ResetCount');
+          q.input('ResetCount', sql.Int, cleanResets);
+        } else if (charCols.has('resets')) {
+          insertCols.push('Resets');
+          insertVals.push('@Resets');
+          q.input('Resets', sql.Int, cleanResets);
+        }
+        if (charCols.has('ctlcode')) {
+          insertCols.push('CtlCode');
+          insertVals.push('0');
+        }
+        if (charCols.has('inventory')) {
+          insertCols.push('Inventory');
+          insertVals.push('CONVERT(VARBINARY(MAX), @EmptyInv, 2)');
+          q.input('EmptyInv', sql.VarChar, emptyInventoryHex);
+        }
+        if (charCols.has('magiclist')) {
+          insertCols.push('MagicList');
+          insertVals.push("CONVERT(VARBINARY(180), REPLICATE('FF', 180), 2)");
+        }
+        if (charCols.has('quest')) {
+          insertCols.push('Quest');
+          insertVals.push("CONVERT(VARBINARY(50), REPLICATE('FF', 50), 2)");
+        }
+        if (charCols.has('experience')) {
+          insertCols.push('Experience');
+          insertVals.push('0');
+        }
+
+        await q.query(`
+          INSERT INTO Character (${insertCols.join(', ')})
+          VALUES (${insertVals.join(', ')});
+        `);
+
+        if (hasAccCharTable.recordset && hasAccCharTable.recordset.length > 0) {
+          await pool.request()
+            .input('Acc', sql.VarChar(10), cleanAccountId)
+            .input('Name', sql.VarChar(10), cleanName)
+            .query(`
+              UPDATE AccountCharacter 
+              SET GameID${targetSlot} = @Name,
+                  GameIDC = ISNULL(GameIDC, @Name)
+              WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
+            `);
         }
       }
 
-      // 4. Detectar columnas dinámicas de la tabla Character
-      const colsRes = await pool.request().query(`
-        SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('Character');
-      `);
-      const charCols = new Set((colsRes.recordset || []).map(r => r.name.toLowerCase()));
-
-      const insertCols = ['AccountID', 'Name', 'cLevel', 'LevelUpPoint', 'Class', 'Strength', 'Dexterity', 'Vitality', 'Energy', 'Money', 'Life', 'MaxLife', 'Mana', 'MaxMana', 'MapNumber', 'MapPosX', 'MapPosY', 'MapDir', 'PkCount', 'PkLevel', 'PkTime'];
-      const insertVals = ['@Acc', '@Name', '@cLevel', '@LevelUpPoint', '@Class', '@Strength', '@Dexterity', '@Vitality', '@Energy', '@Money', '@Life', '@MaxLife', '@Mana', '@MaxMana', '@MapNumber', '@MapPosX', '@MapPosY', '0', '0', '3', '0'];
-
-      const q = pool.request()
-        .input('Acc', sql.VarChar, cleanAccountId)
-        .input('Name', sql.VarChar, cleanName)
-        .input('cLevel', sql.SmallInt, cleanLevel)
-        .input('LevelUpPoint', sql.Int, cleanPoints)
-        .input('Class', sql.TinyInt, cleanClass)
-        .input('Strength', sql.SmallInt, str)
-        .input('Dexterity', sql.SmallInt, agi)
-        .input('Vitality', sql.SmallInt, vit)
-        .input('Energy', sql.SmallInt, ene)
-        .input('Money', sql.BigInt, cleanZen)
-        .input('Life', sql.Real, life)
-        .input('MaxLife', sql.Real, life)
-        .input('Mana', sql.Real, mana)
-        .input('MaxMana', sql.Real, mana)
-        .input('MapNumber', sql.SmallInt, map)
-        .input('MapPosX', sql.SmallInt, x)
-        .input('MapPosY', sql.SmallInt, y);
-
-      if (charCols.has('leadership')) {
-        insertCols.push('Leadership');
-        insertVals.push('@Leadership');
-        q.input('Leadership', sql.SmallInt, cmd);
-      }
-      if (charCols.has('resetcount')) {
-        insertCols.push('ResetCount');
-        insertVals.push('@ResetCount');
-        q.input('ResetCount', sql.Int, cleanResets);
-      } else if (charCols.has('resets')) {
-        insertCols.push('Resets');
-        insertVals.push('@Resets');
-        q.input('Resets', sql.Int, cleanResets);
-      }
-      if (charCols.has('ctlcode')) {
-        insertCols.push('CtlCode');
-        insertVals.push('0');
-      }
-      if (charCols.has('inventory')) {
-        insertCols.push('Inventory');
-        insertVals.push('CONVERT(VARBINARY(MAX), @EmptyInv, 2)');
-        q.input('EmptyInv', sql.VarChar, emptyInventoryHex);
-      }
-      if (charCols.has('experience')) {
-        insertCols.push('Experience');
-        insertVals.push('0');
-      }
-
-      await q.query(`
-        INSERT INTO Character (${insertCols.join(', ')})
-        VALUES (${insertVals.join(', ')});
-      `);
-
-      // 5. Actualizar slot en AccountCharacter
-      if (hasAccCharTable.recordset && hasAccCharTable.recordset.length > 0) {
-        await pool.request()
-          .input('Acc', sql.VarChar, cleanAccountId)
-          .input('Name', sql.VarChar, cleanName)
-          .query(`
-            UPDATE AccountCharacter 
-            SET GameID${targetSlot} = @Name,
-                GameIDC = ISNULL(GameIDC, @Name)
-            WHERE Id = @Acc;
-          `);
-      }
-
-      // 6. Si es clase 3ra (Master), inicializar MasterSkillTree si la tabla existe
+      // 4. Si es clase 3ra (Master), inicializar MasterSkillTree si la tabla existe
       const isTier3 = (cleanClass === 2 || cleanClass === 3 || cleanClass === 18 || cleanClass === 19 || cleanClass === 34 || cleanClass === 35 || cleanClass === 49 || cleanClass === 50 || cleanClass === 65 || cleanClass === 66 || cleanClass === 82 || cleanClass === 83 || cleanClass === 97 || cleanClass === 98);
       if (isTier3) {
         const hasMst = await pool.request().query(`
@@ -2244,9 +2308,9 @@ app.post('/api/character/create', async (req, res) => {
         `);
         if (hasMst.recordset && hasMst.recordset.length > 0) {
           await pool.request()
-            .input('Name', sql.VarChar, cleanName)
+            .input('Name', sql.VarChar(10), cleanName)
             .query(`
-              IF NOT EXISTS (SELECT 1 FROM MasterSkillTree WHERE Name = @Name)
+              IF NOT EXISTS (SELECT 1 FROM MasterSkillTree WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name)
                 INSERT INTO MasterSkillTree (Name, MasterLevel, MasterPoint, MasterExperience)
                 VALUES (@Name, 1, 0, 0);
             `);
@@ -2631,8 +2695,9 @@ app.post('/api/character/update-location', async (req, res) => {
           BEGIN
             IF OBJECT_ID('MEMB_STAT', 'U') IS NOT NULL
               UPDATE MEMB_STAT SET ConnectStat = 0 WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
-            IF OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
-              UPDATE Me_MuOnline.dbo.MEMB_STAT SET ConnectStat = 0 WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
+            IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
+                  UPDATE Me_MuOnline.dbo.MEMB_STAT 
+                  SET ConnectStat = 0 WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
             IF OBJECT_ID('AccountCharacter', 'U') IS NOT NULL
               UPDATE AccountCharacter SET GameIDC = NULL WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
           END
@@ -2899,7 +2964,7 @@ app.post('/api/account/status', async (req, res) => {
                OR memb___id = @FoundAcc
                OR memb___id = @User;
           END
-          ELSE IF OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
+          ELSE IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
           BEGIN
             SELECT TOP 1 @IsOnline = ISNULL(ConnectStat, 0)
             FROM Me_MuOnline.dbo.MEMB_STAT 
@@ -3068,8 +3133,9 @@ app.post('/api/character/teleport', async (req, res) => {
           BEGIN
             IF OBJECT_ID('MEMB_STAT', 'U') IS NOT NULL
               UPDATE MEMB_STAT SET ConnectStat = 0, DisConnectTM = GETDATE() WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
-            IF OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
-              UPDATE Me_MuOnline.dbo.MEMB_STAT SET ConnectStat = 0, DisConnectTM = GETDATE() WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
+            IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
+                  UPDATE Me_MuOnline.dbo.MEMB_STAT 
+                  SET ConnectStat = 0, DisConnectTM = GETDATE() WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
             IF OBJECT_ID('AccountCharacter', 'U') IS NOT NULL
               UPDATE AccountCharacter SET GameIDC = NULL WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
             IF OBJECT_ID('WZ_DISCONNECT_MEMB', 'P') IS NOT NULL
@@ -3294,7 +3360,7 @@ app.post('/api/test-connection', async (req, res) => {
           DB_NAME() AS CurrentDB,
           OBJECT_ID('Character', 'U') AS HasCharacter,
           OBJECT_ID('MEMB_INFO', 'U') AS HasMembInfo,
-          OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') AS HasMeMembInfo,
+          CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') ELSE NULL END AS HasMeMembInfo,
           OBJECT_ID('MEMB_STAT', 'U') AS HasMembStat;
       `);
       const row = (q.recordset && q.recordset[0]) || {};
@@ -3332,9 +3398,9 @@ app.post('/api/accounts', async (req, res) => {
       const checkRes = await pool.request().query(`
         SELECT 
           OBJECT_ID('MEMB_INFO', 'U') AS HasMembInfo,
-          OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') AS HasMeMembInfo,
+          CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') ELSE NULL END AS HasMeMembInfo,
           OBJECT_ID('MEMB_STAT', 'U') AS HasMembStat,
-          OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') AS HasMeMembStat,
+          CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') ELSE NULL END AS HasMeMembStat,
           OBJECT_ID('Character', 'U') AS HasCharTable,
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount') AS HasWareCount,
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse') AS HasExtWarehouse,
@@ -4113,7 +4179,7 @@ app.post('/api/account/disconnect', async (req, res) => {
                OR LOWER(LTRIM(RTRIM(memb___id))) = LOWER(LTRIM(RTRIM(@User)))
                OR memb___id = @User;
           END
-          IF OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
+          IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
           BEGIN
             UPDATE Me_MuOnline.dbo.MEMB_STAT 
             SET ConnectStat = 0, ServerName = NULL, DisConnectTM = GETDATE()
@@ -5480,13 +5546,13 @@ app.post('/api/players/online', async (req, res) => {
         SELECT 
           CASE 
             WHEN OBJECT_ID('MEMB_STAT', 'U') IS NOT NULL THEN 'MEMB_STAT'
-            WHEN OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_STAT'
+            WHEN DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_STAT'
             WHEN OBJECT_ID('MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL THEN 'MuOnline.dbo.MEMB_STAT'
             ELSE NULL 
           END AS StatTable,
           CASE
             WHEN OBJECT_ID('AccountCharacter', 'U') IS NOT NULL THEN 'AccountCharacter'
-            WHEN OBJECT_ID('Me_MuOnline.dbo.AccountCharacter', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.AccountCharacter'
+            WHEN DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.AccountCharacter', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.AccountCharacter'
             WHEN OBJECT_ID('MuOnline.dbo.AccountCharacter', 'U') IS NOT NULL THEN 'MuOnline.dbo.AccountCharacter'
             ELSE NULL
           END AS AccCharTable;
@@ -6249,7 +6315,7 @@ app.post('/api/ip/enforce-limit', async (req, res) => {
                 SET ConnectStat = 0, ServerName = NULL, DisConnectTM = GETDATE()
                 WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
 
-                IF OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
+                IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
                   UPDATE Me_MuOnline.dbo.MEMB_STAT 
                   SET ConnectStat = 0, ServerName = NULL, DisConnectTM = GETDATE()
                   WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;
@@ -6323,7 +6389,7 @@ app.post('/api/accounts/active-bans', async (req, res) => {
         SELECT 
           CASE 
             WHEN OBJECT_ID('MEMB_INFO', 'U') IS NOT NULL THEN 'MEMB_INFO'
-            WHEN OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_INFO'
+            WHEN DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'Me_MuOnline.dbo.MEMB_INFO'
             WHEN OBJECT_ID('MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL THEN 'MuOnline.dbo.MEMB_INFO'
             ELSE 'MEMB_INFO'
           END AS MembTable;

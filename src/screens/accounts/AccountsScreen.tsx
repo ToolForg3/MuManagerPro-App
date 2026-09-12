@@ -427,13 +427,13 @@ export const AccountsScreen = () => {
   const handleDisconnectAccount = async () => {
     if (!selectedAccount) return;
     Alert.alert(
-      'Desconectar Cuenta Trabada',
-      `¿Deseas forzar la desconexión de "${selectedAccount.memb___id}"? Se limpiará su sesión en el servidor (ConnectStat = 0) para que el jugador pueda reconectarse inmediatamente.`,
+      'Liberar Cuenta Trabada en SQL',
+      `¿Deseas restablecer la sesión en SQL Server para "${selectedAccount.memb___id}"? Se limpiará su registro (ConnectStat = 0) en la base de datos (indicado si el servidor se cayó o la cuenta quedó trabada tras cerrar el juego).`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Desconectar Ahora',
-          style: 'destructive',
+          text: 'Liberar Sesión (ConnectStat = 0)',
+          style: 'default',
           onPress: async () => {
             setDisconnectingAccount(true);
             try {
@@ -1344,27 +1344,31 @@ export const AccountsScreen = () => {
       if (isOnline) {
         setSavingWarehouse(false);
         Alert.alert(
-          'Jugador Conectado en el Juego',
-          'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?',
+          'Jugador en Línea en el Juego',
+          'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?\n\n⚠️ AVISO TÉCNICO: Desde la conexión SQL directa no es posible cerrar el cliente de juego (la sesión activa vive en la memoria RAM del GameServer).',
           [
-            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Esperar a que salga', style: 'cancel' },
             {
-              text: 'Desconectar y Guardar',
-              style: 'destructive',
+              text: 'Liberar Traba SQL',
               onPress: async () => {
                 setSavingWarehouse(true);
                 try {
                   await SqlClient.disconnectAccount(warehouseAccount);
                   await new Promise((r) => setTimeout(r, 1000));
-                  await doSaveVault(newHex);
+                  Alert.alert(
+                    'Traba SQL Liberada',
+                    'Se ha restablecido ConnectStat = 0 en la base de datos. Pídele al jugador que cierre el juego o salga antes de guardar el baúl.'
+                  );
                 } catch (e: any) {
-                  Alert.alert('Error', e.message || 'Error al desconectar');
+                  Alert.alert('Error', e.message || 'Error al actualizar estado en SQL');
+                } finally {
                   setSavingWarehouse(false);
                 }
               },
             },
             {
-              text: 'Guardar de Todos Modos',
+              text: 'Guardar de Todos Modos (Riesgo)',
+              style: 'destructive',
               onPress: () => doSaveVault(newHex),
             },
           ]

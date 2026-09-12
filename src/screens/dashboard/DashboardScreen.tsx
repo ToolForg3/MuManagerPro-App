@@ -64,14 +64,21 @@ export const DashboardScreen = () => {
 
   const loadData = async () => {
     try {
-      await refreshMetrics();
+      await refreshMetrics().catch((err) => console.warn('Dashboard metrics refresh notice:', err));
+    } catch (_) {}
+
+    try {
       const accounts = await SqlClient.getRecentAccounts();
-      setRecentAccounts(accounts);
-      const logs = await getAdminLog();
-      setAdminLogs(logs.slice(0, 5));
+      setRecentAccounts(accounts || []);
     } catch (e) {
+      console.warn('Dashboard accounts fetch notice:', e);
       setRecentAccounts([]);
     }
+
+    try {
+      const logs = await getAdminLog();
+      setAdminLogs((logs || []).slice(0, 5));
+    } catch (_) {}
   };
 
   useFocusEffect(

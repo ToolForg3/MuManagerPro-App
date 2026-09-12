@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.8.1",
-  "latestVersion": "1.8.1",
+  "minRequiredVersion": "1.8.2",
+  "latestVersion": "1.8.2",
   "latestApkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.8.1 (Build 83) - Actualización Oficial & Test:\n• Moneda Ruud Universal: Acreditación multi-tabla atómica en MSPro y Louis Season 6 (Character, AccountCharacter, CashShopData y MEMB_INFO) con detección dinámica case-insensitive.\n• Selector de Seed Spheres: Selección visual Lv.1 a Lv.5 con recálculo dinámico en sockets y modales.\n• Purgado Profundo de Caché: Botón Limpiar con reseteo total de almacenamiento, tokens y sesiones con un clic.\n• Entrega en Vivo: Verificación del pipeline de actualización transparente OTA para Android.",
+  "updateChangelog": "MuManager PRO v1.8.2 (Build 84) - Actualización Oficial & Test:\n• Sincronización Canónica Louis S6: Creación nativa mediante WZ_CreateCharacter y resolución de binarios MagicList/Quest.\n• Seguridad Cross-DB Msg 911: Eliminación total de fallos cruzados hacia Me_MuOnline en servidores MSPro y Louis.\n• Filtro y Visualización: Limpieza de espacios en blanco (RTRIM) en cuentas y personajes de SQL Server.\n• Gestión Online Transparente: Clarificación técnica de memoria RAM GameServer vs SQL y opciones seguras de guardado y liberación de traba.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.8.1",
-  "updateTitle": "MuManager PRO v1.8.1 (Build 83)",
+  "minVersion": "1.8.2",
+  "updateTitle": "MuManager PRO v1.8.2 (Build 84)",
   "apkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "versionCode": 83,
+  "versionCode": 84,
   "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
   "directApkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.8.1 (Build 83) - Actualización Oficial & Test:\n• Moneda Ruud Universal: Acreditación multi-tabla atómica en MSPro y Louis Season 6 (Character, AccountCharacter, CashShopData y MEMB_INFO) con detección dinámica case-insensitive.\n• Selector de Seed Spheres: Selección visual Lv.1 a Lv.5 con recálculo dinámico en sockets y modales.\n• Purgado Profundo de Caché: Botón Limpiar con reseteo total de almacenamiento, tokens y sesiones con un clic.\n• Entrega en Vivo: Verificación del pipeline de actualización transparente OTA para Android.",
+  "releaseNotes": "MuManager PRO v1.8.2 (Build 84) - Actualización Oficial & Test:\n• Sincronización Canónica Louis S6: Creación nativa mediante WZ_CreateCharacter y resolución de binarios MagicList/Quest.\n• Seguridad Cross-DB Msg 911: Eliminación total de fallos cruzados hacia Me_MuOnline en servidores MSPro y Louis.\n• Filtro y Visualización: Limpieza de espacios en blanco (RTRIM) en cuentas y personajes de SQL Server.\n• Gestión Online Transparente: Clarificación técnica de memoria RAM GameServer vs SQL y opciones seguras de guardado y liberación de traba.",
   "updateDownloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "appVersion": "1.8.1",
-  "buildNumber": 83,
+  "appVersion": "1.8.2",
+  "buildNumber": 84,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -66,5 +66,7 @@
       "user": "mumanagerpro@gmail.com",
       "pass": ""
     }
-  }
+  },
+  "version": "1.8.2",
+  "build": 84
 }

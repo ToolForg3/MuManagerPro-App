@@ -68,15 +68,15 @@ export const CharacterListScreen = () => {
 
     if (accFilter && accFilter.trim()) {
       const cleanAcc = accFilter.toLowerCase().trim();
-      result = result.filter(c => (c.AccountID || '').toLowerCase() === cleanAcc);
+      result = result.filter(c => (c.AccountID || '').trim().toLowerCase() === cleanAcc);
     }
 
     if (query.trim()) {
       const q = query.toLowerCase().trim();
       result = result.filter(
         (c) =>
-          (c.Name || '').toLowerCase().includes(q) ||
-          (c.AccountID || '').toLowerCase().includes(q)
+          (c.Name || '').trim().toLowerCase().includes(q) ||
+          (c.AccountID || '').trim().toLowerCase().includes(q)
       );
     }
 
