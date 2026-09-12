@@ -847,6 +847,39 @@ export class SqlClient {
   }
 
   /**
+   * 8b. Eliminar Personaje Canónicamente (Louis & MSPro)
+   */
+  static async deleteCharacter(
+    charName: string,
+    accountId?: string,
+    forceOnline: boolean = false
+  ): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/character/delete', {
+        charName: charName.trim(),
+        accountId: accountId ? accountId.trim() : undefined,
+        forceOnline,
+        config: this.config,
+      }, 15000);
+
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al eliminar el personaje');
+      }
+
+      this.logQuery(`DELETE_CHARACTER_${charName}`, duration, true, 1);
+      return { success: true, message: data.message || 'Personaje eliminado exitosamente.' };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery(`DELETE_CHARACTER_${charName}`, duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  /**
    * 9. Bloquear / Desbloquear Cuenta de Jugador (Ban / Unban)
    */
   static async toggleBlockAccount(
@@ -869,6 +902,37 @@ export class SqlClient {
     } catch (e: any) {
       const duration = Date.now() - startTime;
       this.logQuery(`TOGGLE_BLOCK_${username}`, duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  /**
+   * 9a. Eliminar Cuenta Completa y sus Datos (Louis & MSPro)
+   */
+  static async deleteAccount(
+    username: string,
+    forceOnline: boolean = false
+  ): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/account/delete', {
+        username: username.trim(),
+        forceOnline,
+        config: this.config,
+      }, 20000);
+
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Error al eliminar la cuenta');
+      }
+
+      this.logQuery(`DELETE_ACCOUNT_${username}`, duration, true, 1);
+      return { success: true, message: data.message || 'Cuenta eliminada exitosamente.' };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery(`DELETE_ACCOUNT_${username}`, duration, false, 0, e.message);
       return { success: false, message: e.message };
     }
   }

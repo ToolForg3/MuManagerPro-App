@@ -132,6 +132,7 @@ export const AccountsScreen = () => {
   const [editRuud, setEditRuud] = useState<string>('0');
   const [savingAccount, setSavingAccount] = useState<boolean>(false);
   const [disconnectingAccount, setDisconnectingAccount] = useState<boolean>(false);
+  const [deletingAccount, setDeletingAccount] = useState<boolean>(false);
   const [accountChars, setAccountChars] = useState<CharacterSummary[]>([]);
   const [loadingAccountChars, setLoadingAccountChars] = useState<boolean>(false);
 
@@ -454,6 +455,86 @@ export const AccountsScreen = () => {
         },
       ]
     );
+  };
+
+  const promptDeleteAccountDirect = (account: AccountSummary) => {
+    Alert.alert(
+      'Eliminar Cuenta',
+      `¿Deseas eliminar permanentemente la cuenta "${account.memb___id}"?\n\n` +
+      `Se borrarán de forma irreversible:\n` +
+      `• Todos los personajes de la cuenta (${account.CharCount ?? 'todos'})\n` +
+      `• Baúl principal (/ware) y baúles expandidos\n` +
+      `• Monedas (WCoin, GoblinPoints, Ruud)\n` +
+      `• Credenciales y registros de login en SQL\n\n` +
+      `Esta acción NO se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Cuenta',
+          style: 'destructive',
+          onPress: () => performDeleteAccount(account.memb___id, false),
+        },
+      ]
+    );
+  };
+
+  const promptDeleteSelectedAccount = () => {
+    if (!selectedAccount) return;
+    const charCountText = accountChars.length > 0 ? `${accountChars.length} personajes asociados` : 'personajes asociados';
+    Alert.alert(
+      '⚠️ Eliminar Cuenta Completa',
+      `¿Estás absolutamente seguro de eliminar la cuenta "${selectedAccount.memb___id}" de SQL Server?\n\n` +
+      `Se eliminarán de forma irreversible:\n` +
+      `• ${charCountText}\n` +
+      `• Inventarios, habilidades y misiones\n` +
+      `• Baúl (/ware) y Bóvedas expandidas\n` +
+      `• Monedas y puntos CashShop\n` +
+      `• Datos de acceso de MEMB_INFO\n\n` +
+      `Esta acción NO se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar Definitivamente',
+          style: 'destructive',
+          onPress: () => performDeleteAccount(selectedAccount.memb___id, false),
+        },
+      ]
+    );
+  };
+
+  const performDeleteAccount = async (username: string, forceOnline: boolean = false) => {
+    setDeletingAccount(true);
+    try {
+      const res = await SqlClient.deleteAccount(username, forceOnline);
+      if (!res.success) {
+        if (res.message && res.message.includes('ONLINE_WARNING')) {
+          Alert.alert(
+            '⚠️ Cuenta Conectada',
+            `La cuenta "${username}" se encuentra actualmente ONLINE en el servidor de juego.\n\nEliminarla mientras el jugador está conectado puede causar desincronización en el GameServer.\n\n¿Deseas forzar la eliminación de todos modos?`,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Forzar Eliminación',
+                style: 'destructive',
+                onPress: () => performDeleteAccount(username, true),
+              },
+            ]
+          );
+        } else {
+          Alert.alert('Error', res.message || 'No se pudo eliminar la cuenta.');
+        }
+        return;
+      }
+
+      Alert.alert('Éxito', `La cuenta "${username}" y todos sus datos han sido eliminados correctamente.`);
+      setAccountDetailVisible(false);
+      setSelectedAccount(null);
+      await fetchAccounts();
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Error inesperado al eliminar la cuenta.');
+    } finally {
+      setDeletingAccount(false);
+    }
   };
 
   const loadVaultData = async (accountId: string, vaultIdx: number) => {
@@ -1540,6 +1621,15 @@ export const AccountsScreen = () => {
                   <MaterialCommunityIcons name="package-variant-closed" size={20} color="#E8C86A" />
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={styles.deleteAccountQuickBtn}
+                  onPress={() => promptDeleteAccountDirect(item)}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Eliminar Cuenta"
+                >
+                  <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
+                </TouchableOpacity>
+
                 <View style={styles.vipPillBadge}>
                   <Text style={styles.vipPillText}>{badge.label}</Text>
                 </View>
@@ -1879,6 +1969,23 @@ export const AccountsScreen = () => {
                   <>
                     <MaterialCommunityIcons name="power-plug-off" size={18} color="#FF5252" />
                     <Text style={styles.disconnectBtnText}>Desconectar Cuenta Trabada (Unstick)</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Botón Eliminar Cuenta Completa de SQL */}
+              <TouchableOpacity
+                style={styles.deleteAccountBtn}
+                onPress={promptDeleteSelectedAccount}
+                disabled={deletingAccount}
+                activeOpacity={0.8}
+              >
+                {deletingAccount ? (
+                  <ActivityIndicator size="small" color="#FF5252" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
+                    <Text style={styles.deleteAccountBtnText}>Eliminar Cuenta Completa de SQL</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -4253,6 +4360,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#6B5533',
   },
+  deleteAccountQuickBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+  },
   vipPillBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -4526,6 +4643,24 @@ const styles = StyleSheet.create({
   },
   disconnectBtnText: {
     color: '#E2703A',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  deleteAccountBtn: {
+    backgroundColor: 'rgba(244, 67, 54, 0.15)',
+    borderWidth: 1,
+    borderColor: '#F44336',
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+    minHeight: 44,
+  },
+  deleteAccountBtnText: {
+    color: '#FF5252',
     fontWeight: 'bold',
     fontSize: 13,
   },

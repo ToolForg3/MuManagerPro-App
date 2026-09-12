@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.8.2",
-  "latestVersion": "1.8.2",
+  "minRequiredVersion": "1.8.3",
+  "latestVersion": "1.8.3",
   "latestApkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.8.2 (Build 84) - Actualización Oficial & Test:\n• Sincronización Canónica Louis S6: Creación nativa mediante WZ_CreateCharacter y resolución de binarios MagicList/Quest.\n• Seguridad Cross-DB Msg 911: Eliminación total de fallos cruzados hacia Me_MuOnline en servidores MSPro y Louis.\n• Filtro y Visualización: Limpieza de espacios en blanco (RTRIM) en cuentas y personajes de SQL Server.\n• Gestión Online Transparente: Clarificación técnica de memoria RAM GameServer vs SQL y opciones seguras de guardado y liberación de traba.",
+  "updateChangelog": "MuManager PRO v1.8.3 (Build 85) - Actualización Oficial:\n• Eliminación Completa de Cuentas y Personajes: Compatible 100% con emuladores Louis Season 6 y MSPro Season 6.\n• Cascada de Claves Foráneas (FK): Limpieza automática y segura de CustomQuest, CustomNpcQuest, BattlePass y GuildMember.\n• Liberación de Slots AccountCharacter: Desvinculación atómica de GameID1..5 al eliminar personajes.\n• Purga Total de Cuentas: Eliminación integral de baúl principal, bóvedas expandidas, CashShop/Coins y credenciales en SQL Server.\n• Escudo Online Protector: Detección activa en GameServer para prevenir desincronizaciones de memoria RAM.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.8.2",
-  "updateTitle": "MuManager PRO v1.8.2 (Build 84)",
+  "minVersion": "1.8.3",
+  "updateTitle": "MuManager PRO v1.8.3 (Build 85)",
   "apkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "versionCode": 84,
+  "versionCode": 85,
   "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
   "directApkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.8.2 (Build 84) - Actualización Oficial & Test:\n• Sincronización Canónica Louis S6: Creación nativa mediante WZ_CreateCharacter y resolución de binarios MagicList/Quest.\n• Seguridad Cross-DB Msg 911: Eliminación total de fallos cruzados hacia Me_MuOnline en servidores MSPro y Louis.\n• Filtro y Visualización: Limpieza de espacios en blanco (RTRIM) en cuentas y personajes de SQL Server.\n• Gestión Online Transparente: Clarificación técnica de memoria RAM GameServer vs SQL y opciones seguras de guardado y liberación de traba.",
+  "releaseNotes": "MuManager PRO v1.8.3 (Build 85) - Actualización Oficial:\n• Eliminación Completa de Cuentas y Personajes: Compatible 100% con emuladores Louis Season 6 y MSPro Season 6.\n• Cascada de Claves Foráneas (FK): Limpieza automática y segura de CustomQuest, CustomNpcQuest, BattlePass y GuildMember.\n• Liberación de Slots AccountCharacter: Desvinculación atómica de GameID1..5 al eliminar personajes.\n• Purga Total de Cuentas: Eliminación integral de baúl principal, bóvedas expandidas, CashShop/Coins y credenciales en SQL Server.\n• Escudo Online Protector: Detección activa en GameServer para prevenir desincronizaciones de memoria RAM.",
   "updateDownloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "appVersion": "1.8.2",
-  "buildNumber": 84,
+  "appVersion": "1.8.3",
+  "buildNumber": 85,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.8.2",
-  "build": 84
+  "version": "1.8.3",
+  "build": 85
 }

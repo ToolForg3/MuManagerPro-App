@@ -54,6 +54,7 @@ export const CharacterListScreen = () => {
   const [createPoints, setCreatePoints] = useState('0');
   const [createZen, setCreateZen] = useState('1000000');
   const [isCreatingChar, setIsCreatingChar] = useState(false);
+  const [deletingCharName, setDeletingCharName] = useState<string | null>(null);
 
   const charSuggestions = useMemo(() =>
     [...characters.map(c => c.Name), ...[...new Set(characters.map(c => c.AccountID))]]
@@ -195,6 +196,54 @@ export const CharacterListScreen = () => {
     }
   };
 
+  const promptDeleteCharacter = (char: CharacterSummary) => {
+    Alert.alert(
+      'Eliminar Personaje',
+      `¿Estás seguro de que deseas eliminar permanentemente a "${char.Name}" (${char.AccountID})?\n\nEsta acción borrará el personaje de la base de datos, limpiará su slot en la cuenta y eliminará sus ítems, misiones y habilidades.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => performDeleteCharacter(char.Name, char.AccountID, false),
+        },
+      ]
+    );
+  };
+
+  const performDeleteCharacter = async (charName: string, accountId?: string, forceOnline: boolean = false) => {
+    setDeletingCharName(charName);
+    try {
+      const res = await SqlClient.deleteCharacter(charName, accountId, forceOnline);
+      if (!res.success) {
+        if (res.message && res.message.includes('ONLINE_WARNING')) {
+          Alert.alert(
+            '⚠️ Personaje Conectado',
+            `El personaje "${charName}" o su cuenta se encuentra actualmente ONLINE en el servidor de juego.\n\nEliminarlo mientras juega puede causar desincronización en la memoria del GameServer.\n\n¿Deseas forzar la eliminación de todos modos?`,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Forzar Eliminación',
+                style: 'destructive',
+                onPress: () => performDeleteCharacter(charName, accountId, true),
+              },
+            ]
+          );
+        } else {
+          Alert.alert('Error', res.message || 'No se pudo eliminar el personaje.');
+        }
+        return;
+      }
+
+      Alert.alert('Éxito', `El personaje "${charName}" ha sido eliminado correctamente.`);
+      fetchCharacters(accountFilter, false);
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Error inesperado al eliminar el personaje.');
+    } finally {
+      setDeletingCharName(null);
+    }
+  };
+
   const formatZen = (zen: number): string => {
     if (zen >= 1000000000) return `${(zen / 1000000000).toFixed(1)}B`;
     if (zen >= 1000000) return `${(zen / 1000000).toFixed(1)}M`;
@@ -269,6 +318,21 @@ export const CharacterListScreen = () => {
               {item.ResetCount || 0}R{item.MasterResetCount ? ` · ${item.MasterResetCount}MR` : ''}
             </Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.cardDeleteBtn}
+            onPress={() => promptDeleteCharacter(item)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
+            disabled={deletingCharName === item.Name}
+            accessibilityLabel={`Eliminar personaje ${item.Name}`}
+          >
+            {deletingCharName === item.Name ? (
+              <ActivityIndicator size="small" color="#FF5252" />
+            ) : (
+              <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
+            )}
+          </TouchableOpacity>
         </View>
 
         <View style={styles.cardBottomRow}>
@@ -814,6 +878,17 @@ const styles = StyleSheet.create({
     color: THEME.colors.arcano,
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  cardDeleteBtn: {
+    marginLeft: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 82, 82, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardBottomRow: {
     flexDirection: 'row',

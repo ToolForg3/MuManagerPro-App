@@ -143,6 +143,7 @@ export const CharacterEditScreen = () => {
   };
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDeletingChar, setIsDeletingChar] = useState(false);
   const [editorLockWarning, setEditorLockWarning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -240,6 +241,56 @@ export const CharacterEditScreen = () => {
       } else {
         setLoading(false);
       }
+    }
+  };
+
+  const promptDeleteCurrentCharacter = () => {
+    if (!charName) return;
+    Alert.alert(
+      'Eliminar Personaje',
+      `¿Estás seguro de que deseas eliminar permanentemente a "${charName}"?\n\nEsta acción borrará al personaje de la base de datos, limpiará su slot en la cuenta "${character?.AccountID || ''}" y eliminará su inventario, misiones y habilidades.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => performDeleteCurrentCharacter(false),
+        },
+      ]
+    );
+  };
+
+  const performDeleteCurrentCharacter = async (forceOnline: boolean = false) => {
+    if (!charName) return;
+    setIsDeletingChar(true);
+    try {
+      const res = await SqlClient.deleteCharacter(charName, character?.AccountID, forceOnline);
+      if (!res.success) {
+        if (res.message && res.message.includes('ONLINE_WARNING')) {
+          Alert.alert(
+            '⚠️ Personaje Conectado',
+            `El personaje "${charName}" o su cuenta se encuentra actualmente ONLINE en el servidor de juego.\n\nEliminarlo mientras juega puede causar desincronización en la memoria del GameServer.\n\n¿Deseas forzar la eliminación de todos modos?`,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Forzar Eliminación',
+                style: 'destructive',
+                onPress: () => performDeleteCurrentCharacter(true),
+              },
+            ]
+          );
+        } else {
+          Alert.alert('Error', res.message || 'No se pudo eliminar el personaje.');
+        }
+        return;
+      }
+
+      Alert.alert('Éxito', `El personaje "${charName}" ha sido eliminado correctamente.`);
+      navigation.goBack();
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Error inesperado al eliminar el personaje.');
+    } finally {
+      setIsDeletingChar(false);
     }
   };
 
@@ -1104,6 +1155,20 @@ export const CharacterEditScreen = () => {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
+            style={styles.deleteHeaderBtn}
+            onPress={promptDeleteCurrentCharacter}
+            disabled={isDeletingChar}
+            activeOpacity={0.7}
+            accessibilityLabel="Eliminar Personaje"
+          >
+            {isDeletingChar ? (
+              <ActivityIndicator size="small" color="#FF5252" />
+            ) : (
+              <MaterialCommunityIcons name="trash-can-outline" size={22} color="#FF5252" />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.closeBtn, isRefreshing && { backgroundColor: 'rgba(255, 152, 0, 0.2)' }]}
             onPress={() => loadCharacter(true)}
             disabled={isRefreshing}
@@ -1828,6 +1893,32 @@ export const CharacterEditScreen = () => {
                     keyboardType="numeric"
                   />
                 </View>
+              </View>
+
+              {/* Zona de Peligro: Eliminar Personaje */}
+              <View style={styles.dangerZoneCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <MaterialCommunityIcons name="alert-octagon-outline" size={20} color="#FF5252" />
+                  <Text style={styles.dangerZoneTitle}>Zona de Peligro</Text>
+                </View>
+                <Text style={styles.dangerZoneDesc}>
+                  Eliminar permanentemente a "{charName}". Esta operación borrará stats, inventario, habilidades y desvinculará el slot de la cuenta "{character?.AccountID || ''}".
+                </Text>
+                <TouchableOpacity
+                  style={styles.dangerDeleteBtn}
+                  onPress={promptDeleteCurrentCharacter}
+                  disabled={isDeletingChar}
+                  activeOpacity={0.8}
+                >
+                  {isDeletingChar ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="trash-can" size={18} color="#FFF" />
+                      <Text style={styles.dangerDeleteBtnText}>Eliminar Personaje de SQL</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -2573,6 +2664,53 @@ const styles = StyleSheet.create({
     borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  deleteHeaderBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dangerZoneCard: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: 'rgba(244, 67, 54, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(244, 67, 54, 0.35)',
+  },
+  dangerZoneTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FF5252',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  dangerZoneDesc: {
+    fontSize: 12,
+    color: '#CCCCCC',
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  dangerDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#D32F2F',
+    paddingVertical: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FF5252',
+  },
+  dangerDeleteBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+    fontFamily: THEME.typography.fontTitle,
   },
   tabBarWrapper: {
     backgroundColor: THEME.colors.superficie,

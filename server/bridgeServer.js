@@ -2046,6 +2046,150 @@ app.post('/api/characters', async (req, res) => {
 });
 
 // Endpoint para Creación de Personaje en Cuenta (Season 6 Louis Update 40/50)
+
+// =========================================================================
+// ELIMINAR PERSONAJE (CANÓNICO LOUIS SEASON 6 & MSPRO)
+// =========================================================================
+app.post('/api/character/delete', async (req, res) => {
+  try {
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql package not installed' });
+    const { charName, accountId, forceOnline, config } = req.body;
+    if (!charName || typeof charName !== 'string' || !charName.trim()) {
+      return res.status(400).json({ success: false, error: 'Debe especificar el nombre del personaje.' });
+    }
+    const cleanName = charName.trim();
+
+    await executeSql(config || req.body.config, async (pool) => {
+      // 1. Obtener AccountID y verificar existencia
+      const charRes = await pool.request()
+        .input('Name', sql.VarChar(10), cleanName)
+        .query('SELECT TOP 1 AccountID, Name FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name');
+      
+      if (!charRes.recordset || charRes.recordset.length === 0) {
+        throw new Error(`El personaje '${cleanName}' no existe en la base de datos.`);
+      }
+      const accId = (charRes.recordset[0].AccountID || accountId || '').trim();
+
+      // 2. Verificar estado Online si no es forzado
+      if (!forceOnline && accId) {
+        const statCheck = await pool.request()
+          .input('Acc', sql.VarChar(10), accId)
+          .query(`
+            SELECT 
+              (SELECT TOP 1 ConnectStat FROM MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc) AS MembStat,
+              CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL 
+                THEN (SELECT TOP 1 ConnectStat FROM Me_MuOnline.dbo.MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc)
+                ELSE NULL 
+              END AS MeStat;
+          `);
+        const row = statCheck.recordset && statCheck.recordset[0];
+        const isOnline = (row && (row.MembStat === 1 || row.MembStat === '1' || row.MeStat === 1 || row.MeStat === '1'));
+        if (isOnline) {
+          throw new Error(`ONLINE_WARNING: El personaje o la cuenta '${accId}' se encuentra actualmente ONLINE en el servidor de juego. Debe salir del juego antes de eliminarlo para evitar corrupción en memoria RAM del GameServer.`);
+        }
+      }
+
+      // 3. Transacción de borrado integral seguro
+      const delReq = pool.request()
+        .input('Name', sql.VarChar(10), cleanName)
+        .input('Acc', sql.VarChar(10), accId);
+
+      await delReq.query(`
+        BEGIN TRANSACTION;
+        BEGIN TRY
+          -- 3.1. Tablas con Claves Foráneas directas (FK)
+          IF OBJECT_ID('BattlePass_Rewards', 'U') IS NOT NULL
+            DELETE FROM BattlePass_Rewards WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;
+
+          IF OBJECT_ID('BattlePass', 'U') IS NOT NULL
+            DELETE FROM BattlePass WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;
+
+          IF OBJECT_ID('CustomQuest', 'U') IS NOT NULL
+            DELETE FROM CustomQuest WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;
+
+          IF OBJECT_ID('CustomNpcQuest', 'U') IS NOT NULL
+            DELETE FROM CustomNpcQuest WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;
+
+          -- 3.2. Clanes (GuildMember) y liderazgo de Guild
+          IF OBJECT_ID('GuildMember', 'U') IS NOT NULL
+          BEGIN
+            DELETE FROM GuildMember WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;
+          END
+
+          IF OBJECT_ID('Guild', 'U') IS NOT NULL
+          BEGIN
+            DELETE FROM Guild WHERE LTRIM(RTRIM(G_Master)) = LTRIM(RTRIM(@Name)) OR G_Master = @Name;
+          END
+
+          -- 3.3. Tablas auxiliares de personajes (Louis & MSPro)
+          DECLARE @tbls TABLE (tName VARCHAR(100));
+          INSERT INTO @tbls VALUES 
+            ('MasterSkillTree'), ('OptionData'), ('QuestKillCount'), ('QuestWorld'), 
+            ('Gens_Rank'), ('Gens_Reward'), ('Gens_Duprian'), ('Gens_Varnert'),
+            ('RankingBloodCastle'), ('RankingChaosCastle'), ('RankingDevilSquare'), 
+            ('RankingDuel'), ('RankingIllusionTemple'), ('RankingKingPlayer'), ('RankingTvT'),
+            ('EventLeoTheHelper'), ('EventSantaClaus'), ('HelperData'), ('DailyBonus'),
+            ('FortuneWheel'), ('GiftCodes'), ('GremoryCase'), ('ItemMarket'),
+            ('ResetSystem'), ('FlagSystem'), ('AutoAddStats'), ('CustomAttack'),
+            ('XTR_EventEnterCount'), ('XTR_PenaltyData'), ('XTR_PetInventory'), ('XTR_PlayerDieLog'), ('XTR_QuestInfo'),
+            ('T_FriendMain'), ('T_FriendMail'), ('T_FriendList'), ('T_CGuid');
+
+          DECLARE @currTable VARCHAR(100);
+          DECLARE tbl_cursor CURSOR FOR SELECT tName FROM @tbls;
+          OPEN tbl_cursor;
+          FETCH NEXT FROM tbl_cursor INTO @currTable;
+          WHILE @@FETCH_STATUS = 0
+          BEGIN
+            IF OBJECT_ID(@currTable, 'U') IS NOT NULL
+            BEGIN
+              EXEC('DELETE FROM [' + @currTable + '] WHERE LTRIM(RTRIM(Name)) = ''' + @Name + ''' OR Name = ''' + @Name + ''';');
+            END
+            FETCH NEXT FROM tbl_cursor INTO @currTable;
+          END
+          CLOSE tbl_cursor;
+          DEALLOCATE tbl_cursor;
+
+          -- 3.4. Ejecución del SP Canónico WZ_DeleteCharacter si existe
+          IF OBJECT_ID('WZ_DeleteCharacter', 'P') IS NOT NULL
+          BEGIN
+            EXEC WZ_DeleteCharacter @Acc, @Name;
+          END
+
+          -- 3.5. Borrado directo de la tabla Character
+          DELETE FROM Character WHERE (LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name);
+
+          -- 3.6. Limpieza canónica de slot en AccountCharacter
+          IF OBJECT_ID('AccountCharacter', 'U') IS NOT NULL AND @Acc IS NOT NULL AND LEN(@Acc) > 0
+          BEGIN
+            UPDATE AccountCharacter
+            SET 
+              GameID1 = CASE WHEN LTRIM(RTRIM(GameID1)) = LTRIM(RTRIM(@Name)) OR GameID1 = @Name THEN NULL ELSE GameID1 END,
+              GameID2 = CASE WHEN LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(@Name)) OR GameID2 = @Name THEN NULL ELSE GameID2 END,
+              GameID3 = CASE WHEN LTRIM(RTRIM(GameID3)) = LTRIM(RTRIM(@Name)) OR GameID3 = @Name THEN NULL ELSE GameID3 END,
+              GameID4 = CASE WHEN LTRIM(RTRIM(GameID4)) = LTRIM(RTRIM(@Name)) OR GameID4 = @Name THEN NULL ELSE GameID4 END,
+              GameID5 = CASE WHEN LTRIM(RTRIM(GameID5)) = LTRIM(RTRIM(@Name)) OR GameID5 = @Name THEN NULL ELSE GameID5 END,
+              GameIDC = CASE WHEN LTRIM(RTRIM(GameIDC)) = LTRIM(RTRIM(@Name)) OR GameIDC = @Name THEN NULL ELSE GameIDC END
+            WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
+          END
+
+          COMMIT TRANSACTION;
+        END TRY
+        BEGIN CATCH
+          IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+          THROW;
+        END CATCH
+      `);
+    });
+
+    res.json({
+      success: true,
+      message: `El personaje '${cleanName}' ha sido eliminado exitosamente y su ranura ha sido liberada.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/character/create', async (req, res) => {
   try {
     if (!sql) return res.status(500).json({ success: false, error: 'mssql package not installed' });
@@ -3884,6 +4028,158 @@ app.post('/api/account/create', async (req, res) => {
 });
 
 // Bloquear / Desbloquear Cuenta (Ban/Unban)
+
+// =========================================================================
+// ELIMINAR CUENTA (CANÓNICO LOUIS SEASON 6 & MSPRO)
+// =========================================================================
+app.post('/api/account/delete', async (req, res) => {
+  try {
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql package not installed' });
+    const { username, forceOnline, config } = req.body;
+    if (!username || typeof username !== 'string' || !username.trim()) {
+      return res.status(400).json({ success: false, error: 'Debe especificar el nombre de usuario de la cuenta.' });
+    }
+    const cleanUser = username.trim();
+
+    await executeSql(config || req.body.config, async (pool) => {
+      // 1. Verificar existencia en MEMB_INFO
+      const chk = await pool.request()
+        .input('User', sql.VarChar(10), cleanUser)
+        .query(`
+          SELECT memb___id FROM MEMB_INFO WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User
+          UNION
+          SELECT memb___id FROM Me_MuOnline.dbo.MEMB_INFO WHERE DB_ID('Me_MuOnline') IS NOT NULL AND (LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User);
+        `);
+      if (!chk.recordset || chk.recordset.length === 0) {
+        throw new Error(`La cuenta '${cleanUser}' no existe en MEMB_INFO.`);
+      }
+
+      // 2. Verificar estado Online si no es forzado
+      if (!forceOnline) {
+        const statCheck = await pool.request()
+          .input('User', sql.VarChar(10), cleanUser)
+          .query(`
+            SELECT 
+              (SELECT TOP 1 ConnectStat FROM MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User) AS MembStat,
+              CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL 
+                THEN (SELECT TOP 1 ConnectStat FROM Me_MuOnline.dbo.MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User)
+                ELSE NULL 
+              END AS MeStat;
+          `);
+        const row = statCheck.recordset && statCheck.recordset[0];
+        const isOnline = (row && (row.MembStat === 1 || row.MembStat === '1' || row.MeStat === 1 || row.MeStat === '1'));
+        if (isOnline) {
+          throw new Error(`ONLINE_WARNING: La cuenta '${cleanUser}' se encuentra actualmente ONLINE en el servidor de juego. Debe salir del juego antes de eliminarla.`);
+        }
+      }
+
+      // 3. Buscar todos los personajes pertenecientes a la cuenta
+      const charsRes = await pool.request()
+        .input('User', sql.VarChar(10), cleanUser)
+        .query(`
+          SELECT Name FROM Character WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User
+          UNION
+          SELECT GameID1 AS Name FROM AccountCharacter WHERE (LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User) AND GameID1 IS NOT NULL AND LEN(GameID1) > 0
+          UNION
+          SELECT GameID2 AS Name FROM AccountCharacter WHERE (LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User) AND GameID2 IS NOT NULL AND LEN(GameID2) > 0
+          UNION
+          SELECT GameID3 AS Name FROM AccountCharacter WHERE (LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User) AND GameID3 IS NOT NULL AND LEN(GameID3) > 0
+          UNION
+          SELECT GameID4 AS Name FROM AccountCharacter WHERE (LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User) AND GameID4 IS NOT NULL AND LEN(GameID4) > 0
+          UNION
+          SELECT GameID5 AS Name FROM AccountCharacter WHERE (LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User) AND GameID5 IS NOT NULL AND LEN(GameID5) > 0;
+        `);
+      
+      const charList = (charsRes.recordset || []).map(r => (r.Name || '').trim()).filter(Boolean);
+
+      // 4. Borrado transaccional de personajes y cuenta
+      const delReq = pool.request()
+        .input('User', sql.VarChar(10), cleanUser);
+
+      let perCharDeleteSql = '';
+      for (let i = 0; i < charList.length; i++) {
+        const cName = charList[i].replace(/'/g, "''");
+        perCharDeleteSql += `
+          -- Limpieza personaje ${cName}
+          IF OBJECT_ID('BattlePass_Rewards', 'U') IS NOT NULL DELETE FROM BattlePass_Rewards WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('BattlePass', 'U') IS NOT NULL DELETE FROM BattlePass WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('CustomQuest', 'U') IS NOT NULL DELETE FROM CustomQuest WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('CustomNpcQuest', 'U') IS NOT NULL DELETE FROM CustomNpcQuest WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('GuildMember', 'U') IS NOT NULL DELETE FROM GuildMember WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('Guild', 'U') IS NOT NULL DELETE FROM Guild WHERE LTRIM(RTRIM(G_Master)) = '${cName}' OR G_Master = '${cName}';
+          IF OBJECT_ID('MasterSkillTree', 'U') IS NOT NULL DELETE FROM MasterSkillTree WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('OptionData', 'U') IS NOT NULL DELETE FROM OptionData WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('QuestKillCount', 'U') IS NOT NULL DELETE FROM QuestKillCount WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('QuestWorld', 'U') IS NOT NULL DELETE FROM QuestWorld WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('HelperData', 'U') IS NOT NULL DELETE FROM HelperData WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+          IF OBJECT_ID('WZ_DeleteCharacter', 'P') IS NOT NULL EXEC WZ_DeleteCharacter @User, '${cName}';
+          DELETE FROM Character WHERE LTRIM(RTRIM(Name)) = '${cName}' OR Name = '${cName}';
+        `;
+      }
+
+      await delReq.query(`
+        BEGIN TRANSACTION;
+        BEGIN TRY
+          ${perCharDeleteSql}
+
+          -- Borrado de tablas vinculadas a la cuenta
+          IF OBJECT_ID('AccountCharacter', 'U') IS NOT NULL
+            DELETE FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User;
+
+          IF OBJECT_ID('warehouse', 'U') IS NOT NULL
+            DELETE FROM warehouse WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('ExtWarehouse', 'U') IS NOT NULL
+            DELETE FROM ExtWarehouse WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('CashShopData', 'U') IS NOT NULL
+            DELETE FROM CashShopData WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('CashShopInventory', 'U') IS NOT NULL
+            DELETE FROM CashShopInventory WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('CustomGift', 'U') IS NOT NULL
+            DELETE FROM CustomGift WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('LockManager', 'U') IS NOT NULL
+            DELETE FROM LockManager WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('LuckyCoin', 'U') IS NOT NULL
+            DELETE FROM LuckyCoin WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL
+            DELETE FROM CustomJewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('MEMB_STAT', 'U') IS NOT NULL
+            DELETE FROM MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;
+
+          IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') IS NOT NULL
+            DELETE FROM Me_MuOnline.dbo.MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;
+
+          IF OBJECT_ID('MEMB_INFO', 'U') IS NOT NULL
+            DELETE FROM MEMB_INFO WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;
+
+          IF DB_ID('Me_MuOnline') IS NOT NULL AND OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') IS NOT NULL
+            DELETE FROM Me_MuOnline.dbo.MEMB_INFO WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;
+
+          COMMIT TRANSACTION;
+        END TRY
+        BEGIN CATCH
+          IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+          THROW;
+        END CATCH
+      `);
+    });
+
+    res.json({
+      success: true,
+      message: `La cuenta '${cleanUser}' y todos sus datos/personajes asociados han sido eliminados exitosamente.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/account/toggle-block', async (req, res) => {
   try {
     const { username, block, config } = req.body;
