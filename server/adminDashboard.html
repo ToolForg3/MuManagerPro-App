@@ -1024,9 +1024,13 @@
   <div id="change-admin-key-modal" class="modal-overlay">
     <div class="modal-box">
       <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px;">🔑 Cambiar Clave de Acceso al Panel</h3>
-      <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
+      <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">
         Ingresa la nueva clave maestra para acceder a este panel de administración.
       </p>
+      
+      <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 11px; color: #93c5fd; line-height: 1.4;">
+        ℹ️ <strong>Nota sobre Vercel / Nube:</strong> Si tu panel está desplegado en Vercel con la variable de entorno <code>ADMIN_KEY</code>, el servidor aceptará ambas claves. Para que el cambio sea permanente en nuevos despliegues de la nube, actualízala también en el panel de Vercel.
+      </div>
       
       <div class="form-group">
         <label>Nueva Clave:</label>
@@ -2162,11 +2166,14 @@
 
       <!-- Tabla 2: Dispositivos Excluidos / Lista Negra (Tombstones) -->
       <div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
           <div>
-            <h4 style="font-size:15px; font-weight:800; color:#FF5252; margin:0;">🚫 Dispositivos Excluidos / Revocados (Tombstones)</h4>
-            <p style="font-size:11px; color:#888; margin:2px 0 0 0;">Celulares eliminados que no pueden resucitar. Haz clic en "Restaurar" si deseas habilitar su reconexión.</p>
+            <h4 style="font-size:15px; font-weight:800; color:#FF5252; margin:0;">🚫 Dispositivos Excluidos / Historial de Exclusiones (Tombstones)</h4>
+            <p style="font-size:11px; color:#888; margin:2px 0 0 0;">Historial de celulares excluidos. Puedes restaurarlos o eliminarlos definitivamente para limpiar el registro sin bloquearlos.</p>
           </div>
+          <button class="btn btn-dark btn-sm" onclick="clearAllExcludedDevices()" style="color:#FFB74D; border:1px solid rgba(255, 183, 77, 0.4); font-size:12px; display:inline-flex; align-items:center; gap:6px;" title="Limpiar todos los registros de la lista de exclusión">
+            🧹 Limpiar Todo el Historial
+          </button>
         </div>
         <div class="table-container">
           <table>
@@ -2294,7 +2301,7 @@
         if (data.success) {
           sessionStorage.setItem('mumanager_admin_key', newKey);
           closeModal('change-admin-key-modal');
-          showToast('✅ ¡Clave maestra actualizada exitosamente!');
+          showToast(data.message || '✅ ¡Clave maestra actualizada exitosamente!');
         } else {
           showToast(data.error || 'No se pudo actualizar la clave.', true);
         }
@@ -2766,7 +2773,7 @@
     }
 
     async function deleteUserAccount(id, email) {
-      if (!confirm(`¿Deseas eliminar definitivamente la cuenta de "${email}"?`)) return;
+      if (!confirm(`¿Deseas eliminar definitivamente la cuenta de "${email || id}"?`)) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/user/delete', {
@@ -2775,13 +2782,23 @@
           body: JSON.stringify({ id, email })
         });
         const data = await res.json();
-        if (data.success) {
-          showToast('Cuenta eliminada.');
+        if (res.ok && data.success) {
+          showToast('Cuenta de "' + (email || id) + '" eliminada permanentemente.');
+          // Eliminación reactiva/optimista inmediata en memoria local
+          const cleanEmail = (email || '').toLowerCase().trim();
+          allUsersCache = allUsersCache.filter(u => 
+            (id ? u.id !== id : true) && 
+            (cleanEmail ? (u.email || '').toLowerCase().trim() !== cleanEmail : true)
+          );
+          renderUsersTable(allUsersCache);
+          updateTextIfDifferent('metric-users-total', allUsersCache.length);
           refreshUsers();
           loadAuditLogs();
+        } else {
+          showToast('Error al eliminar cuenta: ' + (data.error || 'Operación fallida'), true);
         }
       } catch (e) {
-        showToast('Error al eliminar cuenta: ' + e.message, true);
+        showToast('Error de conexión al eliminar cuenta: ' + e.message, true);
       }
     }
 
@@ -3941,7 +3958,7 @@
     }
 
     async function deleteDevice(hwid) {
-      if (!confirm(`¿Deseas eliminar definitivamente el celular "${hwid}" del panel?`)) return;
+      if (!confirm(`¿Deseas limpiar el celular "${hwid}" del panel?\n\nEl dispositivo se eliminará de la lista para limpiar registros, sin ser bloqueado.`)) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/device/delete', {
@@ -3950,12 +3967,21 @@
           body: JSON.stringify({ hwid })
         });
         const data = await res.json();
-        if (data.success) {
-          showToast('Dispositivo eliminado.');
+        if (res.ok && data.success) {
+          showToast('Registro de celular limpiado exitosamente (sin bloqueo).');
+          const cleanHwid = String(hwid).trim().toUpperCase();
+          const targetKey = Object.keys(allDevicesCache).find(h => h.toUpperCase() === cleanHwid) || hwid;
+          delete allDevicesCache[targetKey];
+          delete allDevicesCache[cleanHwid];
+          renderDevicesTable(allDevicesCache);
+          updateTextIfDifferent('metric-devices-total', Object.keys(allDevicesCache).length);
           refreshDevices();
+          loadAllLicensesModule();
+        } else {
+          showToast('Error al limpiar celular: ' + (data.error || 'Operación fallida'), true);
         }
       } catch (e) {
-        showToast('Error al eliminar', true);
+        showToast('Error al limpiar celular: ' + e.message, true);
       }
     }
 
@@ -5286,6 +5312,7 @@
             <td><small style="color:#FFB74D;">${safeReason}</small></td>
             <td>
               <button class="btn btn-green btn-sm" style="font-size:11px; padding:3px 8px;" data-action="unexclude-device" data-hwid="${safeHwid}" title="Restaurar dispositivo para que pueda volver a conectarse">♻️ Restaurar</button>
+              <button class="btn btn-dark btn-sm" style="color:#FF5252; border:1px solid rgba(255,82,82,0.3); font-size:11px; padding:3px 8px; margin-left:6px;" data-action="delete-tombstone" data-hwid="${safeHwid}" title="Eliminar definitivamente del registro sin bloquear el teléfono">🗑️ Eliminar</button>
             </td>
           </tr>
         `;
@@ -5299,8 +5326,67 @@
           if (btn.dataset.action === 'unexclude-device') {
             const hwid = btn.dataset.hwid;
             if (hwid) unexcludeDevice(hwid);
+          } else if (btn.dataset.action === 'delete-tombstone') {
+            const hwid = btn.dataset.hwid;
+            if (hwid) deleteTombstoneRecord(hwid);
           }
         });
+      }
+    }
+
+    async function deleteTombstoneRecord(hwid) {
+      if (!confirm(`¿Deseas eliminar definitivamente el registro de "${hwid}" del historial?\n\nEl dispositivo ya no figurará como excluido y NO estará bloqueado.`)) return;
+      const key = getAdminKey();
+      if (!key) return;
+      try {
+        const res = await fetch('/api/admin/tombstone/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ hwid })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`🗑️ Registro de ${hwid} eliminado del historial.`);
+          excludedDevicesCache = excludedDevicesCache.filter(d => d.hwid !== hwid && String(d.hwid).toUpperCase() !== String(hwid).toUpperCase());
+          renderExcludedDevicesTable(excludedDevicesCache);
+          updateTextIfDifferent('lic-metric-excluded', excludedDevicesCache.length);
+          loadAllLicensesModule();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo eliminar registro'), true);
+        }
+      } catch (err) {
+        showToast('Error de conexión: ' + err.message, true);
+      }
+    }
+
+    async function clearAllExcludedDevices() {
+      if (!excludedDevicesCache || excludedDevicesCache.length === 0) {
+        showToast('No hay registros en el historial de exclusiones.');
+        return;
+      }
+      if (!confirm(`¿Deseas vaciar TODO el historial de exclusiones (${excludedDevicesCache.length} dispositivos)?\n\nTodos los registros se limpiarán y los celulares NO estarán bloqueados.`)) return;
+      const key = getAdminKey();
+      if (!key) return;
+      try {
+        const res = await fetch('/api/admin/tombstones/clear-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`🧹 Se limpiaron ${data.clearedCount || 0} registros del historial.`);
+          excludedDevicesCache = [];
+          renderExcludedDevicesTable(excludedDevicesCache);
+          updateTextIfDifferent('lic-metric-excluded', 0);
+          loadAllLicensesModule();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo vaciar la lista'), true);
+        }
+      } catch (err) {
+        showToast('Error de conexión: ' + err.message, true);
       }
     }
 

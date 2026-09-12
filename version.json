@@ -1,11 +1,11 @@
 {
-    "version":  "1.7.9",
-    "minRequiredVersion":  "1.7.9",
-    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.7.9",
-    "publishedAt":  "2026-09-12T00:35:00.000Z",
+    "version":  "1.8.0",
+    "minRequiredVersion":  "1.8.0",
+    "githubReleaseUrl":  "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.8.0",
+    "publishedAt":  "2026-09-12T14:50:00.000Z",
     "downloadUrl":  "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-    "build":  81,
+    "build":  82,
     "forceUpdate":  true,
-    "changelog":  "MuManager PRO v1.7.9 (Build 81) - Parche Crítico de Seguridad:\n• Blindaje Criptográfico de Licencias: Renovación total del protocolo de cifrado y rotación de salt maestro.\n• Refuerzo Anti-Fuerza Bruta: Rate limiting estricto de 5 intentos en autenticación y protección HSTS.\n• Purga de Credenciales: Eliminación de accesos por defecto y seguridad Zero-Trust en endpoints.\n• Rendimiento: Mantenimiento de estabilidad en concurrencia y pools SQL persistentes."
+    "changelog":  "MuManager PRO v1.8.0 (Build 82) - Actualización Oficial:\n• Selector de Seed Spheres: Selección visual de nivel (Lv.1 Chipped a Lv.5 Pure) en ranuras de sockets con cálculo dinámico de bonos.\n• Compatibilidad Emulador MSPro: Corrección de consultas SQL mediante sp_executesql dinámico sin alteración de esquemas.\n• Purgado Profundo de Caché: Botón Limpiar con reseteo total de tokens, sesiones y configuración para reconexión instantánea sin reinstalar el APK."
 }
 

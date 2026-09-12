@@ -125,7 +125,7 @@ export class LicenseService {
     if (res.blocked) {
       this.currentStatus.isBlocked = true;
       this.currentStatus.blockReason = (res as any).reason || 'Acceso revocado por el administrador.';
-      if (res.forceWipeKey || res.mode === 'DEMO' || (res as any).authoritativeMode === 'DEMO') {
+      if (res.forceWipeKey || res.forceDemo) {
         this.currentStatus.isActivated = false;
         this.currentStatus.plan = 'DEMO';
         this.currentStatus.licenseKey = undefined;
@@ -227,7 +227,7 @@ export class LicenseService {
           [{ text: '¡Excelente!' }]
         );
       }
-    } else if (res.forceWipeKey || (res as any).authoritativeMode === 'DEMO') {
+    } else if (res.forceWipeKey || ((res as any).authoritativeMode === 'DEMO' && res.forceDemo)) {
       // Solo revocar si hay una orden estricta de borrado administrativo
       this.currentStatus.isActivated = false;
       this.currentStatus.plan = 'DEMO';
