@@ -35,7 +35,7 @@ import { logAdminAction } from '../../services/adminLog';
 export const ConfigScreen = () => {
   const navigation = useNavigation<any>();
   const { t, language, setLanguage } = useLanguage();
-  const { config, updateConfig, connect, isConnecting, isConnected } = useDatabase();
+  const { config, updateConfig, connect, isConnecting, isConnected, resetDatabaseState } = useDatabase();
   const { userEmail, logout } = useAuth();
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(LicenseService.getStatus());
   const [licenseModalVisible, setLicenseModalVisible] = useState(false);
@@ -363,33 +363,35 @@ export const ConfigScreen = () => {
 
   const handleClearConfig = () => {
     Alert.alert(
-      'Limpiar Configuración',
-      '¿Deseas restaurar los valores por defecto de la base de datos?',
+      'Limpiar Configuración y Caché Profunda',
+      '¿Deseas purgar toda la configuración SQL, tokens de sesión y caché local? Esto restablecerá la conexión a su estado inicial limpio sin necesidad de reinstalar la aplicación.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Restaurar',
+          text: 'Limpiar Todo',
           style: 'destructive',
           onPress: async () => {
-            const defaults = {
-              host: '127.0.0.1',
-              port: 1433,
-              database: 'MuOnline',
-              user: 'sa',
-              password: '',
-              encrypt: true,
-              emulatorType: 'MSPro' as const,
-              bridgeUrl: SqlClient.DEFAULT_CLOUD_GATEWAY,
-            };
-            setHost(defaults.host);
-            setPort(String(defaults.port));
-            setDatabase(defaults.database);
-            setUser(defaults.user);
-            setPassword('');
-            setEncrypt(true);
-            setEmulator('MSPro');
-            setBridgeUrl(SqlClient.DEFAULT_CLOUD_GATEWAY);
-            await updateConfig(defaults);
+            try {
+              const defaults = SqlClient.getDefaultConfig();
+              setHost(defaults.host);
+              setPort(String(defaults.port));
+              setDatabase(defaults.database);
+              setUser(defaults.user);
+              setPassword('');
+              setEncrypt(defaults.encrypt);
+              setEmulator(defaults.emulatorType as 'MSPro' | 'Louis');
+              setBridgeUrl(defaults.bridgeUrl || SqlClient.DEFAULT_CLOUD_GATEWAY);
+
+              // Purgado profundo en memoria, SecureStorage y AsyncStorage
+              await resetDatabaseState();
+
+              Alert.alert(
+                'Caché y Conexión Limpiados',
+                'Se han restablecido los valores por defecto y se han purgado todos los tokens y sesiones temporales. Ya puedes ingresar tus credenciales y conectar.'
+              );
+            } catch (err: any) {
+              Alert.alert('Aviso', 'Configuración restablecida: ' + (err?.message || 'Limpieza completada'));
+            }
           },
         },
       ]

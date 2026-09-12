@@ -365,40 +365,85 @@ export function encodeSocketByte(optionId: number, level: number = 1): number {
   return (optionId % 50) + (safeLevel - 1) * 50;
 }
 
+export interface SeedSphereLevelDef {
+  level: number;
+  name: string;
+  badge: string;
+}
+
+export const SEED_SPHERE_LEVELS: SeedSphereLevelDef[] = [
+  { level: 1, name: 'Nivel 1 (Chipped)', badge: 'Lv.1' },
+  { level: 2, name: 'Nivel 2 (Flawed)', badge: 'Lv.2' },
+  { level: 3, name: 'Nivel 3 (Standard)', badge: 'Lv.3' },
+  { level: 4, name: 'Nivel 4 (Greater)', badge: 'Lv.4' },
+  { level: 5, name: 'Nivel 5 (Pure)', badge: 'Lv.5' },
+];
+
 export interface QuickSocketOption {
   label: string;
   val: number;
   element: string;
+  optionId: number;
 }
 
-export const QUICK_SOCKET_OPTIONS: QuickSocketOption[] = [
-  { label: 'Sin Socket', val: 0xFF, element: 'Ninguno' },
-  { label: 'Libre (Gris)', val: 0xFE, element: 'Ninguno' },
-  // Fuego (Weapons)
-  { label: 'Fuego: Vel. Atq +7', val: encodeSocketByte(1, 1), element: 'Fuego' },
-  { label: 'Fuego: Max Atq +30', val: encodeSocketByte(2, 1), element: 'Fuego' },
-  { label: 'Fuego: Min Atq +20', val: encodeSocketByte(3, 1), element: 'Fuego' },
-  { label: 'Fuego: Atq/Mag +20', val: encodeSocketByte(4, 1), element: 'Fuego' },
-  { label: 'Fuego: -Costo AG 40%', val: encodeSocketByte(5, 1), element: 'Fuego' },
-  // Agua (Armor)
-  { label: 'Agua: Reduc. Daño +4%', val: encodeSocketByte(13, 1), element: 'Agua' },
-  { label: 'Agua: Defensa +30', val: encodeSocketByte(11, 1), element: 'Agua' },
-  { label: 'Agua: Reflejo Daño +5%', val: encodeSocketByte(14, 1), element: 'Agua' },
-  { label: 'Agua: Tasa Def. +10%', val: encodeSocketByte(10, 1), element: 'Agua' },
-  { label: 'Agua: Def. Escudo +7%', val: encodeSocketByte(12, 1), element: 'Agua' },
-  // Hielo (Both)
-  { label: 'Hielo: Atq Skill +37', val: encodeSocketByte(18, 1), element: 'Hielo' },
-  { label: 'Hielo: Vida x Kill +V/8', val: encodeSocketByte(16, 1), element: 'Hielo' },
-  { label: 'Hielo: Tasa Atq +25', val: encodeSocketByte(19, 1), element: 'Hielo' },
-  // Viento (Armor)
-  { label: 'Viento: Vida Max +4%', val: encodeSocketByte(22, 1), element: 'Viento' },
-  { label: 'Viento: Auto Vida +8', val: encodeSocketByte(21, 1), element: 'Viento' },
-  { label: 'Viento: AG Max +25', val: encodeSocketByte(25, 1), element: 'Viento' },
-  // Rayo (Weapons)
-  { label: 'Rayo: Daño Exc +15', val: encodeSocketByte(27, 1), element: 'Rayo' },
-  { label: 'Rayo: Daño Crít +30', val: encodeSocketByte(29, 1), element: 'Rayo' },
-  { label: 'Rayo: Tasa Exc +10%', val: encodeSocketByte(28, 1), element: 'Rayo' },
-  { label: 'Rayo: Tasa Crít +8%', val: encodeSocketByte(30, 1), element: 'Rayo' },
-  // Tierra (Armor)
-  { label: 'Tierra: Fuerza/Vit +30', val: encodeSocketByte(31, 1), element: 'Tierra' },
-];
+/**
+ * Genera el listado completo de opciones rápidas de socket para el nivel de Seed Sphere indicado (1 a 5).
+ */
+export function getQuickSocketOptions(level: number = 1): QuickSocketOption[] {
+  const safeLvl = Math.min(5, Math.max(1, level));
+  const lvlIdx = safeLvl - 1;
+
+  const options: QuickSocketOption[] = [
+    { label: 'Sin Socket', val: 0xFF, element: 'Ninguno', optionId: -1 },
+    { label: 'Libre (Gris)', val: 0xFE, element: 'Ninguno', optionId: -1 },
+  ];
+
+  // Opciones clave por elemento con bono dinámico según el nivel
+  const keyOptions = [
+    // Fuego (Weapons)
+    { id: 1, short: 'Vel. Atq' },
+    { id: 2, short: 'Max Atq' },
+    { id: 3, short: 'Min Atq' },
+    { id: 4, short: 'Atq/Mag' },
+    { id: 5, short: '-Costo AG' },
+    // Agua (Armor)
+    { id: 13, short: 'Reduc. Daño' },
+    { id: 11, short: 'Defensa' },
+    { id: 14, short: 'Reflejo Daño' },
+    { id: 10, short: 'Tasa Def.' },
+    { id: 12, short: 'Def. Escudo' },
+    // Hielo (Both)
+    { id: 18, short: 'Atq Skill' },
+    { id: 16, short: 'Vida x Kill' },
+    { id: 19, short: 'Tasa Atq' },
+    // Viento (Armor)
+    { id: 22, short: 'Vida Max' },
+    { id: 21, short: 'Auto Vida' },
+    { id: 25, short: 'AG Max' },
+    // Rayo (Weapons)
+    { id: 27, short: 'Daño Exc' },
+    { id: 29, short: 'Daño Crít' },
+    { id: 28, short: 'Tasa Exc' },
+    { id: 30, short: 'Tasa Crít' },
+    // Tierra (Armor)
+    { id: 31, short: 'Fuerza/Vit' },
+  ];
+
+  for (const ko of keyOptions) {
+    const def = SOCKET_OPTIONS_CATALOG.find((o) => o.optionId === ko.id);
+    if (def) {
+      const bonus = def.bonuses[lvlIdx] || '';
+      options.push({
+        label: `${def.element}: ${ko.short} ${bonus}`,
+        val: encodeSocketByte(ko.id, safeLvl),
+        element: def.element,
+        optionId: ko.id,
+      });
+    }
+  }
+
+  return options;
+}
+
+export const QUICK_SOCKET_OPTIONS: QuickSocketOption[] = getQuickSocketOptions(1);
+

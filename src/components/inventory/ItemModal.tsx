@@ -35,6 +35,8 @@ import {
   decodeSocketByte,
   encodeSocketByte,
   QUICK_SOCKET_OPTIONS,
+  getQuickSocketOptions,
+  SEED_SPHERE_LEVELS,
 } from '../../constants/socketCatalog';
 
 interface ItemModalProps {
@@ -59,6 +61,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [editedItem, setEditedItem] = useState<ParsedItem | null>(null);
   const [enableSockets, setEnableSockets] = useState<boolean>(false);
+  const [socketLevels, setSocketLevels] = useState<number[]>([1, 1, 1, 1, 1]);
 
   useEffect(() => {
     if (item) {
@@ -70,10 +73,16 @@ export const ItemModal: React.FC<ItemModalProps> = ({
         item.sockets.length > 0 &&
         item.sockets.some((s) => s !== 0xFF && s !== undefined);
       setEnableSockets(!!hasActiveSockets);
+      const initialLevels = [0, 1, 2, 3, 4].map((idx) => {
+        const byte = (item.sockets && item.sockets[idx] !== undefined) ? item.sockets[idx] : 0xFF;
+        return byte < 250 ? Math.min(5, Math.max(1, Math.floor(byte / 50) + 1)) : 1;
+      });
+      setSocketLevels(initialLevels);
     } else {
       setEditedItem(null);
       setIsEditing(false);
       setEnableSockets(false);
+      setSocketLevels([1, 1, 1, 1, 1]);
     }
   }, [item, visible, initialEditing, slotIndex]);
 
@@ -592,23 +601,72 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               )}
 
               {enableSockets && isEditing && (
-                <View style={{ marginTop: 8, gap: 12 }}>
+                <View style={{ marginTop: 8, gap: 14 }}>
                   {[0, 1, 2, 3, 4].map((sIdx) => {
                     const currentVal = (editedItem.sockets && editedItem.sockets[sIdx] !== undefined)
                       ? editedItem.sockets[sIdx]
                       : 0xFF;
                     const sockInfo = decodeSocketByte(currentVal);
+                    const currentLvl = sockInfo.hasSeed ? sockInfo.level : (socketLevels[sIdx] || 1);
+                    const currentOptions = getQuickSocketOptions(currentLvl);
+
                     return (
-                      <View key={`socket_modal_${sIdx}`} style={{ gap: 6 }}>
+                      <View key={`socket_modal_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(255,255,255,0.02)', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#2A241E' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Text style={styles.socketLabel}>Slot #{sIdx + 1}:</Text>
                           <Text style={{ fontSize: 11, color: '#E8C86A', fontWeight: '700' }}>
                             {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                           </Text>
                         </View>
+
+                        {/* Selector de Nivel / Tipo de Seed Sphere (Lv.1 a Lv.5) */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 2 }}>
+                          <Text style={{ fontSize: 10, color: '#8C7B6B', fontWeight: '600' }}>Esfera:</Text>
+                          {SEED_SPHERE_LEVELS.map((sl) => {
+                            const isLvlActive = currentLvl === sl.level;
+                            return (
+                              <TouchableOpacity
+                                key={`lvl_${sIdx}_${sl.level}`}
+                                style={{
+                                  paddingHorizontal: 7,
+                                  paddingVertical: 2,
+                                  borderRadius: 4,
+                                  backgroundColor: isLvlActive ? '#E8C86A' : '#1E1A16',
+                                  borderWidth: 1,
+                                  borderColor: isLvlActive ? '#E8C86A' : '#3E342B',
+                                }}
+                                onPress={() => {
+                                  const updatedLevels = [...socketLevels];
+                                  updatedLevels[sIdx] = sl.level;
+                                  setSocketLevels(updatedLevels);
+
+                                  if (sockInfo.hasSeed && sockInfo.optionId >= 0) {
+                                    const newByte = encodeSocketByte(sockInfo.optionId, sl.level);
+                                    const newSockets = [...(editedItem.sockets || [0xFF, 0xFF, 0xFF, 0xFF, 0xFF])];
+                                    newSockets[sIdx] = newByte;
+                                    setEditedItem({
+                                      ...editedItem,
+                                      sockets: newSockets,
+                                      isModified: true,
+                                    });
+                                  }
+                                }}
+                              >
+                                <Text style={{
+                                  fontSize: 10,
+                                  fontWeight: 'bold',
+                                  color: isLvlActive ? '#120F0D' : '#C5B5A5',
+                                }}>
+                                  {sl.badge}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                           <View style={{ flexDirection: 'row', gap: 4 }}>
-                            {QUICK_SOCKET_OPTIONS.map((so) => {
+                            {currentOptions.map((so) => {
                               const isActive = currentVal === so.val;
                               return (
                                 <TouchableOpacity
@@ -625,6 +683,11 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                                       sockets: newSockets,
                                       isModified: true,
                                     });
+                                    if (so.optionId >= 0) {
+                                      const updatedLevels = [...socketLevels];
+                                      updatedLevels[sIdx] = currentLvl;
+                                      setSocketLevels(updatedLevels);
+                                    }
                                   }}
                                 >
                                   <Text

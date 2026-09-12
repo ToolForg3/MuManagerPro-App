@@ -2744,16 +2744,22 @@ app.post('/api/warehouse', async (req, res) => {
     const wareIdx = parseInt(warehouseIndex, 10) || 0;
 
     const data = await executeSql(config, async (pool) => {
-      // 1. Obtener WarehouseCount desde MEMB_INFO
+      // 1. Obtener WarehouseCount desde MEMB_INFO o AccountCharacter.ExtWarehouse (vía sp_executesql dinámico)
       let wareCount = 1;
       try {
         const countRes = await pool.request()
           .input('Acc', sql.VarChar, accountId)
           .query(`
+            DECLARE @Cnt INT = 1;
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
-              SELECT WarehouseCount FROM MEMB_INFO WHERE memb___id = @Acc;
-            ELSE
-              SELECT 1 AS WarehouseCount;
+            BEGIN
+              EXEC sp_executesql N'SELECT @outCnt = ISNULL(WarehouseCount, 1) FROM MEMB_INFO WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;', N'@Acc VARCHAR(10), @outCnt INT OUTPUT', @Acc, @outCnt = @Cnt OUTPUT;
+            END
+            ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
+            BEGIN
+              EXEC sp_executesql N'SELECT @outCnt = CASE WHEN ISNULL(ExtWarehouse, 0) > 0 THEN 2 ELSE 1 END FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;', N'@Acc VARCHAR(10), @outCnt INT OUTPUT', @Acc, @outCnt = @Cnt OUTPUT;
+            END
+            SELECT ISNULL(@Cnt, 1) AS WarehouseCount;
           `);
         if (countRes.recordset && countRes.recordset.length > 0) {
           wareCount = countRes.recordset[0].WarehouseCount || 1;
@@ -2823,16 +2829,18 @@ app.post('/api/warehouse', async (req, res) => {
         wareData.ItemsHex = wareData.ItemsHex.trim().padEnd(7680, 'F');
       }
 
-      // Consultar nivel de Expansión de Baúl Season 6 (AccountCharacter.ExtWarehouse = 0, 1 o 2)
+      // Consultar nivel de Expansión de Baúl Season 6 (AccountCharacter.ExtWarehouse = 0, 1 o 2 vía sp_executesql)
       let extWarehouseLevel = 0;
       try {
         const extRes = await pool.request()
           .input('Acc', sql.VarChar, accountId.trim())
           .query(`
+            DECLARE @ExtLvl INT = 0;
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
-              SELECT ISNULL(ExtWarehouse, 0) AS ExtWarehouse FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
-            ELSE
-              SELECT 0 AS ExtWarehouse;
+            BEGIN
+              EXEC sp_executesql N'SELECT @outLvl = ISNULL(ExtWarehouse, 0) FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;', N'@Acc VARCHAR(10), @outLvl INT OUTPUT', @Acc, @outLvl = @ExtLvl OUTPUT;
+            END
+            SELECT ISNULL(@ExtLvl, 0) AS ExtWarehouse;
           `);
         if (extRes.recordset && extRes.recordset.length > 0) {
           extWarehouseLevel = extRes.recordset[0].ExtWarehouse || 0;
@@ -2981,24 +2989,18 @@ app.post('/api/warehouse/update-count', async (req, res) => {
     const newCount = Math.max(1, Math.min(250, parseInt(count, 10) || 1));
 
     await executeSql(config, async (pool) => {
-      // Auto-crear columna si no existe para compatibilidad universal
-      await pool.request().query(`
-        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
-        BEGIN
-          ALTER TABLE MEMB_INFO ADD WarehouseCount INT NOT NULL DEFAULT 1;
-        END
-      `);
-
       await pool.request()
         .input('Acc', sql.VarChar, accountId)
         .input('Count', sql.Int, newCount)
         .query(`
-          UPDATE MEMB_INFO 
-          SET WarehouseCount = @Count
-          WHERE memb___id = @Acc;
+          IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
+          BEGIN
+            EXEC sp_executesql N'UPDATE MEMB_INFO SET WarehouseCount = @cnt WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@acc)) OR memb___id = @acc;', N'@cnt INT, @acc VARCHAR(10)', @Count, @Acc;
+          END
+
           IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
           BEGIN
-            UPDATE AccountCharacter SET ExtWarehouse = 2 WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
+            EXEC sp_executesql N'UPDATE AccountCharacter SET ExtWarehouse = CASE WHEN @cnt > 1 THEN 2 ELSE 0 END WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@acc)) OR Id = @acc;', N'@cnt INT, @acc VARCHAR(10)', @Count, @Acc;
           END
         `);
     });
@@ -3019,26 +3021,21 @@ app.post('/api/warehouse/set-expansion', async (req, res) => {
     const expLevel = Math.max(0, Math.min(1, parseInt(level, 10) || 1));
 
     await executeSql(config, async (pool) => {
-      // 1. Asegurar columna ExtWarehouse en AccountCharacter
-      await pool.request().query(`
-        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
-        BEGIN
-          ALTER TABLE AccountCharacter ADD ExtWarehouse TINYINT NOT NULL DEFAULT 0;
-        END
-      `);
-
-      // 2. Actualizar o insertar en AccountCharacter
+      // 1. Actualizar o insertar en AccountCharacter (vía sp_executesql dinámico sin ALTER TABLE)
       await pool.request()
         .input('Acc', sql.VarChar, accountId.trim())
         .input('Lvl', sql.Int, expLevel)
         .query(`
-          IF EXISTS (SELECT 1 FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc)
+          IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
           BEGIN
-            UPDATE AccountCharacter SET ExtWarehouse = @Lvl WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
-          END
-          ELSE
-          BEGIN
-            INSERT INTO AccountCharacter (Id, ExtWarehouse) VALUES (@Acc, @Lvl);
+            IF EXISTS (SELECT 1 FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc)
+            BEGIN
+              EXEC sp_executesql N'UPDATE AccountCharacter SET ExtWarehouse = @Lvl WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;', N'@Lvl INT, @Acc VARCHAR(10)', @Lvl, @Acc;
+            END
+            ELSE
+            BEGIN
+              EXEC sp_executesql N'INSERT INTO AccountCharacter (Id, ExtWarehouse) VALUES (@Acc, @Lvl);', N'@Lvl INT, @Acc VARCHAR(10)', @Lvl, @Acc;
+            END
           END
         `);
 
@@ -3281,15 +3278,18 @@ app.post('/api/account/update', async (req, res) => {
               WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
             END
 
-            -- 3. WarehouseCount
+            -- 3. WarehouseCount / ExtWarehouse (vía sp_executesql dinámico sin ALTER TABLE)
             IF @WCount IS NOT NULL
             BEGIN
-              IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
-                ALTER TABLE MEMB_INFO ADD WarehouseCount INT NOT NULL DEFAULT 1;
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
+              BEGIN
+                EXEC sp_executesql N'UPDATE MEMB_INFO SET WarehouseCount = @cnt WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@user)) OR memb___id = @user;', N'@cnt INT, @user VARCHAR(10)', @WCount, @OldUser;
+              END
 
-              UPDATE MEMB_INFO
-              SET WarehouseCount = @WCount
-              WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
+              BEGIN
+                EXEC sp_executesql N'UPDATE AccountCharacter SET ExtWarehouse = CASE WHEN @cnt > 1 THEN 2 ELSE 0 END WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@user)) OR Id = @user;', N'@cnt INT, @user VARCHAR(10)', @WCount, @OldUser;
+              END
             END
 
             -- 4. CashShopData

@@ -42,6 +42,8 @@ import {
   decodeSocketByte,
   encodeSocketByte,
   QUICK_SOCKET_OPTIONS,
+  getQuickSocketOptions,
+  SEED_SPHERE_LEVELS,
 } from '../../constants/socketCatalog';
 import { InventoryGrid } from '../../components/inventory/InventoryGrid';
 import { ItemModal } from '../../components/inventory/ItemModal';
@@ -190,6 +192,7 @@ export const AccountsScreen = () => {
   const [vaultMakerHarmonyLevel, setVaultMakerHarmonyLevel] = useState<number>(0);
   const [vaultMakerQuantity, setVaultMakerQuantity] = useState<number>(1);
   const [vaultMakerSockets, setVaultMakerSockets] = useState<number[]>([0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+  const [vaultMakerSocketLevels, setVaultMakerSocketLevels] = useState<number[]>([1, 1, 1, 1, 1]);
   const [vaultMakerEnableSockets, setVaultMakerEnableSockets] = useState<boolean>(false);
 
   // Quick Sets Modal para Warehouse
@@ -2593,20 +2596,65 @@ export const AccountsScreen = () => {
                 </View>
 
                 {vaultMakerEnableSockets && (
-                  <View style={{ marginTop: 8, gap: 10 }}>
+                  <View style={{ marginTop: 8, gap: 12 }}>
                     {[0, 1, 2, 3, 4].map((sIdx) => {
                       const currentVal = vaultMakerSockets[sIdx] ?? 0xFF;
                       const sockInfo = decodeSocketByte(currentVal);
+                      const currentLvl = sockInfo.hasSeed ? sockInfo.level : (vaultMakerSocketLevels[sIdx] || 1);
+                      const currentOptions = getQuickSocketOptions(currentLvl);
+
                       return (
-                        <View key={`wh_sock_${sIdx}`} style={{ gap: 4 }}>
+                        <View key={`wh_sock_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(0,0,0,0.25)', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#332B24' }}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>Slot #{sIdx + 1}:</Text>
                             <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>
                               {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                             </Text>
                           </View>
+
+                          {/* Selector de Nivel / Tipo de Seed Sphere (Lv.1 a Lv.5) */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 2 }}>
+                            <Text style={{ fontSize: 10, color: '#8C7B6B', fontWeight: '600' }}>Esfera:</Text>
+                            {SEED_SPHERE_LEVELS.map((sl) => {
+                              const isLvlActive = currentLvl === sl.level;
+                              return (
+                                <TouchableOpacity
+                                  key={`wh_lvl_${sIdx}_${sl.level}`}
+                                  style={{
+                                    paddingHorizontal: 7,
+                                    paddingVertical: 2,
+                                    borderRadius: 4,
+                                    backgroundColor: isLvlActive ? '#E8C86A' : '#1E1A16',
+                                    borderWidth: 1,
+                                    borderColor: isLvlActive ? '#E8C86A' : '#3E342B',
+                                  }}
+                                  onPress={() => {
+                                    const updatedLevels = [...vaultMakerSocketLevels];
+                                    updatedLevels[sIdx] = sl.level;
+                                    setVaultMakerSocketLevels(updatedLevels);
+
+                                    if (sockInfo.hasSeed && sockInfo.optionId >= 0) {
+                                      const newByte = encodeSocketByte(sockInfo.optionId, sl.level);
+                                      const updated = [...vaultMakerSockets];
+                                      updated[sIdx] = newByte;
+                                      setVaultMakerSockets(updated);
+                                    }
+                                  }}
+                                >
+                                  <Text style={{
+                                    fontSize: 10,
+                                    fontWeight: 'bold',
+                                    color: isLvlActive ? '#120F0D' : '#C5B5A5',
+                                  }}>
+                                    {sl.badge}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+
                           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4 }}>
-                            {VAULT_SOCKET_OPTIONS.map((so) => {
+                            {currentOptions.map((so) => {
                               const isAct = currentVal === so.val;
                               return (
                                 <TouchableOpacity
@@ -2619,6 +2667,11 @@ export const AccountsScreen = () => {
                                     const updated = [...vaultMakerSockets];
                                     updated[sIdx] = so.val;
                                     setVaultMakerSockets(updated);
+                                    if (so.optionId >= 0) {
+                                      const updatedLevels = [...vaultMakerSocketLevels];
+                                      updatedLevels[sIdx] = currentLvl;
+                                      setVaultMakerSocketLevels(updatedLevels);
+                                    }
                                   }}
                                 >
                                   <Text style={[styles.whSocketBtnText, isAct && styles.whSocketBtnTextActive]}>

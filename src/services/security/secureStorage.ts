@@ -93,17 +93,29 @@ export class SecureStorage {
       const encKey = await this.getDerivedKey();
       const cipherText = raw.substring(7);
       const decrypted = this.decipher(cipherText, encKey);
-      if (!decrypted) return null;
-
-      const parsed = JSON.parse(decrypted);
-      const expectedSig = sha256(`${parsed.val}:${encKey}`).substring(0, 16);
-      if (parsed.sig !== expectedSig) {
-        console.warn(`[SecureStorage] Integridad violada para la clave ${key}.`);
+      if (!decrypted) {
+        console.warn(`[SecureStorage] Descifrado fallido para la clave ${key}. Purgando ciphertext corrupto.`);
+        await AsyncStorage.removeItem(key).catch(() => {});
         return null;
       }
-      return parsed.val;
+
+      try {
+        const parsed = JSON.parse(decrypted);
+        const expectedSig = sha256(`${parsed.val}:${encKey}`).substring(0, 16);
+        if (parsed.sig !== expectedSig) {
+          console.warn(`[SecureStorage] Integridad violada para la clave ${key}. Purgando ciphertext obsoleto.`);
+          await AsyncStorage.removeItem(key).catch(() => {});
+          return null;
+        }
+        return parsed.val;
+      } catch {
+        console.warn(`[SecureStorage] Error parseando payload de ${key}. Purgando.`);
+        await AsyncStorage.removeItem(key).catch(() => {});
+        return null;
+      }
     } catch (e) {
       console.warn(`[SecureStorage] Error loading encrypted item for key ${key}:`, e);
+      await AsyncStorage.removeItem(key).catch(() => {});
       return null;
     }
   }
@@ -117,5 +129,23 @@ export class SecureStorage {
     } catch (e) {
       console.warn(`[SecureStorage] Error removing item for key ${key}:`, e);
     }
+  }
+
+  /**
+   * Purgado de emergencia completo de secretos y caché de sesión local
+   */
+  static async purgeAllKnownSecrets(): Promise<void> {
+    const keys = [
+      '@mumanager_sql_config',
+      '@mumanager_session_token',
+      '@mumanager_admin_key',
+      '@mumanager_server_profiles',
+    ];
+    for (const k of keys) {
+      try {
+        await AsyncStorage.removeItem(k);
+      } catch (_) {}
+    }
+    this.keyCache = null;
   }
 }

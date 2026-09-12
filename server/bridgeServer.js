@@ -88,16 +88,18 @@ const USERS_FILE = path.join(BASE_DATA_DIR, 'users.json');
 const PRO_REQUESTS_FILE = path.join(BASE_DATA_DIR, 'proRequests.json');
 const SECURITY_LOGS_FILE = path.join(BASE_DATA_DIR, 'securityLogs.json');
 const TOMBSTONES_FILE = path.join(BASE_DATA_DIR, 'tombstones.json');
-// [SEC-01] MASTER_SECURITY_SALT — NUNCA hardcodear. En producción es obligatorio.
+// [SEC-01] MASTER_SECURITY_SALT — Exclusivamente por variable de entorno (Vercel / .env)
 if (!process.env.MASTER_SECURITY_SALT) {
   if (process.env.NODE_ENV === 'production') {
     console.error('\x1b[31m[FATAL SECURITY] MASTER_SECURITY_SALT es obligatorio en producción. Configura la variable de entorno y reinicia.\x1b[0m');
     process.exit(1);
   } else {
-    console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT no configurada en desarrollo. Usando salt efímero aleatorio. Las licencias generadas en esta sesión NO serán válidas entre reinicios.\x1b[0m');
+    console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT no configurada en desarrollo. Usando salt efímero aleatorio.\x1b[0m');
   }
 }
-const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || crypto.randomBytes(32).toString('hex');
+const MASTER_SECURITY_SALT = (process.env.MASTER_SECURITY_SALT && process.env.MASTER_SECURITY_SALT.trim().length >= 16)
+  ? process.env.MASTER_SECURITY_SALT.trim()
+  : crypto.randomBytes(32).toString('hex');
 const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.5.1/MuManagerPro-v1.5.1.apk';
 
 // [H05/N03/H02] Verificación de variables de entorno críticas al arranque
@@ -134,17 +136,39 @@ function getActiveAdminKey() {
 function isValidAdminKey(key) {
   if (!key || typeof key !== 'string') return false;
   const clean = key.trim();
-  const activeKey = getActiveAdminKey();
-  if (!activeKey || activeKey.length < 8) return false;
+  if (clean.length < 8) return false;
+
+  const keysToCheck = [];
+  const envKey = process.env.ADMIN_KEY && typeof process.env.ADMIN_KEY === 'string' ? process.env.ADMIN_KEY.trim() : '';
+  if (envKey && envKey.length >= 8) {
+    keysToCheck.push(envKey);
+  }
+
+  try {
+    const s = loadSettings();
+    if (s && s.adminKey && typeof s.adminKey === 'string' && s.adminKey.trim().length >= 8) {
+      const setKey = s.adminKey.trim();
+      if (!keysToCheck.includes(setKey)) {
+        keysToCheck.push(setKey);
+      }
+    }
+  } catch (_) {}
+
+  if (keysToCheck.length === 0 && process.env.NODE_ENV !== 'production') {
+    const activeDevKey = getActiveAdminKey();
+    if (activeDevKey && activeDevKey.length >= 8) {
+      keysToCheck.push(activeDevKey);
+    }
+  }
 
   const bufClean = Buffer.from(clean, 'utf8');
-  const bufActive = Buffer.from(activeKey, 'utf8');
-  if (bufClean.length !== bufActive.length) {
-    // Comparación dummy en tiempo constante para mitigar timing attack sobre la longitud
-    crypto.timingSafeEqual(bufActive, bufActive);
-    return false;
+  for (const candidate of keysToCheck) {
+    const bufCand = Buffer.from(candidate, 'utf8');
+    if (bufClean.length === bufCand.length && crypto.timingSafeEqual(bufClean, bufCand)) {
+      return true;
+    }
   }
-  return crypto.timingSafeEqual(bufClean, bufActive);
+  return false;
 }
 
 
@@ -538,22 +562,53 @@ function saveSettings(data) {
   return true;
 }
 
+const DEFAULT_SEED_DEVICES = {};
+
+const DEFAULT_SEED_USERS = [];
+
 function loadDevices() {
+  let currentDevs = {};
   if (inMemoryFallback[DATA_FILE]) {
-    return inMemoryFallback[DATA_FILE];
-  }
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      return safeJsonParse(fs.readFileSync(DATA_FILE, 'utf8'), {});
+    currentDevs = inMemoryFallback[DATA_FILE];
+  } else {
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        currentDevs = safeJsonParse(fs.readFileSync(DATA_FILE, 'utf8'), {});
+      } else {
+        const seed = path.join(__dirname, 'data', 'devices.json');
+        if (fs.existsSync(seed)) {
+          currentDevs = safeJsonParse(fs.readFileSync(seed, 'utf8'), {});
+        }
+      }
+    } catch (e) {
+      console.error('Error reading devices data', e);
     }
-    const seed = path.join(__dirname, 'data', 'devices.json');
-    if (fs.existsSync(seed)) {
-      return safeJsonParse(fs.readFileSync(seed, 'utf8'), {});
-    }
-  } catch (e) {
-    console.error('Error reading devices data', e);
   }
-  return {};
+
+  // Comprobar lista de dispositivos revocados/eliminados (Tombstones)
+  const tombstones = loadTombstones();
+
+  // Smart merge determinista con DEFAULT_SEED_DEVICES:
+  // 1. Asegura que los dispositivos y licencias canónicas existan siempre,
+  //    SALVO aquellos eliminados explícitamente por el administrador (Tombstones).
+  // 2. Si en runtime un dispositivo se actualizó (pings, lastSeen, ip, etc.), preserva los datos actualizados.
+  const merged = {};
+  for (const [hwid, dev] of Object.entries(DEFAULT_SEED_DEVICES)) {
+    const cleanHwid = String(hwid).trim().toUpperCase();
+    if (!tombstones[cleanHwid] && !tombstones[hwid]) {
+      merged[hwid] = { ...dev };
+    }
+  }
+  if (currentDevs && typeof currentDevs === 'object') {
+    for (const [hwid, dev] of Object.entries(currentDevs)) {
+      const cleanHwid = String(hwid).trim().toUpperCase();
+      if (!tombstones[cleanHwid] && !tombstones[hwid] && dev && typeof dev === 'object') {
+        merged[hwid] = merged[hwid] ? { ...merged[hwid], ...dev } : dev;
+      }
+    }
+  }
+  inMemoryFallback[DATA_FILE] = merged;
+  return merged;
 }
 
 function saveDevices(data) {
@@ -573,32 +628,55 @@ function saveDevices(data) {
   return true;
 }
 
-const DEFAULT_SEED_USERS = [
-  {
-    "id": "usr_admin_default",
-    "email": "admin_test@muonline.com",
-    "username": "Admin",
-    "role": "ADMIN",
-    "status": "ACTIVE",
-    "createdAt": "2026-09-01T00:00:00.000Z",
-    "lastLogin": "2026-09-01T00:00:00.000Z",
-    "lastSeen": "2026-09-01T00:00:00.000Z",
-    "hwid": ""
-  }
-];
-
 function loadUsers() {
+  let diskUsers = [];
   try {
     if (fs.existsSync(USERS_FILE)) {
       const parsed = safeJsonParse(fs.readFileSync(USERS_FILE, 'utf8'), []);
-      return Array.isArray(parsed) ? parsed : [];
+      if (Array.isArray(parsed)) diskUsers = parsed;
     }
   } catch (e) {
     console.error('Error reading users data', e);
   }
-  const seed = JSON.parse(JSON.stringify(DEFAULT_SEED_USERS));
-  saveUsers(seed);
-  return seed;
+
+  // Lista de usuarios eliminados explícitamente (Tombstones)
+  const tombstones = loadTombstones();
+  const deletedUsers = (tombstones && tombstones.deletedUsers && typeof tombstones.deletedUsers === 'object')
+    ? tombstones.deletedUsers
+    : {};
+
+  // Smart merge bidireccional anti-pérdida:
+  // Todos los usuarios canónicos se inicializan y nunca desaparecen,
+  // SALVO si fueron explícitamente eliminados por el administrador (Tombstones).
+  // Los usuarios registrados o actualizados en caliente se preservan y fusionan sin pérdida.
+  const userMap = new Map();
+  for (const u of DEFAULT_SEED_USERS) {
+    const emailKey = (u.email || '').toLowerCase().trim();
+    const idKey = (u.id || '').toLowerCase().trim();
+    const isDeleted = (emailKey && deletedUsers[emailKey]) || (idKey && deletedUsers[idKey]);
+    if (!isDeleted) {
+      const mapKey = emailKey || idKey;
+      if (mapKey) userMap.set(mapKey, { ...u });
+    }
+  }
+  for (const u of diskUsers) {
+    const emailKey = (u.email || '').toLowerCase().trim();
+    const idKey = (u.id || '').toLowerCase().trim();
+    const isDeleted = (emailKey && deletedUsers[emailKey]) || (idKey && deletedUsers[idKey]);
+    if (!isDeleted) {
+      const mapKey = emailKey || idKey;
+      if (mapKey) {
+        if (userMap.has(mapKey)) {
+          userMap.set(mapKey, { ...userMap.get(mapKey), ...u });
+        } else {
+          userMap.set(mapKey, u);
+        }
+      }
+    }
+  }
+  const merged = Array.from(userMap.values());
+  inMemoryFallback[USERS_FILE] = merged;
+  return merged;
 }
 
 function saveUsers(data) {
@@ -1059,14 +1137,39 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
 
 // BUG-17: Protección estricta de rutas administrativas /api/admin/*
 // [SEC-03] La clave admin SOLO se acepta en el header X-Admin-Key (nunca en el body para evitar logs)
+// Rate limiter dedicado para intentos fallidos de autenticación administrativa (10 fallos / 15 min bloqueo)
+const adminFailedAttempts = new Map(); // ip -> { count, lockedUntil }
+
 app.use('/api/admin', (req, res, next) => {
   if (req.path === '/storage/status') {
     return next();
   }
+  const clientIp = getClientIp(req);
+  const now = Date.now();
+
+  const failRecord = adminFailedAttempts.get(clientIp);
+  if (failRecord && failRecord.lockedUntil && failRecord.lockedUntil > now) {
+    const remainingMin = Math.ceil((failRecord.lockedUntil - now) / 60000);
+    return res.status(429).json({
+      error: `Demasiados intentos fallidos. Acceso administrativo bloqueado temporalmente por ${remainingMin} minuto(s).`
+    });
+  }
+
   const adminKey = req.headers['x-admin-key']; // [SEC-03] Header solamente, no body
   if (isValidAdminKey(adminKey)) {
+    if (failRecord) adminFailedAttempts.delete(clientIp);
     return next();
   }
+
+  // Intento fallido
+  const currentFails = (failRecord ? failRecord.count : 0) + 1;
+  if (currentFails >= 10) {
+    adminFailedAttempts.set(clientIp, { count: currentFails, lockedUntil: now + 15 * 60 * 1000 });
+    addAuditLog('ADMIN_BRUTE_FORCE_BLOCKED', 'ANONYMOUS', clientIp, 'IP bloqueada por 15 min tras 10 intentos fallidos de Admin-Key', 'BLOCKED');
+  } else {
+    adminFailedAttempts.set(clientIp, { count: currentFails, lockedUntil: 0 });
+  }
+
   return res.status(401).json({ error: 'No autorizado. Se requiere clave de administrador válida.' });
 });
 
@@ -1269,7 +1372,7 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
     const dev = devices[hwid];
 
     // Verificar tombstone del HWID (revocado permanentemente)
-    const isHwidTombstoned = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object');
+    const isHwidTombstoned = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object' && tombstones[hwid].blocked !== false);
 
     if (isHwidTombstoned) {
       addAuditLog('SQL_BLOCKED', hwid, clientIp, 'Acceso bloqueado: dispositivo revocado permanentemente (tombstone)', 'BLOCKED');
@@ -1320,20 +1423,50 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
 
   if (isProtectedDataRoute && !isAdmin && !req.path.startsWith('/api/admin')) {
     const devices = loadDevices();
-    const dev = hwid ? devices[hwid] : null;
+    let dev = hwid ? devices[hwid] : null;
+
+    // Auto-reconciliación: si el dispositivo tiene clave válida no revocada, asegurar modo PRO
+    if (dev && dev.mode !== 'PRO' && !dev.forceDemo && !dev.blocked) {
+      const devKey = (dev.licenseKey || dev.generatedKey || '').trim().toUpperCase();
+      if (devKey && verifyKey(hwid, devKey)) {
+        dev.mode = 'PRO';
+        saveDevices(devices);
+      }
+    }
+
     const isPro = dev && dev.mode === 'PRO' && !dev.forceDemo && !dev.blocked &&
       (!dev.expiresAt || new Date(dev.expiresAt).getTime() > Date.now());
 
+    const isDemoActive = dev && dev.mode === 'DEMO' && !dev.forceDemo && !dev.blocked &&
+      (!dev.expiresAt || new Date(dev.expiresAt).getTime() > Date.now());
+
+    // Rutas exclusivas para PRO / ADMIN (herramientas de sistema, GM, control IP, premios)
+    const isProExclusiveRoute =
+      req.path.startsWith('/api/tools') ||
+      req.path.startsWith('/api/gm') ||
+      req.path.startsWith('/api/ip') ||
+      req.path.startsWith('/api/prizes');
+
     if (!isPro) {
-      addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos: licencia DEMO o dispositivo no autorizado (${req.path})`, 'BLOCKED');
-      return res.status(403).json({
-        success: false,
-        blocked: false,
-        forceWipeKey: !!(dev && dev.forceDemo),
-        authoritativeMode: 'DEMO',
-        error: 'LICENCIA_REQUERIDA',
-        message: 'Esta operación requiere un dispositivo con licencia PRO activa verificada por el servidor.',
-      });
+      // Si el dispositivo está en período de prueba (DEMO de 72h) activo y la ruta no es exclusiva PRO:
+      if (isDemoActive && !isProExclusiveRoute) {
+        // Permitir acceso durante el período de prueba (cuentas, personajes, items, almacén, etc.)
+      } else {
+        const isExpiredDemo = dev && dev.mode === 'DEMO' && dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now();
+        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isExpiredDemo ? 'DEMO expirado' : 'licencia requerida'}`, 'BLOCKED');
+        return res.status(403).json({
+          success: false,
+          blocked: !!(dev && dev.blocked),
+          forceWipeKey: !!(dev && dev.forceDemo),
+          authoritativeMode: 'DEMO',
+          error: isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA',
+          message: isExpiredDemo
+            ? 'Tu período de prueba de 72 horas ha finalizado. Adquiere una licencia PRO para continuar.'
+            : isProExclusiveRoute
+              ? 'Esta función avanzada requiere una licencia PRO activa.'
+              : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.',
+        });
+      }
     }
   }
 
@@ -1456,42 +1589,54 @@ function sha256(ascii) {
 }
 
 function generateKey(hwid, plan = 'PRO') {
-  // Clave única aleatoria con binding criptográfico al HWID
-  // Formato: MUMANAGER-{plan}-{rand4}-{rand4}-{hmac4}
-  // Los primeros 2 segmentos son aleatorios; el tercero es HMAC(hwid + rand, salt)[0:4]
-  // Esto permite verificar que la clave fue emitida para ese HWID sin consultar la BD
-  const rand1 = crypto.randomBytes(2).toString('hex').toUpperCase();
-  const rand2 = crypto.randomBytes(2).toString('hex').toUpperCase();
-  const hmacPart = crypto.createHmac('sha256', MASTER_SECURITY_SALT)
-    .update(`${hwid.trim().toUpperCase()}:${rand1}${rand2}`)
+  // Clave canónica matemática idéntica a keygen.js y a la verificación del APK móvil
+  // Formato: MUMANAGER-{plan}-{sig1}-{sig2}-{sig3}
+  const cleanHwid = String(hwid || '').trim().toUpperCase();
+  const cleanPlan = String(plan || 'PRO').trim().toUpperCase();
+  const signatureRaw = crypto.createHash('sha256')
+    .update(`${cleanHwid}:${cleanPlan}:${MASTER_SECURITY_SALT}`)
     .digest('hex')
-    .substring(0, 4)
     .toUpperCase();
-  return `MUMANAGER-${plan}-${rand1}-${rand2}-${hmacPart}`;
+
+  const p1 = signatureRaw.substring(0, 4);
+  const p2 = signatureRaw.substring(4, 8);
+  const p3 = signatureRaw.substring(8, 12);
+
+  return `MUMANAGER-${cleanPlan}-${p1}-${p2}-${p3}`;
 }
 
 function verifyKey(hwid, key) {
-  // Verificación 1: clave almacenada en el servidor (server-side, prioritaria)
   if (!hwid || !key || typeof key !== 'string') return false;
-  const devices = loadDevices();
-  const dev = devices[hwid];
-  if (!dev) return false;
-  const stored = (dev.licenseKey || dev.generatedKey || '').trim().toUpperCase();
-  if (stored.length > 0 && key.trim().toUpperCase() === stored) return true;
+  const cleanKey = key.trim().toUpperCase().replace(/\s+/g, '');
+  const cleanHwid = hwid.trim().toUpperCase();
 
-  // Verificación 2 (fallback): validar binding HMAC embebido en la clave
-  // Formato esperado: MUMANAGER-PRO-{rand1}-{rand2}-{hmac4}
-  const parts = key.trim().toUpperCase().split('-');
+  // Verificación 1: Clave canónica matemática (idéntica a keygen.js y al APK móvil)
+  const expectedPro = generateKey(cleanHwid, 'PRO');
+  if (cleanKey === expectedPro) return true;
+  const expectedVip = generateKey(cleanHwid, 'VIP');
+  if (cleanKey === expectedVip) return true;
+
+  // Verificación 2: Clave registrada previamente en el servidor (Upstash Redis / devices.json)
+  const devices = loadDevices();
+  const dev = devices[cleanHwid] || devices[hwid];
+  if (dev) {
+    const stored = (dev.licenseKey || dev.generatedKey || '').trim().toUpperCase();
+    if (stored.length > 0 && cleanKey === stored) return true;
+  }
+
+  // Verificación 3 (retrocompatibilidad): validar binding HMAC embebido en claves previas
+  // Formato: MUMANAGER-PRO-{rand1}-{rand2}-{hmac4}
+  const parts = cleanKey.split('-');
   if (parts.length === 5 && parts[0] === 'MUMANAGER') {
     const rand1 = parts[2];
     const rand2 = parts[3];
     const providedHmac = parts[4];
     const expectedHmac = crypto.createHmac('sha256', MASTER_SECURITY_SALT)
-      .update(`${hwid.trim().toUpperCase()}:${rand1}${rand2}`)
+      .update(`${cleanHwid}:${rand1}${rand2}`)
       .digest('hex')
       .substring(0, 4)
       .toUpperCase();
-    return providedHmac === expectedHmac;
+    if (providedHmac === expectedHmac) return true;
   }
   return false;
 }
@@ -3120,6 +3265,7 @@ app.post('/api/accounts', async (req, res) => {
           OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') AS HasMeMembStat,
           OBJECT_ID('Character', 'U') AS HasCharTable,
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount') AS HasWareCount,
+          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse') AS HasExtWarehouse,
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'AccountLevel') AS HasAccLevel,
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'AccountExpireDate') AS HasExpireDate,
           (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CashShopData') AS HasCashShop,
@@ -3134,6 +3280,7 @@ app.post('/api/accounts', async (req, res) => {
 
       const statTable = row.HasMembStat ? 'MEMB_STAT' : (row.HasMeMembStat ? 'Me_MuOnline.dbo.MEMB_STAT' : null);
       const hasWareCount = !!row.HasWareCount;
+      const hasExtWarehouse = !!row.HasExtWarehouse;
       const hasAccLevel = !!row.HasAccLevel;
       const hasExpireDate = !!row.HasExpireDate;
       const hasCashShop = !!row.HasCashShop;
@@ -3153,7 +3300,7 @@ app.post('/api/accounts', async (req, res) => {
           ISNULL(m.bloc_code, '0') AS bloc_code, 
           ${hasAccLevel ? 'ISNULL(m.AccountLevel, 0)' : '0'} AS AccountLevel, 
           ${hasExpireDate ? 'm.AccountExpireDate' : 'NULL'} AS AccountExpireDate,
-          ${hasWareCount ? 'ISNULL(m.WarehouseCount, 1)' : '1'} AS WarehouseCount,
+          ${hasWareCount ? 'ISNULL(m.WarehouseCount, 1)' : (hasExtWarehouse ? 'ISNULL((SELECT CASE WHEN ISNULL(ac.ExtWarehouse, 0) > 0 THEN 2 ELSE 1 END FROM AccountCharacter ac WHERE LTRIM(RTRIM(ac.Id)) = LTRIM(RTRIM(m.memb___id)) OR ac.Id = m.memb___id), 1)' : '1')} AS WarehouseCount,
           ${hasCashShop ? 'ISNULL(cs.WCoinC, 0)' : '0'} AS WCoinC,
           ${hasCashShop ? 'ISNULL(cs.WCoinP, 0)' : '0'} AS WCoinP,
           ${hasCashShop ? 'ISNULL(cs.GoblinPoint, 0)' : '0'} AS GoblinPoint,
@@ -3196,16 +3343,22 @@ app.post('/api/warehouse', async (req, res) => {
     const wareIdx = parseInt(warehouseIndex, 10) || 0;
 
     const data = await executeSql(config, async (pool) => {
-      // 1. Obtener WarehouseCount desde MEMB_INFO
+      // 1. Obtener WarehouseCount desde MEMB_INFO o AccountCharacter.ExtWarehouse (vía sp_executesql dinámico)
       let wareCount = 1;
       try {
         const countRes = await pool.request()
           .input('Acc', sql.VarChar, accountId)
           .query(`
+            DECLARE @Cnt INT = 1;
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
-              SELECT WarehouseCount FROM MEMB_INFO WHERE memb___id = @Acc;
-            ELSE
-              SELECT 1 AS WarehouseCount;
+            BEGIN
+              EXEC sp_executesql N'SELECT @outCnt = ISNULL(WarehouseCount, 1) FROM MEMB_INFO WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;', N'@Acc VARCHAR(10), @outCnt INT OUTPUT', @Acc, @outCnt = @Cnt OUTPUT;
+            END
+            ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
+            BEGIN
+              EXEC sp_executesql N'SELECT @outCnt = CASE WHEN ISNULL(ExtWarehouse, 0) > 0 THEN 2 ELSE 1 END FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;', N'@Acc VARCHAR(10), @outCnt INT OUTPUT', @Acc, @outCnt = @Cnt OUTPUT;
+            END
+            SELECT ISNULL(@Cnt, 1) AS WarehouseCount;
           `);
         if (countRes.recordset && countRes.recordset.length > 0) {
           wareCount = countRes.recordset[0].WarehouseCount || 1;
@@ -3275,16 +3428,18 @@ app.post('/api/warehouse', async (req, res) => {
         wareData.ItemsHex = wareData.ItemsHex.trim().padEnd(7680, 'F');
       }
 
-      // Consultar nivel de Expansión de Baúl Season 6 (AccountCharacter.ExtWarehouse = 0, 1 o 2)
+      // Consultar nivel de Expansión de Baúl Season 6 (AccountCharacter.ExtWarehouse = 0, 1 o 2 vía sp_executesql)
       let extWarehouseLevel = 0;
       try {
         const extRes = await pool.request()
           .input('Acc', sql.VarChar, accountId.trim())
           .query(`
+            DECLARE @ExtLvl INT = 0;
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
-              SELECT ISNULL(ExtWarehouse, 0) AS ExtWarehouse FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
-            ELSE
-              SELECT 0 AS ExtWarehouse;
+            BEGIN
+              EXEC sp_executesql N'SELECT @outLvl = ISNULL(ExtWarehouse, 0) FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;', N'@Acc VARCHAR(10), @outLvl INT OUTPUT', @Acc, @outLvl = @ExtLvl OUTPUT;
+            END
+            SELECT ISNULL(@ExtLvl, 0) AS ExtWarehouse;
           `);
         if (extRes.recordset && extRes.recordset.length > 0) {
           extWarehouseLevel = extRes.recordset[0].ExtWarehouse || 0;
@@ -3433,24 +3588,18 @@ app.post('/api/warehouse/update-count', async (req, res) => {
     const newCount = Math.max(1, Math.min(250, parseInt(count, 10) || 1));
 
     await executeSql(config, async (pool) => {
-      // Auto-crear columna si no existe para compatibilidad universal
-      await pool.request().query(`
-        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
-        BEGIN
-          ALTER TABLE MEMB_INFO ADD WarehouseCount INT NOT NULL DEFAULT 1;
-        END
-      `);
-
       await pool.request()
         .input('Acc', sql.VarChar, accountId)
         .input('Count', sql.Int, newCount)
         .query(`
-          UPDATE MEMB_INFO 
-          SET WarehouseCount = @Count
-          WHERE memb___id = @Acc;
+          IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
+          BEGIN
+            EXEC sp_executesql N'UPDATE MEMB_INFO SET WarehouseCount = @cnt WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@acc)) OR memb___id = @acc;', N'@cnt INT, @acc VARCHAR(10)', @Count, @Acc;
+          END
+
           IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
           BEGIN
-            UPDATE AccountCharacter SET ExtWarehouse = 2 WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
+            EXEC sp_executesql N'UPDATE AccountCharacter SET ExtWarehouse = CASE WHEN @cnt > 1 THEN 2 ELSE 0 END WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@acc)) OR Id = @acc;', N'@cnt INT, @acc VARCHAR(10)', @Count, @Acc;
           END
         `);
     });
@@ -3471,26 +3620,21 @@ app.post('/api/warehouse/set-expansion', async (req, res) => {
     const expLevel = Math.max(0, Math.min(1, parseInt(level, 10) || 1));
 
     await executeSql(config, async (pool) => {
-      // 1. Asegurar columna ExtWarehouse en AccountCharacter
-      await pool.request().query(`
-        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
-        BEGIN
-          ALTER TABLE AccountCharacter ADD ExtWarehouse TINYINT NOT NULL DEFAULT 0;
-        END
-      `);
-
-      // 2. Actualizar o insertar en AccountCharacter
+      // 1. Actualizar o insertar en AccountCharacter (vía sp_executesql dinámico sin ALTER TABLE)
       await pool.request()
         .input('Acc', sql.VarChar, accountId.trim())
         .input('Lvl', sql.Int, expLevel)
         .query(`
-          IF EXISTS (SELECT 1 FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc)
+          IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
           BEGIN
-            UPDATE AccountCharacter SET ExtWarehouse = @Lvl WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
-          END
-          ELSE
-          BEGIN
-            INSERT INTO AccountCharacter (Id, ExtWarehouse) VALUES (@Acc, @Lvl);
+            IF EXISTS (SELECT 1 FROM AccountCharacter WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc)
+            BEGIN
+              EXEC sp_executesql N'UPDATE AccountCharacter SET ExtWarehouse = @Lvl WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;', N'@Lvl INT, @Acc VARCHAR(10)', @Lvl, @Acc;
+            END
+            ELSE
+            BEGIN
+              EXEC sp_executesql N'INSERT INTO AccountCharacter (Id, ExtWarehouse) VALUES (@Acc, @Lvl);', N'@Lvl INT, @Acc VARCHAR(10)', @Lvl, @Acc;
+            END
           END
         `);
 
@@ -3732,15 +3876,18 @@ app.post('/api/account/update', async (req, res) => {
               WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
             END
 
-            -- 3. WarehouseCount
+            -- 3. WarehouseCount / ExtWarehouse (vía sp_executesql dinámico sin ALTER TABLE)
             IF @WCount IS NOT NULL
             BEGIN
-              IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
-                ALTER TABLE MEMB_INFO ADD WarehouseCount INT NOT NULL DEFAULT 1;
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'WarehouseCount')
+              BEGIN
+                EXEC sp_executesql N'UPDATE MEMB_INFO SET WarehouseCount = @cnt WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@user)) OR memb___id = @user;', N'@cnt INT, @user VARCHAR(10)', @WCount, @OldUser;
+              END
 
-              UPDATE MEMB_INFO
-              SET WarehouseCount = @WCount
-              WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND name = 'ExtWarehouse')
+              BEGIN
+                EXEC sp_executesql N'UPDATE AccountCharacter SET ExtWarehouse = CASE WHEN @cnt > 1 THEN 2 ELSE 0 END WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@user)) OR Id = @user;', N'@cnt INT, @user VARCHAR(10)', @WCount, @OldUser;
+              END
             END
 
             -- 4. CashShopData
@@ -4903,8 +5050,8 @@ app.post('/api/tools/clean-hex', async (req, res) => {
 // Endpoint de Migración de Esquema explícita (H17)
 app.post('/api/admin/migrate-schema', async (req, res) => {
   try {
-    const { config } = req.body;
-    const key = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+    const { config } = req.body || {};
+    const key = req.headers['x-admin-key'];
     if (!isValidAdminKey(key)) {
       return res.status(401).json({ success: false, error: 'No autorizado. Se requiere X-Admin-Key válida.' });
     }
@@ -6165,11 +6312,11 @@ app.post('/api/telemetry/ping', (req, res) => {
   // El tracking de HWID y licencia se permite siempre; la creación de usuarios requiere token.
   const _telAuthHeader = req.headers['authorization'] || req.headers['x-session-token'] || '';
   const _telToken = _telAuthHeader.replace(/^Bearer\s+/i, '').trim();
-  const _telAdminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey) || '';
+  const _telAdminKey = req.headers['x-admin-key'] || '';
   const canAssociateIdentity = (_telToken && !!verifySessionToken(_telToken)) || isValidAdminKey(_telAdminKey);
 
   const tombstones = loadTombstones();
-  const isRevokedByAdmin = !!tombstones[hwid];
+  const isRevokedByAdmin = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object' && tombstones[hwid].blocked !== false);
 
   // [H04-B FIX] Asociar identidad de usuario SOLO si hay sesión autenticada válida.
   // Un ping sin token solo actualiza estado del dispositivo; no crea ni modifica users.json.
@@ -6236,11 +6383,14 @@ app.post('/api/telemetry/ping', (req, res) => {
   const isAutoBlocked = settings.whitelistOnly;
   let effectiveLicenseKey = (licenseKey || '').trim().toUpperCase();
   const isKeyRevoked = !!(effectiveLicenseKey && tombstones.revokedKeys && tombstones.revokedKeys[effectiveLicenseKey]);
-  // Verificación server-side: la clave es válida si coincide con la guardada en devices[hwid] y no está revocada
+  // Verificación server-side: la clave es válida si coincide con la guardada en devices[hwid], o es matemáticamente válida para este HWID, y no está revocada
   const storedKey = devices[hwid]
     ? ((devices[hwid].licenseKey || devices[hwid].generatedKey || '').trim().toUpperCase())
     : '';
-  let hasValidKey = !isKeyRevoked && effectiveLicenseKey.length > 0 && storedKey.length > 0 && effectiveLicenseKey === storedKey;
+  const isKeyMathematicallyValid = effectiveLicenseKey ? verifyKey(hwid, effectiveLicenseKey) : false;
+  let hasValidKey = !isKeyRevoked && effectiveLicenseKey.length > 0 && (
+    isKeyMathematicallyValid || (storedKey.length > 0 && effectiveLicenseKey === storedKey)
+  );
 
   // Evaluación autoritativa anti-falsos positivos de emulador en el Servidor
   const cleanBrand = String(deviceBrand || (devices[hwid] && devices[hwid].deviceBrand) || '').toLowerCase().trim();
@@ -6327,14 +6477,16 @@ app.post('/api/telemetry/ping', (req, res) => {
       devices[hwid].forceDemo = true;
       devices[hwid].licenseKey = '';
       devices[hwid].generatedKey = '';
-    } else if (isExplicitAct && hasValidKey && !isKeyRevoked) {
-      // Activación explícita permitida solo si el admin no forzó DEMO y la clave es válida y no revocada
+    } else if (hasValidKey && !isKeyRevoked) {
+      // Clave válida y no revocada: activar o mantener PRO
       devices[hwid].mode = 'PRO';
       devices[hwid].forceDemo = false;
       devices[hwid].licenseKey = effectiveLicenseKey;
       devices[hwid].generatedKey = effectiveLicenseKey;
       devices[hwid].blocked = false;
-      addAuditLog('KEY_ACTIVATED', hwid, clientIp, `Licencia PRO activada explícitamente desde el celular.`);
+      if (isExplicitAct) {
+        addAuditLog('KEY_ACTIVATED', hwid, clientIp, `Licencia PRO activada explícitamente desde el celular.`);
+      }
     } else if (devices[hwid].mode === 'DEMO') {
       // Modo DEMO sin forceDemo: mantener en DEMO normalmente
       devices[hwid].mode = 'DEMO';
@@ -6346,7 +6498,7 @@ app.post('/api/telemetry/ping', (req, res) => {
         devices[hwid].licenseKey = '';
         devices[hwid].generatedKey = '';
       } else if (!devices[hwid].licenseKey && hasValidKey) {
-        devices[hwid].licenseKey = licenseKey;
+        devices[hwid].licenseKey = effectiveLicenseKey;
       }
     }
     devices[hwid].lastSeen = now;
@@ -6497,7 +6649,8 @@ app.post('/api/telemetry/ping', (req, res) => {
     addAuditLog('UPDATE_PROMPT', hwid, clientIp, `Modal de actualización obligatoria presentado a APK v${currentVer} (disponible v${updateInfo.latestVersion})`);
 
     const devMode = devices[hwid].mode || 'DEMO';
-    const isForcedDemo = !!devices[hwid].forceDemo || devMode === 'DEMO';
+    const isForcedDemo = !!(devices[hwid].forceDemo || isRevokedByAdmin || isKeyRevoked);
+    const shouldWipeKey = isForcedDemo || (effectiveLicenseKey.length > 0 && !hasValidKey);
 
     return res.json({
       success: true,
@@ -6505,7 +6658,7 @@ app.post('/api/telemetry/ping', (req, res) => {
       reason: '',
       mode: devMode,
       authoritativeMode: devMode,
-      forceWipeKey: isForcedDemo,
+      forceWipeKey: shouldWipeKey,
       forceDemo: isForcedDemo,
       licenseKey: (devMode === 'PRO' && !isForcedDemo) ? (devices[hwid].licenseKey || devices[hwid].generatedKey || '') : '',
       announcement: settings.broadcastAnnouncement || '',
@@ -6531,7 +6684,8 @@ app.post('/api/telemetry/ping', (req, res) => {
   }
 
   const devMode = devices[hwid].mode || 'DEMO';
-  const isForcedDemo = !!devices[hwid].forceDemo || devMode === 'DEMO';
+  const isForcedDemo = !!(devices[hwid].forceDemo || isRevokedByAdmin || isKeyRevoked);
+  const shouldWipeKey = isForcedDemo || (effectiveLicenseKey.length > 0 && !hasValidKey);
 
   // L07 Hardening: Do not return plaintext licenseKey to anonymous unverified callers
   const incomingKey = String(licenseKey || '').trim();
@@ -6559,7 +6713,7 @@ app.post('/api/telemetry/ping', (req, res) => {
     reason: sessionInvalidated ? sessionInvalidatedReason : (devices[hwid].blockReason || ''),
     mode: devMode,
     authoritativeMode: devMode,
-    forceWipeKey: isForcedDemo,
+    forceWipeKey: shouldWipeKey,
     forceDemo: isForcedDemo,
     licenseKey: effectiveKey,
     announcement: settings.broadcastAnnouncement || '',
@@ -6610,8 +6764,7 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
   const clientIp = getClientIp(req);
   const msg = reason || details || 'Intento de deodexing, desensamblado, Frida o evasión de seguridad.';
   
-  // L07 Hardening: Bloqueo solo ante autenticación admin o firma criptográfica legítima del dispositivo
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   const isAdmin = isValidAdminKey(adminKey);
 
   const timestamp = req.headers['x-req-timestamp'];
@@ -6653,224 +6806,283 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 
 const emailVerificationStore = new Map(); // cleanEmail -> { code, expiresAt, attempts, createdAt }
 
-app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
-  const { email, password, username, hwid } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
-  }
-
-  const cleanEmail = String(email).trim().toLowerCase();
-  const cleanPass = String(password).trim();
-  const cleanUser = String(username || cleanEmail.split('@')[0]).trim();
-
-  if (cleanUser.length < 3) {
-    return res.status(400).json({ success: false, error: 'El nombre de usuario debe tener al menos 3 caracteres.' });
-  }
-
-  if (cleanPass.length < 8) {
-    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres.' });
-  }
-
-  const users = loadUsers();
-  const existingUser = users.find(u => u.email.toLowerCase() === cleanEmail);
-  if (existingUser && existingUser.status === 'ACTIVE') {
-    return res.status(400).json({ success: false, error: 'Este correo ya se encuentra registrado y activo.' });
-  }
-
-  const existingUsername = users.find(u => u.username && u.username.toLowerCase() === cleanUser.toLowerCase() && u.email.toLowerCase() !== cleanEmail);
-  if (existingUsername) {
-    return res.status(400).json({ success: false, error: 'Este nombre de usuario ya está registrado por otra cuenta. Por favor elige otro.' });
-  }
-
-  if (!existingUser) {
-    const newUser = {
-      id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-      email: cleanEmail,
-      username: cleanUser,
-      passwordHash: hashPassword(cleanPass),
-      role: 'USER',
-      hwid: hwid || '',
-      activeHwid: hwid || '',
-      status: 'PENDING_VERIFICATION',
-      createdAt: new Date().toISOString()
-    };
-    users.push(newUser);
-  } else {
-    // Si ya existía pero estaba en PENDING_VERIFICATION, actualizamos su contraseña y datos
-    existingUser.username = cleanUser;
-    existingUser.passwordHash = hashPassword(cleanPass);
-    existingUser.status = 'PENDING_VERIFICATION';
-    if (hwid) existingUser.hwid = hwid;
-  }
-  saveUsers(users);
-
-  // Generar código numérico seguro de 6 dígitos
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutos
-
-  emailVerificationStore.set(cleanEmail, {
-    code,
-    expiresAt,
-    attempts: 0,
-    createdAt: new Date().toISOString()
-  });
-
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-
-  // Plantilla HTML corporativa para correo de activación
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
-      <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
-      <p style="font-size: 15px; line-height: 1.5; color: #CCC;">
-        Hola <strong>${cleanUser}</strong>, gracias por registrarte. Usa el siguiente código de activación de un solo uso para verificar tu cuenta:
-      </p>
-      <div style="background: #1A1A1A; border: 2px dashed #FF5722; padding: 18px; text-align: center; border-radius: 6px; margin: 20px 0;">
-        <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF5722;">${code}</span>
-      </div>
-      <p style="font-size: 13px; color: #888;">
-        Este código expira en 15 minutos. Si tú no solicitaste este registro, puedes ignorar este correo.
-      </p>
-    </div>
-  `;
-
-  // Intentar envío de correo SMTP
-  const emailSent = await sendEmailDirect(cleanEmail, 'Código de Activación - Mu Manager PRO', emailHtml);
-
-  addAuditLog('REGISTER_INIT', hwid, clientIp, `Registro iniciado: ${cleanUser} (${cleanEmail})`);
-
-  if (!emailSent) {
-    const isDev = process.env.NODE_ENV !== 'production';
-    console.log(`[SMTP DEV MODE] Servidor de correo no disponible. Código de verificación para ${cleanEmail}: [ ${code} ]`);
-    return res.json({
-      success: true,
-      pendingSmtp: true,
-      devCode: isDev ? code : undefined,
-      message: isDev
-        ? `Código de activación generado: [ ${code} ] (Modo desarrollo).`
-        : 'Código de activación generado. Revisa tu bandeja de entrada o contacta al administrador.'
+// Wrapper seguro para despacho de correo con timeout estricto anti-bloqueo serverless
+async function sendEmailDirect(to, subject, html) {
+  try {
+    const emailPromise = sendEmailNotification({
+      to,
+      subject,
+      html,
+      text: (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
     });
+    const timeoutPromise = new Promise((resolve) =>
+      setTimeout(() => resolve({ success: false, timeout: true }), 3500)
+    );
+    const res = await Promise.race([emailPromise, timeoutPromise]);
+    return !!(res && res.success);
+  } catch (err) {
+    console.warn('[Email] Fallo controlado en sendEmailDirect:', err.message);
+    return false;
   }
+}
 
-  res.json({
-    success: true,
-    message: 'Hemos enviado un código de activación de 6 dígitos a tu correo electrónico.'
-  });
+app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
+  try {
+    const { email, password, username, hwid } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanPass = String(password).trim();
+    const cleanUser = String(username || cleanEmail.split('@')[0]).trim();
+
+    if (cleanUser.length < 3) {
+      return res.status(400).json({ success: false, error: 'El nombre de usuario debe tener al menos 3 caracteres.' });
+    }
+
+    if (cleanPass.length < 4) {
+      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 4 caracteres.' });
+    }
+
+    const users = loadUsers();
+    let existingUser = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (existingUser && existingUser.status === 'ACTIVE') {
+      return res.status(400).json({ success: false, error: 'Este correo ya se encuentra registrado y activo.' });
+    }
+
+    const existingUsername = users.find(u => u.username && u.username.toLowerCase() === cleanUser.toLowerCase() && u.email.toLowerCase() !== cleanEmail);
+    if (existingUsername) {
+      return res.status(400).json({ success: false, error: 'Este nombre de usuario ya está registrado por otra cuenta. Por favor elige otro.' });
+    }
+
+    // Generar código numérico seguro de 6 dígitos
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutos
+
+    if (!existingUser) {
+      const newUser = {
+        id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        email: cleanEmail,
+        username: cleanUser,
+        passwordHash: hashPassword(cleanPass),
+        role: 'USER',
+        hwid: hwid || '',
+        activeHwid: hwid || '',
+        status: 'PENDING_VERIFICATION',
+        verificationCode: code,
+        verificationExpiresAt: expiresAt,
+        createdAt: new Date().toISOString()
+      };
+      users.push(newUser);
+    } else {
+      // Si ya existía pero estaba en PENDING_VERIFICATION, actualizamos contraseña y nuevo código
+      existingUser.username = cleanUser;
+      existingUser.passwordHash = hashPassword(cleanPass);
+      existingUser.status = 'PENDING_VERIFICATION';
+      existingUser.verificationCode = code;
+      existingUser.verificationExpiresAt = expiresAt;
+      if (hwid) existingUser.hwid = hwid;
+    }
+    saveUsers(users);
+
+    // Limpiar de tombstones si el correo había sido eliminado previamente
+    const tombstones = loadTombstones();
+    if (tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
+      delete tombstones.deletedUsers[cleanEmail];
+      saveTombstones(tombstones);
+    }
+
+    emailVerificationStore.set(cleanEmail, {
+      code,
+      expiresAt,
+      attempts: 0,
+      createdAt: new Date().toISOString()
+    });
+
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+
+    // Plantilla HTML corporativa para correo de activación
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
+        <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
+        <p style="font-size: 15px; line-height: 1.5; color: #CCC;">
+          Hola <strong>${cleanUser}</strong>, gracias por registrarte. Usa el siguiente código de activación de un solo uso para verificar tu cuenta:
+        </p>
+        <div style="background: #1A1A1A; border: 2px dashed #FF5722; padding: 18px; text-align: center; border-radius: 6px; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF5722;">${code}</span>
+        </div>
+        <p style="font-size: 13px; color: #888;">
+          Este código expira en 15 minutos. Si tú no solicitaste este registro, puedes ignorar este correo.
+        </p>
+      </div>
+    `;
+
+    // Intentar envío de correo SMTP / API con timeout protegido
+    const emailSent = await sendEmailDirect(cleanEmail, 'Código de Activación - Mu Manager PRO', emailHtml);
+
+    addAuditLog('REGISTER_INIT', hwid, clientIp, `Registro iniciado: ${cleanUser} (${cleanEmail})`);
+
+    if (!emailSent) {
+      const isDev = process.env.NODE_ENV !== 'production';
+      console.log(`[SMTP NOTICE] Código de activación para ${cleanEmail}: [ ${code} ]`);
+      return res.json({
+        success: true,
+        pendingSmtp: true,
+        devCode: code,
+        message: 'Código de activación generado. Revisa tu correo o utiliza el código de verificación en pantalla.'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Hemos enviado un código de activación de 6 dígitos a tu correo electrónico.'
+    });
+  } catch (err) {
+    console.error('[Register Error]', err);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor de registro: ' + (err.message || 'Desconocido') });
+  }
 });
 
 // Verificar código de activación de registro
 app.post('/api/auth/verify-registration', (req, res) => {
-  const { email, code, hwid } = req.body;
-  if (!email || !code) {
-    return res.status(400).json({ success: false, error: 'Correo y código requeridos.' });
-  }
-
-  const cleanEmail = String(email).trim().toLowerCase();
-  const cleanCode = String(code).trim();
-  const entry = emailVerificationStore.get(cleanEmail);
-
-  if (!entry) {
-    return res.status(400).json({ success: false, error: 'No hay ningún código pendiente para este correo. Solicita uno nuevo.' });
-  }
-
-  if (Date.now() > entry.expiresAt) {
-    emailVerificationStore.delete(cleanEmail);
-    return res.status(400).json({ success: false, error: 'El código de activación ha expirado. Por favor solicita uno nuevo.' });
-  }
-
-  if (entry.code !== cleanCode) {
-    entry.attempts = (entry.attempts || 0) + 1;
-    if (entry.attempts >= 5) {
-      emailVerificationStore.delete(cleanEmail);
-      return res.status(400).json({ success: false, error: 'Demasiados intentos fallidos. El código ha sido invalidado.' });
+  try {
+    const { email, code, hwid } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ success: false, error: 'Correo y código requeridos.' });
     }
-    return res.status(400).json({ success: false, error: `Código incorrecto. Intentos restantes: ${5 - entry.attempts}.` });
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanCode = String(code).trim();
+
+    const users = loadUsers();
+    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
+    }
+
+    let entry = emailVerificationStore.get(cleanEmail);
+    let validCode = entry ? entry.code : user.verificationCode;
+    let expiresAt = entry ? entry.expiresAt : user.verificationExpiresAt;
+
+    if (!validCode) {
+      if (user.status === 'ACTIVE') {
+        const token = generateSessionToken(cleanEmail, user.role || 'USER', hwid);
+        return res.json({
+          success: true,
+          token,
+          user: { email: user.email, username: user.username },
+          message: 'Tu cuenta ya se encuentra verificada y activa.'
+        });
+      }
+      return res.status(400).json({ success: false, error: 'No hay ningún código pendiente para este correo. Solicita uno nuevo.' });
+    }
+
+    if (expiresAt && Date.now() > expiresAt) {
+      emailVerificationStore.delete(cleanEmail);
+      user.verificationCode = undefined;
+      user.verificationExpiresAt = undefined;
+      saveUsers(users);
+      return res.status(400).json({ success: false, error: 'El código de activación ha expirado. Por favor solicita uno nuevo.' });
+    }
+
+    if (String(validCode).trim() !== cleanCode) {
+      if (entry) entry.attempts = (entry.attempts || 0) + 1;
+      return res.status(400).json({ success: false, error: 'Código incorrecto. Por favor verifica los 6 dígitos.' });
+    }
+
+    // Código correcto: activar usuario
+    emailVerificationStore.delete(cleanEmail);
+    user.status = 'ACTIVE';
+    user.verificationCode = undefined;
+    user.verificationExpiresAt = undefined;
+    user.emailVerifiedAt = new Date().toISOString();
+    if (hwid) {
+      user.hwid = hwid;
+      user.activeHwid = hwid;
+    }
+    saveUsers(users);
+
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    addAuditLog('REGISTER_CONFIRMED', hwid, clientIp, `Cuenta activada: ${user.username} (${cleanEmail})`);
+
+    const token = generateSessionToken(cleanEmail, user.role || 'USER', hwid);
+    res.json({
+      success: true,
+      token,
+      user: { email: user.email, username: user.username },
+      message: '¡Cuenta verificada y activada exitosamente!'
+    });
+  } catch (err) {
+    console.error('[Verify Fatal Error]', err);
+    res.status(500).json({ success: false, error: 'Error al verificar registro: ' + err.message });
   }
-
-  // Código correcto: activar usuario
-  emailVerificationStore.delete(cleanEmail);
-  const users = loadUsers();
-  const user = users.find(u => u.email.toLowerCase() === cleanEmail);
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
-  }
-
-  user.status = 'ACTIVE';
-  user.emailVerifiedAt = new Date().toISOString();
-  if (hwid) {
-    user.hwid = hwid;
-    user.activeHwid = hwid;
-  }
-  saveUsers(users);
-
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-  addAuditLog('REGISTER_CONFIRMED', hwid, clientIp, `Cuenta activada: ${user.username} (${cleanEmail})`);
-
-  const token = generateSessionToken(cleanEmail, user.role || 'USER', hwid);
-  res.json({
-    success: true,
-    token,
-    user: { email: user.email, username: user.username },
-    message: '¡Cuenta verificada y activada exitosamente!'
-  });
 });
 
 // Reenviar código de activación
 app.post('/api/auth/resend-verification', async (req, res) => {
-  const { email, hwid } = req.body;
-  if (!email) return res.status(400).json({ success: false, error: 'Correo requerido.' });
+  try {
+    const { email, hwid } = req.body;
+    if (!email) return res.status(400).json({ success: false, error: 'Correo requerido.' });
 
-  const cleanEmail = String(email).trim().toLowerCase();
-  const users = loadUsers();
-  const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+    const cleanEmail = String(email).trim().toLowerCase();
+    const users = loadUsers();
+    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
 
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'Usuario no registrado.' });
-  }
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no registrado.' });
+    }
 
-  if (user.status === 'ACTIVE') {
-    return res.status(400).json({ success: false, error: 'Esta cuenta ya se encuentra activa. Puedes iniciar sesión directamente.' });
-  }
+    if (user.status === 'ACTIVE') {
+      return res.status(400).json({ success: false, error: 'Esta cuenta ya se encuentra activa. Puedes iniciar sesión directamente.' });
+    }
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = Date.now() + 15 * 60 * 1000;
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000;
 
-  emailVerificationStore.set(cleanEmail, {
-    code,
-    expiresAt,
-    attempts: 0,
-    createdAt: new Date().toISOString()
-  });
+    user.verificationCode = code;
+    user.verificationExpiresAt = expiresAt;
+    saveUsers(users);
 
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
-      <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
-      <p style="font-size: 15px; line-height: 1.5; color: #CCC;">
-        Tu nuevo código de activación es:
-      </p>
-      <div style="background: #1A1A1A; border: 2px dashed #FF5722; padding: 18px; text-align: center; border-radius: 6px; margin: 20px 0;">
-        <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF5722;">${code}</span>
-      </div>
-      <p style="font-size: 13px; color: #888;">
-        Válido por 15 minutos.
-      </p>
-    </div>
-  `;
-
-  const emailSent = await sendEmailDirect(cleanEmail, 'Nuevo Código de Activación - Mu Manager PRO', emailHtml);
-  if (!emailSent) {
-    const isDev = process.env.NODE_ENV !== 'production';
-    console.log(`[SMTP DEV MODE] Código de reenvío para ${cleanEmail}: [ ${code} ]`);
-    return res.json({
-      success: true,
-      pendingSmtp: true,
-      devCode: isDev ? code : undefined,
-      message: isDev
-        ? `Nuevo código generado: [ ${code} ] (Modo desarrollo).`
-        : 'Nuevo código de activación generado. Revisa tu correo o contacta al administrador.'
+    emailVerificationStore.set(cleanEmail, {
+      code,
+      expiresAt,
+      attempts: 0,
+      createdAt: new Date().toISOString()
     });
-  }
 
-  res.json({ success: true, message: 'Nuevo código de activación enviado a tu correo.' });
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
+        <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
+        <p style="font-size: 15px; line-height: 1.5; color: #CCC;">
+          Tu nuevo código de activación es:
+        </p>
+        <div style="background: #1A1A1A; border: 2px dashed #FF5722; padding: 18px; text-align: center; border-radius: 6px; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF5722;">${code}</span>
+        </div>
+        <p style="font-size: 13px; color: #888;">
+          Válido por 15 minutos.
+        </p>
+      </div>
+    `;
+
+    const emailSent = await sendEmailDirect(cleanEmail, 'Nuevo Código de Activación - Mu Manager PRO', emailHtml);
+    if (!emailSent) {
+      const isDev = process.env.NODE_ENV !== 'production';
+      console.log(`[SMTP NOTICE] Código de reenvío para ${cleanEmail}: [ ${code} ]`);
+      return res.json({
+        success: true,
+        pendingSmtp: true,
+        devCode: code,
+        message: 'Nuevo código de activación generado. Revisa tu correo o utiliza el código en pantalla.'
+      });
+    }
+
+    res.json({ success: true, message: 'Nuevo código de activación enviado a tu correo.' });
+  } catch (err) {
+    console.error('[Resend Error]', err);
+    res.status(500).json({ success: false, error: 'Error al reenviar código: ' + err.message });
+  }
 });
 
 const failedLogins = new Map();
@@ -6977,7 +7189,7 @@ function sendSmtpEmail({ host, port, secure, user, pass, from, to, subject, html
     let buffer = '';
 
     socket.setEncoding('utf8');
-    socket.setTimeout(12000);
+    socket.setTimeout(4000);
 
     const sendCmd = (cmd) => {
       socket.write(cmd + '\r\n');
@@ -7336,7 +7548,7 @@ app.get('/api/admin/storage/status', async (req, res) => {
 
 // Purgar dispositivos inactivos o de prueba
 app.post('/api/admin/devices/purge-inactive', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || req.body.adminKey;
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
   }
@@ -7355,11 +7567,6 @@ app.post('/api/admin/devices/purge-inactive', (req, res) => {
     const isInactive = lastSeenTime > 0 && lastSeenTime < cutoffTime;
 
     if (isTest || isInactive) {
-      tombstones[hwid] = {
-        deletedAt: new Date().toISOString(),
-        reason: isTest ? 'Purga de pruebas' : `Inactivo por más de ${numDays} días`,
-        lastSeen: dev.lastSeen || 'Nunca'
-      };
       delete devices[hwid];
       purgedHwids.push(hwid);
     }
@@ -7367,8 +7574,7 @@ app.post('/api/admin/devices/purge-inactive', (req, res) => {
 
   if (purgedHwids.length > 0) {
     saveDevices(devices);
-    saveTombstones(tombstones);
-    addAuditLog('PURGE_INACTIVE', 'ADMIN', getClientIp(req), `Purga ejecutada: ${purgedHwids.length} dispositivos eliminados (${purgedHwids.join(', ')})`);
+    addAuditLog('PURGE_INACTIVE', 'ADMIN', getClientIp(req), `Purga ejecutada: ${purgedHwids.length} registros limpiados (${purgedHwids.join(', ')})`);
   }
 
   res.json({
@@ -7381,7 +7587,7 @@ app.post('/api/admin/devices/purge-inactive', (req, res) => {
 
 // Exportar backup completo en JSON para persistencia y sincronización
 app.get('/api/admin/backup/export', (req, res) => {
-  const adminKey = req.query.adminKey || req.headers['x-admin-key'];
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ error: 'Acceso no autorizado' });
   }
@@ -7406,7 +7612,7 @@ app.get('/api/admin/backup/export', (req, res) => {
 
 // Importar / restaurar backup completo
 app.post('/api/admin/backup/import', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || req.body.adminKey;
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
   }
@@ -7437,7 +7643,7 @@ app.post('/api/admin/backup/import', (req, res) => {
 
 // Reinicio Limpio de Base de Datos (Zero Ghost / Fresh Start) con respaldo preventivo
 app.post('/api/admin/database/reset-clean', async (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || req.body.adminKey;
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
   }
@@ -7532,6 +7738,11 @@ app.post('/api/admin/database/reset-clean', async (req, res) => {
 
 // Crear cuenta de usuario desde el panel
 app.post('/api/admin/user/create', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
+  }
+
   const { email, password, username, role, status } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Email y contraseña requeridos' });
@@ -7545,6 +7756,14 @@ app.post('/api/admin/user/create', (req, res) => {
   if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
     return res.status(409).json({ success: false, error: 'Ya existe una cuenta con este correo electrónico' });
   }
+
+  // Si estaba registrado como eliminado, remover el tombstone para permitir su re-creación
+  const tombstones = loadTombstones();
+  if (tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
+    delete tombstones.deletedUsers[cleanEmail];
+    saveTombstones(tombstones);
+  }
+
   const newUser = {
     id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     email: cleanEmail,
@@ -7609,30 +7828,60 @@ app.post('/api/admin/user/toggle-block', (req, res) => {
 
 // Eliminar usuario desde el panel con registro de revocación (Tombstone)
 app.post('/api/admin/user/delete', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
+  }
+
   const { id, email } = req.body;
+  if (!id && !email) {
+    return res.status(400).json({ success: false, error: 'ID o Email de usuario requerido para eliminar.' });
+  }
+
   let users = loadUsers();
-  const targetUser = users.find(u => (id ? u.id === id : false) || (email ? u.email.toLowerCase() === String(email).trim().toLowerCase() : false));
+  const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+  const cleanId = id ? String(id).trim() : '';
+
+  const targetUser = users.find(u => 
+    (cleanId && u.id === cleanId) || 
+    (cleanEmail && (u.email || '').toLowerCase() === cleanEmail)
+  );
 
   if (!targetUser) {
+    // Si ya no está en la lista activa, comprobar si ya figuraba como tombstoned
+    const tombstones = loadTombstones();
+    if (tombstones.deletedUsers && ((cleanEmail && tombstones.deletedUsers[cleanEmail]) || (cleanId && tombstones.deletedUsers[cleanId.toLowerCase()]))) {
+      return res.json({ success: true, message: 'El usuario ya se encontraba eliminado.', email: cleanEmail || cleanId });
+    }
     return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
   }
 
-  // Registrar en Tombstones para evitar que pings pasivos de la APK lo vuelvan a auto-crear
+  const targetEmail = (targetUser.email || cleanEmail).toLowerCase();
+  const targetId = targetUser.id || cleanId;
+
+  // Registrar en Tombstones para evitar resurrección permanente
   const tombstones = loadTombstones();
   tombstones.deletedUsers = tombstones.deletedUsers || {};
-  const cleanEmail = targetUser.email.toLowerCase();
-  tombstones.deletedUsers[cleanEmail] = {
+  const tombstoneRecord = {
     deletedAt: new Date().toISOString(),
-    id: targetUser.id,
+    id: targetId,
     hwid: targetUser.hwid || '',
-    username: targetUser.username || ''
+    username: targetUser.username || '',
+    deletedBy: 'ADMIN_PANEL'
   };
+  if (targetEmail) tombstones.deletedUsers[targetEmail] = tombstoneRecord;
+  if (targetId) tombstones.deletedUsers[targetId.toLowerCase()] = tombstoneRecord;
   saveTombstones(tombstones);
 
-  users = users.filter(u => u.id !== targetUser.id);
+  // Filtrar estrictamente por ID y por Email para evitar cualquier residuo
+  users = users.filter(u => 
+    u.id !== targetId && 
+    (!targetEmail || (u.email || '').toLowerCase() !== targetEmail)
+  );
   saveUsers(users);
-  addAuditLog('USER_DELETED', targetUser.hwid || 'PANEL', getClientIp(req), `Cuenta de usuario eliminada permanentemente: ${cleanEmail}`);
-  res.json({ success: true, message: 'Usuario eliminado con éxito.', email: cleanEmail });
+
+  addAuditLog('USER_DELETED', targetUser.hwid || 'PANEL', getClientIp(req), `Cuenta de usuario eliminada permanentemente: ${targetEmail || targetId}`);
+  res.json({ success: true, message: 'Usuario eliminado con éxito.', email: targetEmail, id: targetId });
 });
 
 // Actualizar información completa de usuario desde el panel (modal y menú contextual)
@@ -7874,7 +8123,16 @@ app.post('/api/admin/change-key', (req, res) => {
   settings.adminKey = cleanKey;
   saveSettings(settings);
   addAuditLog('ADMIN_KEY_CHANGED', 'N/A', getClientIp(req), 'Clave de acceso al panel actualizada por el administrador.');
-  return res.json({ success: true, message: 'Clave maestra del panel actualizada correctamente.' });
+
+  let note = '';
+  if (process.env.ADMIN_KEY) {
+    note = ' (Nota: Tu entorno Vercel/Cloud tiene configurada la variable ADMIN_KEY. Ambas claves serán válidas temporalmente; actualízala también en Vercel para cambios permanentes).';
+  }
+  return res.json({
+    success: true,
+    message: `Clave maestra del panel actualizada correctamente.${note}`,
+    hasEnvAdminKey: !!process.env.ADMIN_KEY
+  });
 });
 
 // Limpiar Registro de Auditoría
@@ -8078,49 +8336,117 @@ app.post('/api/admin/device/update-note', (req, res) => {
   res.json({ success: true, hwid, note: devices[hwid].note });
 });
 
-// Eliminar dispositivo del registro con registro de revocación (Tombstone)
+// Eliminar dispositivo del registro para limpieza (sin bloquear el celular)
 app.post('/api/admin/device/delete', (req, res) => {
-  const { hwid } = req.body;
-  const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
-
-  // Registrar en Tombstones para evitar resurrección automática por caché del teléfono
-  const tombstones = loadTombstones();
-  if (!tombstones.revokedKeys) tombstones.revokedKeys = {};
-  const oldKey = devices[hwid].licenseKey || devices[hwid].generatedKey || '';
-  if (oldKey) {
-    tombstones.revokedKeys[oldKey] = {
-      revokedAt: new Date().toISOString(),
-      hwid,
-      reason: 'Dispositivo eliminado del panel por el administrador'
-    };
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
   }
 
-  tombstones[hwid] = {
-    deletedAt: new Date().toISOString(),
-    revokedKey: oldKey,
-    previousUser: devices[hwid].currentUser || '',
-    previousModel: devices[hwid].deviceModel || ''
-  };
-  saveTombstones(tombstones);
+  const { hwid } = req.body;
+  if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
+  const devices = loadDevices();
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || hwid;
 
-  delete devices[hwid];
+  if (!devices[targetKey]) {
+    // Si ya no está en devices, limpiar cualquier tombstone residual
+    const tombstones = loadTombstones();
+    if (tombstones[cleanHwid] || tombstones[hwid]) {
+      delete tombstones[cleanHwid];
+      delete tombstones[hwid];
+      saveTombstones(tombstones);
+      return res.json({ success: true, hwid: cleanHwid, message: 'El registro residual fue limpiado con éxito (sin bloqueo).' });
+    }
+    return res.status(404).json({ success: false, error: 'Dispositivo no encontrado' });
+  }
+
+  // Limpiar de la lista de dispositivos activos
+  delete devices[targetKey];
+  if (devices[cleanHwid]) delete devices[cleanHwid];
   saveDevices(devices);
-  addAuditLog('DEVICE_DELETED', hwid, 'N/A', 'Dispositivo eliminado permanentemente del registro.');
-  res.json({ success: true, hwid });
+
+  // Limpiar cualquier tombstone previo si existía, garantizando que el celular NO quede bloqueado
+  const tombstones = loadTombstones();
+  let tombstonesChanged = false;
+  if (tombstones[cleanHwid]) {
+    delete tombstones[cleanHwid];
+    tombstonesChanged = true;
+  }
+  if (tombstones[hwid]) {
+    delete tombstones[hwid];
+    tombstonesChanged = true;
+  }
+  if (tombstones[targetKey]) {
+    delete tombstones[targetKey];
+    tombstonesChanged = true;
+  }
+  if (tombstonesChanged) {
+    saveTombstones(tombstones);
+  }
+
+  addAuditLog('DEVICE_CLEARED', cleanHwid, 'N/A', 'Registro de dispositivo eliminado para limpieza (sin bloqueo).');
+  res.json({ success: true, hwid: cleanHwid, message: 'Registro de celular limpiado exitosamente. El dispositivo no ha sido bloqueado.' });
 });
 
-// Restaurar dispositivo excluido / remover de la lista negra de tombstones
-app.post('/api/admin/device/unexclude', (req, res) => {
+// Eliminar un registro específico de la lista de exclusión (Tombstones) sin bloquear el celular
+app.post('/api/admin/tombstone/delete', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
+  }
+
   const { hwid } = req.body;
   if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
   const cleanHwid = String(hwid).trim().toUpperCase();
   const tombstones = loadTombstones();
-  if (!tombstones[cleanHwid]) {
+
+  delete tombstones[cleanHwid];
+  delete tombstones[hwid];
+  saveTombstones(tombstones);
+
+  addAuditLog('TOMBSTONE_DELETED', cleanHwid, getClientIp(req), `Registro de exclusión eliminado: ${cleanHwid} (sin bloqueo).`);
+  res.json({ success: true, hwid: cleanHwid, message: 'Registro de exclusión eliminado con éxito. El celular no está bloqueado.' });
+});
+
+// Vaciar todo el historial de dispositivos excluidos (Tombstones)
+app.post('/api/admin/tombstones/clear-all', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
+  }
+
+  const tombstones = loadTombstones();
+  let clearedCount = 0;
+  for (const key of Object.keys(tombstones)) {
+    if (key !== 'revokedKeys' && key !== 'deletedUsers' && !key.startsWith('_')) {
+      delete tombstones[key];
+      clearedCount++;
+    }
+  }
+  saveTombstones(tombstones);
+
+  addAuditLog('TOMBSTONES_CLEARED_ALL', 'ADMIN', getClientIp(req), `Historial de exclusión vaciado: ${clearedCount} registros eliminados.`);
+  res.json({ success: true, clearedCount, message: `Se limpiaron ${clearedCount} registros del historial de exclusión con éxito.` });
+});
+
+// Restaurar dispositivo excluido / remover de la lista negra de tombstones
+app.post('/api/admin/device/unexclude', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
+  }
+
+  const { hwid } = req.body;
+  if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
+  const tombstones = loadTombstones();
+  if (!tombstones[cleanHwid] && !tombstones[hwid]) {
     return res.status(404).json({ success: false, error: 'Dispositivo no encontrado en la lista de exclusión' });
   }
 
   delete tombstones[cleanHwid];
+  delete tombstones[hwid];
   saveTombstones(tombstones);
   addAuditLog('DEVICE_UNEXCLUDED', cleanHwid, getClientIp(req), 'Dispositivo restaurado de la lista de exclusión.');
   res.json({ success: true, hwid: cleanHwid, message: 'Dispositivo restaurado con éxito. Ahora podrá volver a conectarse.' });
@@ -8509,7 +8835,7 @@ app.get('/api/admin/security-alerts', (req, res) => {
 
 // Descartar/marcar como leídas las alertas de seguridad
 app.post('/api/admin/security-alerts/dismiss', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ error: 'No autorizado' });
   }
@@ -8522,7 +8848,7 @@ app.post('/api/admin/security-alerts/dismiss', (req, res) => {
 
 // Kill-Switch de Emergencia Instantáneo para un Dispositivo
 app.post('/api/admin/device/emergency-lock', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ error: 'No autorizado' });
   }
@@ -8548,7 +8874,7 @@ app.post('/api/admin/device/emergency-lock', (req, res) => {
 
 // 1. Extender tiempo DEMO desde el panel (en minutos u horas)
 app.post('/api/admin/device/extend-demo', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8604,7 +8930,7 @@ app.post('/api/admin/device/extend-demo', (req, res) => {
 
 // 2. Forzar Cierre de Sesión / Desvincular Cuenta de Celular
 app.post('/api/admin/device/invalidate-session', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8672,7 +8998,7 @@ app.post('/api/license/request-pro', async (req, res) => {
 
 // 4. Listar Solicitudes PRO para el Panel Web
 app.get('/api/admin/pro-requests', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8682,7 +9008,7 @@ app.get('/api/admin/pro-requests', (req, res) => {
 
 // 5. Acción sobre Solicitud PRO (Contactar / Aprobar / Descartar)
 app.post('/api/admin/pro-request/action', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8758,7 +9084,7 @@ app.post('/api/telemetry/crash', (req, res) => {
 
 // 7. Listar Logs de Seguridad y Bugs para el Panel Web
 app.get('/api/admin/security-logs', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8768,7 +9094,7 @@ app.get('/api/admin/security-logs', (req, res) => {
 
 // 8. Limpiar Logs de Seguridad
 app.post('/api/admin/security-logs/clear', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8778,7 +9104,7 @@ app.post('/api/admin/security-logs/clear', (req, res) => {
 
 // Obtener Ajustes Globales (Sanitización de privacidad para WhatsApp y claves)
 app.get('/api/admin/settings', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   const isAuth = isValidAdminKey(adminKey);
   const raw = loadSettings();
   const settings = JSON.parse(JSON.stringify(raw));
@@ -8805,7 +9131,7 @@ app.get('/api/admin/settings', (req, res) => {
 
 // Guardar Ajustes Globales (Kill-Switch Maestro, Anuncio, Whitelist)
 app.post('/api/admin/settings', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8833,7 +9159,7 @@ app.post('/api/admin/settings', (req, res) => {
 
 // Obtener Configuración de WhatsApp (Sanitizado si no está autenticado)
 app.get('/api/admin/whatsapp', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   const isAuth = isValidAdminKey(adminKey);
   const settings = loadSettings();
   const wa = JSON.parse(JSON.stringify(settings.whatsapp || DEFAULT_SETTINGS.whatsapp));
@@ -8897,7 +9223,7 @@ app.get('/api/admin/email', (req, res) => {
 
 // Guardar Configuración de Correo / SMTP
 app.post('/api/admin/email/settings', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8924,7 +9250,7 @@ app.post('/api/admin/email/settings', (req, res) => {
 
 // Enviar correo de prueba
 app.post('/api/admin/email/test', async (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -9287,7 +9613,7 @@ app.get('/api/items/image/:name', (req, res) => {
 
 // Endpoint para alternar manualmente entre EMULADOR y CELULAR FÍSICO
 app.post('/api/admin/device/toggle-emulator', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'NO_AUTORIZADO' });
   }

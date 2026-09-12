@@ -13,6 +13,7 @@ interface DatabaseContextType {
   connect: () => Promise<{ success: boolean; message: string }>;
   refreshMetrics: () => Promise<void>;
   clearLogs: () => void;
+  resetDatabaseState: () => Promise<void>;
 }
 
 const DatabaseContext = createContext<DatabaseContextType>({
@@ -26,6 +27,7 @@ const DatabaseContext = createContext<DatabaseContextType>({
   connect: async () => ({ success: false, message: '' }),
   refreshMetrics: async () => {},
   clearLogs: () => {},
+  resetDatabaseState: async () => {},
 });
 
 export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -138,6 +140,17 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLogs([]);
   };
 
+  const resetDatabaseState = async () => {
+    await SqlClient.resetAllConnectionState();
+    const defaults = SqlClient.getDefaultConfig();
+    setConfig(defaults);
+    setMetrics(null);
+    setIsConnected(false);
+    setIsConnecting(false);
+    setLatency(0);
+    setLogs([]);
+  };
+
   return (
     <DatabaseContext.Provider
       value={{
@@ -151,6 +164,7 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
         connect,
         refreshMetrics,
         clearLogs,
+        resetDatabaseState,
       }}
     >
       {children}

@@ -45,6 +45,8 @@ import {
   decodeSocketByte,
   encodeSocketByte,
   QUICK_SOCKET_OPTIONS,
+  getQuickSocketOptions,
+  SEED_SPHERE_LEVELS,
 } from '../../constants/socketCatalog';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
@@ -172,6 +174,7 @@ export const ToolsScreen = () => {
   const [maker380, setMaker380] = useState<boolean>(true);
   const [enableSockets, setEnableSockets] = useState<boolean>(false);
   const [makerSockets, setMakerSockets] = useState<number[]>([0xFE, 0xFE, 0xFE, 0xFE, 0xFE]);
+  const [makerSocketLevels, setMakerSocketLevels] = useState<number[]>([1, 1, 1, 1, 1]);
   const [makerAncient, setMakerAncient] = useState<number>(0);
   const [quickSetModalVisible, setQuickSetModalVisible] = useState<boolean>(false);
   const [selectedQuickSet, setSelectedQuickSet] = useState<QuickSetDef>(QUICK_SETS_CATALOG[0]);
@@ -2880,17 +2883,62 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   {[0, 1, 2, 3, 4].map((sIdx) => {
                     const currentVal = makerSockets[sIdx] ?? 0xFF;
                     const sockInfo = decodeSocketByte(currentVal);
+                    const currentLvl = sockInfo.hasSeed ? sockInfo.level : (makerSocketLevels[sIdx] || 1);
+                    const currentOptions = getQuickSocketOptions(currentLvl);
+
                     return (
-                      <View key={`socket_${sIdx}`} style={{ gap: 4 }}>
+                      <View key={`socket_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(0,0,0,0.25)', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#332B24' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>Slot #{sIdx + 1}:</Text>
                           <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>
                             {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                           </Text>
                         </View>
+
+                        {/* Selector de Nivel / Tipo de Seed Sphere (Lv.1 a Lv.5) */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 2 }}>
+                          <Text style={{ fontSize: 10, color: '#8C7B6B', fontWeight: '600' }}>Esfera:</Text>
+                          {SEED_SPHERE_LEVELS.map((sl) => {
+                            const isLvlActive = currentLvl === sl.level;
+                            return (
+                              <TouchableOpacity
+                                key={`tools_lvl_${sIdx}_${sl.level}`}
+                                style={{
+                                  paddingHorizontal: 7,
+                                  paddingVertical: 2,
+                                  borderRadius: 4,
+                                  backgroundColor: isLvlActive ? '#E8C86A' : '#1E1A16',
+                                  borderWidth: 1,
+                                  borderColor: isLvlActive ? '#E8C86A' : '#3E342B',
+                                }}
+                                onPress={() => {
+                                  const updatedLevels = [...makerSocketLevels];
+                                  updatedLevels[sIdx] = sl.level;
+                                  setMakerSocketLevels(updatedLevels);
+
+                                  if (sockInfo.hasSeed && sockInfo.optionId >= 0) {
+                                    const newByte = encodeSocketByte(sockInfo.optionId, sl.level);
+                                    const updated = [...makerSockets];
+                                    updated[sIdx] = newByte;
+                                    setMakerSockets(updated);
+                                  }
+                                }}
+                              >
+                                <Text style={{
+                                  fontSize: 10,
+                                  fontWeight: 'bold',
+                                  color: isLvlActive ? '#120F0D' : '#C5B5A5',
+                                }}>
+                                  {sl.badge}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                           <View style={{ flexDirection: 'row', gap: 4 }}>
-                            {SOCKET_OPTIONS.map((so) => (
+                            {currentOptions.map((so) => (
                               <TouchableOpacity
                                 key={`s_${sIdx}_${so.val}`}
                                 style={[
@@ -2901,6 +2949,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                   const newSockets = [...makerSockets];
                                   newSockets[sIdx] = so.val;
                                   setMakerSockets(newSockets);
+                                  if (so.optionId >= 0) {
+                                    const updatedLevels = [...makerSocketLevels];
+                                    updatedLevels[sIdx] = currentLvl;
+                                    setMakerSocketLevels(updatedLevels);
+                                  }
                                 }}
                               >
                                 <Text

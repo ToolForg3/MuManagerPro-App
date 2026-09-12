@@ -132,18 +132,39 @@ export class SqlClient {
     }
   }
 
+  static getDefaultConfig(): SqlServerConfig {
+    return {
+      host: '127.0.0.1',
+      port: 1433,
+      user: 'sa',
+      password: '',
+      database: 'MuOnline',
+      encrypt: false,
+      bridgeUrl: SqlClient.DEFAULT_CLOUD_GATEWAY,
+      useBridge: true,
+      emulatorType: 'MSPro',
+    };
+  }
+
   static async loadSavedConfig(): Promise<SqlServerConfig> {
     try {
       const saved = await SecureStorage.getItem(CONFIG_STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.bridgeUrl && (parsed.bridgeUrl.includes('onrender.com') || parsed.bridgeUrl.includes('localhost') || parsed.bridgeUrl.includes('127.0.0.1'))) {
-          parsed.bridgeUrl = this.DEFAULT_CLOUD_GATEWAY;
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            if (parsed.bridgeUrl && (parsed.bridgeUrl.includes('onrender.com') || parsed.bridgeUrl.includes('localhost') || parsed.bridgeUrl.includes('127.0.0.1'))) {
+              parsed.bridgeUrl = this.DEFAULT_CLOUD_GATEWAY;
+            }
+            if (parsed.useBridge === undefined) {
+              parsed.useBridge = true;
+            }
+            this.config = { ...this.config, ...parsed };
+          }
+        } catch {
+          console.warn('[SqlClient] Configuración JSON corrupta. Purgando.');
+          await SecureStorage.removeItem(CONFIG_STORAGE_KEY).catch(() => {});
         }
-        if (parsed.useBridge === undefined) {
-          parsed.useBridge = true;
-        }
-        this.config = { ...this.config, ...parsed };
       }
     } catch (e) {
       console.warn('Could not load saved SQL config', e);
@@ -160,12 +181,41 @@ export class SqlClient {
     }
   }
 
+  /**
+   * Purgado profundo de emergencia: elimina tokens de sesión, credenciales cacheadas,
+   * perfiles de servidor y restablece la configuración SQL al estado inicial limpio.
+   * Resuelve problemas de reconexión tras actualizaciones de APK sin requerir reinstalación.
+   */
+  static async resetAllConnectionState(): Promise<void> {
+    this.sessionToken = '';
+    this.activeUserEmail = '';
+    this.isConnected = false;
+    this.logs = [];
+    this.config = this.getDefaultConfig();
+
+    try {
+      await SecureStorage.purgeAllKnownSecrets();
+    } catch (e) {
+      console.warn('[SqlClient] Error purging secure storage:', e);
+    }
+    try {
+      await SecureStorage.removeItem(CONFIG_STORAGE_KEY);
+      await SecureStorage.removeItem('@mumanager_session_token');
+      await SecureStorage.removeItem('@mumanager_admin_key');
+      await SecureStorage.removeItem('@mumanager_server_profiles');
+    } catch (_) {}
+  }
+
   static getConfig(): SqlServerConfig {
     return { ...this.config };
   }
 
   static getIsConnected(): boolean {
     return this.isConnected;
+  }
+
+  static setIsConnected(connected: boolean): void {
+    this.isConnected = connected;
   }
 
   static getLogs(): SqlLogEntry[] {
@@ -250,11 +300,6 @@ export class SqlClient {
     const hwid = await SecurityService.getDeviceHwid();
     const effectiveAdminKey = await this.getStoredAdminKey();
     const sessionToken = await this.getSessionToken();
-
-    if (effectiveAdminKey && bodyPayload && typeof bodyPayload === 'object' && !bodyPayload.adminKey) {
-      bodyPayload.adminKey = effectiveAdminKey;
-    }
-
     const bodyStr = JSON.stringify(bodyPayload);
     const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
 
