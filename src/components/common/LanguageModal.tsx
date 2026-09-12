@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   langCode: {
     fontSize: 12,
     fontWeight: THEME.typography.weightBold,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     letterSpacing: 0.5,
   },
   modalOverlay: {
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   optionName: {
     fontSize: 15,
     fontWeight: THEME.typography.weightMedium,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
   },
   optionNameSelected: {
     color: '#E8C86A',
@@ -179,6 +179,6 @@ const styles = StyleSheet.create({
   },
   optionCountry: {
     fontSize: 12,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
   },
 });

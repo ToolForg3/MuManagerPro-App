@@ -1669,21 +1669,21 @@ export const AccountsScreen = () => {
                           width: 6,
                           height: 6,
                           borderRadius: 3,
-                          backgroundColor: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : '#888',
+                          backgroundColor: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : THEME.colors.textoSecundario,
                         }}
                       />
                       <Text
                         style={{
                           fontSize: 10,
                           fontWeight: '700',
-                          color: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : '#888',
+                          color: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : THEME.colors.textoSecundario,
                         }}
                       >
                         {selectedAccount?.ConnectStat === 1 ? 'ONLINE' : 'OFFLINE'}
                       </Text>
                     </View>
                   </View>
-                  <Text style={{ color: '#888', fontSize: 11 }}>Editar Información de Cuenta</Text>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>Editar Información de Cuenta</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={() => setAccountDetailVisible(false)} style={styles.closeModalBtn}>
@@ -1702,7 +1702,7 @@ export const AccountsScreen = () => {
                     onChangeText={setEditUsername}
                     autoCapitalize="none"
                     placeholder="Usuario"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
                 <Text style={styles.helperSubtext}>* Modificarlo renombrará la cuenta y sus personajes en cascada.</Text>
@@ -1719,10 +1719,10 @@ export const AccountsScreen = () => {
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     placeholder="Contraseña"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={THEME.colors.textMuted}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 6 }}>
-                    <MaterialCommunityIcons name={showPassword ? "eye-off" : "eye"} size={20} color="#888" />
+                    <MaterialCommunityIcons name={showPassword ? "eye-off" : "eye"} size={20} color={THEME.colors.textoSecundario} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1736,7 +1736,7 @@ export const AccountsScreen = () => {
                     value={editName}
                     onChangeText={setEditName}
                     placeholder="Nombre del jugador"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
               </View>
@@ -1752,7 +1752,7 @@ export const AccountsScreen = () => {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     placeholder="correo@ejemplo.com"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
               </View>
@@ -1803,7 +1803,7 @@ export const AccountsScreen = () => {
                       onChangeText={setAddVipDaysInput}
                       keyboardType="numeric"
                       placeholder="+ Días a sumar"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <TouchableOpacity style={styles.quickDayBtn} onPress={() => setAddVipDaysInput('15')}>
@@ -1830,7 +1830,7 @@ export const AccountsScreen = () => {
                       onChangeText={setEditCoinC}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <View style={styles.coinCol}>
@@ -1841,7 +1841,7 @@ export const AccountsScreen = () => {
                       onChangeText={setEditCoinP}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <View style={styles.coinCol}>
@@ -1852,7 +1852,7 @@ export const AccountsScreen = () => {
                       onChangeText={setEditGoblinPoint}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <View style={styles.coinCol}>
@@ -1863,7 +1863,7 @@ export const AccountsScreen = () => {
                       onChangeText={setEditRuud}
                       keyboardType="numeric"
                       placeholder="0"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                 </View>
@@ -1889,7 +1889,7 @@ export const AccountsScreen = () => {
                       onChangeText={setEditWarehouseCount}
                       keyboardType="numeric"
                       placeholder="1"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <TouchableOpacity
@@ -2031,7 +2031,7 @@ export const AccountsScreen = () => {
                             <Text style={styles.charChipName} numberOfLines={1}>{c.Name}</Text>
                             <Text style={styles.charChipSub}>{classInfo.name} • Lv {c.cLevel} ({c.ResetCount || 0}R)</Text>
                           </View>
-                          <MaterialCommunityIcons name="chevron-right" size={16} color="#888" />
+                          <MaterialCommunityIcons name="chevron-right" size={16} color={THEME.colors.textoSecundario} />
                         </TouchableOpacity>
                       );
                     })}
@@ -2401,7 +2401,7 @@ export const AccountsScreen = () => {
                     value={vaultMakerLuck}
                     onValueChange={setVaultMakerLuck}
                     trackColor={{ false: '#333333', true: THEME.colors.jade }}
-                    thumbColor={vaultMakerLuck ? THEME.colors.jade : '#888'}
+                    thumbColor={vaultMakerLuck ? THEME.colors.jade : THEME.colors.textMuted}
                   />
                 </View>
 
@@ -2411,7 +2411,7 @@ export const AccountsScreen = () => {
                     value={vaultMakerSkill}
                     onValueChange={setVaultMakerSkill}
                     trackColor={{ false: '#333333', true: '#FF9800' }}
-                    thumbColor={vaultMakerSkill ? '#FF9800' : '#888'}
+                    thumbColor={vaultMakerSkill ? '#FF9800' : THEME.colors.textMuted}
                   />
                 </View>
 
@@ -2421,7 +2421,7 @@ export const AccountsScreen = () => {
                     value={vaultMaker380}
                     onValueChange={setVaultMaker380}
                     trackColor={{ false: '#333333', true: '#FF4081' }}
-                    thumbColor={vaultMaker380 ? '#FF4081' : '#888'}
+                    thumbColor={vaultMaker380 ? '#FF4081' : THEME.colors.textMuted}
                   />
                 </View>
               </View>
@@ -2469,7 +2469,7 @@ export const AccountsScreen = () => {
                 </View>
 
                 {(!selectedVaultMakerDef || !isItemAncientEligible(selectedVaultMakerDef.group, selectedVaultMakerDef.index)) ? (
-                  <Text style={{ color: '#888', fontSize: 12, marginTop: 6, fontStyle: 'italic' }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, marginTop: 6, fontStyle: 'italic' }}>
                     ℹ️ Esta pieza ({selectedVaultMakerDef?.name || 'Seleccionada'}) no posee set Ancient oficial en Season 6.
                   </Text>
                 ) : (
@@ -2586,7 +2586,7 @@ export const AccountsScreen = () => {
                           <MaterialCommunityIcons
                             name={isChecked ? 'checkbox-marked' : 'checkbox-blank-outline'}
                             size={16}
-                            color={isChecked ? THEME.colors.jade : '#666'}
+                            color={isChecked ? THEME.colors.jade : THEME.colors.textMuted}
                           />
                           <Text
                             style={[
@@ -2622,7 +2622,7 @@ export const AccountsScreen = () => {
                       setVaultMakerHarmonyLevel(val ? 13 : 0);
                     }}
                     trackColor={{ false: '#333333', true: '#FFD700' }}
-                    thumbColor={vaultMakerHarmonyType > 0 ? '#FFD700' : '#888'}
+                    thumbColor={vaultMakerHarmonyType > 0 ? '#FFD700' : THEME.colors.textMuted}
                   />
                 </View>
 
@@ -2796,7 +2796,7 @@ export const AccountsScreen = () => {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View>
                     <Text style={{ color: '#DDD', fontSize: 13, fontWeight: '700' }}>Cantidad a Generar:</Text>
-                    <Text style={{ color: '#888', fontSize: 11 }}>Copias a colocar en slots libres contiguos:</Text>
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>Copias a colocar en slots libres contiguos:</Text>
                   </View>
                   <View style={styles.whStepper}>
                     <TouchableOpacity
@@ -3385,7 +3385,7 @@ export const AccountsScreen = () => {
                 {loadingWarehouse ? (
                   <View style={{ padding: 40, alignItems: 'center' }}>
                     <ActivityIndicator size="large" color={THEME.colors.arcano} />
-                    <Text style={{ color: '#888', marginTop: 12 }}>Cargando Bóveda Expandida...</Text>
+                    <Text style={{ color: THEME.colors.textoSecundario, marginTop: 12 }}>Cargando Bóveda Expandida...</Text>
                   </View>
                 ) : (
                   <View style={{ alignItems: 'center' }}>
@@ -3604,7 +3604,7 @@ export const AccountsScreen = () => {
                 onChangeText={setUnlockCountInput}
                 keyboardType="number-pad"
                 placeholder="Ej: 20"
-                placeholderTextColor="#666"
+                placeholderTextColor={THEME.colors.textMuted}
                 maxLength={3}
               />
             </View>
@@ -3762,7 +3762,7 @@ export const AccountsScreen = () => {
                           <MaterialCommunityIcons
                             name="shield-outline"
                             size={24}
-                            color={isSelected ? '#FF7A00' : '#888'}
+                            color={isSelected ? '#FF7A00' : THEME.colors.textMuted}
                           />
                           <Text
                             style={{
@@ -3775,7 +3775,7 @@ export const AccountsScreen = () => {
                           >
                             {set.name}
                           </Text>
-                          <Text style={{ color: '#777', fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
+                          <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
                           <Text style={{ color: '#4CAF50', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
                             {set.pieces.length} piezas
                           </Text>
@@ -3909,12 +3909,12 @@ export const AccountsScreen = () => {
               {/* Ancient Tier for Normal Sets */}
               {selectedVaultQuickSet?.cat !== 'ACC' && (
                 <View style={{ marginBottom: 14 }}>
-                  <Text style={{ color: '#AAA', fontSize: 11, fontWeight: 'bold', marginBottom: 6 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontWeight: 'bold', marginBottom: 6 }}>
                     ANCIENT OPTION:
                   </Text>
                   {vaultSetAncientOptions.length === 0 ? (
                     <View style={{ padding: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 6 }}>
-                      <Text style={{ color: '#888', fontSize: 11, fontStyle: 'italic' }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontStyle: 'italic' }}>
                         Este set no posee versiones Ancient en Season 6.
                       </Text>
                     </View>
@@ -4129,7 +4129,7 @@ export const AccountsScreen = () => {
                 <TextInput
                   style={styles.createInput}
                   placeholder="Ej: mspro02"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={THEME.colors.textMuted}
                   value={newUsername}
                   onChangeText={setNewUsername}
                   autoCapitalize="none"
@@ -4142,7 +4142,7 @@ export const AccountsScreen = () => {
                 <TextInput
                   style={styles.createInput}
                   placeholder="••••••••"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={THEME.colors.textMuted}
                   value={newPassword}
                   onChangeText={setNewPassword}
                   autoCapitalize="none"
@@ -4156,7 +4156,7 @@ export const AccountsScreen = () => {
                 <TextInput
                   style={styles.createInput}
                   placeholder="usuario@mspro.com"
-                  placeholderTextColor="#555"
+                  placeholderTextColor={THEME.colors.textMuted}
                   value={newEmail}
                   onChangeText={setNewEmail}
                   autoCapitalize="none"
@@ -4323,7 +4323,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   accountEmailText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -4443,7 +4443,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fieldValue: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontSize: 14,
   },
   statusToggleButton: {
@@ -4529,7 +4529,7 @@ const styles = StyleSheet.create({
     height: 44,
   },
   helperSubtext: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 10,
     marginTop: 4,
     fontStyle: 'italic',
@@ -4548,7 +4548,7 @@ const styles = StyleSheet.create({
     borderColor: '#2A2A2C',
   },
   vipPillBtnText: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -4586,7 +4586,7 @@ const styles = StyleSheet.create({
   coinLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#AAA',
+    color: THEME.colors.textoSecundario,
     marginBottom: 4,
   },
   coinInput: {
@@ -4711,7 +4711,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232, 200, 106, 0.15)',
   },
   vipSelectBtnText: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontWeight: '600',
   },
   vipSelectBtnTextActive: {
@@ -4729,7 +4729,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   cancelBtnText: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontWeight: '600',
   },
   confirmBtn: {
@@ -4786,7 +4786,7 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyText: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 13,
     textAlign: 'center',
     marginTop: 12,
@@ -4846,7 +4846,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8C86A',
   },
   vaultTabText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -4883,7 +4883,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   vaultHelpText: {
-    color: '#777',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     textAlign: 'center',
     marginTop: 8,
@@ -5347,7 +5347,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   premiumModalBody: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontSize: 14,
     lineHeight: 22,
   },
@@ -5416,7 +5416,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   charChipSub: {
-    color: '#9E9E9E',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     marginTop: 2,
   },
@@ -5440,7 +5440,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   movingBannerSubtitle: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontSize: 10,
     fontWeight: '500',
     marginTop: 2,
@@ -5630,7 +5630,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8C86A',
   },
   whHarmonyBtnText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -5651,7 +5651,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8C86A',
   },
   whSocketBtnText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 10,
     fontWeight: '600',
   },
@@ -5676,7 +5676,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8C86A',
   },
   vaultExtSubTabText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 12,
     fontWeight: '700',
   },

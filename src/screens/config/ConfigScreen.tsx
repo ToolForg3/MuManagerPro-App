@@ -2322,7 +2322,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   brandingFooterVersionText: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -2339,7 +2339,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3FCF8E',
   },
   versionSubFooterText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     fontWeight: '500',
   },

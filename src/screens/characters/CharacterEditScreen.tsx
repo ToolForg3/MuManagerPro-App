@@ -1744,7 +1744,7 @@ export const CharacterEditScreen = () => {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  <Text style={{ color: '#888', fontSize: 10, marginTop: 3 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 3 }}>
                     Abierta en el cliente del juego con la tecla [K] o el botón de inventario expandido.
                   </Text>
                 </View>
@@ -1778,7 +1778,7 @@ export const CharacterEditScreen = () => {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  <Text style={{ color: '#888', fontSize: 10, marginTop: 3 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 3 }}>
                     Abierta en el cliente del juego con la tecla [K] o el botón de inventario expandido.
                   </Text>
                 </View>
@@ -3211,7 +3211,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   movingBannerSubtitle: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontSize: 10,
     fontWeight: '500',
     marginTop: 2,

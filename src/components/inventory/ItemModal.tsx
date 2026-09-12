@@ -424,7 +424,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     value={editedItem.luck}
                     onValueChange={(val) => setEditedItem({ ...editedItem, luck: val, isModified: true })}
                     trackColor={{ false: '#333333', true: THEME.colors.accentGreen }}
-                    thumbColor={editedItem.luck ? THEME.colors.jade : '#888'}
+                    thumbColor={editedItem.luck ? THEME.colors.jade : THEME.colors.textMuted}
                   />
                 ) : (
                   <Text style={styles.rowVal}>{editedItem.luck ? 'Sí' : 'No'}</Text>
@@ -438,7 +438,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     value={editedItem.skill}
                     onValueChange={(val) => setEditedItem({ ...editedItem, skill: val, isModified: true })}
                     trackColor={{ false: '#333333', true: THEME.colors.primaryOrange }}
-                    thumbColor={editedItem.skill ? THEME.colors.primaryOrange : '#888'}
+                    thumbColor={editedItem.skill ? THEME.colors.primaryOrange : THEME.colors.textMuted}
                   />
                 ) : (
                   <Text style={styles.rowVal}>{editedItem.skill ? 'Sí' : 'No'}</Text>
@@ -452,7 +452,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     value={!!editedItem.option380}
                     onValueChange={(val) => setEditedItem({ ...editedItem, option380: val, isModified: true })}
                     trackColor={{ false: '#333333', true: THEME.colors.item380 }}
-                    thumbColor={editedItem.option380 ? THEME.colors.item380 : '#888'}
+                    thumbColor={editedItem.option380 ? THEME.colors.item380 : THEME.colors.textMuted}
                   />
                 ) : (
                   <Text style={styles.rowVal}>{editedItem.option380 ? 'Sí' : 'No'}</Text>
@@ -500,10 +500,10 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                           justifyContent: 'center',
                         }}
                       >
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: isSelected ? fen.color : '#DDD' }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: isSelected ? fen.color : THEME.colors.texto }}>
                           {fen.label}
                         </Text>
-                        <Text style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{fen.desc}</Text>
+                        <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario, marginTop: 2 }}>{fen.desc}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -540,7 +540,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                       <MaterialCommunityIcons
                         name={isChecked ? 'checkbox-marked' : 'checkbox-blank-outline'}
                         size={18}
-                        color={isChecked ? THEME.colors.accentGreenBright : '#666'}
+                        color={isChecked ? THEME.colors.accentGreenBright : THEME.colors.textMuted}
                       />
                       <Text
                         style={[
@@ -725,7 +725,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
               {!isItemAncientEligible(editedItem.group, editedItem.index) ? (
                 <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#333' }}>
-                  <Text style={{ color: '#888', fontSize: 12 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>
                     ℹ️ Esta pieza ({editedItem.name}) no posee ningún set Ancient oficial en Season 6.
                   </Text>
                   {editedItem.isAncient && isEditing && (
@@ -753,7 +753,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 </View>
               ) : (
                 <View>
-                  <Text style={{ color: '#AAA', fontSize: 11, marginBottom: 8 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 8 }}>
                     Sets Ancient oficiales correspondientes a esta pieza:
                   </Text>
                   <View style={styles.ancientRow}>
@@ -934,14 +934,14 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                       });
                     }}
                     trackColor={{ false: '#333333', true: '#FFD700' }}
-                    thumbColor={(editedItem.harmonyType || 0) > 0 ? '#FFD700' : '#888'}
+                    thumbColor={(editedItem.harmonyType || 0) > 0 ? '#FFD700' : THEME.colors.textMuted}
                   />
                 )}
               </View>
 
               {((editedItem.harmonyType || 0) > 0) && (
                 <View style={{ marginTop: 8, gap: 10 }}>
-                  <Text style={{ fontSize: 12, color: '#AAA', fontWeight: '600' }}>
+                  <Text style={{ fontSize: 12, color: THEME.colors.textoSecundario, fontWeight: '600' }}>
                     Tipo de Opción ({isWeapon ? 'Arma / Báculo' : 'Armadura / Escudo'}):
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
@@ -1130,7 +1130,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     marginTop: 2,
     fontWeight: '600',
   },
@@ -1214,7 +1214,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     fontSize: 13,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontWeight: '600',
   },
   rowVal: {
@@ -1266,7 +1266,7 @@ const styles = StyleSheet.create({
   },
   numInput: {
     backgroundColor: '#100D0B',
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     borderWidth: 1,
     borderColor: '#6B5533',
     borderRadius: 6,
@@ -1299,7 +1299,7 @@ const styles = StyleSheet.create({
   },
   excChipText: {
     fontSize: 12,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     flex: 1,
     fontWeight: '600',
   },
@@ -1328,7 +1328,7 @@ const styles = StyleSheet.create({
   },
   socketOptionText: {
     fontSize: 10,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontWeight: '600',
   },
   socketOptionTextActive: {
@@ -1355,7 +1355,7 @@ const styles = StyleSheet.create({
   socketDisplayText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     flex: 1,
   },
   ancientRow: {
@@ -1373,7 +1373,7 @@ const styles = StyleSheet.create({
   },
   ancientBtnText: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontWeight: '600',
   },
   rawHexCard: {
@@ -1387,7 +1387,7 @@ const styles = StyleSheet.create({
   rawHexLabel: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     letterSpacing: 0.5,
   },
   rawHexCode: {
@@ -1467,7 +1467,7 @@ const styles = StyleSheet.create({
   },
   harmonyOptionText: {
     fontSize: 12,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontWeight: '600',
   },
   harmonyOptionTextActive: {

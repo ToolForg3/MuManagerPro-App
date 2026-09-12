@@ -306,7 +306,7 @@ export const CharacterListScreen = () => {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={styles.charClass}>{classInfo.name}</Text>
-              <Text style={{ color: isOnline ? THEME.colors.jade : '#666', fontSize: 10, fontWeight: '700' }}>
+              <Text style={{ color: isOnline ? THEME.colors.jade : THEME.colors.textMuted, fontSize: 10, fontWeight: '700' }}>
                 {isOnline ? 'ONLINE' : 'OFFLINE'}
               </Text>
             </View>
@@ -457,7 +457,7 @@ export const CharacterListScreen = () => {
                 <MaterialCommunityIcons
                   name={accountFilter ? "account-question" : "sword-cross"}
                   size={42}
-                  color={accountFilter ? "#FF9800" : "#666"}
+                  color={accountFilter ? "#FF9800" : THEME.colors.textoSecundario}
                 />
               </View>
               <Text style={styles.emptyTitle}>
@@ -551,7 +551,7 @@ export const CharacterListScreen = () => {
                       autoCapitalize="none"
                       maxLength={10}
                       placeholder="Ej: DarkHero (3-10 chars)"
-                      placeholderTextColor="#5C6B7E"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <Text style={styles.fieldHelp}>* Debe ser único en el servidor (máx. 10 letras/números).</Text>
@@ -579,7 +579,7 @@ export const CharacterListScreen = () => {
                           <MaterialCommunityIcons
                             name={race.avatarIcon as any}
                             size={22}
-                            color={isSelected ? race.accentColor : '#5C6B7E'}
+                            color={isSelected ? race.accentColor : THEME.colors.textoSecundario}
                           />
                           <Text style={[styles.raceChipText, isSelected && { color: race.accentColor, fontWeight: 'bold' }]}>
                             {race.code}
@@ -619,7 +619,7 @@ export const CharacterListScreen = () => {
                 {/* Nivel y Resets */}
                 <View style={styles.rowFields}>
                   <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>Nivel Inicial</Text>
+                    <Text style={styles.fieldLabel}>Nivel Inicial (1 - 400)</Text>
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
@@ -627,7 +627,7 @@ export const CharacterListScreen = () => {
                         onChangeText={setCreateLevel}
                         keyboardType="numeric"
                         placeholder="1"
-                        placeholderTextColor="#5C6B7E"
+                        placeholderTextColor={THEME.colors.textMuted}
                       />
                     </View>
                   </View>
@@ -641,7 +641,7 @@ export const CharacterListScreen = () => {
                         onChangeText={setCreateResets}
                         keyboardType="numeric"
                         placeholder="0"
-                        placeholderTextColor="#5C6B7E"
+                        placeholderTextColor={THEME.colors.textMuted}
                       />
                     </View>
                   </View>
@@ -658,7 +658,7 @@ export const CharacterListScreen = () => {
                         onChangeText={setCreateZen}
                         keyboardType="numeric"
                         placeholder="1000000"
-                        placeholderTextColor="#5C6B7E"
+                        placeholderTextColor={THEME.colors.textMuted}
                       />
                     </View>
                   </View>
@@ -672,7 +672,7 @@ export const CharacterListScreen = () => {
                         onChangeText={setCreatePoints}
                         keyboardType="numeric"
                         placeholder="0"
-                        placeholderTextColor="#5C6B7E"
+                        placeholderTextColor={THEME.colors.textMuted}
                       />
                     </View>
                   </View>

@@ -93,7 +93,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
           <MaterialCommunityIcons
             name={icon as any}
             size={18}
-            color="#888"
+            color={THEME.colors.textMuted}
             style={styles.inputIcon}
           />
         )}
@@ -124,7 +124,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             style={styles.clearButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <MaterialCommunityIcons name="close-circle" size={16} color="#666" />
+            <MaterialCommunityIcons name="close-circle" size={16} color={THEME.colors.textMuted} />
           </TouchableOpacity>
         )}
       </View>

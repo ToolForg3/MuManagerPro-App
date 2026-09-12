@@ -1761,7 +1761,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
       case 4:
         return { label: 'Advertencia PK', color: '#B58F3C', bg: 'rgba(181, 143, 60, 0.2)' };
       default:
-        return { label: 'PK Leve', color: '#9C9182', bg: 'rgba(156, 145, 130, 0.2)' };
+        return { label: 'PK Leve', color: THEME.colors.textoSecundario, bg: 'rgba(200, 190, 175, 0.2)' };
     }
   };
 
@@ -2243,7 +2243,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="cube-send"
               size={18}
-              color={activeTab === 'maker' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'maker' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'maker' && styles.tabButtonTextActive]}>
               Item Maker
@@ -2257,7 +2257,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="shield-search"
               size={18}
-              color={activeTab === 'antidupe' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'antidupe' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'antidupe' && styles.tabButtonTextActive]}>
               Anti-Dupe
@@ -2271,7 +2271,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="trophy"
               size={18}
-              color={activeTab === 'rankings' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'rankings' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'rankings' && styles.tabButtonTextActive]}>
               Rankings
@@ -2285,7 +2285,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="wrench"
               size={18}
-              color={activeTab === 'fixes' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'fixes' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'fixes' && styles.tabButtonTextActive]}>
               Fixes
@@ -2299,7 +2299,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="file-cog-outline"
               size={18}
-              color={activeTab === 'parsers' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'parsers' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'parsers' && styles.tabButtonTextActive]}>
               Parsers
@@ -2316,7 +2316,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="package-variant-closed"
               size={18}
-              color={activeTab === 'kit' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'kit' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'kit' && styles.tabButtonTextActive]}>
               Starter Kit
@@ -2330,7 +2330,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="gift-outline"
               size={18}
-              color={activeTab === 'prizes' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'prizes' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'prizes' && styles.tabButtonTextActive]}>
               Premios
@@ -2344,7 +2344,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="account-group"
               size={18}
-              color={activeTab === 'players' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'players' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'players' && styles.tabButtonTextActive]}>
               Jugadores & GM
@@ -2358,7 +2358,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="shield-account"
               size={18}
-              color={activeTab === 'guilds' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'guilds' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'guilds' && styles.tabButtonTextActive]}>
               Clanes
@@ -2372,7 +2372,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             <MaterialCommunityIcons
               name="skull"
               size={18}
-              color={activeTab === 'pk' ? '#E8C86A' : '#9C9182'}
+              color={activeTab === 'pk' ? '#E8C86A' : THEME.colors.textoSecundario}
             />
             <Text style={[styles.tabButtonText, activeTab === 'pk' && styles.tabButtonTextActive]}>
               PK / Asesinos
@@ -2421,7 +2421,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 maxSuggestions={6}
               />
               <View style={{ marginTop: 12 }}>
-                <Text style={{ color: '#AAA', fontSize: 12, marginBottom: 6, fontWeight: '700' }}>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, marginBottom: 6, fontWeight: '700' }}>
                   Baúl de Destino:
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -2634,7 +2634,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               </View>
 
               {!isItemAncientEligible(selectedItemDef.group, selectedItemDef.index) ? (
-                <Text style={{ color: '#888', fontSize: 12, marginTop: 6, fontStyle: 'italic' }}>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, marginTop: 6, fontStyle: 'italic' }}>
                   Esta pieza ({selectedItemDef.name}) no posee set Ancient oficial en Season 6.
                 </Text>
               ) : (
@@ -2645,7 +2645,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <TouchableOpacity
                       style={[
                         styles.ancientBtn,
-                        makerAncient === 0 && { borderColor: '#888', backgroundColor: 'rgba(255,255,255,0.1)' },
+                        makerAncient === 0 && { borderColor: THEME.colors.textoSecundario, backgroundColor: 'rgba(255,255,255,0.1)' },
                       ]}
                       onPress={() => setMakerAncient(0)}
                     >
@@ -2702,7 +2702,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               setMakerAncient(encodeAncientByte(currentDecoded.tier || 1, bonus));
                             }}
                           >
-                            <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.arcano : '#AAA', fontWeight: isSelBonus ? 'bold' : 'normal' }}>
+                            <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.arcano : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
                               +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
                             </Text>
                           </TouchableOpacity>
@@ -2775,7 +2775,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Switch
                   value={makerLuck}
                   onValueChange={setMakerLuck}
-                  thumbColor={makerLuck ? '#FF9800' : '#888'}
+                  thumbColor={makerLuck ? '#FF9800' : THEME.colors.textMuted}
                 />
               </View>
 
@@ -2784,7 +2784,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Switch
                   value={makerSkill}
                   onValueChange={setMakerSkill}
-                  thumbColor={makerSkill ? '#FF9800' : '#888'}
+                  thumbColor={makerSkill ? '#FF9800' : THEME.colors.textMuted}
                 />
               </View>
 
@@ -2793,7 +2793,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Switch
                   value={maker380}
                   onValueChange={setMaker380}
-                  thumbColor={maker380 ? '#FF9800' : '#888'}
+                  thumbColor={maker380 ? '#FF9800' : THEME.colors.textMuted}
                 />
               </View>
             </View>
@@ -2814,7 +2814,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <Text style={{
                       fontSize: 10,
                       fontWeight: 'bold',
-                      color: makerExcFlags === 0 ? '#AAA' : THEME.colors.jade
+                      color: makerExcFlags === 0 ? THEME.colors.textoSecundario : THEME.colors.jade
                     }}>
                       {makerExcFlags === 0 ? 'ÍTEM NORMAL' : 'EXCELENTE'}
                     </Text>
@@ -2822,7 +2822,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   <TouchableOpacity
-                    style={[styles.excQuickBtn, makerExcFlags === 0 && { borderColor: '#888', backgroundColor: '#33333E' }]}
+                    style={[styles.excQuickBtn, makerExcFlags === 0 && { borderColor: THEME.colors.textoSecundario, backgroundColor: '#33333E' }]}
                     onPress={handleClearExc}
                   >
                     <Text style={[styles.excQuickBtnText, makerExcFlags === 0 && { color: '#FFF' }]}>Normal (Sin Exc)</Text>
@@ -2851,7 +2851,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       <MaterialCommunityIcons
                         name={isActive ? 'checkbox-marked' : 'checkbox-blank-outline'}
                         size={18}
-                        color={isActive ? THEME.colors.jade : '#666'}
+                        color={isActive ? THEME.colors.jade : THEME.colors.textMuted}
                       />
                       <Text style={[styles.excChipText, isActive && styles.excChipTextActive]}>
                         {opt.short}
@@ -3204,7 +3204,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           ? `Baúl: ${it.accountId} (Slot ${it.slot})`
                           : `PJ: ${it.charName} [${it.accountId}] (Slot ${it.slot})`}
                       </Text>
-                      <Text style={{ color: '#888', fontSize: 10 }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10 }}>
                         Serial: {it.serial} (0x{it.serialHex})
                       </Text>
                       {it.hex && (
@@ -3257,7 +3257,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={sub.icon as any}
                     size={16}
-                    color={rankType === sub.id ? '#FFF' : '#888'}
+                    color={rankType === sub.id ? '#FFF' : THEME.colors.textoSecundario}
                   />
                   <Text
                     style={[
@@ -3485,8 +3485,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   >
                     <MaterialCommunityIcons name={dest.icon as any} size={18} color={dest.color} />
                     <View>
-                      <Text style={{ color: '#EDE4D3', fontSize: 12, fontWeight: 'bold' }}>{dest.name}</Text>
-                      <Text style={{ color: '#9C9182', fontSize: 9 }}>{dest.x}, {dest.y}</Text>
+                      <Text style={{ color: THEME.colors.texto, fontSize: 12, fontWeight: 'bold' }}>{dest.name}</Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 9 }}>{dest.x}, {dest.y}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -3498,7 +3498,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   TELETRANSPORTE PERSONALIZADO (MAPA Y COORDENADAS):
                 </Text>
 
-                <Text style={{ color: '#9C9182', fontSize: 10, marginBottom: 4 }}>Selecciona el Mapa Destino:</Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginBottom: 4 }}>Selecciona el Mapa Destino:</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -3542,7 +3542,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         }}
                         onPress={() => setCustomTeleportMap(m.id)}
                       >
-                        <Text style={{ color: isSelected ? '#E8C86A' : '#EDE4D3', fontSize: 11, fontWeight: isSelected ? 'bold' : 'normal' }}>
+                        <Text style={{ color: isSelected ? '#E8C86A' : THEME.colors.texto, fontSize: 11, fontWeight: isSelected ? 'bold' : 'normal' }}>
                           [{m.id}] {m.name}
                         </Text>
                       </TouchableOpacity>
@@ -3552,14 +3552,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                 <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#9C9182', fontSize: 10, marginBottom: 4 }}>Coordenada X (0-255):</Text>
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginBottom: 4 }}>Coordenada X (0-255):</Text>
                     <TextInput
                       style={{
                         backgroundColor: '#100D0B',
                         borderWidth: 1,
                         borderColor: '#6B5533',
                         borderRadius: 6,
-                        color: '#EDE4D3',
+                        color: THEME.colors.texto,
                         paddingHorizontal: 10,
                         paddingVertical: 6,
                         fontSize: 13,
@@ -3569,18 +3569,18 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setCustomTeleportX}
                       keyboardType="numeric"
                       placeholder="125"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#9C9182', fontSize: 10, marginBottom: 4 }}>Coordenada Y (0-255):</Text>
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginBottom: 4 }}>Coordenada Y (0-255):</Text>
                     <TextInput
                       style={{
                         backgroundColor: '#100D0B',
                         borderWidth: 1,
                         borderColor: '#6B5533',
                         borderRadius: 6,
-                        color: '#EDE4D3',
+                        color: THEME.colors.texto,
                         paddingHorizontal: 10,
                         paddingVertical: 6,
                         fontSize: 13,
@@ -3590,7 +3590,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setCustomTeleportY}
                       keyboardType="numeric"
                       placeholder="125"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                   </View>
                 </View>
@@ -3705,7 +3705,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <TextInput
                   style={styles.textInput}
                   placeholder="Base de datos (Default: MuOnline)"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={THEME.colors.textMuted}
                   value={backupDbName}
                   onChangeText={setBackupDbName}
                 />
@@ -3738,9 +3738,9 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 8 }}>
-                <Text style={{ color: '#9C9182', fontSize: 12 }}>Límite Máximo:</Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Límite Máximo:</Text>
                 <TextInput
-                  style={[styles.textInput, { maxWidth: 60, height: 36, textAlign: 'center', backgroundColor: '#100D0B', borderRadius: 6, borderWidth: 1, borderColor: '#6B5533', color: '#EDE4D3' }]}
+                  style={[styles.textInput, { maxWidth: 60, height: 36, textAlign: 'center', backgroundColor: '#100D0B', borderRadius: 6, borderWidth: 1, borderColor: '#6B5533', color: THEME.colors.texto }]}
                   value={ipAbuseMaxLimit}
                   onChangeText={setIpAbuseMaxLimit}
                   keyboardType="numeric"
@@ -3769,10 +3769,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   {ipAbuseResults.map((item, idx) => (
                     <View key={`ip_abuse_${idx}`} style={[styles.dupeItemRow, { backgroundColor: '#100D0B', borderWidth: 1, borderColor: '#6B5533', padding: 8, borderRadius: 6, marginBottom: 4 }]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#EDE4D3', fontWeight: 'bold', fontSize: 12 }}>
+                        <Text style={{ color: THEME.colors.texto, fontWeight: 'bold', fontSize: 12 }}>
                           {item.ip} ({item.count} conexiones)
                         </Text>
-                        <Text style={{ color: '#9C9182', fontSize: 10, marginTop: 2 }}>
+                        <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>
                           Cuentas: {item.accounts.join(', ')}
                         </Text>
                       </View>
@@ -3880,7 +3880,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             {/* Fix 9: Limpiar Conexiones Fantasma */}
             <View style={styles.card}>
               <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="ghost" size={24} color="#9C9182" />
+                <MaterialCommunityIcons name="ghost" size={24} color={THEME.colors.textoSecundario} />
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text style={styles.cardTitle}>9. Purgar Conexiones Fantasma (sp_MuManager_CleanGhostConnections)</Text>
                   <Text style={styles.cardDesc}>
@@ -3938,7 +3938,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   {illegalNamesResults.map((pj, pIdx) => (
                     <View key={`illegal_pj_${pIdx}`} style={[styles.dupeItemRow, { backgroundColor: '#100D0B', borderWidth: 1, borderColor: '#6B5533', padding: 8, borderRadius: 6, marginBottom: 4 }]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ color: '#EDE4D3', fontWeight: 'bold', fontSize: 12 }}>
+                        <Text style={{ color: THEME.colors.texto, fontWeight: 'bold', fontSize: 12 }}>
                           "{pj.Name}" (Cuenta: {pj.AccountID})
                         </Text>
                         <Text style={{ color: '#E2703A', fontSize: 10, marginTop: 2 }}>
@@ -4160,7 +4160,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       value={newKitPresetName}
                       onChangeText={setNewKitPresetName}
                       placeholder="Nombre del Botón (ej: Kit VIP Oro)"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <TouchableOpacity
                       style={[styles.actionBtn, { backgroundColor: '#2E7D32', width: 90, marginTop: 0 }]}
@@ -4219,11 +4219,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <View style={{ flex: 1 }}>
                   <Text style={styles.presetModifyLabel}>Botón Seleccionado:</Text>
                   <TextInput
-                    style={[styles.textInput, { height: 38, fontSize: 13, fontWeight: '700', color: '#EDE4D3', paddingHorizontal: 8, paddingVertical: 2, marginTop: 4, backgroundColor: '#100D0B', borderColor: '#6B5533', borderWidth: 1, borderRadius: 6 }]}
+                    style={[styles.textInput, { height: 38, fontSize: 13, fontWeight: '700', color: THEME.colors.texto, paddingHorizontal: 8, paddingVertical: 2, marginTop: 4, backgroundColor: '#100D0B', borderColor: '#6B5533', borderWidth: 1, borderRadius: 6 }]}
                     value={activeKitPresetName}
                     onChangeText={setActiveKitPresetName}
                     placeholder="Nombre del Botón de Kit..."
-                    placeholderTextColor="#777"
+                    placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
                 <TouchableOpacity
@@ -4238,7 +4238,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
                 <TouchableOpacity onPress={handleResetKitPresets}>
-                  <Text style={{ color: '#888', fontSize: 11, textDecorationLine: 'underline' }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, textDecorationLine: 'underline' }}>
                     Restablecer botones de kit a valores de fábrica
                   </Text>
                 </TouchableOpacity>
@@ -4270,13 +4270,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeZen ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeZen ? '#FFD700' : '#666'}
+                    color={kitIncludeZen ? '#FFD700' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#FFD70022', borderColor: '#FFD700' }]}>
                     <MaterialCommunityIcons name="cash-multiple" size={15} color="#FFD700" />
                     <Text style={[styles.currencyBadgeText, { color: '#FFD700' }]}>Zen</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeZen ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeZen ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {kitIncludeZen ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4288,7 +4288,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setKitZen}
                       keyboardType="numeric"
                       placeholder="Cantidad de Zen..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['1000000', '5000000', '10000000', '50000000', '100000000'].map((val) => (
@@ -4317,13 +4317,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeGCoins ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeGCoins ? THEME.colors.arcano : '#666'}
+                    color={kitIncludeGCoins ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
                     <MaterialCommunityIcons name="hand-coin" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGCoins ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGCoins ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {kitIncludeGCoins ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4335,7 +4335,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setKitGCoins}
                       keyboardType="numeric"
                       placeholder="Cantidad de WCoinC / GCoins..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['50', '100', '250', '500', '1000'].map((val) => (
@@ -4362,13 +4362,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeWCoinP ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeWCoinP ? '#B0BEC5' : '#666'}
+                    color={kitIncludeWCoinP ? '#B0BEC5' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#B0BEC522', borderColor: '#B0BEC5' }]}>
                     <MaterialCommunityIcons name="circle-multiple" size={15} color="#B0BEC5" />
                     <Text style={[styles.currencyBadgeText, { color: '#B0BEC5' }]}>WCoinP</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeWCoinP ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeWCoinP ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {kitIncludeWCoinP ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4380,7 +4380,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setKitWCoinP}
                       keyboardType="numeric"
                       placeholder="Cantidad de WCoinP..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['25', '50', '100', '200', '500'].map((val) => (
@@ -4407,13 +4407,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeGoblinPoints ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeGoblinPoints ? THEME.colors.jade : '#666'}
+                    color={kitIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}>
                     <MaterialCommunityIcons name="hexagon-multiple" size={15} color={THEME.colors.jade} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.jade }]}>Goblin Points (GP)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGoblinPoints ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {kitIncludeGoblinPoints ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4425,7 +4425,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setKitGoblinPoints}
                       keyboardType="numeric"
                       placeholder="Cantidad de Goblin Points..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['25', '50', '100', '250', '500'].map((val) => (
@@ -4452,13 +4452,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeRuud ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeRuud ? THEME.colors.arcano : '#666'}
+                    color={kitIncludeRuud ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
                     <MaterialCommunityIcons name="diamond-stone" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>Ruud</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeRuud ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeRuud ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {kitIncludeRuud ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4470,7 +4470,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setKitRuud}
                       keyboardType="numeric"
                       placeholder="Cantidad de Ruud..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['100', '250', '500', '1000', '2500'].map((val) => (
@@ -4499,9 +4499,9 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeItems ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeItems ? THEME.colors.primaryOrange : '#666'}
+                    color={kitIncludeItems ? THEME.colors.primaryOrange : THEME.colors.textMuted}
                   />
-                  <Text style={[styles.cardTitle, { marginLeft: 8, marginBottom: 0, color: kitIncludeItems ? '#FFF' : '#888' }]}>
+                  <Text style={[styles.cardTitle, { marginLeft: 8, marginBottom: 0, color: kitIncludeItems ? '#FFF' : THEME.colors.textoSecundario }]}>
                     Incluir Ítems en el Baúl ({kitList.length})
                   </Text>
                 </TouchableOpacity>
@@ -4514,14 +4514,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
               {!kitIncludeItems && (
                 <View style={{ paddingVertical: 10, alignItems: 'center' }}>
-                  <Text style={{ color: '#888', fontSize: 12, fontStyle: 'italic' }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, fontStyle: 'italic' }}>
                     Ítems desactivados: solo se entregarán las monedas marcadas arriba.
                   </Text>
                 </View>
               )}
 
               {kitList.length === 0 ? (
-                <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', marginVertical: 14 }}>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, textAlign: 'center', marginVertical: 14 }}>
                   No hay ítems en la lista. Puedes cargar un preset o agregar ítems desde el Maker.
                 </Text>
               ) : (
@@ -4602,7 +4602,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       value={newPrizePresetName}
                       onChangeText={setNewPrizePresetName}
                       placeholder="Nombre del Botón (ej: Premio Guild War)"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <TouchableOpacity
                       style={[styles.actionBtn, { backgroundColor: '#2E7D32', width: 90, marginTop: 0 }]}
@@ -4683,7 +4683,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     value={activePrizePresetName}
                     onChangeText={setActivePrizePresetName}
                     placeholder="Ej: Blood Castle, Torneo PvP..."
-                    placeholderTextColor="#777"
+                    placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
                 <TouchableOpacity
@@ -4698,8 +4698,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
                 <TouchableOpacity onPress={handleResetPrizePresets}>
-                  <Text style={{ color: '#888', fontSize: 11, textDecorationLine: 'underline' }}>
-                    Restablecer botones de premios a valores de fábrica
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, textDecorationLine: 'underline' }}>
+                    Restablecer botones de premio a valores de fábrica
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -4722,13 +4722,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeZen ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeZen ? '#FFD700' : '#666'}
+                    color={prizeIncludeZen ? '#FFD700' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#FFD70022', borderColor: '#FFD700' }]}>
                     <MaterialCommunityIcons name="cash-multiple" size={15} color="#FFD700" />
                     <Text style={[styles.currencyBadgeText, { color: '#FFD700' }]}>Zen por Jugador</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeZen ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeZen ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {prizeIncludeZen ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4740,7 +4740,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setPrizeZen}
                       keyboardType="numeric"
                       placeholder="Cantidad de Zen por jugador..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['1000000', '5000000', '10000000', '25000000', '50000000'].map((val) => (
@@ -4769,13 +4769,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeGCoins ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeGCoins ? THEME.colors.arcano : '#666'}
+                    color={prizeIncludeGCoins ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
                     <MaterialCommunityIcons name="hand-coin" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGCoins ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGCoins ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {prizeIncludeGCoins ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4787,7 +4787,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setPrizeGCoins}
                       keyboardType="numeric"
                       placeholder="Cantidad de WCoins..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['50', '100', '300', '500', '1000'].map((val) => (
@@ -4814,13 +4814,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeWCoinP ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeWCoinP ? '#B0BEC5' : '#666'}
+                    color={prizeIncludeWCoinP ? '#B0BEC5' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#B0BEC522', borderColor: '#B0BEC5' }]}>
                     <MaterialCommunityIcons name="circle-multiple" size={15} color="#B0BEC5" />
                     <Text style={[styles.currencyBadgeText, { color: '#B0BEC5' }]}>WCoinP</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeWCoinP ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeWCoinP ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {prizeIncludeWCoinP ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4832,7 +4832,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setPrizeWCoinP}
                       keyboardType="numeric"
                       placeholder="Cantidad de WCoinP..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['25', '50', '100', '200', '500'].map((val) => (
@@ -4859,13 +4859,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeGoblinPoints ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeGoblinPoints ? THEME.colors.jade : '#666'}
+                    color={prizeIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}>
                     <MaterialCommunityIcons name="hexagon-multiple" size={15} color={THEME.colors.jade} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.jade }]}>Goblin Points (GP)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGoblinPoints ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {prizeIncludeGoblinPoints ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4877,7 +4877,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setPrizeGoblinPoints}
                       keyboardType="numeric"
                       placeholder="Cantidad de Goblin Points..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['25', '50', '100', '250', '500'].map((val) => (
@@ -4904,13 +4904,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeRuud ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeRuud ? THEME.colors.arcano : '#666'}
+                    color={prizeIncludeRuud ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
                     <MaterialCommunityIcons name="diamond-stone" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>Ruud</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeRuud ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeRuud ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {prizeIncludeRuud ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4922,7 +4922,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onChangeText={setPrizeRuud}
                       keyboardType="numeric"
                       placeholder="Cantidad de Ruud..."
-                      placeholderTextColor="#666"
+                      placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
                       {['100', '250', '500', '1000', '2500'].map((val) => (
@@ -4949,20 +4949,20 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeHex ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeHex ? THEME.colors.primaryOrange : '#666'}
+                    color={prizeIncludeHex ? THEME.colors.primaryOrange : THEME.colors.textMuted}
                   />
                   <View style={{ marginLeft: 8, flex: 1 }}>
-                    <Text style={{ color: prizeIncludeHex ? '#FFF' : '#888', fontWeight: 'bold', fontSize: 13 }}>
+                    <Text style={{ color: prizeIncludeHex ? '#FFF' : THEME.colors.textoSecundario, fontWeight: 'bold', fontSize: 13 }}>
                       Incluir Ítem del Maker al Baúl
                     </Text>
-                    <Text style={{ color: '#888', fontSize: 11 }}>
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
                       {selectedItemDef ? selectedItemDef.name + ' +' + makerLevel : 'Inyecta el ítem configurado en el Maker'}
                     </Text>
                   </View>
                 </TouchableOpacity>
                 {prizeIncludeHex && (
                   <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#2C2C3A' }}>
-                    <Text style={{ color: '#AAA', fontSize: 11, marginBottom: 6, fontWeight: '700' }}>
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 6, fontWeight: '700' }}>
                       Baúl Destino del Ítem:
                     </Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -5092,7 +5092,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               {loadingPrizePlayers ? (
                 <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 20 }} />
               ) : prizeOnlinePlayers.length === 0 ? (
-                <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', marginVertical: 14 }}>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, textAlign: 'center', marginVertical: 14 }}>
                   No hay jugadores online conectados en este momento.
                 </Text>
               ) : (
@@ -5120,13 +5120,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             <MaterialCommunityIcons
                               name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
                               size={20}
-                              color={isSelected ? THEME.colors.primaryOrange : '#888'}
+                              color={isSelected ? THEME.colors.primaryOrange : THEME.colors.textMuted}
                             />
                             <View style={{ flex: 1, marginLeft: 10 }}>
                               <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>
                                 {p.charName} (Lv.{p.level})
                               </Text>
-                              <Text style={{ color: '#888', fontSize: 11 }}>
+                              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
                                 {classInfo.name} • Cuenta: {p.accountId}
                               </Text>
                             </View>
@@ -5186,7 +5186,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>
                   Clanes Registrados ({guildsList.length})
                 </Text>
-                <Text style={{ color: '#888', fontSize: 11 }}>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
                   Gestión directa en tabla Guild & GuildMember (SQL Server)
                 </Text>
               </View>
@@ -5201,17 +5201,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
             {/* Search Input */}
             <View style={[styles.inputWrap, { marginBottom: 12 }]}>
-              <MaterialCommunityIcons name="magnify" size={20} color="#888" />
+              <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textoSecundario} />
               <TextInput
                 style={styles.textInput}
                 placeholder="Buscar clan por nombre o Guild Master..."
-                placeholderTextColor="#666"
+                placeholderTextColor={THEME.colors.textMuted}
                 value={guildSearch}
                 onChangeText={setGuildSearch}
               />
               {guildSearch.length > 0 && (
                 <TouchableOpacity onPress={() => setGuildSearch('')}>
-                  <MaterialCommunityIcons name="close-circle" size={18} color="#888" />
+                  <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
                 </TouchableOpacity>
               )}
             </View>
@@ -5220,8 +5220,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 30 }} />
             ) : guildsList.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 30 }}>
-                <MaterialCommunityIcons name="shield-off-outline" size={48} color="#666" />
-                <Text style={{ color: '#888', fontSize: 13, marginTop: 10 }}>
+                <MaterialCommunityIcons name="shield-off-outline" size={48} color={THEME.colors.textoSecundario} />
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginTop: 10 }}>
                   No se encontraron clanes registrados en el servidor.
                 </Text>
               </View>
@@ -5260,7 +5260,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               </Text>
                             </View>
                             {gNotice ? (
-                              <Text style={{ color: '#888', fontSize: 11, fontStyle: 'italic', marginTop: 4 }} numberOfLines={1}>
+                              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontStyle: 'italic', marginTop: 4 }} numberOfLines={1}>
                                 "{gNotice}"
                               </Text>
                             ) : null}
@@ -5317,7 +5317,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <Text style={[styles.filterPillText, { color: '#E8C86A' }]}>Actualizar</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={{ color: '#9C9182', fontSize: 12, marginBottom: 12 }}>
+              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, marginBottom: 12 }}>
                 Limpia el estado PK de personajes individuales o ejecuta un perdón masivo para todo el servidor restableciendo PkLevel a 3 (Común).
               </Text>
 
@@ -5333,17 +5333,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
             {/* Search Input */}
             <View style={[styles.inputWrap, { marginVertical: 12 }]}>
-              <MaterialCommunityIcons name="magnify" size={20} color="#888" />
+              <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textoSecundario} />
               <TextInput
                 style={styles.textInput}
                 placeholder="Buscar por PJ o Cuenta..."
-                placeholderTextColor="#666"
+                placeholderTextColor={THEME.colors.textMuted}
                 value={pkSearch}
                 onChangeText={setPkSearch}
               />
               {pkSearch.length > 0 && (
                 <TouchableOpacity onPress={() => setPkSearch('')}>
-                  <MaterialCommunityIcons name="close-circle" size={18} color="#888" />
+                  <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
                 </TouchableOpacity>
               )}
             </View>
@@ -5356,7 +5356,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Text style={{ color: '#3FCF8E', fontSize: 14, fontWeight: 'bold', marginTop: 10 }}>
                   ¡Servidor Libre de Asesinos!
                 </Text>
-                <Text style={{ color: '#9C9182', fontSize: 12, marginTop: 4 }}>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, marginTop: 4 }}>
                   No hay personajes con PkLevel mayor a 3 o muertes pendientes.
                 </Text>
               </View>
@@ -5388,7 +5388,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               <Text style={{ color: '#E2703A', fontSize: 11 }}>
                                 Asesinatos: <Text style={{ fontWeight: 'bold' }}>{p.PkCount}</Text>
                               </Text>
-                              <Text style={{ color: '#888', fontSize: 11 }}>
+                              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
                                 Tiempo PK: {p.PkTime}s
                               </Text>
                             </View>
@@ -5424,7 +5424,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 style={[styles.filterPill, playerSubTab === 'online' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
                 onPress={() => setPlayerSubTab('online')}
               >
-                <MaterialCommunityIcons name="account-multiple" size={16} color={playerSubTab === 'online' ? '#FFF' : '#888'} />
+                <MaterialCommunityIcons name="account-multiple" size={16} color={playerSubTab === 'online' ? '#FFF' : THEME.colors.textoSecundario} />
                 <Text style={[styles.filterPillText, playerSubTab === 'online' && styles.filterPillTextActive]}>
                   Online
                 </Text>
@@ -5433,7 +5433,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 style={[styles.filterPill, playerSubTab === 'bans' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
                 onPress={() => setPlayerSubTab('bans')}
               >
-                <MaterialCommunityIcons name="gavel" size={16} color={playerSubTab === 'bans' ? '#FFF' : '#888'} />
+                <MaterialCommunityIcons name="gavel" size={16} color={playerSubTab === 'bans' ? '#FFF' : THEME.colors.textoSecundario} />
                 <Text style={[styles.filterPillText, playerSubTab === 'bans' && styles.filterPillTextActive]}>
                   Baneados
                 </Text>
@@ -5442,7 +5442,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 style={[styles.filterPill, playerSubTab === 'gm' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
                 onPress={() => setPlayerSubTab('gm')}
               >
-                <MaterialCommunityIcons name="shield-crown" size={16} color={playerSubTab === 'gm' ? '#FFF' : '#888'} />
+                <MaterialCommunityIcons name="shield-crown" size={16} color={playerSubTab === 'gm' ? '#FFF' : THEME.colors.textoSecundario} />
                 <Text style={[styles.filterPillText, playerSubTab === 'gm' && styles.filterPillTextActive]}>
                   Staff GM
                 </Text>
@@ -5477,8 +5477,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 20 }} />
                 ) : playersList.length === 0 ? (
                   <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                    <MaterialCommunityIcons name="account-off" size={40} color="#666" />
-                    <Text style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
+                    <MaterialCommunityIcons name="account-off" size={40} color={THEME.colors.textMuted} />
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginTop: 8 }}>
                       No hay jugadores online conectados en este momento.
                     </Text>
                   </View>
@@ -5550,7 +5550,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           </View>
 
                           {/* Chevron indicador táctil */}
-                          <MaterialCommunityIcons name="chevron-right" size={20} color="#777" style={{ marginLeft: 4 }} />
+                          <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.textoSecundario} style={{ marginLeft: 4 }} />
                         </TouchableOpacity>
                       );
                     })
@@ -5609,17 +5609,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                 {/* Buscador de Baneados */}
                 <View style={styles.inputWrap}>
-                  <MaterialCommunityIcons name="magnify" size={18} color="#9C9182" />
+                  <MaterialCommunityIcons name="magnify" size={18} color={THEME.colors.textoSecundario} />
                   <TextInput
                     style={styles.textInput}
                     placeholder="Buscar baneado por cuenta, PJ o motivo..."
-                    placeholderTextColor="#666"
+                    placeholderTextColor={THEME.colors.textMuted}
                     value={bansSearch}
                     onChangeText={setBansSearch}
                   />
                   {bansSearch ? (
                     <TouchableOpacity onPress={() => setBansSearch('')}>
-                      <MaterialCommunityIcons name="close-circle" size={18} color="#9C9182" />
+                      <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
                     </TouchableOpacity>
                   ) : null}
                 </View>
@@ -5642,7 +5642,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                     if (filteredBans.length === 0) {
                       return (
-                        <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', marginVertical: 20 }}>
+                        <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, textAlign: 'center', marginVertical: 20 }}>
                           No se encontraron registros de bloqueos.
                         </Text>
                       );
@@ -5673,7 +5673,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 ) : null}
                               </View>
 
-                              <Text style={{ color: '#888', fontSize: 11, marginTop: 4 }}>
+                              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 4 }}>
                                 {isCharacterBan ? `Cuenta: ${b.accountId} • ` : ''}
                                 {classInfo ? `${classInfo.name} • ` : ''}
                                 {b.reason || 'Bloqueo administrativo'}
@@ -5717,7 +5717,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 {loadingGmsList ? (
                   <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 20 }} />
                 ) : gmsList.length === 0 ? (
-                  <Text style={{ color: '#888', fontSize: 12, textAlign: 'center', marginVertical: 20 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, textAlign: 'center', marginVertical: 20 }}>
                     No se encontraron personajes con rango CtlCode GM en Character.
                   </Text>
                 ) : (
@@ -5726,7 +5726,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       gm.gmLevel === 3 ? { text: 'Admin (3)', color: '#FFD700' } :
                       gm.gmLevel === 2 ? { text: 'Game Master (2)', color: THEME.colors.primaryOrange } :
                       gm.gmLevel === 1 ? { text: 'Helper (1)', color: '#00B0FF' } :
-                      { text: 'Normal (0)', color: '#888' };
+                      { text: 'Normal (0)', color: THEME.colors.textoSecundario };
 
                     return (
                       <View key={`gm_${gm.charName}`} style={styles.card}>
@@ -5742,7 +5742,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 </Text>
                               </View>
                             </View>
-                            <Text style={{ color: '#888', fontSize: 11, marginTop: 2 }}>
+                            <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 2 }}>
                               Cuenta: {gm.accountId}
                             </Text>
                           </View>
@@ -5788,7 +5788,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <MaterialCommunityIcons name="shield-crown" size={24} color="#E8C86A" />
                 <View>
                   <Text style={styles.modalTitle}>Clan: {selectedGuild?.G_Name || selectedGuild?.name || 'Clan'}</Text>
-                  <Text style={{ color: '#9C9182', fontSize: 11 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
                     Master: {selectedGuild?.G_Master || selectedGuild?.master || 'Sin Master'} • Score: {selectedGuild?.G_Score ?? selectedGuild?.score ?? 0}
                   </Text>
                 </View>
@@ -5801,7 +5801,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             {loadingMembers ? (
               <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 30 }} />
             ) : guildMembers.length === 0 ? (
-              <Text style={{ color: '#888', textAlign: 'center', marginVertical: 20 }}>
+              <Text style={{ color: THEME.colors.textoSecundario, textAlign: 'center', marginVertical: 20 }}>
                 No se encontraron miembros registrados en este clan.
               </Text>
             ) : (
@@ -5826,7 +5826,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       >
                         <View>
                           <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>{m.Name}</Text>
-                          <Text style={{ color: '#9C9182', fontSize: 11 }}>
+                          <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
                             {classInfo.name} • Lv {m.cLevel ?? '?'}
                           </Text>
                         </View>
@@ -5874,7 +5874,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setQuickSetModalVisible(false)} style={{ padding: 4 }}>
-                <MaterialCommunityIcons name="close" size={24} color="#AAA" />
+                <MaterialCommunityIcons name="close" size={24} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -5882,7 +5882,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               {/* Target Account Notice with Autocomplete and Quick Chips */}
               <View style={{ backgroundColor: '#191512', padding: 10, borderRadius: 6, marginBottom: 12, borderWidth: 1, borderColor: makerAccount.trim() ? '#3FCF8E' : '#E2703A', zIndex: 100 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <Text style={{ color: '#9C9182', fontSize: 11, fontWeight: 'bold' }}>CUENTA DE DESTINO (OBLIGATORIO):</Text>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontWeight: 'bold' }}>CUENTA DE DESTINO (OBLIGATORIO):</Text>
                   <View style={{ backgroundColor: '#241E1A', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#3D312A' }}>
                     <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: 'bold' }}>
                       {makerWarehouseIndex === 0 ? 'Baúl Principal' : makerWarehouseIndex === 1 ? 'Bóveda Expandida' : `Baúl #${makerWarehouseIndex}`}
@@ -5902,7 +5902,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 />
                 {makerAccountSuggestions.length > 0 && (
                   <View style={{ marginTop: 8 }}>
-                    <Text style={{ color: '#666', fontSize: 10, marginBottom: 4, fontWeight: 'bold' }}>CUENTAS RECIENTES (1 TOQUE):</Text>
+                    <Text style={{ color: THEME.colors.textMuted, fontSize: 10, marginBottom: 4, fontWeight: 'bold' }}>CUENTAS RECIENTES (1 TOQUE):</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
                       {makerAccountSuggestions.slice(0, 8).map((acc) => {
                         const isMatch = makerAccount.trim().toLowerCase() === acc.toLowerCase();
@@ -5919,7 +5919,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             }}
                             onPress={() => setMakerAccount(acc)}
                           >
-                            <Text style={{ color: isMatch ? '#FFF' : '#AAA', fontSize: 11, fontWeight: '600' }}>
+                            <Text style={{ color: isMatch ? '#FFF' : THEME.colors.textoSecundario, fontSize: 11, fontWeight: '600' }}>
                               {acc}
                             </Text>
                           </TouchableOpacity>
@@ -5990,7 +5990,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           <MaterialCommunityIcons
                             name="shield-outline"
                             size={24}
-                            color={isSelected ? THEME.colors.primaryOrange : '#888'}
+                            color={isSelected ? THEME.colors.primaryOrange : THEME.colors.textMuted}
                           />
                           <Text
                             style={[
@@ -6001,7 +6001,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           >
                             {set.name}
                           </Text>
-                          <Text style={{ color: '#777', fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
+                          <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
                           <Text style={{ color: '#4CAF50', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
                             {set.pieces.length} piezas
                           </Text>
@@ -6030,7 +6030,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     }}
                   >
                     <MaterialCommunityIcons name="check-circle" size={12} color="#3FCF8E" />
-                    <Text style={{ color: '#EDE4D3', fontSize: 11 }}>{p.name}</Text>
+                    <Text style={{ color: THEME.colors.texto, fontSize: 11 }}>{p.name}</Text>
                   </View>
                 ))}
               </View>
@@ -6040,7 +6040,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               
               {/* Level Stepper */}
               <View style={[styles.optionRow, { justifyContent: 'space-between', marginBottom: 8 }]}>
-                <Text style={{ color: '#DDD', fontSize: 13 }}>Nivel:</Text>
+                <Text style={{ color: THEME.colors.texto, fontSize: 13 }}>Nivel:</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <TouchableOpacity
                     style={styles.stepperBtn}
@@ -6116,12 +6116,12 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               {/* Ancient Tier for Normal Sets */}
               {selectedQuickSet.cat !== 'ACC' && (
                 <View style={{ marginBottom: 14 }}>
-                  <Text style={{ color: '#AAA', fontSize: 11, fontWeight: 'bold', marginBottom: 6 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontWeight: 'bold', marginBottom: 6 }}>
                     OPCIÓN ANCIENT:
                   </Text>
                   {quickSetAncientOptions.length === 0 ? (
                     <View style={{ backgroundColor: '#1A1613', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#6B5533' }}>
-                      <Text style={{ color: '#888', fontSize: 11, fontStyle: 'italic' }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontStyle: 'italic' }}>
                         Este set no posee versiones Ancient en Season 6. Solo se inyectará en versión Normal / Excelente.
                       </Text>
                     </View>
@@ -6252,9 +6252,9 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         <MaterialCommunityIcons
                           name={canInject ? "lightning-bolt" : "lock-outline"}
                           size={22}
-                          color={canInject ? "#FFF" : "#888"}
+                          color={canInject ? "#FFF" : THEME.colors.textoSecundario}
                         />
-                        <Text style={[styles.actionBtnText, { fontSize: 13, fontWeight: 'bold', color: canInject ? '#FFF' : '#888' }]}>
+                        <Text style={[styles.actionBtnText, { fontSize: 13, fontWeight: 'bold', color: canInject ? '#FFF' : THEME.colors.textoSecundario }]}>
                           {canInject
                             ? `INYECTAR ${selectedQuickSet.name.toUpperCase()} (${selectedQuickSet.pieces.length} PIEZAS)`
                             : 'INGRESA CUENTA DE DESTINO PARA ACTIVAR'}
@@ -6354,41 +6354,41 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => setSelectedPlayerModal(null)} style={{ padding: 4 }}>
-                      <MaterialCommunityIcons name="close" size={22} color="#9C9182" />
+                      <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
                     </TouchableOpacity>
                   </View>
 
                   {/* Tarjetas de Información Detallada */}
                   <View style={{ backgroundColor: '#14100D', borderRadius: 6, borderWidth: 1, borderColor: '#3A2E22', padding: 12, gap: 6, marginBottom: 14 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ color: '#9C9182', fontSize: 12 }}>Cuenta Asociada:</Text>
-                      <Text style={{ color: '#EDE4D3', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.accountId}</Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Cuenta Asociada:</Text>
+                      <Text style={{ color: THEME.colors.texto, fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.accountId}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ color: '#9C9182', fontSize: 12 }}>Ubicación en Vivo:</Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Ubicación en Vivo:</Text>
                       <Text style={{ color: '#5B8DEF', fontSize: 12, fontWeight: '600' }}>{mapName} ({posX}, {posY})</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ color: '#9C9182', fontSize: 12 }}>Servidor / GameServer:</Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Servidor / GameServer:</Text>
                       <Text style={{ color: '#3FCF8E', fontSize: 12, fontWeight: '600' }}>{selectedPlayerModal.serverName || 'GameServer'}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ color: '#9C9182', fontSize: 12 }}>Dirección IP:</Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Dirección IP:</Text>
                       <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.ip || '127.0.0.1'}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ color: '#9C9182', fontSize: 12 }}>Hora de Conexión:</Text>
-                      <Text style={{ color: '#EDE4D3', fontSize: 11 }}>{selectedPlayerModal.connectTime || 'En línea'}</Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Hora de Conexión:</Text>
+                      <Text style={{ color: THEME.colors.texto, fontSize: 11 }}>{selectedPlayerModal.connectTime || 'En línea'}</Text>
                     </View>
                     {selectedPlayerModal.resets !== undefined && (
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ color: '#9C9182', fontSize: 12 }}>Resets Acumulados:</Text>
+                        <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Resets Acumulados:</Text>
                         <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.resets}</Text>
                       </View>
                     )}
                     {selectedPlayerModal.money !== undefined && selectedPlayerModal.money > 0 && (
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ color: '#9C9182', fontSize: 12 }}>Zen en Inventario:</Text>
+                        <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Zen en Inventario:</Text>
                         <Text style={{ color: '#3FCF8E', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.money.toLocaleString()} Zen</Text>
                       </View>
                     )}
@@ -6426,8 +6426,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         onPress={() => handleTeleportPlayerCity(selectedPlayerModal.charName, c.name, c.map, c.x, c.y)}
                       >
                         <MaterialCommunityIcons name={c.icon as any} size={14} color={c.color} />
-                        <Text style={{ color: '#EDE4D3', fontSize: 11, fontWeight: 'bold' }}>{c.name}</Text>
-                        <Text style={{ color: '#9C9182', fontSize: 9 }}>({c.x},{c.y})</Text>
+                        <Text style={{ color: THEME.colors.texto, fontSize: 11, fontWeight: 'bold' }}>{c.name}</Text>
+                        <Text style={{ color: THEME.colors.textoSecundario, fontSize: 9 }}>({c.x},{c.y})</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -6441,7 +6441,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onPress={() => handleClearPkForPlayer(selectedPlayerModal.charName)}
                     >
                       <MaterialCommunityIcons name="sword-cross" size={16} color="#5B8DEF" />
-                      <Text style={[styles.actionBtnText, { fontSize: 11, color: '#EDE4D3' }]}>Limpiar PK</Text>
+                      <Text style={[styles.actionBtnText, { fontSize: 11, color: THEME.colors.texto }]}>Limpiar PK</Text>
                     </TouchableOpacity>
 
                     {/* Asignar Rango GM */}
@@ -6493,7 +6493,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       }}
                     >
                       <MaterialCommunityIcons name="anvil" size={16} color="#E8C86A" />
-                      <Text style={{ color: '#EDE4D3', fontSize: 10, fontWeight: 'bold' }}>Item Maker</Text>
+                      <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Item Maker</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -6516,7 +6516,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       }}
                     >
                       <MaterialCommunityIcons name="gift-outline" size={16} color="#3FCF8E" />
-                      <Text style={{ color: '#EDE4D3', fontSize: 10, fontWeight: 'bold' }}>Starter Kit</Text>
+                      <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Starter Kit</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -6539,7 +6539,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       }}
                     >
                       <MaterialCommunityIcons name="wrench-outline" size={16} color="#5B8DEF" />
-                      <Text style={{ color: '#EDE4D3', fontSize: 10, fontWeight: 'bold' }}>Desatascar</Text>
+                      <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Desatascar</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -6577,7 +6577,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       }}
                     >
                       <MaterialCommunityIcons name="account-cancel" size={16} color="#E2703A" />
-                      <Text style={[styles.actionBtnText, { color: '#EDE4D3' }]}>Banear Solo Este Personaje</Text>
+                      <Text style={[styles.actionBtnText, { color: THEME.colors.texto }]}>Banear Solo Este Personaje</Text>
                     </TouchableOpacity>
 
                     {/* Banear Cuenta Completa */}
@@ -6653,11 +6653,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             </View>
             <Text style={[styles.label, { marginTop: 10 }]}>Motivo del Baneo:</Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: '#14100D', borderColor: '#6B5533', color: '#EDE4D3' }]}
+              style={[styles.textInput, { backgroundColor: '#14100D', borderColor: '#6B5533', color: THEME.colors.texto }]}
               value={banCharReasonInput}
               onChangeText={setBanCharReasonInput}
               placeholder="Ej: Infracción de reglas de personaje"
-              placeholderTextColor="#777"
+              placeholderTextColor={THEME.colors.textMuted}
             />
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <TouchableOpacity
@@ -6701,11 +6701,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             </View>
             <Text style={[styles.label, { marginTop: 10 }]}>Motivo del Bloqueo:</Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: '#14100D', borderColor: '#6B5533', color: '#EDE4D3' }]}
+              style={[styles.textInput, { backgroundColor: '#14100D', borderColor: '#6B5533', color: THEME.colors.texto }]}
               value={banReasonInput}
               onChangeText={setBanReasonInput}
               placeholder="Ej: Uso de programas ilegales"
-              placeholderTextColor="#777"
+              placeholderTextColor={THEME.colors.textMuted}
             />
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <TouchableOpacity
@@ -6778,7 +6778,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8C86A',
   },
   tabButtonText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.3,
@@ -6816,7 +6816,7 @@ const styles = StyleSheet.create({
   },
   cardDesc: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     marginBottom: 10,
     lineHeight: 16,
   },
@@ -6854,7 +6854,7 @@ const styles = StyleSheet.create({
   },
   catPillText: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontWeight: '700',
   },
   catPillTextActive: {
@@ -7065,7 +7065,7 @@ const styles = StyleSheet.create({
   },
   socketOptionText: {
     fontSize: 10,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontWeight: '600',
   },
   socketOptionTextActive: {
@@ -7105,7 +7105,7 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontSize: 11,
-    color: '#888',
+    color: THEME.colors.textoSecundario,
   },
   filterPillTextActive: {
     color: THEME.colors.primaryOrange,
@@ -7208,7 +7208,7 @@ const styles = StyleSheet.create({
   },
   dupeItemLoc: {
     fontSize: 10,
-    color: '#AAA',
+    color: THEME.colors.textoSecundario,
     marginTop: 1,
   },
   excBadge: {
@@ -7242,7 +7242,7 @@ const styles = StyleSheet.create({
     borderColor: THEME.colors.primaryOrange,
   },
   rankPillText: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -7294,7 +7294,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   rankSub: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 10,
     marginTop: 1,
   },
@@ -7313,7 +7313,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   rankScoreLabel: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 9,
   },
   pkClearBtn: {
@@ -7648,7 +7648,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   presetModifyLabel: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 10,
     textTransform: 'uppercase',
     fontWeight: '700',
@@ -7694,7 +7694,7 @@ const styles = StyleSheet.create({
   },
   ancientBtnText: {
     fontSize: 12,
-    color: '#AAA',
+    color: THEME.colors.textoSecundario,
   },
   stepperBtn: {
     width: 36,
@@ -7721,7 +7721,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232, 200, 106, 0.15)',
   },
   switchText: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 12,
     fontWeight: '600',
   },

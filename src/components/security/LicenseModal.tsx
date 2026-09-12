@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontWeight: THEME.typography.weightMedium,
   },
   pill: {
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   },
   statusDesc: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     lineHeight: 16,
     marginTop: 4,
   },
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   sectionHelp: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     lineHeight: 16,
     marginBottom: 10,
   },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   },
   copyBtnText: {
     fontSize: 11,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontWeight: THEME.typography.weightMedium,
   },
   contactButtonsRow: {
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   tabSwitchText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
   },
   tabSwitchTextActive: {
     color: '#E8C86A',
@@ -606,13 +606,13 @@ const styles = StyleSheet.create({
   },
   formInstructions: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     marginBottom: 6,
   },
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     marginTop: 6,
     marginBottom: 3,
   },
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6B5533',
     borderRadius: 6,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     paddingHorizontal: 12,
     paddingVertical: 8,
     minHeight: 44,
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6B5533',
     borderRadius: 6,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontFamily: THEME.typography.fontMono,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   },
   activatedSub: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontFamily: THEME.typography.fontMono,
   },
   vigenciaBadge: {
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
   },
   securityText: {
     fontSize: 10,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     textAlign: 'center',
   },
 });

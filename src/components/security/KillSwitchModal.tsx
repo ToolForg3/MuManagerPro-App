@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 13,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     textAlign: 'center',
     lineHeight: 19,
     marginBottom: 20,
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   supportCardSubtitle: {
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     textAlign: 'center',
     lineHeight: 16,
     marginBottom: 12,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 11,
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     lineHeight: 16,
   },
   footerBrand: {

@@ -26,10 +26,10 @@ export const THEME = {
     arcano: '#5B8DEF', // Datos / valores mágicos / sub-stats
     jade: '#3FCF8E', // Éxito / ZEN / "Online"
 
-    // 3. Tipografía
-    texto: '#EDE4D3', // Texto principal claro
-    textoSecundario: '#9C9182', // Texto atenuado / etiquetas
-    textoOscuro: '#191512', // Texto sobre oro brillante
+    // 3. Tipografía (Alto Contraste WCAG AAA sobre fondo oscuro)
+    texto: '#FAF6EE', // Texto principal claro de alto contraste (blanco pergamino luminoso)
+    textoSecundario: '#C8BEAF', // Texto secundario de alta legibilidad (marfil cálido)
+    textoOscuro: '#100D0B', // Texto sobre oro brillante
 
     // 4. Elementos y Remaches
     remache: '#B58F3C',
@@ -56,12 +56,12 @@ export const THEME = {
     accentGreenBright: '#3FCF8E',
     accentPurple: '#E8C86A', // Purgado morado -> Oro Season 6
     dangerRed: '#E2703A',
-    textPrimary: '#EDE4D3',
-    textSecondary: '#9C9182',
-    textMuted: '#9C9182',
-    textGold: '#E8C86A',
-    textNeon: '#5B8DEF',
-    textInverse: '#191512',
+    textPrimary: '#FAF6EE',
+    textSecondary: '#C8BEAF',
+    textMuted: '#B8AEA0',
+    textGold: '#F0D27A',
+    textNeon: '#7CA8FF',
+    textInverse: '#100D0B',
 
     // Atributos y C-Window
     statStrength: '#E2703A',
@@ -73,7 +73,7 @@ export const THEME = {
     statRuud: '#5B8DEF',
 
     // Rarezas
-    itemNormal: '#EDE4D3',
+    itemNormal: '#FAF6EE',
     itemMagic: '#5B8DEF',
     itemExcellent: '#3FCF8E',
     itemAncient: '#5B8DEF',

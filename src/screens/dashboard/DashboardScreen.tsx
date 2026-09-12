@@ -468,17 +468,17 @@ export const DashboardScreen = () => {
 
           {/* Buscador de acciones */}
           <View style={styles.logsSearchBox}>
-            <MaterialCommunityIcons name="magnify" size={20} color="#888" />
+            <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textoSecundario} />
             <TextInput
               style={styles.logsSearchInput}
               placeholder="Buscar por acción o detalle..."
-              placeholderTextColor="#777"
+              placeholderTextColor={THEME.colors.textMuted}
               value={logsSearchQuery}
               onChangeText={setLogsSearchQuery}
             />
             {logsSearchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setLogsSearchQuery('')}>
-                <MaterialCommunityIcons name="close-circle" size={18} color="#888" />
+                <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             )}
           </View>
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   logsModalSub: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
     marginTop: 1,
   },
@@ -904,19 +904,21 @@ const styles = StyleSheet.create({
     borderColor: '#E2703A',
     minHeight: 44,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logsModalList: {
+    padding: 16,
   },
   logsSearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#100D0B',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 6,
-    paddingHorizontal: 12,
-    height: 44,
-    minHeight: 44,
     borderRadius: 6,
     borderWidth: 1,
+    paddingHorizontal: 10,
+    height: 40,
+    marginHorizontal: 16,
+    marginBottom: 8,
     borderColor: THEME.colors.border,
     gap: 8,
   },
@@ -932,7 +934,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyLogsTextModal: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 14,
   },
   fullLogRow: {
@@ -952,11 +954,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   fullLogTimeText: {
-    color: '#888',
+    color: THEME.colors.textoSecundario,
     fontSize: 11,
   },
   fullLogDetailText: {
-    color: '#BBB',
+    color: THEME.colors.texto,
     fontSize: 12,
     marginTop: 4,
     lineHeight: 16,

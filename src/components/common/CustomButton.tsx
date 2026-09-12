@@ -84,7 +84,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     if (variant === 'neonBlue') return '#5B8DEF';
     if (variant === 'green') return '#3FCF8E';
     if (variant === 'outline') return THEME.colors.oro;
-    return '#EDE4D3';
+    return THEME.colors.texto;
   };
 
   const getPadding = () => {

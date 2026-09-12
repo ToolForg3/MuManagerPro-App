@@ -278,6 +278,6 @@ const styles = StyleSheet.create({
     color: THEME.colors.texto,
   },
   keyTextDisabled: {
-    color: '#666',
+    color: THEME.colors.textMuted,
   },
 });

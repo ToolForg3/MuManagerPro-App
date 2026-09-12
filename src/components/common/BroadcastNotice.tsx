@@ -10,6 +10,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BroadcastNoticeInfo } from '../../services/database/sqlClient';
 import { RemoteConfigService } from '../../services/security/remoteConfigService';
+import { THEME } from '../../constants/theme';
 
 interface BroadcastNoticeProps {
   visible: boolean;
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     fontSize: 13,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   },
   bannerMessage: {
     fontSize: 12,
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     lineHeight: 16,
   },
   bannerCloseBtn: {
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bannerCloseText: {
-    color: '#9C9182',
+    color: THEME.colors.textoSecundario,
     fontSize: 16,
     fontWeight: '700',
   },

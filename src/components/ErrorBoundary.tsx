@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   desc: {
-    color: '#EDE4D3',
+    color: THEME.colors.texto,
     fontSize: 12,
     textAlign: 'center',
     marginBottom: 12,

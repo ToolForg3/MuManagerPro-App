@@ -95,7 +95,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
             activeOpacity={0.8}
             onPress={handleDownload}
           >
-            <Text style={[styles.downloadButtonText, isRollback && { color: '#EDE4D3' }]}>
+            <Text style={[styles.downloadButtonText, isRollback && { color: THEME.colors.texto }]}>
               {isRollback ? 'Reinstalar Versión Anterior (Rollback)' : isBeta ? 'Instalar Versión Beta' : 'Descargar e Instalar Ahora'}
             </Text>
           </TouchableOpacity>
