@@ -1,6 +1,6 @@
 {
   "name": "apk-editor-mu",
-  "version": "1.8.7",
+  "version": "1.8.8",
   "author": "ToolForg3",
   "main": "index.js",
   "scripts": {

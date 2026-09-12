@@ -164,7 +164,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                 activeOpacity={0.7}
               >
                 {renderHighlightedText(item, value)}
-                <MaterialCommunityIcons name="chevron-right" size={14} color="#555" />
+                <MaterialCommunityIcons name="chevron-right" size={14} color={THEME.colors.textMuted} />
               </TouchableOpacity>
             ))}
           </ScrollView>

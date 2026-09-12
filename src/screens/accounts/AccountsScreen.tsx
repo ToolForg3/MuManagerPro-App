@@ -1464,7 +1464,7 @@ export const AccountsScreen = () => {
       case 1:
         return { label: 'Bronce', color: '#CD7F32', dot: '#CD7F32' };
       default:
-        return { label: 'Free', color: '#888888', dot: '#888888' };
+        return { label: 'Free', color: THEME.colors.textoSecundario, dot: THEME.colors.textoSecundario };
     }
   };
 
@@ -1526,7 +1526,7 @@ export const AccountsScreen = () => {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="account-search" size={48} color="#555" />
+              <MaterialCommunityIcons name="account-search" size={48} color={THEME.colors.textMuted} />
               <Text style={styles.emptyText}>
                 {errorMessage
                   ? 'No se cargaron cuentas debido a un error de conexión.'
@@ -1687,7 +1687,7 @@ export const AccountsScreen = () => {
                 </View>
               </View>
               <TouchableOpacity onPress={() => setAccountDetailVisible(false)} style={styles.closeModalBtn}>
-                <MaterialCommunityIcons name="close" size={22} color="#AAAAAA" />
+                <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -1762,7 +1762,7 @@ export const AccountsScreen = () => {
                 <Text style={styles.fieldLabel}>Nivel de Cuenta (VIP)</Text>
                 <View style={styles.vipRow}>
                   {[
-                    { level: 0, label: 'Free', color: '#888888' },
+                    { level: 0, label: 'Free', color: THEME.colors.textoSecundario },
                     { level: 1, label: 'Bronce', color: '#CD7F32' },
                     { level: 2, label: 'Plata', color: '#B0BEC5' },
                     { level: 3, label: 'Oro', color: '#FFD700' },
@@ -2432,10 +2432,10 @@ export const AccountsScreen = () => {
                   <Text style={[styles.whSectionHeader, { color: '#FACC15' }]}>COLOR DE FENRIR</Text>
                   <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                     {[
-                      { label: 'Rojo', flags: 0, color: '#EF4444' },
-                      { label: 'Negro', flags: 1, color: '#A1A1AA' },
-                      { label: 'Azul', flags: 2, color: '#3B82F6' },
-                      { label: 'Dorado', flags: 4, color: '#EAB308' },
+                      { label: 'Rojo', flags: 0, color: '#FF5252' },
+                      { label: 'Negro', flags: 1, color: THEME.colors.textoSecundario },
+                      { label: 'Azul', flags: 2, color: '#64B5F6' },
+                      { label: 'Dorado', flags: 4, color: THEME.colors.oroClaro },
                     ].map((fen) => {
                       const isSel = vaultMakerExcFlags === fen.flags;
                       return (
@@ -2447,7 +2447,7 @@ export const AccountsScreen = () => {
                           ]}
                           onPress={() => setVaultMakerExcFlags(fen.flags)}
                         >
-                          <Text style={{ fontSize: 11, fontWeight: '700', color: isSel ? fen.color : '#AAA' }}>
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: isSel ? fen.color : THEME.colors.textoSecundario }}>
                             {fen.label}
                           </Text>
                         </TouchableOpacity>
@@ -2537,7 +2537,7 @@ export const AccountsScreen = () => {
                                 setVaultMakerAncient(encodeAncientByte(currentDecoded.tier || 1, bonus));
                               }}
                             >
-                              <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.itemAncient : '#AAA', fontWeight: isSelBonus ? 'bold' : 'normal' }}>
+                              <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.itemAncient : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
                                 +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
                               </Text>
                             </TouchableOpacity>
@@ -2694,7 +2694,7 @@ export const AccountsScreen = () => {
                       setVaultMakerSockets(val ? [0xFE, 0xFE, 0xFE, 0xFE, 0xFE] : [0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
                     }}
                     trackColor={{ false: '#332B24', true: '#6B5533' }}
-                    thumbColor={vaultMakerEnableSockets ? '#E8C86A' : '#8C7B6B'}
+                    thumbColor={vaultMakerEnableSockets ? THEME.colors.oroClaro : THEME.colors.textMuted}
                   />
                 </View>
 
@@ -2717,7 +2717,7 @@ export const AccountsScreen = () => {
 
                           {/* Selector de Nivel / Tipo de Seed Sphere (Lv.1 a Lv.5) */}
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 2 }}>
-                            <Text style={{ fontSize: 10, color: '#8C7B6B', fontWeight: '600' }}>Esfera:</Text>
+                            <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario, fontWeight: '600' }}>Esfera:</Text>
                             {SEED_SPHERE_LEVELS.map((sl) => {
                               const isLvlActive = currentLvl === sl.level;
                               return (
@@ -2795,7 +2795,7 @@ export const AccountsScreen = () => {
               <View style={styles.whControlCardBox}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View>
-                    <Text style={{ color: '#DDD', fontSize: 13, fontWeight: '700' }}>Cantidad a Generar:</Text>
+                    <Text style={{ color: THEME.colors.texto, fontSize: 13, fontWeight: '700' }}>Cantidad a Generar:</Text>
                     <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>Copias a colocar en slots libres contiguos:</Text>
                   </View>
                   <View style={styles.whStepper}>
@@ -2825,7 +2825,7 @@ export const AccountsScreen = () => {
                       ]}
                       onPress={() => setVaultMakerQuantity(q)}
                     >
-                      <Text style={{ color: vaultMakerQuantity === q ? THEME.colors.oroClaro : '#AAA', fontSize: 11, fontWeight: '700' }}>
+                      <Text style={{ color: vaultMakerQuantity === q ? THEME.colors.oroClaro : THEME.colors.textoSecundario, fontSize: 11, fontWeight: '700' }}>
                         x{q}
                       </Text>
                     </TouchableOpacity>
@@ -3250,7 +3250,7 @@ export const AccountsScreen = () => {
                     </View>
                   </View>
 
-                  <Text style={{ color: '#BBB', fontSize: 11, lineHeight: 16, marginBottom: 10 }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, lineHeight: 16, marginBottom: 10 }}>
                     Esta es la <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold' }}>Bóveda de Expansión oficial del Baúl</Text> de Season 6 (Almacenado 1). En el cliente del juego se abre abriendo el baúl y presionando el botón <Text style={{ color: '#FFF', fontWeight: 'bold' }}>[+]</Text> ("Abriendo una Bóveda Expandida").
                   </Text>
 
@@ -3566,11 +3566,11 @@ export const AccountsScreen = () => {
                 <Text style={styles.detailTitle}>Desbloquear Baúles</Text>
               </View>
               <TouchableOpacity onPress={() => setShowUnlockModal(false)} style={styles.closeModalBtn}>
-                <MaterialCommunityIcons name="close" size={20} color="#AAAAAA" />
+                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
-            <Text style={{ color: '#AAA', fontSize: 13, marginBottom: 14 }}>
+            <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginBottom: 14 }}>
               Configura el número de baúles disponibles en <Text style={{ color: '#FFF', fontWeight: 'bold' }}>MEMB_INFO.WarehouseCount</Text> para la cuenta <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>{warehouseAccount}</Text>.
             </Text>
 
@@ -3626,7 +3626,7 @@ export const AccountsScreen = () => {
                   Expansión de Baúl Oficial Season 6
                 </Text>
               </View>
-              <Text style={{ color: '#AAA', fontSize: 11, marginBottom: 8 }}>
+              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 8 }}>
                 Desbloquea las pestañas de Expansión 1 y 2 en el juego (<Text style={{ color: '#FFF' }}>AccountCharacter.ExtWarehouse = 2</Text>).
               </Text>
               <TouchableOpacity
@@ -3694,7 +3694,7 @@ export const AccountsScreen = () => {
                 <Text style={styles.detailTitle}>Inyectar Set al Baúl #{activeVaultIndex}</Text>
               </View>
               <TouchableOpacity onPress={() => setShowQuickSetsVaultModal(false)} style={styles.closeModalBtn}>
-                <MaterialCommunityIcons name="close" size={20} color="#AAAAAA" />
+                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -3873,7 +3873,7 @@ export const AccountsScreen = () => {
                   style={[styles.whFenrirPill, quickSetVaultLuck && { backgroundColor: 'rgba(63, 207, 142, 0.2)', borderColor: '#3FCF8E' }]}
                   onPress={() => setQuickSetVaultLuck(!quickSetVaultLuck)}
                 >
-                  <Text style={{ color: quickSetVaultLuck ? '#3FCF8E' : '#AAA', fontSize: 11, fontWeight: '700' }}>
+                  <Text style={{ color: quickSetVaultLuck ? '#3FCF8E' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
                     Luck
                   </Text>
                 </TouchableOpacity>
@@ -3882,7 +3882,7 @@ export const AccountsScreen = () => {
                   style={[styles.whFenrirPill, quickSetVaultSkill && { backgroundColor: 'rgba(232, 200, 106, 0.2)', borderColor: '#E8C86A' }]}
                   onPress={() => setQuickSetVaultSkill(!quickSetVaultSkill)}
                 >
-                  <Text style={{ color: quickSetVaultSkill ? '#E8C86A' : '#AAA', fontSize: 11, fontWeight: '700' }}>
+                  <Text style={{ color: quickSetVaultSkill ? '#E8C86A' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
                     Skill
                   </Text>
                 </TouchableOpacity>
@@ -3891,7 +3891,7 @@ export const AccountsScreen = () => {
                   style={[styles.whFenrirPill, quickSetVaultFullExc && { backgroundColor: 'rgba(63, 207, 142, 0.2)', borderColor: '#3FCF8E' }]}
                   onPress={() => setQuickSetVaultFullExc(!quickSetVaultFullExc)}
                 >
-                  <Text style={{ color: quickSetVaultFullExc ? '#3FCF8E' : '#AAA', fontSize: 11, fontWeight: '700' }}>
+                  <Text style={{ color: quickSetVaultFullExc ? '#3FCF8E' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
                     Full Exc
                   </Text>
                 </TouchableOpacity>
@@ -3900,7 +3900,7 @@ export const AccountsScreen = () => {
                   style={[styles.whFenrirPill, quickSetVault380 && { backgroundColor: 'rgba(226, 112, 58, 0.2)', borderColor: '#E2703A' }]}
                   onPress={() => setQuickSetVault380(!quickSetVault380)}
                 >
-                  <Text style={{ color: quickSetVault380 ? '#E2703A' : '#AAA', fontSize: 11, fontWeight: '700' }}>
+                  <Text style={{ color: quickSetVault380 ? '#E2703A' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
                     380 PvP
                   </Text>
                 </TouchableOpacity>
@@ -3958,7 +3958,7 @@ export const AccountsScreen = () => {
               {/* OPCIÓN JEWEL OF HARMONY */}
               <View style={{ marginBottom: 14 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <Text style={{ color: '#AAA', fontSize: 11, fontWeight: 'bold' }}>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontWeight: 'bold' }}>
                     OPCIÓN JEWEL OF HARMONY:
                   </Text>
                   {quickSetVaultHarmonyType > 0 && (
@@ -4048,9 +4048,9 @@ export const AccountsScreen = () => {
                         <MaterialCommunityIcons
                           name={isVaultAccountValid ? "lightning-bolt" : "lock-outline"}
                           size={20}
-                          color={isVaultAccountValid ? "#FFF" : "#AAA"}
+                          color={isVaultAccountValid ? "#FFF" : THEME.colors.textMuted}
                         />
-                        <Text style={{ color: isVaultAccountValid ? '#FFFFFF' : '#AAA', fontSize: 13, fontWeight: '800' }}>
+                        <Text style={{ color: isVaultAccountValid ? '#FFFFFF' : THEME.colors.textMuted, fontSize: 13, fontWeight: '800' }}>
                           {isVaultAccountValid
                             ? `INYECTAR ${selectedVaultQuickSet?.name.toUpperCase()} (${selectedVaultQuickSet?.pieces.length} PIEZAS)`
                             : `SELECCIONA UNA CUENTA PARA ACTIVAR`}
@@ -4120,7 +4120,7 @@ export const AccountsScreen = () => {
               <View style={styles.detailHeader}>
                 <Text style={styles.detailTitle}>Nueva Cuenta (MEMB_INFO)</Text>
                 <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.closeModalBtn}>
-                  <MaterialCommunityIcons name="close" size={22} color="#AAAAAA" />
+                  <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
                 </TouchableOpacity>
               </View>
 
@@ -4168,7 +4168,7 @@ export const AccountsScreen = () => {
                 <Text style={styles.fieldLabel}>Nivel VIP</Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {[
-                    { level: 0, label: 'Free', color: '#888888' },
+                    { level: 0, label: 'Free', color: THEME.colors.textoSecundario },
                     { level: 1, label: 'Bronce', color: '#CD7F32' },
                     { level: 2, label: 'Plata', color: '#B0BEC5' },
                     { level: 3, label: 'Oro', color: '#FFD700' },
@@ -4938,7 +4938,7 @@ const styles = StyleSheet.create({
     borderColor: '#FF5722',
   },
   presetPillText: {
-    color: '#AAA',
+    color: THEME.colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },

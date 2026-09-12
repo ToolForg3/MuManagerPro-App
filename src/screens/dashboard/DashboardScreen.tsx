@@ -106,7 +106,7 @@ export const DashboardScreen = () => {
       case 1:
         return { label: 'Bronce', color: '#CD7F32', bg: 'rgba(205, 127, 50, 0.15)' };
       default:
-        return { label: 'Free', color: '#9E9E9E', bg: 'rgba(158, 158, 158, 0.12)' };
+        return { label: 'Free', color: THEME.colors.textoSecundario, bg: 'rgba(200, 190, 175, 0.15)' };
     }
   };
 
@@ -497,7 +497,7 @@ export const DashboardScreen = () => {
               if (filtered.length === 0) {
                 return (
                   <View style={styles.emptyLogsWrapModal}>
-                    <MaterialCommunityIcons name="shield-check-outline" size={48} color="#555" />
+                    <MaterialCommunityIcons name="shield-check-outline" size={48} color={THEME.colors.textMuted} />
                     <Text style={styles.emptyLogsTextModal}>
                       {allAdminLogs.length === 0
                         ? 'Sin registros administrativos guardados'

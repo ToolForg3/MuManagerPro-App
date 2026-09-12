@@ -2581,10 +2581,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   {[
-                    { label: 'Rojo', flags: 0, color: '#EF4444', subType: 'red' },
-                    { label: 'Negro', flags: 1, color: '#A1A1AA', subType: 'black' },
-                    { label: 'Azul', flags: 2, color: '#3B82F6', subType: 'blue' },
-                    { label: 'Dorado', flags: 4, color: '#EAB308', subType: 'gold' },
+                    { label: 'Rojo', flags: 0, color: '#FF5252', subType: 'red' },
+                    { label: 'Negro', flags: 1, color: THEME.colors.textoSecundario, subType: 'black' },
+                    { label: 'Azul', flags: 2, color: '#64B5F6', subType: 'blue' },
+                    { label: 'Dorado', flags: 4, color: THEME.colors.oroClaro, subType: 'gold' },
                   ].map((fen) => {
                     const isSelected = makerExcFlags === fen.flags;
                     return (
@@ -2612,7 +2612,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           justifyContent: 'center',
                         }}
                       >
-                        <Text style={{ fontSize: 11, fontWeight: 'bold', color: isSelected ? fen.color : '#DDD' }}>
+                        <Text style={{ fontSize: 11, fontWeight: 'bold', color: isSelected ? fen.color : THEME.colors.textoSecundario }}>
                           {fen.label}
                         </Text>
                       </TouchableOpacity>
@@ -2870,7 +2870,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   value={enableSockets}
                   onValueChange={setEnableSockets}
                   trackColor={{ false: '#332B24', true: '#6B5533' }}
-                  thumbColor={enableSockets ? '#E8C86A' : '#8C7B6B'}
+                  thumbColor={enableSockets ? THEME.colors.oroClaro : THEME.colors.textMuted}
                 />
               </View>
 
@@ -2893,7 +2893,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                         {/* Selector de Nivel / Tipo de Seed Sphere (Lv.1 a Lv.5) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 2 }}>
-                          <Text style={{ fontSize: 10, color: '#8C7B6B', fontWeight: '600' }}>Esfera:</Text>
+                          <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario, fontWeight: '600' }}>Esfera:</Text>
                           {SEED_SPHERE_LEVELS.map((sl) => {
                             const isLvlActive = currentLvl === sl.level;
                             return (
@@ -3288,13 +3288,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 {rankingsList.map((entry, index) => {
                   const rankPos = index + 1;
                   const medalColor =
-                    rankPos === 1 ? '#FFD700' : rankPos === 2 ? '#C0C0C0' : rankPos === 3 ? '#CD7F32' : '#555';
+                    rankPos === 1 ? '#FFD700' : rankPos === 2 ? '#C0C0C0' : rankPos === 3 ? '#CD7F32' : 'rgba(200, 190, 175, 0.15)';
 
                   if (rankType === 'guilds') {
                     return (
                       <View key={`guild_${entry.G_Name}_${index}`} style={styles.rankCard}>
                         <View style={[styles.rankMedal, { backgroundColor: medalColor }]}>
-                          <Text style={styles.rankMedalText}>{rankPos}</Text>
+                          <Text style={[styles.rankMedalText, rankPos > 3 && { color: THEME.colors.textoSecundario }]}>{rankPos}</Text>
                         </View>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                           <Text style={styles.rankName}>{entry.G_Name}</Text>
@@ -3316,7 +3316,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   return (
                     <View key={`rank_char_${entry.Name}_${index}`} style={styles.rankCard}>
                       <View style={[styles.rankMedal, { backgroundColor: medalColor }]}>
-                        <Text style={styles.rankMedalText}>{rankPos}</Text>
+                        <Text style={[styles.rankMedalText, rankPos > 3 && { color: THEME.colors.textoSecundario }]}>{rankPos}</Text>
                       </View>
                       <View style={{ flex: 1, marginLeft: 12 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -3701,7 +3701,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
               </View>
               <View style={styles.inputWrap}>
-                <MaterialCommunityIcons name="database" size={20} color="#6B5533" />
+                <MaterialCommunityIcons name="database" size={20} color={THEME.colors.oroClaro} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Base de datos (Default: MuOnline)"
@@ -6062,7 +6062,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
               {/* Option Stepper */}
               <View style={[styles.optionRow, { justifyContent: 'space-between', marginBottom: 8 }]}>
-                <Text style={{ color: '#DDD', fontSize: 13 }}>Opción Adicional:</Text>
+                <Text style={{ color: THEME.colors.texto, fontSize: 13 }}>Opción Adicional:</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <TouchableOpacity
                     style={styles.stepperBtn}
@@ -7167,7 +7167,7 @@ const styles = StyleSheet.create({
   },
   dupeBannerSub: {
     fontSize: 11,
-    color: '#CCC',
+    color: THEME.colors.textoSecundario,
     marginTop: 2,
   },
   dupeGroupCard: {
@@ -7547,7 +7547,7 @@ const styles = StyleSheet.create({
     borderColor: '#6B5533',
   },
   onlinePlayerPillText: {
-    color: '#CCCCCC',
+    color: THEME.colors.textoSecundario,
     fontSize: 10,
   },
   currencyCard: {
@@ -7615,7 +7615,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   currencyQuickBtnText: {
-    color: '#DDD',
+    color: THEME.colors.texto,
     fontSize: 10,
     fontWeight: '700',
   },
@@ -7632,7 +7632,7 @@ const styles = StyleSheet.create({
     minHeight: 38,
   },
   presetPillText: {
-    color: '#DDD',
+    color: THEME.colors.textoSecundario,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -7746,7 +7746,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232, 200, 106, 0.15)',
   },
   itemName: {
-    color: '#DDD',
+    color: THEME.colors.texto,
     fontSize: 12,
     fontWeight: '600',
   },

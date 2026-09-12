@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   footerBrand: {
     fontSize: 10,
-    color: '#7A5E22',
+    color: THEME.colors.textoSecundario,
     letterSpacing: 1,
     fontWeight: '700',
     textAlign: 'center',

@@ -10,43 +10,43 @@ export interface MuClassInfo {
 
 export const MU_CLASSES: Record<number, MuClassInfo> = {
   // Dark Wizard tree
-  0: { id: 0, code: 'DW', name: 'Dark Wizard', baseClass: 'Dark Wizard', tier: 1, avatarIcon: 'magic-staff', accentColor: '#1E88E5' },
-  1: { id: 1, code: 'SM', name: 'Soul Master', baseClass: 'Dark Wizard', tier: 2, avatarIcon: 'fire', accentColor: '#1565C0' },
-  2: { id: 2, code: 'GM', name: 'Grand Master', baseClass: 'Dark Wizard', tier: 3, avatarIcon: 'star-shooting', accentColor: '#0D47A1' },
-  3: { id: 3, code: 'GM', name: 'Grand Master', baseClass: 'Dark Wizard', tier: 3, avatarIcon: 'star-shooting', accentColor: '#0D47A1' },
+  0: { id: 0, code: 'DW', name: 'Dark Wizard', baseClass: 'Dark Wizard', tier: 1, avatarIcon: 'magic-staff', accentColor: '#5B8DEF' },
+  1: { id: 1, code: 'SM', name: 'Soul Master', baseClass: 'Dark Wizard', tier: 2, avatarIcon: 'fire', accentColor: '#64B5F6' },
+  2: { id: 2, code: 'GM', name: 'Grand Master', baseClass: 'Dark Wizard', tier: 3, avatarIcon: 'star-shooting', accentColor: '#90CAF9' },
+  3: { id: 3, code: 'GM', name: 'Grand Master', baseClass: 'Dark Wizard', tier: 3, avatarIcon: 'star-shooting', accentColor: '#90CAF9' },
 
   // Dark Knight tree
-  16: { id: 16, code: 'DK', name: 'Dark Knight', baseClass: 'Dark Knight', tier: 1, avatarIcon: 'sword', accentColor: '#E53935' },
-  17: { id: 17, code: 'BK', name: 'Blade Knight', baseClass: 'Dark Knight', tier: 2, avatarIcon: 'shield-sword', accentColor: '#D32F2F' },
-  18: { id: 18, code: 'BM', name: 'Blade Master', baseClass: 'Dark Knight', tier: 3, avatarIcon: 'crown', accentColor: '#B71C1C' },
-  19: { id: 19, code: 'BM', name: 'Blade Master', baseClass: 'Dark Knight', tier: 3, avatarIcon: 'crown', accentColor: '#B71C1C' },
+  16: { id: 16, code: 'DK', name: 'Dark Knight', baseClass: 'Dark Knight', tier: 1, avatarIcon: 'sword', accentColor: '#FF5252' },
+  17: { id: 17, code: 'BK', name: 'Blade Knight', baseClass: 'Dark Knight', tier: 2, avatarIcon: 'shield-sword', accentColor: '#FF6E40' },
+  18: { id: 18, code: 'BM', name: 'Blade Master', baseClass: 'Dark Knight', tier: 3, avatarIcon: 'crown', accentColor: '#FF7A00' },
+  19: { id: 19, code: 'BM', name: 'Blade Master', baseClass: 'Dark Knight', tier: 3, avatarIcon: 'crown', accentColor: '#FF7A00' },
 
   // Fairy Elf tree
-  32: { id: 32, code: 'FE', name: 'Fairy Elf', baseClass: 'Fairy Elf', tier: 1, avatarIcon: 'bow-arrow', accentColor: '#43A047' },
-  33: { id: 33, code: 'ME', name: 'Muse Elf', baseClass: 'Fairy Elf', tier: 2, avatarIcon: 'leaf', accentColor: '#2E7D32' },
-  34: { id: 34, code: 'HE', name: 'High Elf', baseClass: 'Fairy Elf', tier: 3, avatarIcon: 'flower', accentColor: '#1B5E20' },
-  35: { id: 35, code: 'HE', name: 'High Elf', baseClass: 'Fairy Elf', tier: 3, avatarIcon: 'flower', accentColor: '#1B5E20' },
+  32: { id: 32, code: 'FE', name: 'Fairy Elf', baseClass: 'Fairy Elf', tier: 1, avatarIcon: 'bow-arrow', accentColor: '#3FCF8E' },
+  33: { id: 33, code: 'ME', name: 'Muse Elf', baseClass: 'Fairy Elf', tier: 2, avatarIcon: 'leaf', accentColor: '#66BB6A' },
+  34: { id: 34, code: 'HE', name: 'High Elf', baseClass: 'Fairy Elf', tier: 3, avatarIcon: 'flower', accentColor: '#81C784' },
+  35: { id: 35, code: 'HE', name: 'High Elf', baseClass: 'Fairy Elf', tier: 3, avatarIcon: 'flower', accentColor: '#81C784' },
 
   // Magic Gladiator tree
-  48: { id: 48, code: 'MG', name: 'Magic Gladiator', baseClass: 'Magic Gladiator', tier: 1, avatarIcon: 'lightning-bolt', accentColor: '#FB8C00' },
-  49: { id: 49, code: 'DM', name: 'Duel Master', baseClass: 'Magic Gladiator', tier: 3, avatarIcon: 'flash', accentColor: '#E65100' },
-  50: { id: 50, code: 'DM', name: 'Duel Master', baseClass: 'Magic Gladiator', tier: 3, avatarIcon: 'flash', accentColor: '#E65100' },
+  48: { id: 48, code: 'MG', name: 'Magic Gladiator', baseClass: 'Magic Gladiator', tier: 1, avatarIcon: 'lightning-bolt', accentColor: '#FFA726' },
+  49: { id: 49, code: 'DM', name: 'Duel Master', baseClass: 'Magic Gladiator', tier: 3, avatarIcon: 'flash', accentColor: '#FFB74D' },
+  50: { id: 50, code: 'DM', name: 'Duel Master', baseClass: 'Magic Gladiator', tier: 3, avatarIcon: 'flash', accentColor: '#FFB74D' },
 
   // Dark Lord tree
-  64: { id: 64, code: 'DL', name: 'Dark Lord', baseClass: 'Dark Lord', tier: 1, avatarIcon: 'horse', accentColor: '#8E24AA' },
-  65: { id: 65, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#4A148C' },
-  66: { id: 66, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#4A148C' },
+  64: { id: 64, code: 'DL', name: 'Dark Lord', baseClass: 'Dark Lord', tier: 1, avatarIcon: 'horse', accentColor: '#E8C86A' },
+  65: { id: 65, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#F0D27A' },
+  66: { id: 66, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#F0D27A' },
 
   // Summoner tree
-  80: { id: 80, code: 'SU', name: 'Summoner', baseClass: 'Summoner', tier: 1, avatarIcon: 'book-open-variant', accentColor: '#00ACC1' },
-  81: { id: 81, code: 'BS', name: 'Bloody Summoner', baseClass: 'Summoner', tier: 2, avatarIcon: 'skull', accentColor: '#00838F' },
-  82: { id: 82, code: 'DM', name: 'Dimension Master', baseClass: 'Summoner', tier: 3, avatarIcon: 'orbit', accentColor: '#006064' },
-  83: { id: 83, code: 'DM', name: 'Dimension Master', baseClass: 'Summoner', tier: 3, avatarIcon: 'orbit', accentColor: '#006064' },
+  80: { id: 80, code: 'SU', name: 'Summoner', baseClass: 'Summoner', tier: 1, avatarIcon: 'book-open-variant', accentColor: '#4DD0E1' },
+  81: { id: 81, code: 'BS', name: 'Bloody Summoner', baseClass: 'Summoner', tier: 2, avatarIcon: 'skull', accentColor: '#FF8A65' },
+  82: { id: 82, code: 'DM', name: 'Dimension Master', baseClass: 'Summoner', tier: 3, avatarIcon: 'orbit', accentColor: '#80DEEA' },
+  83: { id: 83, code: 'DM', name: 'Dimension Master', baseClass: 'Summoner', tier: 3, avatarIcon: 'orbit', accentColor: '#80DEEA' },
 
   // Rage Fighter tree
-  96: { id: 96, code: 'RF', name: 'Rage Fighter', baseClass: 'Rage Fighter', tier: 1, avatarIcon: 'hand-back-right', accentColor: '#D81B60' },
-  97: { id: 97, code: 'FM', name: 'Fist Master', baseClass: 'Rage Fighter', tier: 3, avatarIcon: 'boxing-glove', accentColor: '#880E4F' },
-  98: { id: 98, code: 'FM', name: 'Fist Master', baseClass: 'Rage Fighter', tier: 3, avatarIcon: 'boxing-glove', accentColor: '#880E4F' },
+  96: { id: 96, code: 'RF', name: 'Rage Fighter', baseClass: 'Rage Fighter', tier: 1, avatarIcon: 'hand-back-right', accentColor: '#FF7043' },
+  97: { id: 97, code: 'FM', name: 'Fist Master', baseClass: 'Rage Fighter', tier: 3, avatarIcon: 'boxing-glove', accentColor: '#FF8A65' },
+  98: { id: 98, code: 'FM', name: 'Fist Master', baseClass: 'Rage Fighter', tier: 3, avatarIcon: 'boxing-glove', accentColor: '#FF8A65' },
 };
 
 export interface MuRaceTier {
@@ -73,7 +73,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'DK',
     name: 'Dark Knight',
     avatarIcon: 'sword',
-    accentColor: '#E53935',
+    accentColor: '#FF5252',
     defaultId: 18,
     tiers: [
       { tier: 1, classId: 16, name: 'Dark Knight', subtitle: '1ra Clase Inicial', icon: 'sword' },
@@ -86,7 +86,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'DW',
     name: 'Dark Wizard',
     avatarIcon: 'magic-staff',
-    accentColor: '#1E88E5',
+    accentColor: '#5B8DEF',
     defaultId: 2,
     tiers: [
       { tier: 1, classId: 0, name: 'Dark Wizard', subtitle: '1ra Clase Inicial', icon: 'magic-staff' },
@@ -99,7 +99,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'FE',
     name: 'Fairy Elf',
     avatarIcon: 'bow-arrow',
-    accentColor: '#43A047',
+    accentColor: '#3FCF8E',
     defaultId: 34,
     tiers: [
       { tier: 1, classId: 32, name: 'Fairy Elf', subtitle: '1ra Clase Inicial', icon: 'bow-arrow' },
@@ -112,7 +112,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'MG',
     name: 'Magic Gladiator',
     avatarIcon: 'lightning-bolt',
-    accentColor: '#FB8C00',
+    accentColor: '#FFA726',
     defaultId: 50,
     tiers: [
       { tier: 1, classId: 48, name: 'Magic Gladiator', subtitle: '1ra Clase Inicial', icon: 'lightning-bolt' },
@@ -124,7 +124,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'DL',
     name: 'Dark Lord',
     avatarIcon: 'shield-crown',
-    accentColor: '#8E24AA',
+    accentColor: '#E8C86A',
     defaultId: 66,
     tiers: [
       { tier: 1, classId: 64, name: 'Dark Lord', subtitle: '1ra Clase Inicial', icon: 'horse' },
@@ -136,7 +136,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'SU',
     name: 'Summoner',
     avatarIcon: 'book-open-variant',
-    accentColor: '#00ACC1',
+    accentColor: '#4DD0E1',
     defaultId: 82,
     tiers: [
       { tier: 1, classId: 80, name: 'Summoner', subtitle: '1ra Clase Inicial', icon: 'book-open-variant' },
@@ -149,7 +149,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'RF',
     name: 'Rage Fighter',
     avatarIcon: 'boxing-glove',
-    accentColor: '#D81B60',
+    accentColor: '#FF7043',
     defaultId: 98,
     tiers: [
       { tier: 1, classId: 96, name: 'Rage Fighter', subtitle: '1ra Clase Inicial', icon: 'boxing-glove' },

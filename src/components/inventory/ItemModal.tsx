@@ -399,7 +399,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                       >
                         <Text
                           style={{
-                            color: editedItem.durability === qtyVal ? '#FFF' : '#AAA',
+                            color: editedItem.durability === qtyVal ? '#FFF' : THEME.colors.textoSecundario,
                             fontSize: 10,
                             fontWeight: 'bold',
                           }}
@@ -465,14 +465,14 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               <View style={[styles.section, { borderColor: '#EAB308', borderWidth: 1, backgroundColor: '#1A1608' }]}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={[styles.sectionHeading, { color: '#FACC15' }]}>COLOR / TIPO DE FENRIR</Text>
-                  <Text style={{ fontSize: 11, color: '#A1A1AA' }}>Season 6 Louis</Text>
+                  <Text style={{ fontSize: 11, color: THEME.colors.textoSecundario }}>Season 6 Louis</Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                   {[
-                    { label: 'Rojo (Normal)', flags: 0, color: '#EF4444', desc: 'Estándar' },
-                    { label: 'Negro (Destrucción)', flags: 1, color: '#A1A1AA', desc: '+10% Daño' },
-                    { label: 'Azul (Protección)', flags: 2, color: '#3B82F6', desc: '+10% Absorción' },
-                    { label: 'Dorado (Golden)', flags: 4, color: '#EAB308', desc: 'Especial / Ilusión' },
+                    { label: 'Rojo (Normal)', flags: 0, color: '#FF5252', desc: 'Estándar' },
+                    { label: 'Negro (Destrucción)', flags: 1, color: THEME.colors.textoSecundario, desc: '+10% Daño' },
+                    { label: 'Azul (Protección)', flags: 2, color: '#64B5F6', desc: '+10% Absorción' },
+                    { label: 'Dorado (Golden)', flags: 4, color: THEME.colors.oroClaro, desc: 'Especial / Ilusión' },
                   ].map((fen) => {
                     const isSelected = (editedItem.excellentFlags || 0) === fen.flags;
                     return (
@@ -575,7 +575,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                       });
                     }}
                     trackColor={{ false: '#332B24', true: '#6B5533' }}
-                    thumbColor={enableSockets ? '#E8C86A' : '#8C7B6B'}
+                    thumbColor={enableSockets ? THEME.colors.oroClaro : THEME.colors.textMuted}
                   />
                 )}
               </View>
@@ -621,7 +621,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
                         {/* Selector de Nivel / Tipo de Seed Sphere (Lv.1 a Lv.5) */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 2 }}>
-                          <Text style={{ fontSize: 10, color: '#8C7B6B', fontWeight: '600' }}>Esfera:</Text>
+                          <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario, fontWeight: '600' }}>Esfera:</Text>
                           {SEED_SPHERE_LEVELS.map((sl) => {
                             const isLvlActive = currentLvl === sl.level;
                             return (
@@ -875,7 +875,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                                 });
                               }}
                             >
-                              <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.itemAncient : '#AAA', fontWeight: isSelBonus ? 'bold' : 'normal' }}>
+                              <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.itemAncient : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
                                 +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
                               </Text>
                             </TouchableOpacity>

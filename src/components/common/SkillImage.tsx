@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SqlClient } from '../../services/database/sqlClient';
 import { getSkillById } from '../../constants/muSkills';
 import { THEME } from '../../constants/theme';
+import { SKILL_ASSET_IMAGES } from '../../constants/skillAssets';
 
 interface SkillImageProps {
   skillId: number;
@@ -59,7 +60,8 @@ export const SkillImage: React.FC<SkillImageProps> = ({
     borderColor = THEME.colors.oroClaro;
   }
 
-  const imageUrl = getSkillImageUrl(skillId);
+  const localSource = SKILL_ASSET_IMAGES[skillId];
+  const imageUrl = !localSource ? getSkillImageUrl(skillId) : null;
   const borderThickness = isSelected ? 2 : 1.5;
 
   return (
@@ -78,7 +80,17 @@ export const SkillImage: React.FC<SkillImageProps> = ({
         containerStyle,
       ]}
     >
-      {!hasError && imageUrl ? (
+      {localSource ? (
+        <Image
+          source={localSource}
+          style={[
+            styles.image,
+            { width: size, height: size, borderRadius: 1 },
+            style,
+          ]}
+          resizeMode="cover"
+        />
+      ) : !hasError && imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
           style={[

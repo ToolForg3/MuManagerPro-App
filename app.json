@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mu Manager PRO",
     "slug": "mumanager-pro",
-    "version": "1.8.7",
+    "version": "1.8.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -14,7 +14,8 @@
       "backgroundColor": "#0D0D0D"
     },
     "assetBundlePatterns": [
-      "assets/*"
+      "assets/*",
+      "assets/**/*"
     ],
     "ios": {
       "supportsTablet": true,
@@ -22,7 +23,7 @@
     },
     "android": {
       "package": "com.mumanager.pro",
-      "versionCode": 89,
+      "versionCode": 90,
       "jsEngine": "hermes",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

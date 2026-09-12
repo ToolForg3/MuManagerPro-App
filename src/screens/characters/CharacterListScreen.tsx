@@ -287,7 +287,7 @@ export const CharacterListScreen = () => {
         <View style={styles.cardTopRow}>
           <View style={styles.avatarContainer}>
             <ClassAvatar classId={item.Class} size={46} />
-            <View style={[styles.charOnlineDot, { backgroundColor: isOnline ? THEME.colors.jade : '#555555' }]} />
+            <View style={[styles.charOnlineDot, { backgroundColor: isOnline ? THEME.colors.jade : THEME.colors.textMuted }]} />
           </View>
 
           <View style={styles.nameClassCol}>

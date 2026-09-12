@@ -1956,8 +1956,8 @@ export const CharacterEditScreen = () => {
                   { level: 2, label: 'Héroe 1', color: THEME.colors.arcano, bg: 'rgba(91, 141, 239, 0.2)' },
                   { level: 3, label: 'Común (3)', color: THEME.colors.oroClaro, bg: 'rgba(232, 200, 106, 0.2)' },
                   { level: 4, label: 'Warning (4)', color: THEME.colors.brasa, bg: 'rgba(226, 112, 58, 0.2)' },
-                  { level: 5, label: 'Asesino (5)', color: '#FF5252', bg: 'rgba(255, 82, 82, 0.2)' },
-                  { level: 6, label: 'Phono (6)', color: '#B71C1C', bg: 'rgba(183, 28, 28, 0.25)' },
+                  { level: 5, label: 'Asesino (5)', color: '#FF7043', bg: 'rgba(255, 112, 67, 0.2)' },
+                  { level: 6, label: 'Phono (6)', color: '#FF5252', bg: 'rgba(255, 82, 82, 0.25)' },
                 ].map((pk) => {
                   const isSelected = pkLevel === pk.level;
                   return (
@@ -2512,19 +2512,19 @@ export const CharacterEditScreen = () => {
               {/* Quick Actions 1-clic */}
               <View style={styles.quickQuestActionRow}>
                 <TouchableOpacity
-                  style={[styles.quickQuestBtn, { backgroundColor: 'rgba(76, 175, 80, 0.15)', borderColor: '#4CAF50' }]}
+                  style={[styles.quickQuestBtn, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}
                   onPress={handleCompleteAllQuests}
                 >
-                  <MaterialCommunityIcons name="star-shooting" size={16} color="#4CAF50" />
-                  <Text style={[styles.quickQuestText, { color: '#4CAF50' }]}>Completar Todas (3ra Clase)</Text>
+                  <MaterialCommunityIcons name="star-shooting" size={16} color={THEME.colors.jade} />
+                  <Text style={[styles.quickQuestText, { color: THEME.colors.jade }]}>Completar Todas (3ra Clase)</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.quickQuestBtn, { backgroundColor: 'rgba(244, 67, 54, 0.15)', borderColor: '#F44336' }]}
+                  style={[styles.quickQuestBtn, { backgroundColor: 'rgba(255, 82, 82, 0.15)', borderColor: '#FF5252' }]}
                   onPress={handleResetAllQuests}
                 >
-                  <MaterialCommunityIcons name="restart" size={16} color="#F44336" />
-                  <Text style={[styles.quickQuestText, { color: '#F44336' }]}>Reiniciar (1ra Clase)</Text>
+                  <MaterialCommunityIcons name="restart" size={16} color="#FF5252" />
+                  <Text style={[styles.quickQuestText, { color: '#FF5252' }]}>Reiniciar (1ra Clase)</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -2800,7 +2800,7 @@ const styles = StyleSheet.create({
   },
   dangerZoneDesc: {
     fontSize: 12,
-    color: '#CCCCCC',
+    color: THEME.colors.textoSecundario,
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -3831,7 +3831,7 @@ const styles = StyleSheet.create({
   },
   statusBannerSubtitle: {
     fontSize: 10,
-    color: '#AAA',
+    color: THEME.colors.textoSecundario,
     marginTop: 1,
   },
   headerStatusPill: {

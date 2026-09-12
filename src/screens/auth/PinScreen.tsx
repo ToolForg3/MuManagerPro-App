@@ -174,7 +174,7 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
             <MaterialCommunityIcons
               name="backspace-outline"
               size={24}
-              color={lockoutTimer > 0 ? '#555' : THEME.colors.oro}
+              color={lockoutTimer > 0 ? THEME.colors.textMuted : THEME.colors.oro}
             />
           </TouchableOpacity>
         </View>
