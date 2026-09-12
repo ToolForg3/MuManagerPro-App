@@ -58,12 +58,12 @@
   "buildNumber": 81,
   "email": {
     "provider": "smtp",
-    "from": "mumanagerpro@gmail.com",
+    "from": "",
     "smtp": {
-      "host": "smtp.gmail.com",
+      "host": "",
       "port": 465,
       "secure": true,
-      "user": "mumanagerpro@gmail.com",
+      "user": "",
       "pass": ""
     }
   }
