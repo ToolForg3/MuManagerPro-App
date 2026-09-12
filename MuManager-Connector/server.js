@@ -1378,9 +1378,10 @@ app.post('/api/characters', async (req, res) => {
       const hasMapPosX = charCols.has('mapposx');
       const hasMapPosY = charCols.has('mapposy');
       const hasPkCount = charCols.has('pkcount');
-      const hasPkLevel = charCols.has('pklevel');
-      const hasRuud = charCols.has('ruud') || charCols.has('ruudtoken');
-      const ruudCol = charCols.has('ruudtoken') ? 'c.RuudToken' : 'c.Ruud';
+      // Soporte MSPro y Louis: Ruud, RuudToken, ruudtoken, ExtRuud
+      const ruudColName = Array.from(charCols).find(col => col.includes('ruud') || col === 'ruudtoken' || col === 'wcoinr' || col === 'coinr');
+      const hasRuud = !!ruudColName;
+      const ruudCol = ruudColName ? `c.[${ruudColName}]` : 'c.Ruud';
       const resetExpr = charCols.has('resetcount') ? 'ISNULL(c.ResetCount, 0)' : (charCols.has('resets') ? 'ISNULL(c.Resets, 0)' : '0');
       const moneyExpr = charCols.has('money') ? 'ISNULL(c.Money, 0)' : '0';
 
@@ -1388,11 +1389,28 @@ app.post('/api/characters', async (req, res) => {
         SELECT 
           OBJECT_ID('MEMB_STAT', 'U') AS HasMembStat,
           OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') AS HasMeMembStat,
-          OBJECT_ID('GuildMember', 'U') AS HasGuildMember;
+          OBJECT_ID('GuildMember', 'U') AS HasGuildMember,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken'))) AS AcRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'wcoinr'))) AS CsRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken'))) AS MembRuudCol;
       `);
       const statRow = (statCheck.recordset && statCheck.recordset[0]) || {};
       const statTable = statRow.HasMembStat ? 'MEMB_STAT' : (statRow.HasMeMembStat ? 'Me_MuOnline.dbo.MEMB_STAT' : null);
       const hasGm = !!statRow.HasGuildMember;
+      const acRuudCol = statRow.AcRuudCol;
+      const csRuudCol = statRow.CsRuudCol;
+      const membRuudCol = statRow.MembRuudCol;
+
+      let ruudExpr = '0';
+      if (hasRuud) {
+        ruudExpr = `ISNULL(${ruudCol}, 0)`;
+      } else if (acRuudCol) {
+        ruudExpr = `ISNULL((SELECT TOP 1 ac.[${acRuudCol}] FROM AccountCharacter ac WHERE LTRIM(RTRIM(ac.Id)) = LTRIM(RTRIM(c.AccountID)) OR ac.Id = c.AccountID), 0)`;
+      } else if (csRuudCol) {
+        ruudExpr = `ISNULL((SELECT TOP 1 cs.[${csRuudCol}] FROM CashShopData cs WHERE LTRIM(RTRIM(cs.AccountID)) = LTRIM(RTRIM(c.AccountID)) OR cs.AccountID = c.AccountID), 0)`;
+      } else if (membRuudCol) {
+        ruudExpr = `ISNULL((SELECT TOP 1 m.[${membRuudCol}] FROM MEMB_INFO m WHERE LTRIM(RTRIM(m.memb___id)) = LTRIM(RTRIM(c.AccountID)) OR m.memb___id = c.AccountID), 0)`;
+      }
 
       const q = pool.request();
       let queryStr = `
@@ -1402,7 +1420,7 @@ app.post('/api/characters', async (req, res) => {
           ISNULL(c.Class, 0) AS Class, 
           ${resetExpr} AS ResetCount, 
           ${moneyExpr} AS Money, 
-          ${hasRuud ? `ISNULL(${ruudCol}, 0)` : '0'} AS Ruud,
+          ${ruudExpr} AS Ruud,
           c.AccountID,
           ${hasMr ? 'ISNULL(c.MasterResetCount, 0)' : '0'} AS MasterResetCount,
           ${hasMapNum ? 'ISNULL(c.MapNumber, 0)' : '0'} AS MapNumber,
@@ -1723,15 +1741,48 @@ app.post('/api/character/update-stats', async (req, res) => {
         WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;
 
         ${cleanRuud !== null ? `
-        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Ruud')
+        -- 1. Actualizar Ruud en Character (LOWER y QUOTENAME dinámico para cualquier variante)
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr')))
         BEGIN
-          EXEC sp_executesql N'UPDATE Character SET Ruud = @RuudVal WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;',
-               N'@RuudVal INT, @CharName VARCHAR(10)', @Ruud, @CharName;
+          DECLARE @sqlCharStatRuud NVARCHAR(MAX) = (
+            SELECT TOP 1 'UPDATE Character SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;'
+            FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr'))
+          );
+          IF @sqlCharStatRuud IS NOT NULL
+            EXEC sp_executesql @sqlCharStatRuud, N'@RuudVal INT, @CharName VARCHAR(10)', @RuudVal = @Ruud, @CharName = @CharName;
         END
-        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'RuudToken')
+
+        -- 2. Actualizar Ruud en AccountCharacter (MSPro) si existe columna
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney')))
         BEGIN
-          EXEC sp_executesql N'UPDATE Character SET RuudToken = @RuudVal WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;',
-               N'@RuudVal INT, @CharName VARCHAR(10)', @Ruud, @CharName;
+          DECLARE @sqlAcStatRuud NVARCHAR(MAX) = (
+            SELECT TOP 1 'UPDATE AccountCharacter SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(Id)) = (SELECT TOP 1 LTRIM(RTRIM(AccountID)) FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName);'
+            FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney'))
+          );
+          IF @sqlAcStatRuud IS NOT NULL
+            EXEC sp_executesql @sqlAcStatRuud, N'@RuudVal INT, @CharName VARCHAR(10)', @RuudVal = @Ruud, @CharName = @CharName;
+        END
+
+        -- 3. Actualizar Ruud en CashShopData si existe columna
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr')))
+        BEGIN
+          DECLARE @sqlCsStatRuud NVARCHAR(MAX) = (
+            SELECT TOP 1 'UPDATE CashShopData SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(AccountID)) = (SELECT TOP 1 LTRIM(RTRIM(AccountID)) FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName);'
+            FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr'))
+          );
+          IF @sqlCsStatRuud IS NOT NULL
+            EXEC sp_executesql @sqlCsStatRuud, N'@RuudVal INT, @CharName VARCHAR(10)', @RuudVal = @Ruud, @CharName = @CharName;
+        END
+
+        -- 4. Actualizar Ruud en MEMB_INFO si existe columna
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney')))
+        BEGIN
+          DECLARE @sqlMembStatRuud NVARCHAR(MAX) = (
+            SELECT TOP 1 'UPDATE MEMB_INFO SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(memb___id)) = (SELECT TOP 1 LTRIM(RTRIM(AccountID)) FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName);'
+            FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney'))
+          );
+          IF @sqlMembStatRuud IS NOT NULL
+            EXEC sp_executesql @sqlMembStatRuud, N'@RuudVal INT, @CharName VARCHAR(10)', @RuudVal = @Ruud, @CharName = @CharName;
         END
         ` : ''}
 
@@ -2552,9 +2603,17 @@ app.post('/api/character/:name', async (req, res) => {
       const hasMstTable = (hasMst.recordset || []).length > 0;
 
       const hasStat = await pool.request().query(`
-        SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'MEMB_STAT';
+        SELECT 
+          OBJECT_ID('MEMB_STAT', 'U') AS HasMembStat,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken'))) AS AcRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'wcoinr'))) AS CsRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken'))) AS MembRuudCol;
       `);
-      const hasStatTable = (hasStat.recordset || []).length > 0;
+      const statRow = (hasStat.recordset && hasStat.recordset[0]) || {};
+      const hasStatTable = !!statRow.HasMembStat;
+      const acRuudCol = statRow.AcRuudCol;
+      const csRuudCol = statRow.CsRuudCol;
+      const membRuudCol = statRow.MembRuudCol;
 
       const resetExpr = charCols.has('resetcount') ? 'ISNULL(c.ResetCount, 0)' : (charCols.has('resets') ? 'ISNULL(c.Resets, 0)' : '0');
       const mresetExpr = charCols.has('masterresetcount') ? 'ISNULL(c.MasterResetCount, 0)' : (charCols.has('mresetcount') ? 'ISNULL(c.MResetCount, 0)' : '0');
@@ -2569,7 +2628,18 @@ app.post('/api/character/:name', async (req, res) => {
       const questExpr = charCols.has('quest') ? 'CONVERT(VARCHAR(MAX), c.Quest, 2)' : "''";
       const ctlCodeExpr = charCols.has('ctlcode') ? 'ISNULL(c.CtlCode, 0)' : '0';
       const magicExpr = charCols.has('magiclist') ? 'CONVERT(VARCHAR(MAX), c.MagicList, 2)' : "''";
-      const ruudExpr = charCols.has('ruud') ? 'ISNULL(c.Ruud, 0)' : (charCols.has('ruudtoken') ? 'ISNULL(c.RuudToken, 0)' : '0');
+
+      const charRuudCol = Array.from(charCols).find(col => col.includes('ruud') || col === 'ruudtoken' || col === 'wcoinr' || col === 'coinr');
+      let ruudExpr = '0';
+      if (charRuudCol) {
+        ruudExpr = `ISNULL(c.[${charRuudCol}], 0)`;
+      } else if (acRuudCol) {
+        ruudExpr = `ISNULL((SELECT TOP 1 ac.[${acRuudCol}] FROM AccountCharacter ac WHERE LTRIM(RTRIM(ac.Id)) = LTRIM(RTRIM(c.AccountID)) OR ac.Id = c.AccountID), 0)`;
+      } else if (csRuudCol) {
+        ruudExpr = `ISNULL((SELECT TOP 1 cs.[${csRuudCol}] FROM CashShopData cs WHERE LTRIM(RTRIM(cs.AccountID)) = LTRIM(RTRIM(c.AccountID)) OR cs.AccountID = c.AccountID), 0)`;
+      } else if (membRuudCol) {
+        ruudExpr = `ISNULL((SELECT TOP 1 m.[${membRuudCol}] FROM MEMB_INFO m WHERE LTRIM(RTRIM(m.memb___id)) = LTRIM(RTRIM(c.AccountID)) OR m.memb___id = c.AccountID), 0)`;
+      }
 
       const result = await pool.request()
         .input('CharName', sql.VarChar, req.params.name.trim())
@@ -2666,10 +2736,10 @@ app.post('/api/accounts', async (req, res) => {
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'AccountLevel') AS HasAccLevel,
           (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'AccountExpireDate') AS HasExpireDate,
           (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CashShopData') AS HasCashShop,
-          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Ruud') AS HasCharRuud,
-          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'RuudToken') AS HasCharRuudToken,
-          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'Ruud') AS HasMembRuud,
-          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND name = 'Ruud') AS HasCashRuud;
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr'))) AS CharRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney'))) AS AcRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr'))) AS CsRuudCol,
+          (SELECT TOP 1 name FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney'))) AS MembRuudCol;
       `);
       const row = (checkRes.recordset && checkRes.recordset[0]) || {};
       const membTable = row.HasMembInfo ? 'MEMB_INFO' : (row.HasMeMembInfo ? 'Me_MuOnline.dbo.MEMB_INFO' : null);
@@ -2681,11 +2751,22 @@ app.post('/api/accounts', async (req, res) => {
       const hasAccLevel = !!row.HasAccLevel;
       const hasExpireDate = !!row.HasExpireDate;
       const hasCashShop = !!row.HasCashShop;
-      const hasCharRuud = !!row.HasCharRuud;
-      const hasCharRuudToken = !!row.HasCharRuudToken;
-      const hasMembRuud = !!row.HasMembRuud;
-      const hasCashRuud = !!row.HasCashRuud;
+      const charRuudCol = row.CharRuudCol;
+      const acRuudCol = row.AcRuudCol;
+      const csRuudCol = row.CsRuudCol;
+      const membRuudCol = row.MembRuudCol;
       const hasCharTable = !!row.HasCharTable;
+
+      let ruudSelect = '0';
+      if (charRuudCol) {
+        ruudSelect = `ISNULL((SELECT SUM(ISNULL(c.[${charRuudCol}], 0)) FROM Character c WHERE LTRIM(RTRIM(c.AccountID)) = LTRIM(RTRIM(m.memb___id)) OR c.AccountID = m.memb___id), 0)`;
+      } else if (acRuudCol) {
+        ruudSelect = `ISNULL((SELECT TOP 1 ac.[${acRuudCol}] FROM AccountCharacter ac WHERE LTRIM(RTRIM(ac.Id)) = LTRIM(RTRIM(m.memb___id)) OR ac.Id = m.memb___id), 0)`;
+      } else if (csRuudCol && hasCashShop) {
+        ruudSelect = `ISNULL(cs.[${csRuudCol}], 0)`;
+      } else if (membRuudCol) {
+        ruudSelect = `ISNULL(m.[${membRuudCol}], 0)`;
+      }
 
       const query = `
         SELECT 
@@ -2705,15 +2786,7 @@ app.post('/api/accounts', async (req, res) => {
           ${hasCashShop ? 'ISNULL(cs.WCoinC, 0)' : '0'} AS WCoinC,
           ${hasCashShop ? 'ISNULL(cs.WCoinP, 0)' : '0'} AS WCoinP,
           ${hasCashShop ? 'ISNULL(cs.GoblinPoint, 0)' : '0'} AS GoblinPoint,
-          ${hasCharRuud
-            ? 'ISNULL((SELECT SUM(ISNULL(c.Ruud, 0)) FROM Character c WHERE c.AccountID = m.memb___id), 0)'
-            : hasCharRuudToken
-            ? 'ISNULL((SELECT SUM(ISNULL(c.RuudToken, 0)) FROM Character c WHERE c.AccountID = m.memb___id), 0)'
-            : hasMembRuud
-            ? 'ISNULL(m.Ruud, 0)'
-            : hasCashRuud
-            ? 'ISNULL(cs.Ruud, 0)'
-            : '0'} AS Ruud,
+          ${ruudSelect} AS Ruud,
           ${statTable ? 'ISNULL(ms.ConnectStat, 0)' : '0'} AS ConnectStat,
           ${statTable ? "ISNULL(ms.IP, '')" : "''"} AS IP,
           ${hasCharTable ? "(SELECT COUNT(*) FROM Character WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(m.memb___id)) OR AccountID = m.memb___id)" : '0'} AS CharCount
@@ -3314,17 +3387,52 @@ app.post('/api/account/update', async (req, res) => {
               END
             END
 
-            -- 4.5. Actualizar Ruud (vía sp_executesql dinámico)
+            -- 4.5. Actualizar Ruud universalmente (vía sp_executesql dinámico - Louis y MSPro multi-tabla)
             IF @Ruud IS NOT NULL
             BEGIN
-              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'Ruud')
-                EXEC sp_executesql N'UPDATE MEMB_INFO SET Ruud = @RuudVal WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;', N'@RuudVal INT, @User VARCHAR(10)', @Ruud, @OldUser;
-              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND name = 'Ruud')
-                EXEC sp_executesql N'UPDATE CashShopData SET Ruud = @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;', N'@RuudVal INT, @User VARCHAR(10)', @Ruud, @OldUser;
-              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Ruud')
-                EXEC sp_executesql N'UPDATE Character SET Ruud = @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;', N'@RuudVal INT, @User VARCHAR(10)', @Ruud, @OldUser;
-              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'RuudToken')
-                EXEC sp_executesql N'UPDATE Character SET RuudToken = @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;', N'@RuudVal INT, @User VARCHAR(10)', @Ruud, @OldUser;
+              -- A. MEMB_INFO
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney')))
+              BEGIN
+                DECLARE @sqlMembRuud NVARCHAR(MAX) = (
+                  SELECT TOP 1 'UPDATE MEMB_INFO SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;'
+                  FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney'))
+                );
+                IF @sqlMembRuud IS NOT NULL
+                  EXEC sp_executesql @sqlMembRuud, N'@RuudVal INT, @User VARCHAR(10)', @RuudVal = @Ruud, @User = @OldUser;
+              END
+
+              -- B. AccountCharacter (MSPro)
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney')))
+              BEGIN
+                DECLARE @sqlAcRuud NVARCHAR(MAX) = (
+                  SELECT TOP 1 'UPDATE AccountCharacter SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@User)) OR Id = @User;'
+                  FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney'))
+                );
+                IF @sqlAcRuud IS NOT NULL
+                  EXEC sp_executesql @sqlAcRuud, N'@RuudVal INT, @User VARCHAR(10)', @RuudVal = @Ruud, @User = @OldUser;
+              END
+
+              -- C. CashShopData
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr')))
+              BEGIN
+                DECLARE @sqlCsRuud NVARCHAR(MAX) = (
+                  SELECT TOP 1 'UPDATE CashShopData SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;'
+                  FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr'))
+                );
+                IF @sqlCsRuud IS NOT NULL
+                  EXEC sp_executesql @sqlCsRuud, N'@RuudVal INT, @User VARCHAR(10)', @RuudVal = @Ruud, @User = @OldUser;
+              END
+
+              -- D. Character (Louis y MSPro)
+              IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr')))
+              BEGIN
+                DECLARE @sqlCharRuud NVARCHAR(MAX) = (
+                  SELECT TOP 1 'UPDATE Character SET ' + QUOTENAME(name) + ' = @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;'
+                  FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr'))
+                );
+                IF @sqlCharRuud IS NOT NULL
+                  EXEC sp_executesql @sqlCharRuud, N'@RuudVal INT, @User VARCHAR(10)', @RuudVal = @Ruud, @User = @OldUser;
+              END
             END
 
             -- 5. Renombrado atómico en cascada si NewUser no está vacío y es distinto
@@ -5062,14 +5170,49 @@ app.post('/api/kit/deliver', async (req, res) => {
           .input('Acc', sql.VarChar(10), cleanAcc)
           .input('Ruud', sql.Int, addRuud)
           .query(`
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Ruud')
-              EXEC sp_executesql N'UPDATE Character SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;', N'@RuudVal INT, @Acc VARCHAR(10)', @Ruud, @Acc;
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'RuudToken')
-              EXEC sp_executesql N'UPDATE Character SET RuudToken = ISNULL(RuudToken, 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;', N'@RuudVal INT, @Acc VARCHAR(10)', @Ruud, @Acc;
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'Ruud')
-              EXEC sp_executesql N'UPDATE MEMB_INFO SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;', N'@RuudVal INT, @Acc VARCHAR(10)', @Ruud, @Acc;
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND name = 'Ruud')
-              EXEC sp_executesql N'UPDATE CashShopData SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;', N'@RuudVal INT, @Acc VARCHAR(10)', @Ruud, @Acc;
+            -- A. Character
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr')))
+            BEGIN
+              DECLARE @sqlCharKitRuud NVARCHAR(MAX) = (
+                SELECT TOP 1 'UPDATE Character SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;'
+                FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr'))
+              );
+              IF @sqlCharKitRuud IS NOT NULL
+                EXEC sp_executesql @sqlCharKitRuud, N'@RuudVal INT, @Acc VARCHAR(10)', @RuudVal = @Ruud, @Acc = @Acc;
+            END
+
+            -- B. AccountCharacter (MSPro)
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney')))
+            BEGIN
+              DECLARE @sqlAcKitRuud NVARCHAR(MAX) = (
+                SELECT TOP 1 'UPDATE AccountCharacter SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;'
+                FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney'))
+              );
+              IF @sqlAcKitRuud IS NOT NULL
+                EXEC sp_executesql @sqlAcKitRuud, N'@RuudVal INT, @Acc VARCHAR(10)', @RuudVal = @Ruud, @Acc = @Acc;
+            END
+
+            -- C. MEMB_INFO
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney')))
+            BEGIN
+              DECLARE @sqlMembKitRuud NVARCHAR(MAX) = (
+                SELECT TOP 1 'UPDATE MEMB_INFO SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@Acc)) OR memb___id = @Acc;'
+                FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney'))
+              );
+              IF @sqlMembKitRuud IS NOT NULL
+                EXEC sp_executesql @sqlMembKitRuud, N'@RuudVal INT, @Acc VARCHAR(10)', @RuudVal = @Ruud, @Acc = @Acc;
+            END
+
+            -- D. CashShopData
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr')))
+            BEGIN
+              DECLARE @sqlCsKitRuud NVARCHAR(MAX) = (
+                SELECT TOP 1 'UPDATE CashShopData SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;'
+                FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr'))
+              );
+              IF @sqlCsKitRuud IS NOT NULL
+                EXEC sp_executesql @sqlCsKitRuud, N'@RuudVal INT, @Acc VARCHAR(10)', @RuudVal = @Ruud, @Acc = @Acc;
+            END
           `);
       }
     });
@@ -5178,24 +5321,53 @@ app.post('/api/prizes/deliver', async (req, res) => {
               .input('Target', sql.VarChar(10), target)
               .input('Ruud', sql.Int, ruudNum)
               .query(`
-                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Ruud')
+                -- A. Character
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr')))
                 BEGIN
-                  IF EXISTS (SELECT 1 FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Target)))
-                    EXEC sp_executesql N'UPDATE Character SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@TargetVal));', N'@RuudVal INT, @TargetVal VARCHAR(10)', @Ruud, @Target;
-                  ELSE
-                    EXEC sp_executesql N'UPDATE Character SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@AccVal)) OR AccountID = @AccVal;', N'@RuudVal INT, @AccVal VARCHAR(10)', @Ruud, @Acc;
+                  DECLARE @sqlCharPrizeRuud NVARCHAR(MAX) = (
+                    SELECT TOP 1 
+                      'IF EXISTS (SELECT 1 FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@TargetVal))) ' +
+                      '  UPDATE Character SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@TargetVal)); ' +
+                      'ELSE ' +
+                      '  UPDATE Character SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@AccVal)) OR AccountID = @AccVal;'
+                    FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney', 'ruud_money', 'ruudpoint', 'wcoinr'))
+                  );
+                  IF @sqlCharPrizeRuud IS NOT NULL
+                    EXEC sp_executesql @sqlCharPrizeRuud, N'@RuudVal INT, @TargetVal VARCHAR(10), @AccVal VARCHAR(10)', @RuudVal = @Ruud, @TargetVal = @Target, @AccVal = @Acc;
                 END
-                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'RuudToken')
+
+                -- B. AccountCharacter (MSPro)
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney')))
                 BEGIN
-                  IF EXISTS (SELECT 1 FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Target)))
-                    EXEC sp_executesql N'UPDATE Character SET RuudToken = ISNULL(RuudToken, 0) + @RuudVal WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@TargetVal));', N'@RuudVal INT, @TargetVal VARCHAR(10)', @Ruud, @Target;
-                  ELSE
-                    EXEC sp_executesql N'UPDATE Character SET RuudToken = ISNULL(RuudToken, 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@AccVal)) OR AccountID = @AccVal;', N'@RuudVal INT, @AccVal VARCHAR(10)', @Ruud, @Acc;
+                  DECLARE @sqlAcPrizeRuud NVARCHAR(MAX) = (
+                    SELECT TOP 1 'UPDATE AccountCharacter SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@AccVal)) OR Id = @AccVal;'
+                    FROM sys.columns WHERE object_id = OBJECT_ID('AccountCharacter') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('extruud', 'ruud', 'ruudtoken', 'ruudmoney'))
+                  );
+                  IF @sqlAcPrizeRuud IS NOT NULL
+                    EXEC sp_executesql @sqlAcPrizeRuud, N'@RuudVal INT, @AccVal VARCHAR(10)', @RuudVal = @Ruud, @AccVal = @Acc;
                 END
-                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND name = 'Ruud')
-                  EXEC sp_executesql N'UPDATE MEMB_INFO SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@AccVal)) OR memb___id = @AccVal;', N'@RuudVal INT, @AccVal VARCHAR(10)', @Ruud, @Acc;
-                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND name = 'Ruud')
-                  EXEC sp_executesql N'UPDATE CashShopData SET Ruud = ISNULL(Ruud, 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@AccVal)) OR AccountID = @AccVal;', N'@RuudVal INT, @AccVal VARCHAR(10)', @Ruud, @Acc;
+
+                -- C. MEMB_INFO
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney')))
+                BEGIN
+                  DECLARE @sqlMembPrizeRuud NVARCHAR(MAX) = (
+                    SELECT TOP 1 'UPDATE MEMB_INFO SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@AccVal)) OR memb___id = @AccVal;'
+                    FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudtoken', 'ruudmoney'))
+                  );
+                  IF @sqlMembPrizeRuud IS NOT NULL
+                    EXEC sp_executesql @sqlMembPrizeRuud, N'@RuudVal INT, @AccVal VARCHAR(10)', @RuudVal = @Ruud, @AccVal = @Acc;
+                END
+
+                -- D. CashShopData
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr')))
+                BEGIN
+                  DECLARE @sqlCsPrizeRuud NVARCHAR(MAX) = (
+                    SELECT TOP 1 'UPDATE CashShopData SET ' + QUOTENAME(name) + ' = ISNULL(' + QUOTENAME(name) + ', 0) + @RuudVal WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@AccVal)) OR AccountID = @AccVal;'
+                    FROM sys.columns WHERE object_id = OBJECT_ID('CashShopData') AND (LOWER(name) LIKE '%ruud%' OR LOWER(name) IN ('ruud', 'ruudpoint', 'ruudpoints', 'ruudtoken', 'wcoinr', 'coinr'))
+                  );
+                  IF @sqlCsPrizeRuud IS NOT NULL
+                    EXEC sp_executesql @sqlCsPrizeRuud, N'@RuudVal INT, @AccVal VARCHAR(10)', @RuudVal = @Ruud, @AccVal = @Acc;
+                END
               `);
           }
 
