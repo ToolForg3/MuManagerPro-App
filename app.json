@@ -2,7 +2,7 @@
     "expo":  {
                  "name":  "Mu Manager PRO",
                  "slug":  "mumanager-pro",
-                 "version":  "1.8.0",
+                 "version":  "1.8.1",
                  "orientation":  "portrait",
                  "icon":  "./assets/icon.png",
                  "userInterfaceStyle":  "dark",
@@ -22,7 +22,7 @@
                          },
                  "android":  {
                                  "package":  "com.mumanager.pro",
-                                 "versionCode":  82,
+                                 "versionCode":  83,
                                  "jsEngine":  "hermes",
                                  "adaptiveIcon":  {
                                                       "foregroundImage":  "./assets/adaptive-icon.png",
