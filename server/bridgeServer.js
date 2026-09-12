@@ -1926,26 +1926,27 @@ app.post('/api/dashboard', async (req, res) => {
       const schemaCheck = await pool.request().query(`
         SELECT 
           OBJECT_ID('MEMB_INFO', 'U') AS HasMembInfo,
-          OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') AS HasMeMembInfo,
+          CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN OBJECT_ID('Me_MuOnline.dbo.MEMB_INFO', 'U') ELSE NULL END AS HasMeMembInfo,
           OBJECT_ID('Character', 'U') AS HasCharacter,
           OBJECT_ID('MEMB_STAT', 'U') AS HasMembStat,
-          OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') AS HasMeMembStat,
+          CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN OBJECT_ID('Me_MuOnline.dbo.MEMB_STAT', 'U') ELSE NULL END AS HasMeMembStat,
           OBJECT_ID('Guild', 'U') AS HasGuild,
-          COL_LENGTH('MEMB_INFO', 'AccountLevel') AS HasAccLevel,
-          COL_LENGTH('Me_MuOnline.dbo.MEMB_INFO', 'AccountLevel') AS HasMeAccLevel;
+          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_INFO') AND LOWER(name) IN ('accountlevel', 'vip')) AS HasAccLevel,
+          (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('MEMB_STAT') AND LOWER(name) = 'connectstat') AS HasConnectStat;
       `);
       const row = (schemaCheck.recordset && schemaCheck.recordset[0]) || {};
       const membTable = row.HasMembInfo ? 'MEMB_INFO' : (row.HasMeMembInfo ? 'Me_MuOnline.dbo.MEMB_INFO' : null);
       const statTable = row.HasMembStat ? 'MEMB_STAT' : (row.HasMeMembStat ? 'Me_MuOnline.dbo.MEMB_STAT' : null);
       const hasChar = !!row.HasCharacter;
       const hasGuild = !!row.HasGuild;
-      const hasVipCol = (row.HasAccLevel !== null && row.HasAccLevel !== undefined) || (row.HasMeAccLevel !== null && row.HasMeAccLevel !== undefined);
+      const hasVipCol = !!row.HasAccLevel;
+      const hasConnectStat = !!row.HasConnectStat;
 
       const query = `
         SELECT 
           ${membTable ? `(SELECT COUNT(*) FROM ${membTable})` : '0'} AS Cuentas,
           ${hasChar ? '(SELECT COUNT(*) FROM Character)' : '0'} AS Personajes,
-          ${statTable ? `(SELECT COUNT(*) FROM ${statTable} WHERE ConnectStat = 1)` : '0'} AS Online,
+          ${(statTable && hasConnectStat) ? `(SELECT COUNT(*) FROM ${statTable} WHERE ConnectStat = 1)` : '0'} AS Online,
           ${(membTable && hasVipCol) ? `(SELECT COUNT(*) FROM ${membTable} WHERE AccountLevel > 0)` : '0'} AS VIP,
           ${hasGuild ? '(SELECT COUNT(*) FROM Guild)' : '0'} AS Guilds;
       `;
