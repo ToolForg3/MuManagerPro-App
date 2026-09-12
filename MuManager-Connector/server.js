@@ -6822,8 +6822,12 @@ app.post('/api/admin/user/update', (req, res) => {
     user.notes = String(notes).trim();
   }
 
-  if (password && String(password).trim().length >= 4) {
-    user.passwordHash = hashPassword(String(password).trim());
+  if (password) {
+    const cleanPass = String(password).trim();
+    if (cleanPass.length < 8) {
+      return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+    }
+    user.passwordHash = hashPassword(cleanPass);
   }
 
   user.updatedAt = new Date().toISOString();

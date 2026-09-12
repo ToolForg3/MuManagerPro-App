@@ -347,11 +347,11 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                   <MaterialCommunityIcons
                     name={status.isLifetime || !status.expiresAt ? 'infinity' : 'calendar-clock'}
                     size={16}
-                    color={status.isLifetime || !status.expiresAt ? '#00E676' : '#FFB74D'}
+                    color={status.isLifetime || !status.expiresAt ? THEME.colors.jade : '#FFB74D'}
                   />
                   <Text style={[
                     styles.vigenciaText,
-                    { color: status.isLifetime || !status.expiresAt ? '#00E676' : '#FFB74D' }
+                    { color: status.isLifetime || !status.expiresAt ? THEME.colors.jade : '#FFB74D' }
                   ]}>
                     {status.isLifetime || !status.expiresAt
                       ? 'Licencia Vitalicia (Acceso Permanente)'

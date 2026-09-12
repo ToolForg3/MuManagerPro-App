@@ -1677,7 +1677,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
   const getGuildRole = (status: number) => {
     if (status === 128) return { label: 'Líder / Master', color: '#FFD700' };
-    if (status === 64) return { label: 'Asistente', color: '#00E676' };
+    if (status === 64) return { label: 'Asistente', color: THEME.colors.jade };
     if (status === 32) return { label: 'Battle Master', color: '#FF5722' };
     return { label: 'Miembro', color: '#90CAF9' };
   };
@@ -2627,7 +2627,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.cardTitle}>Opción Ancient (Sets Acc)</Text>
                 {makerAncient > 0 && (
-                  <Text style={{ fontSize: 11, color: '#00E5FF', fontWeight: 'bold' }}>
+                  <Text style={{ fontSize: 11, color: THEME.colors.arcano, fontWeight: 'bold' }}>
                     (+{decodeAncientByte(makerAncient).staminaBonus} Stamina)
                   </Text>
                 )}
@@ -2663,14 +2663,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           key={'maker_anc_' + anc.tier + '_' + anc.setId}
                           style={[
                             styles.ancientBtn,
-                            isSel && { borderColor: '#00E5FF', backgroundColor: 'rgba(0,229,255,0.15)' },
+                            isSel && { borderColor: THEME.colors.arcano, backgroundColor: 'rgba(91, 141, 239, 0.15)' },
                           ]}
                           onPress={() => {
                             const curStam = currentDecoded.staminaBonus === 10 ? 10 : 5;
                             setMakerAncient(encodeAncientByte(anc.tier, curStam));
                           }}
                         >
-                          <Text style={[styles.ancientBtnText, isSel && { color: '#00E5FF', fontWeight: 'bold' }]}>
+                          <Text style={[styles.ancientBtnText, isSel && { color: THEME.colors.arcano, fontWeight: 'bold' }]}>
                             {anc.name} (Tier {anc.tier})
                           </Text>
                         </TouchableOpacity>
@@ -2694,15 +2694,15 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 alignItems: 'center',
                                 borderRadius: 6,
                                 borderWidth: 1,
-                                borderColor: isSelBonus ? '#00E5FF' : '#444',
-                                backgroundColor: isSelBonus ? 'rgba(0,229,255,0.2)' : 'transparent',
+                                borderColor: isSelBonus ? THEME.colors.arcano : '#444',
+                                backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
                               },
                             ]}
                             onPress={() => {
                               setMakerAncient(encodeAncientByte(currentDecoded.tier || 1, bonus));
                             }}
                           >
-                            <Text style={{ fontSize: 11, color: isSelBonus ? '#00E5FF' : '#AAA', fontWeight: isSelBonus ? 'bold' : 'normal' }}>
+                            <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.arcano : '#AAA', fontWeight: isSelBonus ? 'bold' : 'normal' }}>
                               +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
                             </Text>
                           </TouchableOpacity>
@@ -2804,17 +2804,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={[styles.cardTitle, { marginBottom: 0 }]}>Opciones Excelentes</Text>
                   <View style={{
-                    backgroundColor: makerExcFlags === 0 ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 230, 118, 0.15)',
+                    backgroundColor: makerExcFlags === 0 ? 'rgba(255, 255, 255, 0.1)' : 'rgba(63, 207, 142, 0.15)',
                     paddingHorizontal: 7,
                     paddingVertical: 2,
                     borderRadius: 6,
                     borderWidth: 1,
-                    borderColor: makerExcFlags === 0 ? '#555' : '#00E676',
+                    borderColor: makerExcFlags === 0 ? '#555' : THEME.colors.jade,
                   }}>
                     <Text style={{
                       fontSize: 10,
                       fontWeight: 'bold',
-                      color: makerExcFlags === 0 ? '#AAA' : '#00E676'
+                      color: makerExcFlags === 0 ? '#AAA' : THEME.colors.jade
                     }}>
                       {makerExcFlags === 0 ? 'ÍTEM NORMAL' : 'EXCELENTE'}
                     </Text>
@@ -2851,7 +2851,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       <MaterialCommunityIcons
                         name={isActive ? 'checkbox-marked' : 'checkbox-blank-outline'}
                         size={18}
-                        color={isActive ? '#00E676' : '#666'}
+                        color={isActive ? THEME.colors.jade : '#666'}
                       />
                       <Text style={[styles.excChipText, isActive && styles.excChipTextActive]}>
                         {opt.short}
@@ -2985,7 +2985,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   >
                     <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>-</Text>
                   </TouchableOpacity>
-                  <Text style={{ color: '#00E5FF', fontSize: 16, fontWeight: 'bold', minWidth: 28, textAlign: 'center' }}>
+                  <Text style={{ color: THEME.colors.oroClaro, fontSize: 16, fontWeight: 'bold', minWidth: 28, textAlign: 'center' }}>
                     x{makerQuantity}
                   </Text>
                   <TouchableOpacity
@@ -3176,7 +3176,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             Alert.alert('Copiado', `Hex de ${it.name} copiado.`);
                           }}
                         >
-                          <Text style={{ color: '#00E676', fontSize: 9, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2 }}>
+                          <Text style={{ color: THEME.colors.jade, fontSize: 9, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2 }}>
                             HEX: {it.hex}
                           </Text>
                         </TouchableOpacity>
@@ -3214,7 +3214,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             Alert.alert('Copiado', `Hex de ${it.name} copiado.`);
                           }}
                         >
-                          <Text style={{ color: '#00E676', fontSize: 9, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2 }}>
+                          <Text style={{ color: THEME.colors.jade, fontSize: 9, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2 }}>
                             HEX: {it.hex}
                           </Text>
                         </TouchableOpacity>
@@ -3379,7 +3379,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             {/* Fix 1: Unstick Account */}
             <View style={[styles.card, { zIndex: 30 }]}>
               <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="lock-open-variant" size={24} color="#00E676" />
+                <MaterialCommunityIcons name="lock-open-variant" size={24} color={THEME.colors.jade} />
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text style={styles.cardTitle}>1. Destrabar Cuenta o Personaje</Text>
                   <Text style={styles.cardDesc}>
@@ -3441,7 +3441,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   { name: 'Lorencia', map: 0, x: 125, y: 125, icon: 'castle', color: '#E8C86A' },
                   { name: 'Devias', map: 2, x: 220, y: 220, icon: 'snowflake', color: '#5B8DEF' },
                   { name: 'Noria', map: 3, x: 175, y: 110, icon: 'forest', color: '#3FCF8E' },
-                  { name: 'Elbeland', map: 51, x: 50, y: 220, icon: 'tree', color: '#BA68C8' },
+                  { name: 'Elbeland', map: 51, x: 50, y: 220, icon: 'tree', color: '#A8894D' },
                   { name: 'Stadium', map: 6, x: 60, y: 60, icon: 'stadium', color: '#E2703A' },
                   { name: 'Losttower', map: 4, x: 208, y: 75, icon: 'fire', color: '#E2703A' },
                   { name: 'Atlans', map: 7, x: 24, y: 35, icon: 'water', color: '#5B8DEF' },
@@ -4196,7 +4196,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         {p.name}
                       </Text>
                       {isActive && (
-                        <MaterialCommunityIcons name="check-circle" size={14} color="#00E676" style={{ marginLeft: 2 }} />
+                        <MaterialCommunityIcons name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
                       )}
                       <TouchableOpacity
                           onPress={() => {
@@ -4276,7 +4276,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <MaterialCommunityIcons name="cash-multiple" size={15} color="#FFD700" />
                     <Text style={[styles.currencyBadgeText, { color: '#FFD700' }]}>Zen</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeZen ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeZen ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {kitIncludeZen ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4317,13 +4317,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeGCoins ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeGCoins ? '#00E5FF' : '#666'}
+                    color={kitIncludeGCoins ? THEME.colors.arcano : '#666'}
                   />
-                  <View style={[styles.currencyBadge, { backgroundColor: '#00E5FF22', borderColor: '#00E5FF' }]}>
-                    <MaterialCommunityIcons name="hand-coin" size={15} color="#00E5FF" />
-                    <Text style={[styles.currencyBadgeText, { color: '#00E5FF' }]}>WCoinC (WCoins / GCoins)</Text>
+                  <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
+                    <MaterialCommunityIcons name="hand-coin" size={15} color={THEME.colors.arcano} />
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGCoins ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGCoins ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {kitIncludeGCoins ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4368,7 +4368,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <MaterialCommunityIcons name="circle-multiple" size={15} color="#B0BEC5" />
                     <Text style={[styles.currencyBadgeText, { color: '#B0BEC5' }]}>WCoinP</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeWCoinP ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeWCoinP ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {kitIncludeWCoinP ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4407,13 +4407,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeGoblinPoints ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeGoblinPoints ? '#00E676' : '#666'}
+                    color={kitIncludeGoblinPoints ? THEME.colors.jade : '#666'}
                   />
-                  <View style={[styles.currencyBadge, { backgroundColor: '#00E67622', borderColor: '#00E676' }]}>
-                    <MaterialCommunityIcons name="hexagon-multiple" size={15} color="#00E676" />
-                    <Text style={[styles.currencyBadgeText, { color: '#00E676' }]}>Goblin Points (GP)</Text>
+                  <View style={[styles.currencyBadge, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}>
+                    <MaterialCommunityIcons name="hexagon-multiple" size={15} color={THEME.colors.jade} />
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.jade }]}>Goblin Points (GP)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGoblinPoints ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGoblinPoints ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {kitIncludeGoblinPoints ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4452,13 +4452,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={kitIncludeRuud ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={kitIncludeRuud ? '#E040FB' : '#666'}
+                    color={kitIncludeRuud ? THEME.colors.arcano : '#666'}
                   />
-                  <View style={[styles.currencyBadge, { backgroundColor: '#E040FB22', borderColor: '#E040FB' }]}>
-                    <MaterialCommunityIcons name="diamond-stone" size={15} color="#E040FB" />
-                    <Text style={[styles.currencyBadgeText, { color: '#E040FB' }]}>Ruud</Text>
+                  <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
+                    <MaterialCommunityIcons name="diamond-stone" size={15} color={THEME.colors.arcano} />
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>Ruud</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeRuud ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeRuud ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {kitIncludeRuud ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4638,7 +4638,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         {p.name}
                       </Text>
                       {isActive && (
-                        <MaterialCommunityIcons name="check-circle" size={14} color="#00E676" style={{ marginLeft: 2 }} />
+                        <MaterialCommunityIcons name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
                       )}
                       <TouchableOpacity
                           onPress={() => {
@@ -4728,7 +4728,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <MaterialCommunityIcons name="cash-multiple" size={15} color="#FFD700" />
                     <Text style={[styles.currencyBadgeText, { color: '#FFD700' }]}>Zen por Jugador</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeZen ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeZen ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {prizeIncludeZen ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4769,13 +4769,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeGCoins ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeGCoins ? '#00E5FF' : '#666'}
+                    color={prizeIncludeGCoins ? THEME.colors.arcano : '#666'}
                   />
-                  <View style={[styles.currencyBadge, { backgroundColor: '#00E5FF22', borderColor: '#00E5FF' }]}>
-                    <MaterialCommunityIcons name="hand-coin" size={15} color="#00E5FF" />
-                    <Text style={[styles.currencyBadgeText, { color: '#00E5FF' }]}>WCoinC (WCoins / GCoins)</Text>
+                  <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
+                    <MaterialCommunityIcons name="hand-coin" size={15} color={THEME.colors.arcano} />
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGCoins ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGCoins ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {prizeIncludeGCoins ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4820,7 +4820,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <MaterialCommunityIcons name="circle-multiple" size={15} color="#B0BEC5" />
                     <Text style={[styles.currencyBadgeText, { color: '#B0BEC5' }]}>WCoinP</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeWCoinP ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeWCoinP ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {prizeIncludeWCoinP ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4859,13 +4859,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeGoblinPoints ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeGoblinPoints ? '#00E676' : '#666'}
+                    color={prizeIncludeGoblinPoints ? THEME.colors.jade : '#666'}
                   />
-                  <View style={[styles.currencyBadge, { backgroundColor: '#00E67622', borderColor: '#00E676' }]}>
-                    <MaterialCommunityIcons name="hexagon-multiple" size={15} color="#00E676" />
-                    <Text style={[styles.currencyBadgeText, { color: '#00E676' }]}>Goblin Points (GP)</Text>
+                  <View style={[styles.currencyBadge, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}>
+                    <MaterialCommunityIcons name="hexagon-multiple" size={15} color={THEME.colors.jade} />
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.jade }]}>Goblin Points (GP)</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGoblinPoints ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGoblinPoints ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {prizeIncludeGoblinPoints ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -4904,13 +4904,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <MaterialCommunityIcons
                     name={prizeIncludeRuud ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
-                    color={prizeIncludeRuud ? '#E040FB' : '#666'}
+                    color={prizeIncludeRuud ? THEME.colors.arcano : '#666'}
                   />
-                  <View style={[styles.currencyBadge, { backgroundColor: '#E040FB22', borderColor: '#E040FB' }]}>
-                    <MaterialCommunityIcons name="diamond-stone" size={15} color="#E040FB" />
-                    <Text style={[styles.currencyBadgeText, { color: '#E040FB' }]}>Ruud</Text>
+                  <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
+                    <MaterialCommunityIcons name="diamond-stone" size={15} color={THEME.colors.arcano} />
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>Ruud</Text>
                   </View>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeRuud ? '#00E676' : '#666', fontWeight: 'bold' }}>
+                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeRuud ? THEME.colors.jade : '#666', fontWeight: 'bold' }}>
                     {prizeIncludeRuud ? 'ACTIVADO' : 'DESACTIVADO'}
                   </Text>
                 </TouchableOpacity>
@@ -5255,7 +5255,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               <Text style={{ color: '#90CAF9', fontSize: 12 }}>
                                 Miembros: <Text style={{ fontWeight: 'bold' }}>{memberCount}</Text>
                               </Text>
-                              <Text style={{ color: '#00E676', fontSize: 12 }}>
+                              <Text style={{ color: THEME.colors.jade, fontSize: 12 }}>
                                 Score: <Text style={{ fontWeight: 'bold' }}>{gScore}</Text>
                               </Text>
                             </View>
@@ -7212,7 +7212,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   excBadge: {
-    backgroundColor: '#00C853',
+    backgroundColor: THEME.colors.jade,
     color: '#FFF',
     fontSize: 9,
     fontWeight: 'bold',
@@ -7302,7 +7302,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00E676',
+    backgroundColor: THEME.colors.jade,
   },
   rankScoreWrap: {
     alignItems: 'flex-end',

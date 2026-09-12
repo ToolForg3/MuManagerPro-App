@@ -287,7 +287,7 @@ export const CharacterListScreen = () => {
         <View style={styles.cardTopRow}>
           <View style={styles.avatarContainer}>
             <ClassAvatar classId={item.Class} size={46} />
-            <View style={[styles.charOnlineDot, { backgroundColor: isOnline ? '#00E676' : '#555555' }]} />
+            <View style={[styles.charOnlineDot, { backgroundColor: isOnline ? THEME.colors.jade : '#555555' }]} />
           </View>
 
           <View style={styles.nameClassCol}>
@@ -306,7 +306,7 @@ export const CharacterListScreen = () => {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={styles.charClass}>{classInfo.name}</Text>
-              <Text style={{ color: isOnline ? '#00E676' : '#666', fontSize: 10, fontWeight: '700' }}>
+              <Text style={{ color: isOnline ? THEME.colors.jade : '#666', fontSize: 10, fontWeight: '700' }}>
                 {isOnline ? 'ONLINE' : 'OFFLINE'}
               </Text>
             </View>
@@ -502,7 +502,7 @@ export const CharacterListScreen = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
-          <View style={[styles.modalCard, { maxHeight: '92%' }]}>
+          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
               {/* Header Modal */}
               <View style={styles.modalHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -524,6 +524,7 @@ export const CharacterListScreen = () => {
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
                 contentContainerStyle={{ paddingBottom: Math.max(20, insets.bottom + 10) }}
               >
                 {/* Campo Cuenta con Autocomplete */}
@@ -1073,7 +1074,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     width: '100%',
-    maxWidth: 460,
+    maxWidth: 420,
     alignSelf: 'center',
   },
   modalHeader: {

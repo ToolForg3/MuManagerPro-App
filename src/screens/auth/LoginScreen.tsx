@@ -555,7 +555,7 @@ export const LoginScreen = () => {
 
         {/* Security Notice */}
         <View style={styles.securityNotice}>
-          <MaterialCommunityIcons name="shield-check" size={16} color="#00FF66" />
+          <MaterialCommunityIcons name="shield-check" size={16} color={THEME.colors.jade} />
           <Text style={styles.securityText}>Conexión cifrada TLS / TDS puerto 1433 TCP</Text>
         </View>
 
@@ -592,127 +592,129 @@ export const LoginScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {forgotStep === 1 ? (
-              <View>
-                <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 16 }}>
-                  Ingresa tu correo electrónico registrado. Te enviaremos un código de seguridad de 6 dígitos para restablecer tu contraseña.
-                </Text>
+            <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+              {forgotStep === 1 ? (
+                <View>
+                  <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 16 }}>
+                    Ingresa tu correo electrónico registrado. Te enviaremos un código de seguridad de 6 dígitos para restablecer tu contraseña.
+                  </Text>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Correo Electrónico</Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialCommunityIcons name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="tu@correo.com"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={forgotEmail}
-                      onChangeText={setForgotEmail}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                    />
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Correo Electrónico</Text>
+                    <View style={styles.inputWrapper}>
+                      <MaterialCommunityIcons name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="tu@correo.com"
+                        placeholderTextColor={THEME.colors.textMuted}
+                        value={forgotEmail}
+                        onChangeText={setForgotEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                      />
+                    </View>
                   </View>
+
+                  <CustomButton
+                    title="Enviar Código de Verificación"
+                    onPress={handleRequestResetCode}
+                    variant="orange"
+                    loading={forgotLoading}
+                    icon="email-send-outline"
+                    size="md"
+                    style={{ marginTop: 8 }}
+                  />
                 </View>
+              ) : (
+                <View>
+                  <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 14 }}>
+                    Ingresa el código OTP de 6 dígitos que enviamos a tu correo y tu nueva contraseña.
+                  </Text>
 
-                <CustomButton
-                  title="Enviar Código de Verificación"
-                  onPress={handleRequestResetCode}
-                  variant="orange"
-                  loading={forgotLoading}
-                  icon="email-send-outline"
-                  size="md"
-                  style={{ marginTop: 8 }}
-                />
-              </View>
-            ) : (
-              <View>
-                <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 14 }}>
-                  Ingresa el código OTP de 6 dígitos que enviamos a tu correo y tu nueva contraseña.
-                </Text>
-
-                {/* Locked / Read-Only Recovery Email Badge */}
-                <View style={styles.lockedEmailBadge}>
-                  <MaterialCommunityIcons name="lock" size={18} color={THEME.colors.primaryOrange} />
-                  <View style={{ flex: 1, marginLeft: 8 }}>
-                    <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
-                      Cuenta a recuperar (bloqueada)
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '700' }} numberOfLines={1}>
-                      {forgotEmail}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setForgotStep(1)} style={styles.changeEmailBtn}>
-                    <Text style={{ fontSize: 11, color: THEME.colors.textSecondary }}>Cambiar</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Código de Seguridad (6 dígitos)</Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
-                    <TextInput
-                      style={[styles.input, { letterSpacing: 4, fontWeight: '800', fontSize: 16 }]}
-                      placeholder="123456"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={forgotCode}
-                      onChangeText={setForgotCode}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nueva Contraseña</Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialCommunityIcons name="lock-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="••••••••"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={forgotNewPass}
-                      onChangeText={setForgotNewPass}
-                      secureTextEntry={forgotSecure}
-                    />
-                    <TouchableOpacity onPress={() => setForgotSecure(!forgotSecure)} style={styles.eyeBtn}>
-                      <MaterialCommunityIcons name={forgotSecure ? 'eye-off-outline' : 'eye-outline'} size={20} color={THEME.colors.textSecondary} />
+                  {/* Locked / Read-Only Recovery Email Badge */}
+                  <View style={styles.lockedEmailBadge}>
+                    <MaterialCommunityIcons name="lock" size={18} color={THEME.colors.primaryOrange} />
+                    <View style={{ flex: 1, marginLeft: 8 }}>
+                      <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
+                        Cuenta a recuperar (bloqueada)
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '700' }} numberOfLines={1}>
+                        {forgotEmail}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setForgotStep(1)} style={styles.changeEmailBtn}>
+                      <Text style={{ fontSize: 11, color: THEME.colors.textSecondary }}>Cambiar</Text>
                     </TouchableOpacity>
                   </View>
-                </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirmar Nueva Contraseña</Text>
-                  <View style={styles.inputWrapper}>
-                    <MaterialCommunityIcons name="lock-check-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="••••••••"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={forgotConfirmPass}
-                      onChangeText={setForgotConfirmPass}
-                      secureTextEntry={forgotSecure}
-                    />
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Código de Seguridad (6 dígitos)</Text>
+                    <View style={styles.inputWrapper}>
+                      <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.input, { letterSpacing: 4, fontWeight: '800', fontSize: 16 }]}
+                        placeholder="123456"
+                        placeholderTextColor={THEME.colors.textMuted}
+                        value={forgotCode}
+                        onChangeText={setForgotCode}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                      />
+                    </View>
                   </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Nueva Contraseña</Text>
+                    <View style={styles.inputWrapper}>
+                      <MaterialCommunityIcons name="lock-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="••••••••"
+                        placeholderTextColor={THEME.colors.textMuted}
+                        value={forgotNewPass}
+                        onChangeText={setForgotNewPass}
+                        secureTextEntry={forgotSecure}
+                      />
+                      <TouchableOpacity onPress={() => setForgotSecure(!forgotSecure)} style={styles.eyeBtn}>
+                        <MaterialCommunityIcons name={forgotSecure ? 'eye-off-outline' : 'eye-outline'} size={20} color={THEME.colors.textSecondary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Confirmar Nueva Contraseña</Text>
+                    <View style={styles.inputWrapper}>
+                      <MaterialCommunityIcons name="lock-check-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="••••••••"
+                        placeholderTextColor={THEME.colors.textMuted}
+                        value={forgotConfirmPass}
+                        onChangeText={setForgotConfirmPass}
+                        secureTextEntry={forgotSecure}
+                      />
+                    </View>
+                  </View>
+
+                  <CustomButton
+                    title="Restablecer Contraseña"
+                    onPress={handleConfirmResetPassword}
+                    variant="orange"
+                    loading={forgotLoading}
+                    icon="check-circle-outline"
+                    size="md"
+                    style={{ marginTop: 8 }}
+                  />
+
+                  <TouchableOpacity
+                    style={{ alignItems: 'center', marginTop: 12 }}
+                    onPress={() => setForgotStep(1)}
+                  >
+                    <Text style={{ color: THEME.colors.textMuted, fontSize: 12 }}>← Volver a ingresar correo</Text>
+                  </TouchableOpacity>
                 </View>
-
-                <CustomButton
-                  title="Restablecer Contraseña"
-                  onPress={handleConfirmResetPassword}
-                  variant="orange"
-                  loading={forgotLoading}
-                  icon="check-circle-outline"
-                  size="md"
-                  style={{ marginTop: 8 }}
-                />
-
-                <TouchableOpacity
-                  style={{ alignItems: 'center', marginTop: 12 }}
-                  onPress={() => setForgotStep(1)}
-                >
-                  <Text style={{ color: THEME.colors.textMuted, fontSize: 12 }}>← Volver a ingresar correo</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+              )}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -736,68 +738,70 @@ export const LoginScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 14 }}>
-              Hemos enviado un código numérico de 6 dígitos a tu correo. Ingrésalo a continuación para activar tu cuenta e iniciar sesión.
-            </Text>
+            <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+              <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 14 }}>
+                Hemos enviado un código numérico de 6 dígitos a tu correo. Ingrésalo a continuación para activar tu cuenta e iniciar sesión.
+              </Text>
 
-            <View style={styles.lockedEmailBadge}>
-              <MaterialCommunityIcons name="lock" size={18} color={THEME.colors.primaryOrange} />
-              <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
-                  Correo a verificar
-                </Text>
-                <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '700' }} numberOfLines={1}>
-                  {verifyEmail}
-                </Text>
+              <View style={styles.lockedEmailBadge}>
+                <MaterialCommunityIcons name="lock" size={18} color={THEME.colors.primaryOrange} />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
+                    Correo a verificar
+                  </Text>
+                  <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '700' }} numberOfLines={1}>
+                    {verifyEmail}
+                  </Text>
+                </View>
               </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Código de Activación (6 dígitos)</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { letterSpacing: 4, fontWeight: '800', fontSize: 16 }]}
-                  placeholder="123456"
-                  placeholderTextColor={THEME.colors.textMuted}
-                  value={verifyCode}
-                  onChangeText={setVerifyCode}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Código de Activación (6 dígitos)</Text>
+                <View style={styles.inputWrapper}>
+                  <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.input, { letterSpacing: 4, fontWeight: '800', fontSize: 16 }]}
+                    placeholder="123456"
+                    placeholderTextColor={THEME.colors.textMuted}
+                    value={verifyCode}
+                    onChangeText={setVerifyCode}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                </View>
               </View>
-            </View>
 
-            <CustomButton
-              title="Activar mi Cuenta"
-              onPress={handleVerifyRegistration}
-              variant="orange"
-              loading={verifyLoading}
-              icon="check-decagram"
-              size="md"
-              style={{ marginTop: 8 }}
-            />
+              <CustomButton
+                title="Activar mi Cuenta"
+                onPress={handleVerifyRegistration}
+                variant="orange"
+                loading={verifyLoading}
+                icon="check-decagram"
+                size="md"
+                style={{ marginTop: 8 }}
+              />
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-              <TouchableOpacity
-                onPress={handleResendVerification}
-                disabled={resendLoading}
-                style={{ paddingVertical: 6 }}
-              >
-                <Text style={{ color: THEME.colors.primaryOrange, fontSize: 12, fontWeight: '600' }}>
-                  {resendLoading ? 'Reenviando...' : 'Reenviar Código'}
-                </Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+                <TouchableOpacity
+                  onPress={handleResendVerification}
+                  disabled={resendLoading}
+                  style={{ paddingVertical: 6 }}
+                >
+                  <Text style={{ color: THEME.colors.primaryOrange, fontSize: 12, fontWeight: '600' }}>
+                    {resendLoading ? 'Reenviando...' : 'Reenviar Código'}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => setVerifyModalVisible(false)}
-                style={{ paddingVertical: 6 }}
-              >
-                <Text style={{ color: THEME.colors.textMuted, fontSize: 12 }}>
-                  Cerrar
-                </Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  onPress={() => setVerifyModalVisible(false)}
+                  style={{ paddingVertical: 6 }}
+                >
+                  <Text style={{ color: THEME.colors.textMuted, fontSize: 12 }}>
+                    Cerrar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>

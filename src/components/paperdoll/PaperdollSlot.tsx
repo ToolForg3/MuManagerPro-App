@@ -36,7 +36,7 @@ export const PaperdollSlot: React.FC<PaperdollSlotProps> = memo(({
 
   const getItemGlowColor = () => {
     if (!item) return THEME.colors.casillaFondo;
-    if (item.isAncient) return 'rgba(0, 229, 255, 0.15)';
+    if (item.isAncient) return 'rgba(91, 141, 239, 0.15)';
     if (item.isExcellent) return 'rgba(63, 207, 142, 0.15)';
     if (item.level >= 13) return 'rgba(232, 200, 106, 0.18)';
     if (item.sockets && item.sockets.some((s) => s !== 0xFF && s !== undefined)) return 'rgba(91, 141, 239, 0.15)';

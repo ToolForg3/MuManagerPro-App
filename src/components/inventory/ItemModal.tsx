@@ -223,17 +223,17 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               />
               <View style={styles.badgeRow}>
                 {editedItem.isAncient && (
-                  <View style={[styles.pill, { backgroundColor: 'rgba(0,229,255,0.2)' }]}>
+                  <View style={[styles.pill, { backgroundColor: 'rgba(91, 141, 239, 0.2)' }]}>
                     <Text style={[styles.pillText, { color: THEME.colors.itemAncient }]}>Ancient</Text>
                   </View>
                 )}
                 {editedItem.isExcellent && (
-                  <View style={[styles.pill, { backgroundColor: 'rgba(0,255,102,0.2)' }]}>
+                  <View style={[styles.pill, { backgroundColor: 'rgba(63, 207, 142, 0.2)' }]}>
                     <Text style={[styles.pillText, { color: THEME.colors.itemExcellent }]}>Excellent</Text>
                   </View>
                 )}
                 {editedItem.option380 && (
-                  <View style={[styles.pill, { backgroundColor: 'rgba(255,64,129,0.2)' }]}>
+                  <View style={[styles.pill, { backgroundColor: 'rgba(226, 112, 58, 0.2)' }]}>
                     <Text style={[styles.pillText, { color: THEME.colors.item380 }]}>PvP 380</Text>
                   </View>
                 )}
@@ -424,7 +424,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     value={editedItem.luck}
                     onValueChange={(val) => setEditedItem({ ...editedItem, luck: val, isModified: true })}
                     trackColor={{ false: '#333333', true: THEME.colors.accentGreen }}
-                    thumbColor={editedItem.luck ? '#00E676' : '#888'}
+                    thumbColor={editedItem.luck ? THEME.colors.jade : '#888'}
                   />
                 ) : (
                   <Text style={styles.rowVal}>{editedItem.luck ? 'Sí' : 'No'}</Text>
@@ -715,7 +715,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionHeading}>OPCIONES ANCIENT</Text>
                 {editedItem.isAncient && (
-                  <View style={[{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1 }, { backgroundColor: 'rgba(0,229,255,0.15)', borderColor: THEME.colors.itemAncient }]}>
+                  <View style={[{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1 }, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.itemAncient }]}>
                     <Text style={{ fontSize: 10, color: THEME.colors.itemAncient, fontWeight: 'bold' }}>
                       {editedItem.ancientSetName || 'ANCIENT'} (+{decodeAncientByte(editedItem.ancientOption).staminaBonus} Stam)
                     </Text>
@@ -802,7 +802,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                             styles.ancientBtn,
                             isSelected && {
                               borderColor: THEME.colors.itemAncient,
-                              backgroundColor: 'rgba(0,229,255,0.15)',
+                              backgroundColor: 'rgba(91, 141, 239, 0.15)',
                             },
                           ]}
                           disabled={!isEditing}
@@ -839,7 +839,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
                   {/* Stamina Bonus Selector si el ítem es Ancient */}
                   {editedItem.isAncient && (
-                    <View style={{ marginTop: 10, padding: 8, backgroundColor: 'rgba(0,229,255,0.05)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(0,229,255,0.2)' }}>
+                    <View style={{ marginTop: 10, padding: 8, backgroundColor: 'rgba(91, 141, 239, 0.05)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(91, 141, 239, 0.2)' }}>
                       <Text style={{ fontSize: 11, color: THEME.colors.itemAncient, fontWeight: 'bold', marginBottom: 6 }}>
                         Bonificación de Atributo Ancient (Stamina):
                       </Text>
@@ -858,7 +858,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                                   borderRadius: 6,
                                   borderWidth: 1,
                                   borderColor: isSelBonus ? THEME.colors.itemAncient : '#444',
-                                  backgroundColor: isSelBonus ? 'rgba(0,229,255,0.2)' : 'transparent',
+                                  backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
                                 },
                               ]}
                               disabled={!isEditing}
@@ -888,17 +888,17 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                         const info = getAncientInfo(editedItem.group, editedItem.index, editedItem.ancientOption);
                         if (!info.set) return null;
                         return (
-                          <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(0,229,255,0.1)' }}>
-                            <Text style={{ fontSize: 10, color: '#00E5FF', fontWeight: 'bold', marginBottom: 2 }}>
+                          <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(91, 141, 239, 0.15)' }}>
+                            <Text style={{ fontSize: 10, color: THEME.colors.arcano, fontWeight: 'bold', marginBottom: 2 }}>
                               Propiedades del Set {info.set.name}:
                             </Text>
                             {info.set.options.slice(0, 4).map((opt, oIdx) => (
-                              <Text key={`anc_prop_${oIdx}`} style={{ fontSize: 10, color: '#80DEEA' }}>
+                              <Text key={`anc_prop_${oIdx}`} style={{ fontSize: 10, color: THEME.colors.textoSecundario }}>
                                 • {opt.optName}: +{opt.val}
                               </Text>
                             ))}
                             {info.set.fullOptions.length > 0 && (
-                              <Text style={{ fontSize: 10, color: '#4DD0E1', marginTop: 2, fontStyle: 'italic' }}>
+                              <Text style={{ fontSize: 10, color: THEME.colors.arcano, marginTop: 2, fontStyle: 'italic' }}>
                                 • Full Set: {info.set.fullOptions[0].optName} +{info.set.fullOptions[0].val}
                               </Text>
                             )}
@@ -1093,9 +1093,9 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 420,
     height: '90%',
-    maxHeight: '94%',
+    maxHeight: '90%',
     backgroundColor: '#2B2521',
     borderRadius: 6,
     borderWidth: 1.5,

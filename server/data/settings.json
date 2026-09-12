@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.8.6",
-  "latestVersion": "1.8.6",
-  "latestApkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.8.6 (Build 88) - Actualización Oficial:\n• Purga y Unificación Visual Total: Migración completa de todas las pantallas al Sistema Oficial Season 6 Piedra y Oro (#191512, #2B2521, #6B5533, #A8894D, #E8C86A).\n• CharacterEditScreen Renovado: Pestañas de Stats, Progreso, Skills y Quest sin remanentes azules ni biseles pizarra. Rediseño medieval del selector de estado PK eliminando el botón blanco plano.\n• Baúl / Warehouse Unificado: Purgados estilos azul marino y adaptados al marco noble de piedra grabada.\n• Componentes e Inventario: Marcos de InventoryGrid, SkillImage y avatares de Dashboard sincronizados con el radio de esquina estricto de 6px y tokens canónicos.",
+  "minRequiredVersion": "1.8.7",
+  "latestVersion": "1.8.7",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.7/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v1.8.7 (Build 89) - Actualización de Diseño Canónico Season 6:\n• Armonización Canónica Season 6 (Piedra y Oro): Purga total de colores estridentes y migración completa a Verde Jade (#3FCF8E) para estados en vivo y opciones excelentes, Azul Arcano (#5B8DEF) para opciones ancient y bóveda expandida, y Oro (#E8C86A).\n• Optimización de Modales: Normalización de diálogos a ancho máximo de 420px con scroll vertical fluido en todas las resoluciones móviles.\n• Reducción de Peso de Assets: Eliminación de 86 texturas duplicadas en el bundle del APK.\n• Integridad 100%: Cero impacto en lógica SQL, concurrencia, math de sockets ni licenciamiento.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.8.6",
-  "updateTitle": "MuManager PRO v1.8.6 (Build 88)",
-  "apkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "versionCode": 88,
-  "downloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "directApkUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.8.6 (Build 88) - Actualización Oficial:\n• Purga y Unificación Visual Total: Migración completa de todas las pantallas al Sistema Oficial Season 6 Piedra y Oro (#191512, #2B2521, #6B5533, #A8894D, #E8C86A).\n• CharacterEditScreen Renovado: Pestañas de Stats, Progreso, Skills y Quest sin remanentes azules ni biseles pizarra. Rediseño medieval del selector de estado PK eliminando el botón blanco plano.\n• Baúl / Warehouse Unificado: Purgados estilos azul marino y adaptados al marco noble de piedra grabada.\n• Componentes e Inventario: Marcos de InventoryGrid, SkillImage y avatares de Dashboard sincronizados con el radio de esquina estricto de 6px y tokens canónicos.",
-  "updateDownloadUrl": "https://raw.githubusercontent.com/ToolForg3/MuManagerPro-App/main/MuManagerPro.apk",
-  "appVersion": "1.8.6",
-  "buildNumber": 88,
+  "minVersion": "1.8.7",
+  "updateTitle": "MuManager PRO v1.8.7 (Build 89)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.7/MuManagerPro.apk",
+  "versionCode": 89,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.7/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.6/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v1.8.7 (Build 89) - Actualización de Diseño Canónico Season 6:\n• Armonización Canónica Season 6 (Piedra y Oro): Purga total de colores estridentes y migración completa a Verde Jade (#3FCF8E) para estados en vivo y opciones excelentes, Azul Arcano (#5B8DEF) para opciones ancient y bóveda expandida, y Oro (#E8C86A).\n• Optimización de Modales: Normalización de diálogos a ancho máximo de 420px con scroll vertical fluido en todas las resoluciones móviles.\n• Reducción de Peso de Assets: Eliminación de 86 texturas duplicadas en el bundle del APK.\n• Integridad 100%: Cero impacto en lógica SQL, concurrencia, math de sockets ni licenciamiento.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.8.7/MuManagerPro.apk",
+  "appVersion": "1.8.7",
+  "buildNumber": 89,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.8.3",
-  "build": 85
+  "version": "1.8.6",
+  "build": 88
 }

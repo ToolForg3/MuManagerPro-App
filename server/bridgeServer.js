@@ -1141,9 +1141,6 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
 const adminFailedAttempts = new Map(); // ip -> { count, lockedUntil }
 
 app.use('/api/admin', (req, res, next) => {
-  if (req.path === '/storage/status') {
-    return next();
-  }
   const clientIp = getClientIp(req);
   const now = Date.now();
 
@@ -8235,6 +8232,7 @@ app.post('/api/admin/database/reset-clean', async (req, res) => {
         username: 'Admin',
         role: 'ADMIN',
         status: 'ACTIVE',
+        passwordHash: hashPassword(process.env.ADMIN_KEY || 'MuAdminDefault2026!'),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
         lastSeen: new Date().toISOString(),
@@ -8462,8 +8460,12 @@ app.post('/api/admin/user/update', (req, res) => {
     user.notes = String(notes).trim();
   }
 
-  if (password && String(password).trim().length >= 4) {
-    user.passwordHash = hashPassword(String(password).trim());
+  if (password) {
+    const cleanPass = String(password).trim();
+    if (cleanPass.length < 8) {
+      return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+    }
+    user.passwordHash = hashPassword(cleanPass);
   }
 
   user.updatedAt = new Date().toISOString();

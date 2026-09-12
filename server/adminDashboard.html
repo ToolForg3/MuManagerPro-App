@@ -6,21 +6,22 @@
   <title>Mu Manager PRO - Centro de Operaciones y Control Total</title>
   <style>
     :root {
-      --bg: #0C0C0E;
-      --card: #151518;
-      --card-hover: #1C1C20;
-      --border: #26262B;
-      --orange: #FF5722;
-      --orange-hover: #F4511E;
-      --green: #2E7D32;
-      --green-bright: #00E676;
-      --yellow: #FFB300;
-      --red: #D32F2F;
-      --red-bright: #FF5252;
-      --blue: #29B6F6;
-      --purple: #AB47BC;
-      --text: #F5F5F7;
-      --muted: #8E8E93;
+      --bg: #191512;
+      --card: #241E1A;
+      --card-hover: #2B2521;
+      --border: #6B5533;
+      --border-highlight: #A8894D;
+      --orange: #B58F3C;
+      --orange-hover: #E8C86A;
+      --green: #245C3F;
+      --green-bright: #3FCF8E;
+      --yellow: #E8C86A;
+      --red: #B84514;
+      --red-bright: #E2703A;
+      --blue: #5B8DEF;
+      --purple: #5B8DEF;
+      --text: #EDE4D3;
+      --muted: #9C9182;
       --font-mono: 'SF Mono', Monaco, Consolas, 'Courier New', monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,13 +50,13 @@
     .brand-logo {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, #FF5722, #E64A19);
-      border-radius: 12px;
+      background: linear-gradient(135deg, #B58F3C, #7A5E22);
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 26px;
-      box-shadow: 0 4px 18px rgba(255, 87, 34, 0.45);
+      box-shadow: 0 4px 18px rgba(181, 143, 60, 0.35);
     }
     .brand h1 { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; }
     .brand p { font-size: 13px; color: var(--muted); }
@@ -69,11 +70,11 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(0, 230, 118, 0.12);
+      background: rgba(63, 207, 142, 0.12);
       border: 1px solid var(--green-bright);
       color: var(--green-bright);
       padding: 8px 14px;
-      border-radius: 20px;
+      border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
     }
@@ -97,7 +98,7 @@
     .metric-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 6px;
       padding: 16px 18px;
       position: relative;
       transition: all 0.2s ease-in-out;
@@ -133,7 +134,7 @@
     .module-hub-card {
       background: #141417;
       border: 1px solid #28282E;
-      border-radius: 12px;
+      border-radius: 6px;
       padding: 14px 16px;
       cursor: pointer;
       display: flex;
@@ -216,7 +217,7 @@
       padding: 10px 14px;
       background: #0E0E11;
       border: 1px solid #24242B;
-      border-radius: 10px;
+      border-radius: 6px;
       margin-bottom: 22px;
       overflow-x: auto;
     }
@@ -239,7 +240,7 @@
       padding: 8px 14px;
       font-size: 12.5px;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -262,8 +263,8 @@
       box-shadow: 0 0 12px rgba(255, 87, 34, 0.45);
     }
     .submodule-pill.btn-action {
-      background: rgba(0, 230, 118, 0.1);
-      border-color: rgba(0, 230, 118, 0.35);
+      background: rgba(63, 207, 142, 0.1);
+      border-color: rgba(63, 207, 142, 0.35);
       color: var(--green-bright);
       margin-left: auto;
     }
@@ -290,7 +291,7 @@
     .main-section {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 6px;
       padding: 24px;
       margin-bottom: 24px;
     }
@@ -309,7 +310,7 @@
       color: #fff;
       border: none;
       padding: 9px 16px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
@@ -330,8 +331,8 @@
     .btn-dark:hover { background: #2E2E34; }
     .btn-warning { background: #E65100; color: #FFF; }
     .btn-warning:hover { background: #EF6C00; }
-    .btn-pro { background: #00E676; color: #000; font-weight: 700; }
-    .btn-pro:hover { background: #69F0AE; color: #000; }
+    .btn-pro { background: #3FCF8E; color: #191512; font-weight: 700; }
+    .btn-pro:hover { background: #5EE5A5; color: #191512; }
     .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 6px; }
 
     .table-container { overflow-x: auto; }
@@ -365,9 +366,9 @@
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
     .badge-demo { background: rgba(255, 179, 0, 0.15); color: var(--yellow); border: 1px solid var(--yellow); }
-    .badge-pro { background: rgba(0, 230, 118, 0.15); color: var(--green-bright); border: 1px solid var(--green-bright); }
+    .badge-pro { background: rgba(63, 207, 142, 0.15); color: var(--green-bright); border: 1px solid var(--green-bright); }
     .badge-blocked { background: rgba(211, 47, 47, 0.15); color: var(--red-bright); border: 1px solid var(--red-bright); }
-    .badge-expired { background: rgba(171, 71, 188, 0.15); color: #CE93D8; border: 1px solid var(--purple); }
+    .badge-expired { background: rgba(226, 112, 58, 0.15); color: #FF884D; border: 1px solid #E2703A; }
     .badge-admin { background: rgba(255, 87, 34, 0.15); color: #FF7043; border: 1px solid var(--orange); }
     .badge-user { background: rgba(41, 182, 246, 0.15); color: var(--blue); border: 1px solid var(--blue); }
 
@@ -438,7 +439,7 @@
       border: 1px solid #333;
       color: #FFF;
       padding: 10px 14px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 13px;
     }
     .form-control:focus { outline: none; border-color: var(--orange); }
@@ -494,7 +495,7 @@
     .terminal-box {
       background: #0A0A0C;
       border: 1px solid #222;
-      border-radius: 10px;
+      border-radius: 6px;
       padding: 16px;
       font-family: var(--font-mono);
       font-size: 12px;
@@ -525,7 +526,7 @@
     .modal-box {
       background: #18181C;
       border: 1px solid #333;
-      border-radius: 16px;
+      border-radius: 6px;
       padding: 30px;
       width: 90%;
       max-width: 480px;
@@ -552,7 +553,7 @@
       z-index: 10000;
       background: #18181C;
       border: 1px solid #33333A;
-      border-radius: 10px;
+      border-radius: 6px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.85);
       padding: 6px 0;
       min-width: 230px;
@@ -785,7 +786,7 @@
       <div class="form-group" style="margin-bottom: 16px;">
         <label style="font-weight:700; color:#CCC; margin-bottom:8px; display:block;">Selecciona la Vigencia de la Licencia:</label>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px;">
-          <button type="button" class="btn btn-dark pro-dur-btn active" id="pro-btn-lifetime" onclick="selectProDuration('LIFETIME', 0, this)" style="justify-content:center; padding:8px; border-color:#00E676; color:#00E676; font-weight:700; grid-column: span 3;">
+          <button type="button" class="btn btn-dark pro-dur-btn active" id="pro-btn-lifetime" onclick="selectProDuration('LIFETIME', 0, this)" style="justify-content:center; padding:8px; border-color:#3FCF8E; color:#3FCF8E; font-weight:700; grid-column: span 3;">
             ♾️ Vitalicia (Permanente)
           </button>
           <button type="button" class="btn btn-dark pro-dur-btn" onclick="selectProDuration('MINUTES', 15, this)" style="justify-content:center; padding:8px; font-size:12px;">
@@ -811,7 +812,7 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
             <label style="font-size:12px; color:#AAA; margin:0;">O define tiempo personalizado:</label>
-            <span id="pro-duration-summary" style="font-size:12px; font-weight:700; color:#00E676;">♾️ Licencia Vitalicia (Permanente)</span>
+            <span id="pro-duration-summary" style="font-size:12px; font-weight:700; color:#3FCF8E;">♾️ Licencia Vitalicia (Permanente)</span>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
             <input type="number" id="pro-custom-val-input" class="form-control" placeholder="Ej: 15, 2, 45, 60" min="1" max="3650" style="flex:1;" oninput="onProCustomValChange()" />
@@ -971,7 +972,7 @@
         <label>Cantidad de días:</label>
         <div style="display:flex; gap:8px; align-items:center;">
           <input type="number" id="exp-custom-days-input" class="form-control" placeholder="Ej: 45, 60, 120" min="1" max="3650" />
-          <span style="font-size:12px; color:#00E676; font-weight:700;">días</span>
+          <span style="font-size:12px; color:#3FCF8E; font-weight:700;">días</span>
         </div>
       </div>
       
@@ -1130,8 +1131,8 @@
         Vercel es una infraestructura Serverless (sus archivos locales en <code>/tmp</code> se resetean al reiniciar o desplegar). Para que el panel tenga persistencia real y permanente, conéctalo a <strong>Upstash Redis</strong> (100% gratuito de por vida).
       </p>
 
-      <div style="background: rgba(0, 230, 118, 0.05); border: 1px solid rgba(0, 230, 118, 0.2); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
-        <div style="font-weight: bold; color: #00E676; font-size: 13px; margin-bottom: 6px;">Estado Actual de Persistencia:</div>
+      <div style="background: rgba(63, 207, 142, 0.05); border: 1px solid rgba(63, 207, 142, 0.2); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <div style="font-weight: bold; color: #3FCF8E; font-size: 13px; margin-bottom: 6px;">Estado Actual de Persistencia:</div>
         <div id="cloud-modal-status-text" style="font-size: 13px; color: #FFF;">Verificando...</div>
       </div>
 
@@ -1289,7 +1290,7 @@
     </div>
     <div class="metric-card purple" onclick="selectMainModule('mod-security', 'tab-masters')" title="Clic para abrir Kill-Switch y Mantenimiento">
       <div class="metric-label">⚡ Modo Mantenimiento</div>
-      <div class="metric-value" id="metric-maint" style="font-size: 18px; font-weight: 700; color: #00E676;">INACTIVO</div>
+      <div class="metric-value" id="metric-maint" style="font-size: 18px; font-weight: 700; color: #3FCF8E;">INACTIVO</div>
       <span class="metric-hint">Kill-Switch Maestro →</span>
     </div>
   </div>
@@ -1341,7 +1342,7 @@
     <div class="module-hub-card" id="card-mod-deploy" onclick="selectMainModule('mod-deploy')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
-          <div class="module-hub-icon" style="color: #00E676; background: rgba(0, 230, 118, 0.12);">🚀</div>
+          <div class="module-hub-icon" style="color: #3FCF8E; background: rgba(63, 207, 142, 0.12);">🚀</div>
           <div>
             <div class="module-hub-title">Distribución & APK</div>
             <div class="module-hub-desc">Auto-Updater, bloqueo v1.5.3 y avisos push</div>
@@ -1354,7 +1355,7 @@
     <div class="module-hub-card" id="card-mod-system" onclick="selectMainModule('mod-system')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
-          <div class="module-hub-icon" style="color: #AB47BC; background: rgba(171, 71, 188, 0.12);">⚙️</div>
+          <div class="module-hub-icon" style="color: #5B8DEF; background: rgba(91, 141, 239, 0.12);">⚙️</div>
           <div>
             <div class="module-hub-title">Base de Datos & Sistema</div>
             <div class="module-hub-desc">Auditoría forense, diagnóstico SQL y Upstash</div>
@@ -1412,8 +1413,8 @@
       <div class="section-header">
         <div class="section-title" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
           📱 Historial Permanente de Celulares Registrados
-          <span class="badge" style="background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
-            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #00E676; margin-right: 4px;"></span>Registro Histórico (En Vivo)
+          <span class="badge" style="background: rgba(63, 207, 142, 0.15); color: #3FCF8E; border: 1px solid rgba(63, 207, 142, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #3FCF8E; margin-right: 4px;"></span>Registro Histórico (En Vivo)
           </span>
           <span id="storage-status-badge" class="badge" style="background: rgba(33, 150, 243, 0.15); color: #64B5F6; border: 1px solid rgba(33, 150, 243, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600; cursor: pointer;" onclick="openCloudStorageModal()" title="Ver estado del Backend y Base de Datos">
             ☁️ Backend: Verificando...
@@ -1430,7 +1431,7 @@
             🌐 Historial Completo <span id="count-all" class="badge" style="background: rgba(255, 255, 255, 0.15); color: #FFF; margin-left: 6px; font-weight: 700;">0</span>
           </button>
           <button id="view-btn-online" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('online')">
-            🟢 Conectados Ahora <span id="count-online" class="badge" style="background: rgba(0, 230, 118, 0.2); color: #00E676; margin-left: 6px; font-weight: 700;">0</span>
+            🟢 Conectados Ahora <span id="count-online" class="badge" style="background: rgba(63, 207, 142, 0.2); color: #3FCF8E; margin-left: 6px; font-weight: 700;">0</span>
           </button>
           <button id="view-btn-clients" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('clients')">
             👤 Clientes Reales <span id="count-clients" class="badge" style="background: rgba(41, 182, 246, 0.2); color: #29B6F6; margin-left: 6px; font-weight: 700;">0</span>
@@ -1475,8 +1476,8 @@
       <div class="section-header">
         <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
           👥 Cuentas de Usuario de la APK
-          <span class="badge" style="background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
-            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #00E676; margin-right: 4px;"></span>Presencia en Vivo (Auto-sync 3s)
+          <span class="badge" style="background: rgba(63, 207, 142, 0.15); color: #3FCF8E; border: 1px solid rgba(63, 207, 142, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #3FCF8E; margin-right: 4px;"></span>Presencia en Vivo (Auto-sync 3s)
           </span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -1626,14 +1627,14 @@
       </div>
 
       <div id="wa-callmebot-box" class="form-group">
-        <label style="color: #00E676; font-weight: 800;">🔑 API Key de CallMeBot (Obligatoria para recibir alertas):</label>
+        <label style="color: #3FCF8E; font-weight: 800;">🔑 API Key de CallMeBot (Obligatoria para recibir alertas):</label>
         <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
           <input type="text" id="wa-apikey" class="form-control" style="flex: 1; min-width: 200px;" placeholder="Ej: 987654 (Código de 6 dígitos que te envía el bot)" />
           <a href="https://wa.me/34644105584?text=I%20allow%20callmebot%20to%20send%20me%20messages" target="_blank" class="btn btn-green" style="white-space: nowrap;">
             📲 Obtener API Key Gratis en WhatsApp
           </a>
         </div>
-        <div style="background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
+        <div style="background: rgba(63, 207, 142, 0.08); border: 1px solid rgba(63, 207, 142, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
           <strong>📖 Pasos para recibir las alertas en WhatsApp (+55 21 97121-7376):</strong><br>
           1. Pulsa el botón verde <strong>"Obtener API Key Gratis en WhatsApp"</strong> (o abre un chat con el bot oficial <code>+34 644 10 55 84</code>).<br>
           2. Envíale el mensaje pre-cargado: <code>I allow callmebot to send me messages</code>.<br>
@@ -2098,7 +2099,7 @@
         </div>
       </div>
 
-      <div id="free-key-result" style="margin-top: 20px; padding: 20px; background: rgba(0, 230, 118, 0.08); border: 1px dashed var(--green-bright); border-radius: 12px; display: none; max-width: 600px;">
+      <div id="free-key-result" style="margin-top: 20px; padding: 20px; background: rgba(63, 207, 142, 0.08); border: 1px dashed var(--green-bright); border-radius: 12px; display: none; max-width: 600px;">
       </div>
     </div>
   </div>
@@ -2117,7 +2118,7 @@
       <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); margin-bottom: 20px;">
         <div class="metric-card">
           <div class="metric-title">Total Claves</div>
-          <div class="metric-value" id="lic-metric-total" style="color:#00E676;">0</div>
+          <div class="metric-value" id="lic-metric-total" style="color:#3FCF8E;">0</div>
         </div>
         <div class="metric-card">
           <div class="metric-title">⭐ PRO Activas</div>
@@ -2129,7 +2130,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-title">📅 Por Días</div>
-          <div class="metric-value" id="lic-metric-days" style="color:#AB47BC;">0</div>
+          <div class="metric-value" id="lic-metric-days" style="color:#5B8DEF;">0</div>
         </div>
         <div class="metric-card">
           <div class="metric-title">⛔ Expiradas</div>
@@ -2596,7 +2597,7 @@
 
       const isOnline = !!u.isOnline;
       const presenceHtml = isOnline
-        ? `<span class="badge" style="background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.4); font-weight: 700;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#00E676; margin-right:4px;"></span>EN LÍNEA</span>`
+        ? `<span class="badge" style="background: rgba(63, 207, 142, 0.15); color: #3FCF8E; border: 1px solid rgba(63, 207, 142, 0.4); font-weight: 700;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#3FCF8E; margin-right:4px;"></span>EN LÍNEA</span>`
         : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: #888;">⚪ Desconectado</span>`;
 
       const createdDate = new Date(u.createdAt).toLocaleDateString() + ' ' + new Date(u.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -2615,7 +2616,7 @@
         </td>
         <td><span class="hwid-code" style="font-size:11px;">${safeHwid}</span></td>
         <td><small>${createdDate}</small></td>
-        <td class="user-last-seen-cell"><small class="user-last-seen-text" style="color: ${isOnline ? '#00E676' : 'inherit'}; font-weight: ${isOnline ? '600' : 'normal'};">${lastActivity}</small></td>
+        <td class="user-last-seen-cell"><small class="user-last-seen-text" style="color: ${isOnline ? '#3FCF8E' : 'inherit'}; font-weight: ${isOnline ? '600' : 'normal'};">${lastActivity}</small></td>
         <td class="actions-cell">
           <button class="btn btn-dark btn-sm" data-action="user-edit" data-id="${escapeHtml(u.id || '')}" data-email="${escapeHtml(u.email || '')}" title="Editar cuenta completa (o clic derecho)">
             ✏️ Editar
@@ -3162,15 +3163,15 @@
           const remainingStr = dev.timeRemainingFormatted || (dev.daysRemaining !== undefined ? `${dev.daysRemaining} días` : '');
           expText = isPast 
             ? `<span style="color:#FF5252; font-weight:700;">⛔ PRO Vencida</span> <button type="button" class="btn btn-dark btn-sm" style="padding:1px 5px; font-size:10px; margin-left:4px;" data-action="expiration" title="Renovar o modificar vigencia">Renovar</button>` 
-            : `<div style="color:#00E676; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px;">
+            : `<div style="color:#3FCF8E; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px;">
                 📅 ${expDate.toLocaleDateString()} ${expDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                 <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px;" data-action="expiration" title="Modificar vigencia o convertir a vitalicio">✏️</button>
                </div>
-               <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(0,230,118,0.15); color:#00E676; border:1px solid rgba(0,230,118,0.3); padding:1px 6px; font-weight:700;">⏱️ ${remainingStr}</span></div>`;
+               <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(63, 207, 142,0.15); color:#3FCF8E; border:1px solid rgba(63, 207, 142,0.3); padding:1px 6px; font-weight:700;">⏱️ ${remainingStr}</span></div>`;
         } else {
-          expText = `<span style="display:inline-flex; align-items:center; gap:4px; color:#00E676; font-weight:800; font-size:11px; background:rgba(0,230,118,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(0,230,118,0.3);">
+          expText = `<span style="display:inline-flex; align-items:center; gap:4px; color:#3FCF8E; font-weight:800; font-size:11px; background:rgba(63, 207, 142,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(63, 207, 142,0.3);">
             ♾️ VITALICIA
-            <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px; border-color:#00E676; color:#00E676;" data-action="expiration" title="Modificar vigencia o cambiar a días">✏️</button>
+            <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px; border-color:#3FCF8E; color:#3FCF8E;" data-action="expiration" title="Modificar vigencia o cambiar a días">✏️</button>
           </span>`;
         }
       } else {
@@ -3181,14 +3182,14 @@
           expText = isPast 
             ? '<span style="color:#FF5252; font-weight:700;">⛔ Prueba Vencida</span>' 
             : `<div style="color:#FFB300; font-weight:700; font-size:12px;">⏳ ${expDate.toLocaleDateString()} ${expDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-               <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid rgba(255,179,0,0.3); padding:1px 6px; font-weight:700;">⚡ Restan: ${remainingStr}</span></div>`;
+               <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid rgba(255,179,0,0.3); padding:1px 6px; font-weight:700;">⚡ Restan: ${escapeHtml(remainingStr)}</span></div>`;
         } else {
           expText = '<span style="color:#FFB300;">Prueba Ilimitada</span>';
         }
       }
 
       const onlineBadge = `<div class="dev-online-indicator" data-online="${isOnline ? '1' : '0'}" style="display:flex; align-items:center; gap:5px; margin-top:5px;">${isOnline 
-        ? '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#00E676; box-shadow:0 0 6px #00E676;"></span><strong style="color:#00E676; font-size:11px;">EN LÍNEA AHORA</strong>'
+        ? '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#3FCF8E; box-shadow:0 0 6px #3FCF8E;"></span><strong style="color:#3FCF8E; font-size:11px;">EN LÍNEA AHORA</strong>'
         : '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#666;"></span><span style="color:#777; font-size:11px;">Desconectado</span>'
       }</div>`;
 
@@ -3206,7 +3207,7 @@
         <td><span class="badge ${badgeClass}">${statusText}</span></td>
         <td>
           <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;" title="País de conexión">
-            <span style="font-size:17px; line-height:1;">${flag}</span>
+            <span style="font-size:17px; line-height:1;">${escapeHtml(flag)}</span>
             <strong style="font-size:12px; color:#FFF;">${safeCountry}</strong>
             ${safeCity ? `<span style="font-size:11px; color:#AAA;">(${safeCity})</span>` : ''}
           </div>
@@ -3218,7 +3219,7 @@
               ${dev.isEmulator ? '🎮 EMULADOR' : '📱 FÍSICO'}
             </span>
             <span class="badge" 
-                  style="background:${dev.isTest ? 'rgba(255,152,0,0.18)' : 'rgba(0,230,118,0.15)'}; color:${dev.isTest ? '#FFB74D' : '#00E676'}; border:1px solid ${dev.isTest ? 'rgba(255,152,0,0.4)' : 'rgba(0,230,118,0.3)'}; cursor:pointer; font-size:10px; font-weight:700;" 
+                  style="background:${dev.isTest ? 'rgba(255,152,0,0.18)' : 'rgba(63, 207, 142,0.15)'}; color:${dev.isTest ? '#FFB74D' : '#3FCF8E'}; border:1px solid ${dev.isTest ? 'rgba(255,152,0,0.4)' : 'rgba(63, 207, 142,0.3)'}; cursor:pointer; font-size:10px; font-weight:700;" 
                   data-action="toggle-test" 
                   title="Clic para mover entre Pruebas y Clientes Reales">
               ${dev.isTest ? '🧪 TEST' : '👤 CLIENTE'}
@@ -3231,7 +3232,7 @@
         </td>
         <td>v${safeAppVersion}<br><small style="color:#666;" class="dev-pings-text">${dev.totalPings || 1} pings</small></td>
         <td>
-          <div style="font-weight: 700; font-size: 12px; color: ${isExpired ? '#FF5252' : (dev.mode === 'PRO' ? '#00E676' : '#FFB300')};">
+          <div style="font-weight: 700; font-size: 12px; color: ${isExpired ? '#FF5252' : (dev.mode === 'PRO' ? '#3FCF8E' : '#FFB300')};">
             ${expText}
           </div>
           ${dev.mode !== 'PRO' ? `
@@ -3242,7 +3243,7 @@
             </div>
           ` : ''}
         </td>
-        <td class="dev-last-seen-cell"><small class="dev-last-seen-text" style="color: ${isOnline ? '#00E676' : 'inherit'}; font-weight: ${isOnline ? '600' : 'normal'};">${dateStr}</small></td>
+        <td class="dev-last-seen-cell"><small class="dev-last-seen-text" style="color: ${isOnline ? '#3FCF8E' : 'inherit'}; font-weight: ${isOnline ? '600' : 'normal'};">${dateStr}</small></td>
         <td class="actions-cell">
           ${dev.mode === 'PRO'
             ? `<button type="button" class="btn btn-warning btn-sm" data-action="toggle-plan" data-target-plan="DEMO" title="Remover Licencia PRO y volver a DEMO">⭐ Quitar PRO</button>`
@@ -3354,7 +3355,7 @@
             const timeText = tr.querySelector('.dev-last-seen-text');
             if (timeText && timeText.innerText !== dateStr) {
               timeText.innerText = dateStr;
-              timeText.style.color = isOnline ? '#00E676' : 'inherit';
+              timeText.style.color = isOnline ? '#3FCF8E' : 'inherit';
               timeText.style.fontWeight = isOnline ? '600' : 'normal';
             }
             // 2. Actualizar pings
@@ -3368,7 +3369,7 @@
             if (onlineInd && onlineInd.dataset.online !== (isOnline ? '1' : '0')) {
               onlineInd.dataset.online = isOnline ? '1' : '0';
               onlineInd.innerHTML = isOnline
-                ? '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#00E676; box-shadow:0 0 6px #00E676;"></span><strong style="color:#00E676; font-size:11px;">EN LÍNEA AHORA</strong>'
+                ? '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#3FCF8E; box-shadow:0 0 6px #3FCF8E;"></span><strong style="color:#3FCF8E; font-size:11px;">EN LÍNEA AHORA</strong>'
                 : '<span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#666;"></span><span style="color:#777; font-size:11px;">Desconectado</span>';
             }
             // 4. Actualizar tiempo restante si aplica
@@ -3513,8 +3514,8 @@
       const defBtn = document.getElementById('pro-btn-lifetime');
       if (defBtn) {
         defBtn.classList.add('active');
-        defBtn.style.borderColor = '#00E676';
-        defBtn.style.color = '#00E676';
+        defBtn.style.borderColor = '#3FCF8E';
+        defBtn.style.color = '#3FCF8E';
       }
 
       document.getElementById('pro-activation-modal').style.display = 'flex';
@@ -3530,8 +3531,8 @@
       });
       if (btn) {
         btn.classList.add('active');
-        btn.style.borderColor = '#00E676';
-        btn.style.color = '#00E676';
+        btn.style.borderColor = '#3FCF8E';
+        btn.style.color = '#3FCF8E';
       }
       const customInput = document.getElementById('pro-custom-val-input');
       if (customInput) customInput.value = '';
@@ -3869,7 +3870,7 @@
         const timeStr = dev.timeRemainingFormatted || (dev.daysRemaining !== undefined ? `${dev.daysRemaining} días` : 'Activa');
         if (dev.mode === 'PRO') {
           if (!dev.expiresAt || dev.isLifetime) {
-            statusBox.innerHTML = '<span style="color:#00E676; font-weight:bold;">♾️ Licencia PRO Actual: VITALICIA / PERMANENTE</span>';
+            statusBox.innerHTML = '<span style="color:#3FCF8E; font-weight:bold;">♾️ Licencia PRO Actual: VITALICIA / PERMANENTE</span>';
             document.getElementById('exp-hours-select').value = '0';
           } else {
             const expD = new Date(dev.expiresAt);
@@ -4246,7 +4247,7 @@
           
           let statusBadge = '<span class="badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid #FFB300;">PENDIENTE</span>';
           if (r.status === 'CONTACTED') statusBadge = '<span class="badge" style="background:rgba(41,182,246,0.15); color:#29B6F6; border:1px solid #29B6F6;">CONTACTADO</span>';
-          if (r.status === 'APPROVED') statusBadge = '<span class="badge" style="background:rgba(0,230,118,0.15); color:#00E676; border:1px solid #00E676;">APROBADO PRO</span>';
+          if (r.status === 'APPROVED') statusBadge = '<span class="badge" style="background:rgba(63, 207, 142,0.15); color:#3FCF8E; border:1px solid #3FCF8E;">APROBADO PRO</span>';
           if (r.status === 'DISMISSED') statusBadge = '<span class="badge" style="background:rgba(142,142,147,0.15); color:#888; border:1px solid #555;">DESCARTADO</span>';
 
           const dateStr = new Date(r.createdAt).toLocaleDateString() + ' ' + new Date(r.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -4254,7 +4255,7 @@
           tr.innerHTML = `
             <td>
               <strong style="font-size:13px; color:#FFF;">${escapeHtml(r.name)}</strong><br>
-              <a href="${waLink}" target="_blank" style="color:#00E676; text-decoration:none; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px; margin-top:3px;">
+              <a href="${waLink}" target="_blank" style="color:#3FCF8E; text-decoration:none; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px; margin-top:3px;">
                 <span>💬</span> ${escapeHtml(r.phone)}
               </a>
             </td>
@@ -4503,7 +4504,7 @@
           } else if (isKill) {
             typeBadge = '<span class="badge" style="background:rgba(211,47,47,0.4); color:#FFF; border:1px solid #FF1744; font-weight:800;">⛔ KILL-SWITCH</span>';
           } else if (isAuthDenied) {
-            typeBadge = '<span class="badge" style="background:rgba(156,39,176,0.2); color:#CE93D8; border:1px solid #AB47BC;">🔒 NO AUTORIZADO</span>';
+            typeBadge = '<span class="badge" style="background:rgba(226,112,58,0.2); color:#FF884D; border:1px solid #E2703A;">🔒 NO AUTORIZADO</span>';
           } else if (isCrash) {
             typeBadge = '<span class="badge badge-expired">⚠️ ERROR CRASH</span>';
           }
@@ -4819,7 +4820,7 @@
             document.getElementById('bridge-status').innerText = 'Mantenimiento';
           } else {
             maintEl.innerText = '🟢 INACTIVO';
-            maintEl.style.color = '#00E676';
+            maintEl.style.color = '#3FCF8E';
             dot.className = 'status-dot';
             document.getElementById('bridge-status').innerText = 'Pasarela Activa';
           }
@@ -4944,7 +4945,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          statusEl.style.color = '#00E676';
+          statusEl.style.color = '#3FCF8E';
           statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito a WhatsApp!';
           showToast('Alerta enviada a +5521971217376');
         } else {
@@ -5035,7 +5036,7 @@
         const data = await res.json();
         if (data.success) {
           if (statusEl) {
-            statusEl.style.color = '#00E676';
+            statusEl.style.color = '#3FCF8E';
             statusEl.innerText = '✅ ¡Ajustes de correo guardados con éxito!';
           }
           showToast('Configuración de correo actualizada');
@@ -5081,7 +5082,7 @@
         const data = await res.json();
         if (data.success) {
           if (statusEl) {
-            statusEl.style.color = '#00E676';
+            statusEl.style.color = '#3FCF8E';
             statusEl.innerText = `✅ ¡Correo de prueba enviado a ${dest}!`;
           }
           showToast('Correo de prueba enviado');
@@ -5130,13 +5131,13 @@
         const data = await res.json();
         box.style.display = 'block';
         if (data.success) {
-          box.style.background = 'rgba(0, 230, 118, 0.1)';
+          box.style.background = 'rgba(63, 207, 142, 0.1)';
           box.style.border = '1px solid var(--green-bright)';
           box.innerHTML = `
-            <div style="font-size: 15px; font-weight: 800; color: #00E676; margin-bottom: 6px;">✅ ¡Conexión Exitosa desde la Nube!</div>
-            <div style="font-size: 13px; color: #EEE;">Latencia de respuesta: <strong>${data.latencyMs} ms</strong></div>
-            <div style="font-size: 12px; color: #AAA; margin-top: 4px;">Base de Datos: <strong>${data.database}</strong></div>
-            <div style="font-size: 11px; color: #888; font-family: monospace; margin-top: 6px;">${data.version}</div>
+            <div style="font-size: 15px; font-weight: 800; color: #3FCF8E; margin-bottom: 6px;">✅ ¡Conexión Exitosa desde la Nube!</div>
+            <div style="font-size: 13px; color: #EEE;">Latencia de respuesta: <strong>${escapeHtml(data.latencyMs)} ms</strong></div>
+            <div style="font-size: 12px; color: #AAA; margin-top: 4px;">Base de Datos: <strong>${escapeHtml(data.database)}</strong></div>
+            <div style="font-size: 11px; color: #888; font-family: monospace; margin-top: 6px;">${escapeHtml(data.version)}</div>
           `;
           showToast('Conexión SQL exitosa');
         } else {
@@ -5144,8 +5145,8 @@
           box.style.border = '1px solid var(--red-bright)';
           box.innerHTML = `
             <div style="font-size: 15px; font-weight: 800; color: #FF5252; margin-bottom: 6px;">❌ Error al Conectar con SQL Server</div>
-            <div style="font-size: 13px; color: #EEE;">Tiempo de intento: <strong>${data.latencyMs} ms</strong></div>
-            <div style="font-size: 12px; color: #FF8A80; font-family: monospace; margin-top: 6px; white-space: pre-wrap;">${data.error}</div>
+            <div style="font-size: 13px; color: #EEE;">Tiempo de intento: <strong>${escapeHtml(data.latencyMs)} ms</strong></div>
+            <div style="font-size: 12px; color: #FF8A80; font-family: monospace; margin-top: 6px; white-space: pre-wrap;">${escapeHtml(data.error)}</div>
             <div style="font-size: 11px; color: #AAA; margin-top: 8px;">💡 Verifica que el puerto 1433 esté abierto en el Firewall del VPS del cliente y que el usuario 'sa' permita autenticación SQL Server.</div>
           `;
           showToast('Fallo en la prueba SQL', true);
@@ -5154,7 +5155,7 @@
         box.style.display = 'block';
         box.style.background = 'rgba(211, 47, 47, 0.12)';
         box.style.border = '1px solid var(--red-bright)';
-        box.innerHTML = `<div style="color: #FF5252;">Error de red: ${e.message}</div>`;
+        box.innerHTML = `<div style="color: #FF5252;">Error de red: ${escapeHtml(e.message)}</div>`;
       } finally {
         btn.innerText = '⚡ Probar Conexión Ahora';
         btn.disabled = false;
@@ -5206,7 +5207,7 @@
       let planBadge = l.mode === 'PRO' ? '<span class="badge badge-pro">PRO</span>' : '<span class="badge badge-demo">DEMO</span>';
       let remVal = l.timeRemainingFormatted || (l.daysRemaining !== null ? l.daysRemaining + ' días' : 'Por tiempo');
       let vigBadge = l.isLifetime 
-        ? '<span style="color:#00E676; font-weight:800; font-size:11px;">♾️ VITALICIA</span>'
+        ? '<span style="color:#3FCF8E; font-weight:800; font-size:11px;">♾️ VITALICIA</span>'
         : `<span style="color:#29B6F6; font-weight:700; font-size:11px;">⏱️ <span class="lic-remaining-text">${escapeHtml(remVal)}</span></span>`;
 
       let expText = l.isLifetime 
@@ -5574,8 +5575,8 @@
         let catColor = '#29B6F6';
         let catLabel = '⚙️ SISTEMA';
         if (cat === 'SECURITY') { catColor = '#FF5252'; catLabel = '🛡️ SEGURIDAD'; }
-        else if (cat === 'LICENSE') { catColor = '#00E676'; catLabel = '🔑 LICENCIA'; }
-        else if (cat === 'USERS') { catColor = '#AB47BC'; catLabel = '👥 USUARIOS'; }
+        else if (cat === 'LICENSE') { catColor = '#3FCF8E'; catLabel = '🔑 LICENCIA'; }
+        else if (cat === 'USERS') { catColor = '#5B8DEF'; catLabel = '👥 USUARIOS'; }
         else if (cat === 'DEVICES') { catColor = '#FFB300'; catLabel = '📱 DISPOSITIVO'; }
 
         const safeHwid = escapeHtml(l.hwid);
@@ -5676,19 +5677,19 @@
           if (data.livePingOk) {
             if (badge) {
               badge.innerHTML = '🟢 Cloud DB: Activo';
-              badge.style.background = 'rgba(0, 230, 118, 0.15)';
-              badge.style.color = '#00E676';
-              badge.style.border = '1px solid rgba(0, 230, 118, 0.35)';
+              badge.style.background = 'rgba(63, 207, 142, 0.15)';
+              badge.style.color = '#3FCF8E';
+              badge.style.border = '1px solid rgba(63, 207, 142, 0.35)';
             }
             if (label) {
               label.innerHTML = '🟢 ' + escapeHtml(data.provider);
-              label.style.color = '#00E676';
+              label.style.color = '#3FCF8E';
             }
             if (desc) {
               desc.innerHTML = `Base de datos permanente activa y verificada con PING. Celulares: ${data.deviceCount}, Revocaciones: ${data.tombstoneCount}.`;
             }
             if (modalText) {
-              modalText.innerHTML = `🟢 <strong>${escapeHtml(data.provider)} CONECTADA Y VERIFICADA</strong><br><span style="font-size:12px; color:#00E676;">⚡ Comunicación en vivo exitosa (PING/PONG). Tus celulares (${data.deviceCount}) y licencias están 100% permanentes en la nube.</span>`;
+              modalText.innerHTML = `🟢 <strong>${escapeHtml(data.provider)} CONECTADA Y VERIFICADA</strong><br><span style="font-size:12px; color:#3FCF8E;">⚡ Comunicación en vivo exitosa (PING/PONG). Tus celulares (${data.deviceCount}) y licencias están 100% permanentes en la nube.</span>`;
             }
             if (showAlert) showToast('¡Conexión Cloud confirmada con éxito! ' + data.provider);
           } else {
@@ -5891,8 +5892,8 @@
 
           box.innerHTML = `
             <div style="font-size: 13px; color: #AAA; margin-bottom: 6px;">CLAVE PRO GENERADA PARA <strong>${safeHwid}</strong>:</div>
-            <div style="font-size: 24px; font-weight: 800; color: #00E676; font-family: monospace; letter-spacing: 1px; margin-bottom: 8px;" id="copy-target-key">${safeKey}</div>
-            <div style="font-size: 13px; color: #FFF; font-weight: 700; margin-bottom: 12px;">⏳ Vigencia: <span style="color:#00E676;">${escapeHtml(finalVigencia)}</span></div>
+            <div style="font-size: 24px; font-weight: 800; color: #3FCF8E; font-family: monospace; letter-spacing: 1px; margin-bottom: 8px;" id="copy-target-key">${safeKey}</div>
+            <div style="font-size: 13px; color: #FFF; font-weight: 700; margin-bottom: 12px;">⏳ Vigencia: <span style="color:#3FCF8E;">${escapeHtml(finalVigencia)}</span></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
               <button class="btn btn-dark btn-sm" id="btn-copy-keygen-key">📋 Copiar Solo Clave</button>
               <button class="btn btn-green btn-sm" id="btn-copy-keygen-wa">📲 Copiar Mensaje para WhatsApp / Telegram</button>

@@ -1658,7 +1658,7 @@ export const AccountsScreen = () => {
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 4,
-                        backgroundColor: selectedAccount?.ConnectStat === 1 ? 'rgba(0, 230, 118, 0.15)' : 'rgba(150, 150, 150, 0.15)',
+                        backgroundColor: selectedAccount?.ConnectStat === 1 ? 'rgba(63, 207, 142, 0.15)' : 'rgba(150, 150, 150, 0.15)',
                         paddingHorizontal: 6,
                         paddingVertical: 2,
                         borderRadius: 6,
@@ -1669,14 +1669,14 @@ export const AccountsScreen = () => {
                           width: 6,
                           height: 6,
                           borderRadius: 3,
-                          backgroundColor: selectedAccount?.ConnectStat === 1 ? '#00E676' : '#888',
+                          backgroundColor: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : '#888',
                         }}
                       />
                       <Text
                         style={{
                           fontSize: 10,
                           fontWeight: '700',
-                          color: selectedAccount?.ConnectStat === 1 ? '#00E676' : '#888',
+                          color: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : '#888',
                         }}
                       >
                         {selectedAccount?.ConnectStat === 1 ? 'ONLINE' : 'OFFLINE'}
@@ -1918,12 +1918,12 @@ export const AccountsScreen = () => {
                   <MaterialCommunityIcons
                     name={String(selectedAccount?.bloc_code) === '1' ? 'lock' : 'lock-open-outline'}
                     size={20}
-                    color={String(selectedAccount?.bloc_code) === '1' ? '#FF5252' : '#00E676'}
+                    color={String(selectedAccount?.bloc_code) === '1' ? '#FF5252' : THEME.colors.jade}
                   />
                   <Text
                     style={[
                       styles.statusToggleText,
-                      { color: String(selectedAccount?.bloc_code) === '1' ? '#FF5252' : '#00E676' },
+                      { color: String(selectedAccount?.bloc_code) === '1' ? '#FF5252' : THEME.colors.jade },
                     ]}
                   >
                     {String(selectedAccount?.bloc_code) === '1' ? 'Cuenta Bloqueada (Baneada)' : 'Cuenta Activa (Desbloqueada)'}
@@ -2069,7 +2069,7 @@ export const AccountsScreen = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(0, 229, 255, 0.12)', borderColor: '#00E5FF' }]}
+                  style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(91, 141, 239, 0.12)', borderColor: THEME.colors.arcano }]}
                   onPress={() => {
                     if (selectedAccount?.memb___id) {
                       openWarehouseForAccount(selectedAccount.memb___id, 'vault_ext');
@@ -2077,8 +2077,8 @@ export const AccountsScreen = () => {
                   }}
                   activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons name="safe" size={18} color="#00E5FF" />
-                  <Text style={[styles.detailBtnWarehouseText, { color: '#00E5FF' }]}>Bóveda Expandida</Text>
+                  <MaterialCommunityIcons name="safe" size={18} color={THEME.colors.arcano} />
+                  <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.arcano }]}>Bóveda Expandida</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -2267,7 +2267,7 @@ export const AccountsScreen = () => {
 
                     <View style={{ flex: 1 }}>
                       <Text style={{
-                        color: vaultMakerExcFlags > 0 ? '#00E676' : (vaultMakerAncient > 0 ? '#00E5FF' : '#FFFFFF'),
+                        color: vaultMakerExcFlags > 0 ? THEME.colors.jade : (vaultMakerAncient > 0 ? THEME.colors.arcano : '#FFFFFF'),
                         fontSize: 15,
                         fontWeight: '800',
                       }}>
@@ -2280,8 +2280,8 @@ export const AccountsScreen = () => {
                       {/* Badges Fila */}
                       <View style={{ flexDirection: 'row', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
                         {vaultMakerLuck && (
-                          <View style={{ backgroundColor: 'rgba(0, 230, 118, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#00E676' }}>
-                            <Text style={{ color: '#00E676', fontSize: 10, fontWeight: '700' }}>Luck</Text>
+                          <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: THEME.colors.jade }}>
+                            <Text style={{ color: THEME.colors.jade, fontSize: 10, fontWeight: '700' }}>Luck</Text>
                           </View>
                         )}
                         {vaultMakerSkill && (
@@ -2400,8 +2400,8 @@ export const AccountsScreen = () => {
                   <Switch
                     value={vaultMakerLuck}
                     onValueChange={setVaultMakerLuck}
-                    trackColor={{ false: '#333333', true: '#00E676' }}
-                    thumbColor={vaultMakerLuck ? '#00E676' : '#888'}
+                    trackColor={{ false: '#333333', true: THEME.colors.jade }}
+                    thumbColor={vaultMakerLuck ? THEME.colors.jade : '#888'}
                   />
                 </View>
 
@@ -2530,7 +2530,7 @@ export const AccountsScreen = () => {
                                   borderRadius: 6,
                                   borderWidth: 1,
                                   borderColor: isSelBonus ? THEME.colors.itemAncient : '#444',
-                                  backgroundColor: isSelBonus ? 'rgba(0,229,255,0.2)' : 'transparent',
+                                  backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
                                 },
                               ]}
                               onPress={() => {
@@ -2552,7 +2552,7 @@ export const AccountsScreen = () => {
               {/* EXCELLENT OPTIONS */}
               <View style={styles.whControlCardBox}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[styles.whSectionHeader, { color: '#00E676' }]}>OPCIONES EXCELENTES</Text>
+                  <Text style={[styles.whSectionHeader, { color: THEME.colors.jade }]}>OPCIONES EXCELENTES</Text>
                   <View style={{ flexDirection: 'row', gap: 6 }}>
                     <TouchableOpacity
                       style={styles.whQuickExcBtn}
@@ -2586,12 +2586,12 @@ export const AccountsScreen = () => {
                           <MaterialCommunityIcons
                             name={isChecked ? 'checkbox-marked' : 'checkbox-blank-outline'}
                             size={16}
-                            color={isChecked ? '#00E676' : '#666'}
+                            color={isChecked ? THEME.colors.jade : '#666'}
                           />
                           <Text
                             style={[
                               styles.whExcChipText,
-                              isChecked && { color: '#00E676', fontWeight: 'bold' },
+                              isChecked && { color: THEME.colors.jade, fontWeight: 'bold' },
                             ]}
                             numberOfLines={1}
                           >
@@ -2805,7 +2805,7 @@ export const AccountsScreen = () => {
                     >
                       <Text style={styles.whStepBtnTextSmall}>-</Text>
                     </TouchableOpacity>
-                    <Text style={[styles.whStepperVal, { color: '#00E5FF' }]}>x{vaultMakerQuantity}</Text>
+                    <Text style={[styles.whStepperVal, { color: THEME.colors.oroClaro }]}>x{vaultMakerQuantity}</Text>
                     <TouchableOpacity
                       style={styles.whStepBtnSmall}
                       onPress={() => setVaultMakerQuantity(prev => Math.min(20, prev + 1))}
@@ -2820,12 +2820,12 @@ export const AccountsScreen = () => {
                       key={`vault_qty_chip_${q}`}
                       style={[
                         styles.whFenrirPill,
-                        vaultMakerQuantity === q && { backgroundColor: 'rgba(0, 229, 255, 0.2)', borderColor: '#00E5FF' },
+                        vaultMakerQuantity === q && { backgroundColor: 'rgba(232, 200, 106, 0.15)', borderColor: THEME.colors.oroClaro },
                         { flex: 1, alignItems: 'center', paddingVertical: 6 },
                       ]}
                       onPress={() => setVaultMakerQuantity(q)}
                     >
-                      <Text style={{ color: vaultMakerQuantity === q ? '#00E5FF' : '#AAA', fontSize: 11, fontWeight: '700' }}>
+                      <Text style={{ color: vaultMakerQuantity === q ? THEME.colors.oroClaro : '#AAA', fontSize: 11, fontWeight: '700' }}>
                         x{q}
                       </Text>
                     </TouchableOpacity>
@@ -3227,8 +3227,8 @@ export const AccountsScreen = () => {
                 <View style={styles.vaultExtHeroCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                      <MaterialCommunityIcons name="safe" size={20} color="#00E5FF" />
-                      <Text style={{ color: '#00E5FF', fontWeight: '800', fontSize: 13 }}>
+                      <MaterialCommunityIcons name="safe" size={20} color={THEME.colors.arcano} />
+                      <Text style={{ color: THEME.colors.arcano, fontWeight: '800', fontSize: 13 }}>
                         BÓVEDA EXPANDIDA DEL BAÚL (ALMACENADO 1)
                       </Text>
                     </View>
@@ -3236,14 +3236,14 @@ export const AccountsScreen = () => {
                       paddingHorizontal: 8,
                       paddingVertical: 3,
                       borderRadius: 6,
-                      backgroundColor: vaultExtLevel >= 1 ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 152, 0, 0.15)',
+                      backgroundColor: vaultExtLevel >= 1 ? 'rgba(63, 207, 142, 0.15)' : 'rgba(255, 152, 0, 0.15)',
                       borderWidth: 1,
-                      borderColor: vaultExtLevel >= 1 ? '#00E676' : '#FF9800',
+                      borderColor: vaultExtLevel >= 1 ? THEME.colors.jade : '#FF9800',
                     }}>
                       <Text style={{
                         fontSize: 10,
                         fontWeight: 'bold',
-                        color: vaultExtLevel >= 1 ? '#00E676' : '#FFB74D',
+                        color: vaultExtLevel >= 1 ? THEME.colors.jade : '#FFB74D',
                       }}>
                         {vaultExtLevel >= 1 ? 'ACTIVA EN JUEGO' : 'DESACTIVADA'}
                       </Text>
@@ -3251,7 +3251,7 @@ export const AccountsScreen = () => {
                   </View>
 
                   <Text style={{ color: '#BBB', fontSize: 11, lineHeight: 16, marginBottom: 10 }}>
-                    Esta es la <Text style={{ color: '#00E5FF', fontWeight: 'bold' }}>Bóveda de Expansión oficial del Baúl</Text> de Season 6 (Almacenado 1). En el cliente del juego se abre abriendo el baúl y presionando el botón <Text style={{ color: '#FFF', fontWeight: 'bold' }}>[+]</Text> ("Abriendo una Bóveda Expandida").
+                    Esta es la <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold' }}>Bóveda de Expansión oficial del Baúl</Text> de Season 6 (Almacenado 1). En el cliente del juego se abre abriendo el baúl y presionando el botón <Text style={{ color: '#FFF', fontWeight: 'bold' }}>[+]</Text> ("Abriendo una Bóveda Expandida").
                   </Text>
 
                   <TouchableOpacity
@@ -3260,8 +3260,8 @@ export const AccountsScreen = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 6,
-                      backgroundColor: vaultExtLevel >= 1 ? 'rgba(0, 229, 255, 0.12)' : '#00E5FF',
-                      borderColor: '#00E5FF',
+                      backgroundColor: vaultExtLevel >= 1 ? 'rgba(91, 141, 239, 0.12)' : THEME.colors.arcano,
+                      borderColor: THEME.colors.arcano,
                       borderWidth: 1,
                       paddingVertical: 9,
                       borderRadius: 6,
@@ -3272,11 +3272,11 @@ export const AccountsScreen = () => {
                     activeOpacity={0.8}
                   >
                     {unlockingVaults ? (
-                      <ActivityIndicator size="small" color={vaultExtLevel >= 1 ? '#00E5FF' : '#000'} />
+                      <ActivityIndicator size="small" color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
                     ) : (
                       <>
-                        <MaterialCommunityIcons name="lightning-bolt" size={16} color={vaultExtLevel >= 1 ? '#00E5FF' : '#000'} />
-                        <Text style={{ color: vaultExtLevel >= 1 ? '#00E5FF' : '#000', fontWeight: 'bold', fontSize: 12 }}>
+                        <MaterialCommunityIcons name="lightning-bolt" size={16} color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
+                        <Text style={{ color: vaultExtLevel >= 1 ? THEME.colors.arcano : '#000', fontWeight: 'bold', fontSize: 12 }}>
                           {vaultExtLevel >= 1 ? 'Re-Sincronizar Bóveda en Juego' : 'Activar Bóveda Expandida en Juego'}
                         </Text>
                       </>
@@ -3340,17 +3340,17 @@ export const AccountsScreen = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 4,
-                      backgroundColor: 'rgba(0, 200, 83, 0.12)',
-                      borderColor: '#00C853',
+                      backgroundColor: 'rgba(63, 207, 142, 0.12)',
+                      borderColor: THEME.colors.jade,
                       borderWidth: 1,
-                      borderRadius: 8,
+                      borderRadius: 6,
                       paddingVertical: 9,
                     }}
                     onPress={handlePlaceMakerItemInVault}
                     activeOpacity={0.7}
                   >
-                    <MaterialCommunityIcons name="plus-box" size={16} color="#00E676" />
-                    <Text style={{ color: '#00E676', fontSize: 11, fontWeight: '800' }}>
+                    <MaterialCommunityIcons name="plus-box" size={16} color={THEME.colors.jade} />
+                    <Text style={{ color: THEME.colors.jade, fontSize: 11, fontWeight: '800' }}>
                       COLOCAR ÍTEM
                     </Text>
                   </TouchableOpacity>
@@ -3362,10 +3362,10 @@ export const AccountsScreen = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 4,
-                      backgroundColor: 'rgba(41, 182, 246, 0.12)',
-                      borderColor: '#29B6F6',
+                      backgroundColor: 'rgba(91, 141, 239, 0.12)',
+                      borderColor: THEME.colors.arcano,
                       borderWidth: 1,
-                      borderRadius: 8,
+                      borderRadius: 6,
                       paddingVertical: 9,
                     }}
                     onPress={() => {
@@ -3374,8 +3374,8 @@ export const AccountsScreen = () => {
                     }}
                     activeOpacity={0.7}
                   >
-                    <MaterialCommunityIcons name="tools" size={16} color="#29B6F6" />
-                    <Text style={{ color: '#29B6F6', fontSize: 11, fontWeight: '800' }}>
+                    <MaterialCommunityIcons name="tools" size={16} color={THEME.colors.arcano} />
+                    <Text style={{ color: THEME.colors.arcano, fontSize: 11, fontWeight: '800' }}>
                       ITEM MAKER
                     </Text>
                   </TouchableOpacity>
@@ -3384,15 +3384,15 @@ export const AccountsScreen = () => {
                 {/* Grid 8x15 (120 Slots de la Bóveda Expandida) */}
                 {loadingWarehouse ? (
                   <View style={{ padding: 40, alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#00E5FF" />
+                    <ActivityIndicator size="large" color={THEME.colors.arcano} />
                     <Text style={{ color: '#888', marginTop: 12 }}>Cargando Bóveda Expandida...</Text>
                   </View>
                 ) : (
                   <View style={{ alignItems: 'center' }}>
                     {movingVaultItem && (
-                      <View style={[styles.movingBanner, { borderColor: '#00E5FF' }]}>
+                      <View style={[styles.movingBanner, { borderColor: THEME.colors.arcano }]}>
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.movingBannerTitle, { color: '#00E5FF' }]}>
+                          <Text style={[styles.movingBannerTitle, { color: THEME.colors.arcano }]}>
                             Moviendo: {movingVaultItem.item.name} ({movingVaultItem.item.width || 1}x{movingVaultItem.item.height || 1})
                           </Text>
                           <Text style={styles.movingBannerSubtitle}>
@@ -3458,12 +3458,12 @@ export const AccountsScreen = () => {
               <MaterialCommunityIcons
                 name="safe"
                 size={22}
-                color={warehouseViewTab === 'vault_ext' ? '#00E5FF' : '#8E8E93'}
+                color={warehouseViewTab === 'vault_ext' ? THEME.colors.arcano : '#8E8E93'}
               />
               <Text
                 style={[
                   styles.whBottomTabText,
-                  warehouseViewTab === 'vault_ext' && { color: '#00E5FF', fontWeight: 'bold' },
+                  warehouseViewTab === 'vault_ext' && { color: THEME.colors.arcano, fontWeight: 'bold' },
                 ]}
               >
                 Bóveda Expandida
@@ -3612,17 +3612,17 @@ export const AccountsScreen = () => {
             {/* Tarjeta de Expansión Oficial Season 6 (ExtWarehouse 1 y 2) */}
             <View
               style={{
-                backgroundColor: 'rgba(0, 229, 255, 0.06)',
-                borderRadius: 8,
+                backgroundColor: 'rgba(91, 141, 239, 0.06)',
+                borderRadius: 6,
                 padding: 10,
                 marginBottom: 10,
                 borderWidth: 1,
-                borderColor: 'rgba(0, 229, 255, 0.3)',
+                borderColor: 'rgba(91, 141, 239, 0.3)',
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <MaterialCommunityIcons name="arrow-expand-all" size={16} color="#00E5FF" />
-                <Text style={{ color: '#00E5FF', fontWeight: 'bold', fontSize: 12 }}>
+                <MaterialCommunityIcons name="arrow-expand-all" size={16} color={THEME.colors.arcano} />
+                <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
                   Expansión de Baúl Oficial Season 6
                 </Text>
               </View>
@@ -3631,9 +3631,9 @@ export const AccountsScreen = () => {
               </Text>
               <TouchableOpacity
                 style={{
-                  backgroundColor: 'rgba(0, 229, 255, 0.2)',
+                  backgroundColor: 'rgba(91, 141, 239, 0.2)',
                   borderWidth: 1,
-                  borderColor: '#00E5FF',
+                  borderColor: THEME.colors.arcano,
                   borderRadius: 6,
                   paddingVertical: 7,
                   alignItems: 'center',
@@ -3644,8 +3644,8 @@ export const AccountsScreen = () => {
                 disabled={unlockingVaults}
                 onPress={handleActivateVaultExpansion}
               >
-                <MaterialCommunityIcons name="lightning-bolt" size={15} color="#00E5FF" />
-                <Text style={{ color: '#00E5FF', fontWeight: 'bold', fontSize: 12 }}>
+                <MaterialCommunityIcons name="lightning-bolt" size={15} color={THEME.colors.arcano} />
+                <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
                   Activar Expansión 1 y 2 en Juego
                 </Text>
               </TouchableOpacity>
@@ -4111,7 +4111,7 @@ export const AccountsScreen = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.detailModalOverlay}
         >
-          <View style={[styles.detailModalCard, { maxHeight: '92%' }]}>
+          <View style={[styles.detailModalCard, { maxHeight: '90%' }]}>
             <ScrollView
               contentContainerStyle={{ flexGrow: 1 }}
               keyboardShouldPersistTaps="handled"
@@ -4389,6 +4389,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6B5533',
     maxHeight: '90%',
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
   detailHeader: {
     flexDirection: 'row',
@@ -4663,20 +4666,20 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#00E676',
+    backgroundColor: THEME.colors.jade,
     borderWidth: 2,
     borderColor: '#1C1C1E',
   },
   onlineBadgePill: {
-    backgroundColor: 'rgba(0, 230, 118, 0.15)',
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.4)',
+    borderColor: 'rgba(63, 207, 142, 0.4)',
   },
   onlineBadgeText: {
-    color: '#00E676',
+    color: THEME.colors.jade,
     fontSize: 9,
     fontWeight: 'bold',
   },

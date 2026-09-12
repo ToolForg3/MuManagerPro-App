@@ -1203,13 +1203,13 @@ export const CharacterEditScreen = () => {
                 <View
                   style={[
                     styles.statusDot,
-                    { width: 7, height: 7, backgroundColor: isCharacterOnline ? '#FF5252' : '#00E676' }
+                    { width: 7, height: 7, backgroundColor: isCharacterOnline ? '#FF5252' : THEME.colors.jade }
                   ]}
                 />
                 <Text
                   style={[
                     styles.headerStatusPillText,
-                    { color: isCharacterOnline ? '#FF5252' : '#00E676' }
+                    { color: isCharacterOnline ? '#FF5252' : THEME.colors.jade }
                   ]}
                 >
                   {isCharacterOnline ? 'EN LÍNEA' : 'OFFLINE'}
@@ -1264,11 +1264,11 @@ export const CharacterEditScreen = () => {
         <View
           style={[
             styles.statusDot,
-            { backgroundColor: isCharacterOnline ? '#FF5252' : '#00E676' }
+            { backgroundColor: isCharacterOnline ? '#FF5252' : THEME.colors.jade }
           ]}
         />
         <View style={{ flex: 1 }}>
-          <Text style={[styles.statusBannerTitle, { color: isCharacterOnline ? '#FF7043' : '#00E676' }]}>
+          <Text style={[styles.statusBannerTitle, { color: isCharacterOnline ? '#FF7043' : THEME.colors.jade }]}>
             {isCharacterOnline ? '🔴 PERSONAJE EN JUEGO (EN LÍNEA)' : '🟢 DESCONECTADO (OFFLINE) • SEGURO'}
           </Text>
           <Text style={styles.statusBannerSubtitle}>
@@ -1278,12 +1278,12 @@ export const CharacterEditScreen = () => {
           </Text>
         </View>
         {isCheckingStatus ? (
-          <ActivityIndicator size="small" color={isCharacterOnline ? '#FF7043' : '#00E676'} />
+          <ActivityIndicator size="small" color={isCharacterOnline ? '#FF7043' : THEME.colors.jade} />
         ) : (
           <MaterialCommunityIcons
             name={isCharacterOnline ? 'alert-circle-outline' : 'shield-check'}
             size={20}
-            color={isCharacterOnline ? '#FF7043' : '#00E676'}
+            color={isCharacterOnline ? '#FF7043' : THEME.colors.jade}
           />
         )}
       </TouchableOpacity>
@@ -1547,9 +1547,9 @@ export const CharacterEditScreen = () => {
                     />
                   </View>
                   <View style={styles.muZenCol}>
-                    <Text style={[styles.muZenTag, { color: '#00E5FF' }]}>RUUD</Text>
+                    <Text style={[styles.muZenTag, { color: THEME.colors.arcano }]}>RUUD</Text>
                     <TextInput
-                      style={[styles.muZenValField, { color: '#00E5FF' }]}
+                      style={[styles.muZenValField, { color: THEME.colors.arcano }]}
                       value={ruud}
                       onChangeText={setRuud}
                       keyboardType="numeric"
@@ -2653,6 +2653,7 @@ export const CharacterEditScreen = () => {
               data={filteredCatalogSkills}
               keyExtractor={(item) => String(item.id)}
               keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled={true}
               contentContainerStyle={{ paddingBottom: 20 }}
               renderItem={({ item }) => {
                 const alreadyAdded = skills.some((s) => s.id === item.id);
@@ -3392,6 +3393,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6B5533',
     maxHeight: '90%',
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
     paddingBottom: 24,
   },
   skillPickerModalHeader: {
@@ -3812,8 +3816,8 @@ const styles = StyleSheet.create({
     borderColor: '#FF5252',
   },
   connectionStatusOffline: {
-    backgroundColor: 'rgba(0, 230, 118, 0.10)',
-    borderColor: '#00E676',
+    backgroundColor: 'rgba(63, 207, 142, 0.10)',
+    borderColor: THEME.colors.jade,
   },
   statusDot: {
     width: 10,
@@ -3835,7 +3839,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     gap: 4,
   },
@@ -3844,8 +3848,8 @@ const styles = StyleSheet.create({
     borderColor: '#FF5252',
   },
   headerStatusPillOffline: {
-    backgroundColor: 'rgba(0, 230, 118, 0.15)',
-    borderColor: '#00E676',
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
+    borderColor: THEME.colors.jade,
   },
   headerStatusPillText: {
     fontSize: 9,

@@ -1147,11 +1147,11 @@ export const ConfigScreen = () => {
 
               <View style={styles.updateCardBody}>
                 <View style={styles.updateRow}>
-                  <View style={[styles.updateIconBox, { backgroundColor: remoteConfig.releaseChannel === 'BETA' ? 'rgba(156, 39, 176, 0.15)' : 'rgba(255, 255, 255, 0.05)' }]}>
+                  <View style={[styles.updateIconBox, { backgroundColor: remoteConfig.releaseChannel === 'BETA' ? 'rgba(232, 200, 106, 0.15)' : 'rgba(255, 255, 255, 0.05)' }]}>
                     <MaterialCommunityIcons
                       name={remoteConfig.releaseChannel === 'BETA' ? "flask-round-bottom" : "shield-check"}
                       size={24}
-                      color={remoteConfig.releaseChannel === 'BETA' ? '#BA68C8' : THEME.colors.textSecondary}
+                      color={remoteConfig.releaseChannel === 'BETA' ? THEME.colors.oroClaro : THEME.colors.textSecondary}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -1236,12 +1236,12 @@ export const ConfigScreen = () => {
                   <MaterialCommunityIcons name="account-circle" size={24} color={THEME.colors.primaryOrange} />
                   <Text style={styles.sectionTitle}>Cuenta de Usuario</Text>
                 </View>
-                <View style={{ backgroundColor: 'rgba(0, 230, 118, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(0, 230, 118, 0.3)' }}>
-                  <Text style={{ color: '#00E676', fontSize: 10, fontWeight: '700' }}>SESIÓN ACTIVA</Text>
+                <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(63, 207, 142, 0.3)' }}>
+                  <Text style={{ color: THEME.colors.jade, fontSize: 10, fontWeight: '700' }}>SESIÓN ACTIVA</Text>
                 </View>
               </View>
 
-              <View style={{ backgroundColor: '#111114', padding: 12, borderRadius: 8, marginBottom: 14, borderWidth: 1, borderColor: THEME.colors.border }}>
+              <View style={{ backgroundColor: '#111114', padding: 12, borderRadius: 6, marginBottom: 14, borderWidth: 1, borderColor: THEME.colors.border }}>
                 <Text style={{ color: THEME.colors.textMuted, fontSize: 11, textTransform: 'uppercase', marginBottom: 2 }}>Usuario Conectado</Text>
                 <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '700' }}>{userEmail || 'Usuario'}</Text>
               </View>
@@ -1251,7 +1251,7 @@ export const ConfigScreen = () => {
                   backgroundColor: 'rgba(255, 82, 82, 0.12)',
                   borderWidth: 1,
                   borderColor: 'rgba(255, 82, 82, 0.3)',
-                  borderRadius: 8,
+                  borderRadius: 6,
                   paddingVertical: 12,
                   paddingHorizontal: 16,
                   flexDirection: 'row',
