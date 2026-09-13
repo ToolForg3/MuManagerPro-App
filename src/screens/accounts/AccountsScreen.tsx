@@ -21,7 +21,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
-import { INTERFACE_ASSETS } from '../../constants/equipAssets';
 import { AccountSummary, AccountUpdateData, CharacterSummary } from '../../types/character';
 import { SqlClient } from '../../services/database/sqlClient';
 import { useLanguage } from '../../context/LanguageContext';
@@ -3156,20 +3155,14 @@ export const AccountsScreen = () => {
                 {/* Footer Clásico de Baúl MU Online Season 6: ZEN en Jade, Almacenado en Brasa y Botones de Piedra */}
                 <View style={styles.muVaultFooterContainer}>
                   <View style={styles.muVaultMoneyRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Image source={INTERFACE_ASSETS.zenCoin} style={{ width: 14, height: 14 }} resizeMode="contain" />
-                      <Text style={styles.muVaultZenLabel}>ZEN</Text>
-                    </View>
+                    <Text style={styles.muVaultZenLabel}>ZEN</Text>
                     <View style={styles.muVaultMoneyBox}>
                       <Text style={styles.muVaultMoneyText}>0</Text>
                     </View>
                   </View>
 
                   <View style={styles.muVaultMoneyRow}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Image source={INTERFACE_ASSETS.zenCoin} style={{ width: 14, height: 14 }} resizeMode="contain" />
-                      <Text style={styles.muVaultStoredLabel}>ALMACENADO</Text>
-                    </View>
+                    <Text style={styles.muVaultStoredLabel}>ALMACENADO</Text>
                     <View style={styles.muVaultMoneyBox}>
                       <TextInput
                         style={styles.muVaultMoneyInput}

@@ -46,7 +46,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { LicenseService } from '../../services/security/licenseService';
 import { LicenseModal } from '../../components/security/LicenseModal';
 import { SkillImage } from '../../components/common/SkillImage';
-import { INTERFACE_ASSETS } from '../../constants/equipAssets';
 
 type TabType = 'Stats' | 'Progreso' | 'Skills' | 'Inventario' | 'Ubicacion' | 'Quest';
 type InventorySubTab = 'equip' | 'main' | 'ext1' | 'ext2' | 'store';
@@ -1539,10 +1538,7 @@ export const CharacterEditScreen = () => {
                 {/* Zen & Ruud Row */}
                 <View style={styles.muZenRowWrap}>
                   <View style={styles.muZenCol}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Image source={INTERFACE_ASSETS.zenCoin} style={{ width: 14, height: 14 }} resizeMode="contain" />
-                      <Text style={styles.muZenTag}>ZEN</Text>
-                    </View>
+                    <Text style={styles.muZenTag}>ZEN</Text>
                     <TextInput
                       style={styles.muZenValField}
                       value={zen}
@@ -1742,7 +1738,7 @@ export const CharacterEditScreen = () => {
                       onPress={handleUnlockExtensions}
                       disabled={unlockingExt}
                     >
-                      <Image source={INTERFACE_ASSETS.lockOpen} style={{ width: 14, height: 14 }} resizeMode="contain" />
+                      <MaterialCommunityIcons name="lock-open-variant-outline" size={14} color="#FF9800" />
                       <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF9800' }}>
                         {unlockingExt ? 'Desbloqueando...' : 'Desbloquear en Juego'}
                       </Text>
@@ -1776,7 +1772,7 @@ export const CharacterEditScreen = () => {
                       onPress={handleUnlockExtensions}
                       disabled={unlockingExt}
                     >
-                      <Image source={INTERFACE_ASSETS.lockOpen} style={{ width: 14, height: 14 }} resizeMode="contain" />
+                      <MaterialCommunityIcons name="lock-open-variant-outline" size={14} color="#FF9800" />
                       <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF9800' }}>
                         {unlockingExt ? 'Desbloqueando...' : 'Desbloquear en Juego'}
                       </Text>
@@ -1810,7 +1806,7 @@ export const CharacterEditScreen = () => {
                       onPress={handleUnlockExtensions}
                       disabled={unlockingExt}
                     >
-                      <Image source={INTERFACE_ASSETS.lockOpen} style={{ width: 14, height: 14 }} resizeMode="contain" />
+                      <MaterialCommunityIcons name="lock-open-outline" size={14} color="#FF9800" />
                       <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF9800' }}>Liberar Candado</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -1835,10 +1831,7 @@ export const CharacterEditScreen = () => {
 
             {/* Barra Inferior de Zen Oficial de MU Online (Captura Inventario) */}
             <View style={styles.muInvZenRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Image source={INTERFACE_ASSETS.zenCoin} style={{ width: 14, height: 14 }} resizeMode="contain" />
-                <Text style={styles.muZenTag}>ZEN</Text>
-              </View>
+              <Text style={styles.muZenTag}>ZEN</Text>
               <View style={styles.muInvZenBox}>
                 <Text style={styles.muInvZenVal}>{Number(zen || 0).toLocaleString()}</Text>
               </View>
@@ -1865,7 +1858,7 @@ export const CharacterEditScreen = () => {
                   style={styles.quickPkBtn}
                   onPress={handleQuickPkClear}
                 >
-                  <Image source={INTERFACE_ASSETS.pkBadge} style={{ width: 14, height: 14 }} resizeMode="contain" />
+                  <MaterialCommunityIcons name="broom" size={14} color={THEME.colors.accentGreenBright} />
                   <Text style={styles.quickPkBtnText}>PK CLEAR</Text>
                 </TouchableOpacity>
               </View>
@@ -1976,23 +1969,14 @@ export const CharacterEditScreen = () => {
                       ]}
                       onPress={() => setPkLevel(pk.level)}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        {isSelected && (
-                          <Image
-                            source={INTERFACE_ASSETS.pkBadge}
-                            style={{ width: 12, height: 12, tintColor: pk.color }}
-                            resizeMode="contain"
-                          />
-                        )}
-                        <Text
-                          style={[
-                            styles.pkPillText,
-                            isSelected && { color: pk.color, fontWeight: 'bold' }
-                          ]}
-                        >
-                          {pk.label}
-                        </Text>
-                      </View>
+                      <Text
+                        style={[
+                          styles.pkPillText,
+                          isSelected && { color: pk.color, fontWeight: 'bold' }
+                        ]}
+                      >
+                        {pk.label}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
