@@ -166,7 +166,7 @@ export const getMuClassInfo = (classId: number): MuClassInfo => {
     baseClass: 'Unknown',
     tier: 1,
     avatarIcon: 'account-question',
-    accentColor: '#757575',
+    accentColor: '#B8AEA0',
   };
 };
 

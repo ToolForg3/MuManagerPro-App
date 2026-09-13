@@ -262,19 +262,19 @@ export const CharacterListScreen = () => {
     const pkLvl = item.PkLevel ?? 3;
 
     let pkLabel = 'Ciudadano';
-    let pkColor = '#4CAF50';
+    let pkColor = THEME.colors.jade;
     let pkIcon = 'shield-check';
     if (pkLvl <= 2) {
       pkLabel = 'Héroe';
-      pkColor = '#00B0FF';
+      pkColor = THEME.colors.arcano;
       pkIcon = 'star-circle';
     } else if (pkLvl === 4) {
       pkLabel = 'Phono';
-      pkColor = '#FFB300';
+      pkColor = THEME.colors.oroClaro;
       pkIcon = 'alert-circle';
     } else if (pkLvl >= 5) {
       pkLabel = `PK ${item.PkCount ? `(${item.PkCount})` : ''}`;
-      pkColor = '#FF5252';
+      pkColor = THEME.colors.brasa;
       pkIcon = 'sword-cross';
     }
 
@@ -359,7 +359,7 @@ export const CharacterListScreen = () => {
           {/* Guild / Clan */}
           {!!item.GuildName && (
             <View style={styles.guildPill}>
-              <MaterialCommunityIcons name="shield-crown-outline" size={13} color="#E040FB" />
+              <MaterialCommunityIcons name="shield-crown-outline" size={13} color={THEME.colors.oroClaro} />
               <Text style={styles.guildPillText} numberOfLines={1}>{item.GuildName}</Text>
             </View>
           )}
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
     borderColor: THEME.colors.borde,
   },
   guildPillText: {
-    color: '#EA80FC',
+    color: THEME.colors.oroClaro,
     fontSize: 11,
     fontWeight: '600',
   },

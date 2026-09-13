@@ -1138,8 +1138,8 @@ export const ConfigScreen = () => {
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>CANAL DE ACTUALIZACIÓN (BETA)</Text>
-                <View style={[styles.versionPill, { backgroundColor: remoteConfig.releaseChannel === 'BETA' ? 'rgba(156, 39, 176, 0.2)' : 'rgba(33, 150, 243, 0.15)' }]}>
-                  <Text style={[styles.versionPillText, { color: remoteConfig.releaseChannel === 'BETA' ? '#CE93D8' : '#64B5F6' }]}>
+                <View style={[styles.versionPill, { backgroundColor: remoteConfig.releaseChannel === 'BETA' ? 'rgba(232, 200, 106, 0.2)' : 'rgba(91, 141, 239, 0.15)' }]}>
+                  <Text style={[styles.versionPillText, { color: remoteConfig.releaseChannel === 'BETA' ? THEME.colors.oroClaro : THEME.colors.arcano }]}>
                     {remoteConfig.releaseChannel === 'BETA' ? 'Canal Beta' : 'Canal Estable'}
                   </Text>
                 </View>
@@ -1178,8 +1178,8 @@ export const ConfigScreen = () => {
                       styles.checkUpdateBtn,
                       {
                         marginTop: 12,
-                        backgroundColor: remoteConfig.betaStatus === 'PENDING' ? 'rgba(255, 255, 255, 0.08)' : '#6A1B9A',
-                        borderColor: remoteConfig.betaStatus === 'PENDING' ? THEME.colors.border : '#8E24AA',
+                        backgroundColor: remoteConfig.betaStatus === 'PENDING' ? 'rgba(255, 255, 255, 0.08)' : THEME.colors.oroOscuro,
+                        borderColor: remoteConfig.betaStatus === 'PENDING' ? THEME.colors.border : THEME.colors.oroClaro,
                         borderWidth: 1,
                       }
                     ]}
@@ -1780,7 +1780,7 @@ const styles = StyleSheet.create({
   profileAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 6,
     backgroundColor: THEME.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1880,8 +1880,8 @@ const styles = StyleSheet.create({
   adminModalIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    borderRadius: 6,
+    backgroundColor: 'rgba(226, 112, 58, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1974,7 +1974,7 @@ const styles = StyleSheet.create({
   updateIconBox: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },

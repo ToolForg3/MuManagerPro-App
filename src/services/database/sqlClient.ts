@@ -295,52 +295,62 @@ export class SqlClient {
   private static async sendSecureRequest(
     endpoint: string,
     bodyPayload: any,
-    timeoutMs: number = 10000
+    timeoutMs: number = 10000,
+    maxRetries: number = 0
   ): Promise<Response> {
-    const hwid = await SecurityService.getDeviceHwid();
-    const effectiveAdminKey = await this.getStoredAdminKey();
-    const sessionToken = await this.getSessionToken();
-    const bodyStr = JSON.stringify(bodyPayload);
-    const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      const hwid = await SecurityService.getDeviceHwid();
+      const effectiveAdminKey = await this.getStoredAdminKey();
+      const sessionToken = await this.getSessionToken();
+      const bodyStr = JSON.stringify(bodyPayload);
+      const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
 
-    const bridgeUrl = this.getBridgeUrl();
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      const bridgeUrl = this.getBridgeUrl();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'X-App-Version': APP_VERSION,
-        ...secHeaders,
-        ...(effectiveAdminKey ? { 'X-Admin-Key': effectiveAdminKey } : {}),
-        ...(sessionToken ? {
-          'Authorization': `Bearer ${sessionToken}`,
-          'X-Session-Token': sessionToken,
-        } : {}),
-      };
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'X-App-Version': APP_VERSION,
+          ...secHeaders,
+          ...(effectiveAdminKey ? { 'X-Admin-Key': effectiveAdminKey } : {}),
+          ...(sessionToken ? {
+            'Authorization': `Bearer ${sessionToken}`,
+            'X-Session-Token': sessionToken,
+          } : {}),
+        };
 
-      const response = await fetch(`${bridgeUrl}${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: bodyStr,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+        const response = await fetch(`${bridgeUrl}${endpoint}`, {
+          method: 'POST',
+          headers,
+          body: bodyStr,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      // Si el servidor responde 403 (Kill-Switch activado remotamente)
-      if (response.status === 403) {
-        try {
-          const errData = await this.safeJson(response.clone());
-          if (errData.blocked) {
-            LicenseService.checkKillSwitch().catch(() => {});
-          }
-        } catch {}
+        // Si el servidor responde 403 (Kill-Switch activado remotamente)
+        if (response.status === 403) {
+          try {
+            const errData = await this.safeJson(response.clone());
+            if (errData.blocked) {
+              LicenseService.checkKillSwitch().catch(() => {});
+            }
+          } catch {}
+        }
+
+        return response;
+      } catch (e: any) {
+        clearTimeout(timeoutId);
+        const isNetworkOrTimeout = e?.name === 'AbortError' || e?.message?.includes('Network') || e?.message?.includes('Failed to fetch');
+        if (attempt <= maxRetries && isNetworkOrTimeout) {
+          await new Promise((res) => setTimeout(res, 1000 * attempt));
+          continue;
+        }
+        throw e;
       }
-
-      return response;
-    } catch (e) {
-      clearTimeout(timeoutId);
-      throw e;
     }
   }
 
@@ -395,7 +405,7 @@ export class SqlClient {
     const startTime = Date.now();
 
     try {
-      const res = await this.sendSecureRequest('/api/dashboard', { config: this.config });
+      const res = await this.sendSecureRequest('/api/dashboard', { config: this.config }, 12000, 1);
 
       if (!res.ok) {
         const errorJson = await this.safeJson(res);
@@ -432,7 +442,7 @@ export class SqlClient {
     const startTime = Date.now();
 
     try {
-      const res = await this.sendSecureRequest('/api/characters', { config: this.config });
+      const res = await this.sendSecureRequest('/api/characters', { config: this.config }, 15000, 1);
 
       if (!res.ok) {
         const errorJson = await this.safeJson(res);

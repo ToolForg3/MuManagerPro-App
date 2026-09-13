@@ -1316,7 +1316,7 @@ export const ToolsScreen = () => {
     const newPreset: KitPresetItem = {
       id: 'custom_' + Date.now(),
       name,
-      badgeColor: '#00B0FF',
+      badgeColor: THEME.colors.arcano,
       icon: 'star-outline',
       isCustom: true,
       zen: kitZen,
@@ -1654,7 +1654,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
     const newPreset: PrizePresetItem = {
       id: 'prize_custom_' + Date.now(),
       name,
-      badgeColor: '#00B0FF',
+      badgeColor: THEME.colors.arcano,
       icon: 'star-outline',
       isCustom: true,
       zen: prizeZen,
@@ -2989,7 +2989,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     paddingVertical: 2,
                     borderRadius: 6,
                     borderWidth: 1,
-                    borderColor: makerExcFlags === 0 ? '#555' : THEME.colors.jade,
+                    borderColor: makerExcFlags === 0 ? THEME.colors.borde : THEME.colors.jade,
                   }}>
                     <Text style={{
                       fontSize: 10,
@@ -6333,7 +6333,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     const levelBadge =
                       gm.gmLevel === 3 ? { text: 'Admin (3)', color: '#FFD700' } :
                       gm.gmLevel === 2 ? { text: 'Game Master (2)', color: THEME.colors.primaryOrange } :
-                      gm.gmLevel === 1 ? { text: 'Helper (1)', color: '#00B0FF' } :
+                      gm.gmLevel === 1 ? { text: 'Helper (1)', color: THEME.colors.arcano } :
                       { text: 'Normal (0)', color: THEME.colors.textoSecundario };
 
                     return (
@@ -8061,8 +8061,8 @@ const styles = StyleSheet.create({
   statsIconWrap: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 107, 0, 0.1)',
+    borderRadius: 6,
+    backgroundColor: 'rgba(226, 112, 58, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,

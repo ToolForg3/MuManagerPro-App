@@ -1,10 +1,10 @@
 {
-  "version": "1.9.2",
-  "minRequiredVersion": "1.9.2",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.2",
-  "publishedAt": "2026-09-13T02:05:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.2/MuManagerPro.apk",
-  "build": 94,
+  "version": "1.9.3",
+  "minRequiredVersion": "1.9.3",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.3",
+  "publishedAt": "2026-09-13T17:21:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.3/MuManagerPro.apk",
+  "build": 95,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v1.9.2 (Build 94) - Banco de Joyas, Nivel Editable y Escudo de Ranuras:\n• Banco de Joyas (CustomJewelBank Louis S6 Up40): Visualización y edición del saldo de las 10 joyas oficiales (Bless, Soul, Chaos, Life, Creation, Guardian, Harmony, GemStone, LowStone, HighStone) con llenado rápido (0, 100, 250, 1000).\n• Nivel de Personaje Editable: Modificación interactiva de cLevel (1 a 400) tanto en la pestaña Stats como en Progreso, con presets (Nv 1, 220, 380, 400 MAX) y guardado directo en SQL Server.\n• Escudo de Deduplicación de Slots: Corrección atómica del bug de creación de clones de personajes en ranuras vacías de AccountCharacter y auto-reparación preventiva al listar personajes."
+  "changelog": "MuManager PRO v1.9.3 (Build 95) - Blindaje de Seguridad, Resiliencia SQL y Depuracion Season 6:\n• Blindaje de Seguridad en Conector: Autenticacion estricta con cabecera x-admin-key en todos los endpoints administrativos del servidor.\n• Resiliencia de Red SQL: Reintento automatico inteligente ante micro-cortes o latencia en lecturas de base de datos sin duplicar transacciones atomicas.\n• Estandarizacion Season 6 (Piedra y Oro): Purga total de colores no canonicos, contraste WCAG AAA > 7:1 y esquinas goticas calibradas."
 }

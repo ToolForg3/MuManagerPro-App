@@ -779,7 +779,7 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
 
 // BUG-17: Protección estricta de rutas administrativas /api/admin/*
 app.use('/api/admin', (req, res, next) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (isValidAdminKey(adminKey)) {
     return next();
   }
@@ -830,7 +830,7 @@ app.use((req, res, next) => {
   }
 
   // 2. Validación de Clave Administrativa X-Admin-Key O Token de Sesión Firmado (H01, H02, H04)
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   let isAuthorized = false;
   let authUser = null;
 
@@ -5664,7 +5664,7 @@ app.post('/api/tools/purge-jewels', async (req, res) => {
 app.post('/api/admin/migrate-schema', async (req, res) => {
   try {
     const { config } = req.body;
-    const key = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+    const key = req.headers['x-admin-key'];
     if (!isValidAdminKey(key)) {
       return res.status(401).json({ success: false, error: 'No autorizado. Se requiere X-Admin-Key válida.' });
     }
@@ -6916,7 +6916,7 @@ app.post('/api/telemetry/ping', (req, res) => {
   // [H04-B FIX] Solo asociar identidad (email/username) si hay sesión autenticada válida en el conector.
   const _telAuthHeader = req.headers['authorization'] || req.headers['x-session-token'] || '';
   const _telToken = _telAuthHeader.replace(/^Bearer\s+/i, '').trim();
-  const _telAdminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey) || '';
+  const _telAdminKey = req.headers['x-admin-key'] || '';
   const canAssociateIdentity = (_telToken && !!verifySessionToken(_telToken)) || isValidAdminKey(_telAdminKey);
 
   // Telemetría de Usuario de la APK: Asociar presencia online en tiempo real SOLO con sesión válida
@@ -7905,7 +7905,7 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
 
 // 1. Extender tiempo DEMO desde el panel
 app.post('/api/admin/device/extend-demo', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -7940,7 +7940,7 @@ app.post('/api/admin/device/extend-demo', (req, res) => {
 
 // 2. Forzar Cierre de Sesión / Desvincular Cuenta de Celular
 app.post('/api/admin/device/invalidate-session', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8008,7 +8008,7 @@ app.post('/api/license/request-pro', async (req, res) => {
 
 // 4. Listar Solicitudes PRO para el Panel Web
 app.get('/api/admin/pro-requests', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8018,7 +8018,7 @@ app.get('/api/admin/pro-requests', (req, res) => {
 
 // 5. Acción sobre Solicitud PRO (Contactar / Aprobar / Descartar)
 app.post('/api/admin/pro-request/action', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8094,7 +8094,7 @@ app.post('/api/telemetry/crash', (req, res) => {
 
 // 7. Listar Logs de Seguridad y Bugs para el Panel Web
 app.get('/api/admin/security-logs', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8104,7 +8104,7 @@ app.get('/api/admin/security-logs', (req, res) => {
 
 // 8. Limpiar Logs de Seguridad
 app.post('/api/admin/security-logs/clear', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8114,7 +8114,7 @@ app.post('/api/admin/security-logs/clear', (req, res) => {
 
 // Obtener Ajustes Globales (Sanitización de privacidad para WhatsApp y claves)
 app.get('/api/admin/settings', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   const isAuth = isValidAdminKey(adminKey);
   const raw = loadSettings();
   const settings = JSON.parse(JSON.stringify(raw));
@@ -8141,7 +8141,7 @@ app.get('/api/admin/settings', (req, res) => {
 
 // Guardar Ajustes Globales (Kill-Switch Maestro, Anuncio, Whitelist)
 app.post('/api/admin/settings', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
@@ -8167,7 +8167,7 @@ app.post('/api/admin/settings', (req, res) => {
 
 // Obtener Configuración de WhatsApp (Sanitizado si no está autenticado)
 app.get('/api/admin/whatsapp', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   const isAuth = isValidAdminKey(adminKey);
   const settings = loadSettings();
   const wa = JSON.parse(JSON.stringify(settings.whatsapp || DEFAULT_SETTINGS.whatsapp));
@@ -8536,7 +8536,7 @@ app.get('/api/items/image/:name', (req, res) => {
 
 // Endpoint para alternar manualmente entre EMULADOR y CELULAR FÍSICO
 app.post('/api/admin/device/toggle-emulator', (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || (req.body && req.body.adminKey);
+  const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'NO_AUTORIZADO' });
   }
