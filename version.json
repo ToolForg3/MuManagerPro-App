@@ -1,10 +1,10 @@
 {
-  "version": "1.9.0",
-  "minRequiredVersion": "1.9.0",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.0",
-  "publishedAt": "2026-09-13T00:15:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.0/MuManagerPro.apk",
-  "build": 92,
+  "version": "1.9.1",
+  "minRequiredVersion": "1.9.1",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.1",
+  "publishedAt": "2026-09-13T00:41:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.1/MuManagerPro.apk",
+  "build": 93,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v1.9.0 (Build 92) - Perfeccionamiento y Nitidez Visual HD:\n• Restauración de Iconografía Vectorial Retina/AMOLED: Regreso a siluetas vectoriales de alta definición con bajo relieve en piedra y oro para ranuras de equipamiento vacías (sin deformaciones ni bloques planos).\n• Interfaz Ultra Limpia y Optimizada: Eliminación de artefactos de texturas de baja resolución de PC; botones de inventario, baúl y monedas con máxima legibilidad y contraste WCAG AAA.\n• 100% Compatibilidad y Rendimiento: Máxima fluidez y estabilidad sin degradación visual en pantallas móviles de alta densidad."
+  "changelog": "MuManager PRO v1.9.1 (Build 93) - Gestor, Auditor y Depurador de Joyas e Ítems SQL:\n• Gestor de Joyas del Servidor: Auditoría, censo y conteo exacto de unidades y paquetes (Bundles x10, x20, x30) con desglose por tipo y top de propietarios.\n• Depuración y Capping Flexible: Limpieza total, cuotas máximas por PJ/Baúl y tope global de stock en todo el servidor (Capping Server-Wide).\n• Blindaje Binario SQL y GameServer: Preservación de 16 bytes por ranura vacía (0xFF), protección de equipo equipado (slots 0..11) y omisión automática de cuentas conectadas (ConnectStat=1).\n• Compatibilidad Dual Louis S6 & MSPro: Detección dinámica de baúles extendidos (ExtWarehouse) sin alterar tablas ni riesgo de desincronización."
 }
