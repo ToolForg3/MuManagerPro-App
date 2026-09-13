@@ -58,13 +58,15 @@ import {
   GuildEntry,
   GuildMemberEntry,
   PkPlayerEntry,
+  JewelAuditResult,
+  JewelPurgeResult,
 } from '../../types/admin';
 import { AccountSummary, CharacterSummary } from '../../types/character';
 import { logAdminAction } from '../../services/adminLog';
 import { AutocompleteInput } from '../../components/common/AutocompleteInput';
 
-export type ToolTab = 'maker' | 'antidupe' | 'rankings' | 'fixes' | 'parsers' | 'kit' | 'prizes' | 'players' | 'guilds' | 'pk';
-const ALL_TABS: ToolTab[] = ['maker', 'antidupe', 'rankings', 'fixes', 'parsers', 'kit', 'prizes', 'players', 'guilds', 'pk'];
+export type ToolTab = 'maker' | 'jewels' | 'antidupe' | 'rankings' | 'fixes' | 'parsers' | 'kit' | 'prizes' | 'players' | 'guilds' | 'pk';
+const ALL_TABS: ToolTab[] = ['maker', 'jewels', 'antidupe', 'rankings', 'fixes', 'parsers', 'kit', 'prizes', 'players', 'guilds', 'pk'];
 
 // =========================================================================
 // 1. QUICK SETS CATALOG & INTERFACES DEFINITION
@@ -107,6 +109,44 @@ export const ToolsScreen = () => {
   const catalogSuggestions = useMemo(() => {
     return Array.from(new Set(DEFAULT_ITEM_CATALOG.map((i) => i.name)));
   }, []);
+
+  // --- GESTOR Y DEPURADOR DE JOYAS / ÍTEMS ---
+  const JEWEL_PRESETS = useMemo(() => [
+    { id: 'all_jewels', label: 'Todas las Joyas', icon: 'diamond-stone', color: '#E8C86A' },
+    { id: 'bless', label: 'Bless', group: 14, index: 13, icon: 'diamond', color: '#3FCF8E' },
+    { id: 'soul', label: 'Soul', group: 14, index: 14, icon: 'diamond', color: '#5B8DEF' },
+    { id: 'chaos', label: 'Chaos', group: 12, index: 15, icon: 'fire', color: '#E2703A' },
+    { id: 'life', label: 'Life', group: 14, index: 16, icon: 'heart', color: '#E8C86A' },
+    { id: 'creation', label: 'Creation', group: 14, index: 22, icon: 'leaf', color: '#3FCF8E' },
+    { id: 'harmony', label: 'Harmony', group: 14, index: 42, icon: 'star', color: '#F0D27A' },
+    { id: 'guardian', label: 'Guardian', group: 14, index: 31, icon: 'shield', color: '#C8BEAF' },
+    { id: 'gemstone', label: 'Gemstone', group: 14, index: 41, icon: 'gift', color: '#5B8DEF' },
+    { id: 'custom_jewels', label: 'Joyas Custom', icon: 'crown', color: '#E8C86A' },
+    { id: 'all_items', label: 'Cualquier Ítem', icon: 'cube-outline', color: '#C8BEAF' },
+  ], []);
+
+  const [jewelScope, setJewelScope] = useState<'all' | 'character' | 'account'>('all');
+  const [jewelTargetName, setJewelTargetName] = useState<string>('');
+  const [jewelFilterType, setJewelFilterType] = useState<string>('all_jewels');
+  const [jewelSpecificName, setJewelSpecificName] = useState<string>('');
+  const [jewelIncInventory, setJewelIncInventory] = useState<boolean>(true);
+  const [jewelIncWarehouse, setJewelIncWarehouse] = useState<boolean>(true);
+  const [jewelIncExtWarehouse, setJewelIncExtWarehouse] = useState<boolean>(true);
+  const [jewelProtectEquipment, setJewelProtectEquipment] = useState<boolean>(true);
+  const [jewelSkipOnline, setJewelSkipOnline] = useState<boolean>(true);
+
+  const [jewelActionMode, setJewelActionMode] = useState<'audit' | 'purge_all' | 'cap_target' | 'cap_server'>('audit');
+  const [jewelCapAmount, setJewelCapAmount] = useState<string>('50');
+  const [jewelCountBy, setJewelCountBy] = useState<'slots' | 'units'>('units');
+
+  const [isAuditingJewels, setIsAuditingJewels] = useState<boolean>(false);
+  const [isPurgingJewels, setIsPurgingJewels] = useState<boolean>(false);
+  const [jewelAuditResult, setJewelAuditResult] = useState<JewelAuditResult | null>(null);
+  const [jewelPurgeResult, setJewelPurgeResult] = useState<JewelPurgeResult | null>(null);
+
+  const [showJewelConfirmModal, setShowJewelConfirmModal] = useState<boolean>(false);
+  const [jewelConfirmText, setJewelConfirmText] = useState<string>('');
+
 
   useEffect(() => {
     // Scroll auto on tab switch
@@ -462,6 +502,132 @@ export const ToolsScreen = () => {
       Alert.alert('Error', e.message);
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const getSelectedJewelFilterParams = () => {
+    let itemFilter: any = 'all_jewels';
+    let specificGroup: number | undefined;
+    let specificIndex: number | undefined;
+
+    if (jewelFilterType === 'all_jewels') {
+      itemFilter = 'all_jewels';
+    } else if (jewelFilterType === 'custom_jewels') {
+      itemFilter = 'custom_jewels';
+    } else if (jewelFilterType === 'all_items') {
+      itemFilter = 'all_items';
+    } else if (jewelFilterType === 'bless') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 13;
+    } else if (jewelFilterType === 'soul') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 14;
+    } else if (jewelFilterType === 'chaos') {
+      itemFilter = 'specific'; specificGroup = 12; specificIndex = 15;
+    } else if (jewelFilterType === 'life') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 16;
+    } else if (jewelFilterType === 'creation') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 22;
+    } else if (jewelFilterType === 'harmony') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 42;
+    } else if (jewelFilterType === 'guardian') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 31;
+    } else if (jewelFilterType === 'gemstone') {
+      itemFilter = 'specific'; specificGroup = 14; specificIndex = 41;
+    } else if (jewelFilterType === 'specific') {
+      itemFilter = 'specific';
+      if (jewelSpecificName) {
+        const found = ItemDatabase.findByName(jewelSpecificName);
+        if (found) {
+          specificGroup = found.group;
+          specificIndex = found.index;
+        }
+      }
+    }
+
+    return { itemFilter, specificGroup, specificIndex };
+  };
+
+  const handleAuditJewels = async () => {
+    if (jewelScope !== 'all' && !jewelTargetName.trim()) {
+      Alert.alert('Campo Requerido', `Por favor especifica el ${jewelScope === 'character' ? 'personaje' : 'usuario/cuenta'} para auditar.`);
+      return;
+    }
+    const { itemFilter, specificGroup, specificIndex } = getSelectedJewelFilterParams();
+    try {
+      setIsAuditingJewels(true);
+      const res = await SqlClient.auditJewels({
+        targetScope: jewelScope,
+        targetName: jewelTargetName.trim(),
+        itemFilter,
+        specificGroup,
+        specificIndex,
+        includeInventory: jewelIncInventory,
+        includeWarehouse: jewelIncWarehouse,
+        includeExtWarehouse: jewelIncExtWarehouse,
+        protectEquipment: jewelProtectEquipment,
+      });
+      if (res.success) {
+        setJewelAuditResult(res);
+        setJewelPurgeResult(null);
+        if (res.totalSlots === 0) {
+          Alert.alert('Auditoría', 'No se encontraron joyas o ítems que coincidan con los filtros especificados.');
+        }
+      } else {
+        Alert.alert('Error', res.message || 'No se pudo completar la auditoría');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setIsAuditingJewels(false);
+    }
+  };
+
+  const handleExecutePurgeAction = async (isDryRunParam: boolean) => {
+    if (jewelScope !== 'all' && !jewelTargetName.trim()) {
+      Alert.alert('Campo Requerido', `Por favor especifica el ${jewelScope === 'character' ? 'personaje' : 'usuario/cuenta'}.`);
+      return;
+    }
+
+    const { itemFilter, specificGroup, specificIndex } = getSelectedJewelFilterParams();
+    const action = jewelActionMode === 'cap_target' ? 'cap_per_target' : jewelActionMode === 'cap_server' ? 'cap_server_wide' : 'purge_all';
+    const maxAmount = parseInt(jewelCapAmount, 10) || 0;
+
+    try {
+      setIsPurgingJewels(true);
+      const res = await SqlClient.purgeJewels({
+        targetScope: jewelScope,
+        targetName: jewelTargetName.trim(),
+        itemFilter,
+        specificGroup,
+        specificIndex,
+        action,
+        maxAmount,
+        countBy: jewelCountBy,
+        includeInventory: jewelIncInventory,
+        includeWarehouse: jewelIncWarehouse,
+        includeExtWarehouse: jewelIncExtWarehouse,
+        protectEquipment: jewelProtectEquipment,
+        skipOnline: jewelSkipOnline,
+        dryRun: isDryRunParam,
+      });
+
+      if (res.success) {
+        setJewelPurgeResult(res);
+        setShowJewelConfirmModal(false);
+        setJewelConfirmText('');
+        if (!isDryRunParam) {
+          handleAuditJewels();
+        }
+        Alert.alert(
+          isDryRunParam ? 'Simulación Completada' : 'Depuración Exitosa',
+          res.message + (res.skippedOnlineCount > 0 ? `\n\n🛡️ Se protegieron ${res.skippedOnlineCount} cuentas conectadas al juego.` : '')
+        );
+      } else {
+        Alert.alert('Error', res.message || 'Error al procesar depuración');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setIsPurgingJewels(false);
     }
   };
 
@@ -2251,6 +2417,20 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'jewels' && styles.tabButtonActive]}
+            onPress={() => setActiveTab('jewels')}
+          >
+            <MaterialCommunityIcons
+              name="diamond-stone"
+              size={18}
+              color={activeTab === 'jewels' ? '#E8C86A' : THEME.colors.textoSecundario}
+            />
+            <Text style={[styles.tabButtonText, activeTab === 'jewels' && styles.tabButtonTextActive]}>
+              Joyas
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.tabButton, activeTab === 'antidupe' && styles.tabButtonActive]}
             onPress={() => setActiveTab('antidupe')}
           >
@@ -3035,6 +3215,434 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               style={{ marginTop: 14, marginBottom: 20 }}
             />
           </View>
+          </ErrorBoundary>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: GESTOR & DEPURADOR DE JOYAS / ÍTEMS DEL SERVIDOR                     */}
+        {/* ========================================================================= */}
+        {activeTab === 'jewels' && (
+          <ErrorBoundary tabName="Joyas">
+            <View style={styles.tabContent}>
+              {/* Tarjeta de Configuración de Filtros */}
+              <View style={[styles.card, { zIndex: 10 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <MaterialCommunityIcons name="diamond-stone" size={24} color="#E8C86A" />
+                  <Text style={[styles.cardTitle, { marginLeft: 8, marginBottom: 0 }]}>
+                    Gestor & Depurador de Joyas
+                  </Text>
+                </View>
+                <Text style={styles.cardDesc}>
+                  Audita la economía de joyas o depura excedentes en inventarios y baúles con máxima seguridad SQL.
+                </Text>
+
+                {/* 1. Selector de Ámbito */}
+                <Text style={[styles.label, { marginTop: 10 }]}>1. Ámbito de Búsqueda:</Text>
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                  {(['all', 'character', 'account'] as const).map((sc) => (
+                    <TouchableOpacity
+                      key={`jewel_scope_${sc}`}
+                      style={[styles.filterPill, jewelScope === sc && styles.filterPillActive]}
+                      onPress={() => setJewelScope(sc)}
+                    >
+                      <Text style={[styles.filterPillText, jewelScope === sc && styles.filterPillTextActive]}>
+                        {sc === 'all' ? '🌐 Todo el Servidor' : sc === 'character' ? '👤 Por Personaje' : '📁 Por Cuenta'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Input de Personaje / Cuenta si no es 'all' */}
+                {jewelScope !== 'all' && (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={styles.label}>
+                      {jewelScope === 'character' ? 'Nombre del Personaje:' : 'Usuario / AccountID:'}
+                    </Text>
+                    <AutocompleteInput
+                      value={jewelTargetName}
+                      onChangeText={setJewelTargetName}
+                      suggestions={jewelScope === 'character' ? fixesCharSuggestions : fixesAccountSuggestions}
+                      placeholder={jewelScope === 'character' ? 'Ej: PETERETE' : 'Ej: cris'}
+                      icon={jewelScope === 'character' ? 'account' : 'account-box'}
+                      maxSuggestions={5}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                )}
+
+                {/* 2. Selector de Ubicaciones */}
+                <Text style={[styles.label, { marginTop: 14 }]}>2. Ubicaciones a Incluir:</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                  <TouchableOpacity
+                    style={[styles.filterPill, jewelIncInventory && styles.filterPillActive]}
+                    onPress={() => setJewelIncInventory(!jewelIncInventory)}
+                  >
+                    <MaterialCommunityIcons
+                      name={jewelIncInventory ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={16}
+                      color={jewelIncInventory ? '#100D0B' : THEME.colors.textoSecundario}
+                    />
+                    <Text style={[styles.filterPillText, jewelIncInventory && styles.filterPillTextActive, { marginLeft: 4 }]}>
+                      Inventarios
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.filterPill, jewelIncWarehouse && styles.filterPillActive]}
+                    onPress={() => setJewelIncWarehouse(!jewelIncWarehouse)}
+                  >
+                    <MaterialCommunityIcons
+                      name={jewelIncWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={16}
+                      color={jewelIncWarehouse ? '#100D0B' : THEME.colors.textoSecundario}
+                    />
+                    <Text style={[styles.filterPillText, jewelIncWarehouse && styles.filterPillTextActive, { marginLeft: 4 }]}>
+                      Baúl Principal (0)
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.filterPill, jewelIncExtWarehouse && styles.filterPillActive]}
+                    onPress={() => setJewelIncExtWarehouse(!jewelIncExtWarehouse)}
+                  >
+                    <MaterialCommunityIcons
+                      name={jewelIncExtWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={16}
+                      color={jewelIncExtWarehouse ? '#100D0B' : THEME.colors.textoSecundario}
+                    />
+                    <Text style={[styles.filterPillText, jewelIncExtWarehouse && styles.filterPillTextActive, { marginLeft: 4 }]}>
+                      Baúles Ext (1..N)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* 3. Selección de Joya / Ítem */}
+                <Text style={[styles.label, { marginTop: 14 }]}>3. Joya o Ítem Objetivo:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    {JEWEL_PRESETS.map((p) => (
+                      <TouchableOpacity
+                        key={`preset_${p.id}`}
+                        style={[
+                          styles.filterPill,
+                          jewelFilterType === p.id && styles.filterPillActive,
+                          { paddingHorizontal: 10 }
+                        ]}
+                        onPress={() => setJewelFilterType(p.id as any)}
+                      >
+                        <MaterialCommunityIcons
+                          name={p.icon as any}
+                          size={15}
+                          color={jewelFilterType === p.id ? '#100D0B' : p.color}
+                        />
+                        <Text style={[styles.filterPillText, jewelFilterType === p.id && styles.filterPillTextActive, { marginLeft: 4 }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+
+                {jewelFilterType === 'all_items' && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={[styles.label, { fontSize: 11 }]}>Buscar ítem específico (opcional):</Text>
+                    <AutocompleteInput
+                      value={jewelSpecificName}
+                      onChangeText={(val) => {
+                        setJewelSpecificName(val);
+                        if (val) setJewelFilterType('specific');
+                      }}
+                      suggestions={catalogSuggestions}
+                      placeholder="Ej: Chaos Dragon Shield (vacío para todos)"
+                      icon="magnify"
+                      maxSuggestions={5}
+                    />
+                  </View>
+                )}
+
+                {/* 4. Acción y Cuota */}
+                <Text style={[styles.label, { marginTop: 14 }]}>4. Acción a Realizar:</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                  {[
+                    { id: 'audit', label: '🔍 Solo Auditar / Contar' },
+                    { id: 'cap_server', label: '🌐 Dejar Tope Global Server' },
+                    { id: 'cap_target', label: '👤 Dejar Tope por PJ / Baúl' },
+                    { id: 'purge_all', label: '🔥 Depurar / Vaciar Todo' },
+                  ].map((act) => (
+                    <TouchableOpacity
+                      key={`act_${act.id}`}
+                      style={[styles.filterPill, jewelActionMode === act.id && styles.filterPillActive]}
+                      onPress={() => setJewelActionMode(act.id as any)}
+                    >
+                      <Text style={[styles.filterPillText, jewelActionMode === act.id && styles.filterPillTextActive]}>
+                        {act.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Opciones de Capping numérico */}
+                {(jewelActionMode === 'cap_target' || jewelActionMode === 'cap_server') && (
+                  <View style={{ marginTop: 12, padding: 10, backgroundColor: '#191512', borderRadius: 6, borderWidth: 1, borderColor: '#6B5533' }}>
+                    <Text style={[styles.label, { color: '#E8C86A' }]}>
+                      {jewelActionMode === 'cap_server'
+                        ? 'Tope Máximo en TODO el Servidor (dejar hasta):'
+                        : 'Tope Máximo por Personaje / Baúl (dejar hasta):'}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                      <TextInput
+                        style={[styles.textInput, { flex: 1, backgroundColor: '#100D0B', borderColor: '#A8894D', color: '#FAF6EE', height: 42, paddingHorizontal: 10 }]}
+                        value={jewelCapAmount}
+                        onChangeText={setJewelCapAmount}
+                        keyboardType="numeric"
+                        placeholder="Ej: 50"
+                        placeholderTextColor="#B8AEA0"
+                      />
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        {(['units', 'slots'] as const).map((unitMode) => (
+                          <TouchableOpacity
+                            key={`mode_${unitMode}`}
+                            style={[styles.filterPill, jewelCountBy === unitMode && styles.filterPillActive]}
+                            onPress={() => setJewelCountBy(unitMode)}
+                          >
+                            <Text style={[styles.filterPillText, jewelCountBy === unitMode && styles.filterPillTextActive]}>
+                              {unitMode === 'units' ? 'Unidades' : 'Slots'}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 11, color: THEME.colors.textoSecundario, marginTop: 4 }}>
+                      {jewelCountBy === 'units'
+                        ? 'ℹ️ Modo Unidades: Los bundles se calculan según su contenido real (x10, x20, x30).'
+                        : 'ℹ️ Modo Slots: Cada ranura ocupada cuenta como 1, sin importar si es bundle o joya suelta.'}
+                    </Text>
+                  </View>
+                )}
+
+                {/* 5. Toggles de Seguridad SQL */}
+                <View style={{ marginTop: 14, padding: 10, backgroundColor: '#241E1A', borderRadius: 6, borderWidth: 1, borderColor: '#6B5533' }}>
+                  <Text style={[styles.label, { color: '#E8C86A', marginBottom: 8 }]}>🛡️ Blindaje de Seguridad SQL:</Text>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={{ fontSize: 12, color: THEME.colors.texto, fontWeight: '600' }}>Proteger Equipo Equipado (Slots 0..11)</Text>
+                      <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario }}>Evita desvestir o alterar alas, armas o sets puestos.</Text>
+                    </View>
+                    <Switch
+                      value={jewelProtectEquipment}
+                      onValueChange={setJewelProtectEquipment}
+                      trackColor={{ false: '#33271E', true: '#3FCF8E' }}
+                      thumbColor={jewelProtectEquipment ? '#FAF6EE' : '#B8AEA0'}
+                    />
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={{ fontSize: 12, color: THEME.colors.texto, fontWeight: '600' }}>Omitir Cuentas Online (GameServer Shield)</Text>
+                      <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario }}>Evita que el GameServer sobreescriba datos en memoria.</Text>
+                    </View>
+                    <Switch
+                      value={jewelSkipOnline}
+                      onValueChange={setJewelSkipOnline}
+                      trackColor={{ false: '#33271E', true: '#3FCF8E' }}
+                      thumbColor={jewelSkipOnline ? '#FAF6EE' : '#B8AEA0'}
+                    />
+                  </View>
+                </View>
+
+                {/* Botones de Acción */}
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                  <TouchableOpacity
+                    style={[styles.searchBtn, { flex: 1 }]}
+                    onPress={handleAuditJewels}
+                    disabled={isAuditingJewels}
+                  >
+                    {isAuditingJewels ? (
+                      <ActivityIndicator color="#E8C86A" size="small" />
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons name="magnify" size={18} color="#E8C86A" />
+                        <Text style={styles.searchBtnText}>Auditar / Contar</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  {jewelActionMode !== 'audit' && (
+                    <TouchableOpacity
+                      style={[styles.filterPill, { flex: 1, backgroundColor: '#2B2521', borderColor: '#A8894D', justifyContent: 'center', alignItems: 'center', height: 44 }]}
+                      onPress={() => handleExecutePurgeAction(true)}
+                      disabled={isPurgingJewels}
+                    >
+                      {isPurgingJewels ? (
+                        <ActivityIndicator color="#E8C86A" size="small" />
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <MaterialCommunityIcons name="shield-check" size={16} color="#E8C86A" style={{ marginRight: 4 }} />
+                          <Text style={{ color: '#E8C86A', fontWeight: 'bold', fontSize: 12 }}>Simular (Dry-Run)</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  )}
+
+                  {jewelActionMode !== 'audit' && (
+                    <TouchableOpacity
+                      style={[styles.scanDupesBtn, { flex: 1.2 }]}
+                      onPress={() => setShowJewelConfirmModal(true)}
+                      disabled={isPurgingJewels}
+                    >
+                      <MaterialCommunityIcons name="fire" size={18} color="#E2703A" />
+                      <Text style={styles.scanDupesBtnText}>
+                        {jewelActionMode === 'purge_all' ? 'Depurar Todo' : 'Aplicar Tope'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              {/* Banner de Resultados de Auditoría */}
+              {jewelAuditResult && (
+                <View style={styles.card}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <Text style={styles.cardTitle}>Resultados de Auditoría:</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ color: '#3FCF8E', fontWeight: 'bold', fontSize: 13 }}>
+                        {jewelAuditResult.totalUnits.toLocaleString()} unidades
+                      </Text>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
+                        ({jewelAuditResult.totalSlots} slots)
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Desglose por Tipo de Joya */}
+                  {jewelAuditResult.summaryByType.length > 0 ? (
+                    <View style={{ marginBottom: 14 }}>
+                      <Text style={[styles.label, { marginBottom: 6 }]}>Desglose por Tipo:</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                        {jewelAuditResult.summaryByType.map((tItem) => (
+                          <View
+                            key={`sum_${tItem.id}`}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              backgroundColor: '#191512',
+                              paddingHorizontal: 8,
+                              paddingVertical: 6,
+                              borderRadius: 6,
+                              borderWidth: 1,
+                              borderColor: '#6B5533',
+                            }}
+                          >
+                            <ItemImage itemName={tItem.name} size={22} fallbackIcon={tItem.icon} fallbackColor="#E8C86A" />
+                            <View style={{ marginLeft: 6 }}>
+                              <Text style={{ color: '#FAF6EE', fontSize: 11, fontWeight: '600' }}>{tItem.name}</Text>
+                              <Text style={{ color: '#E8C86A', fontSize: 10 }}>
+                                {tItem.totalUnits.toLocaleString()} u. ({tItem.totalSlots} slots)
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  ) : (
+                    <Text style={{ color: THEME.colors.textoSecundario, fontStyle: 'italic', marginBottom: 10 }}>
+                      No se encontraron joyas o ítems con los filtros seleccionados.
+                    </Text>
+                  )}
+
+                  {/* Top Jugadores / Baúles */}
+                  {jewelAuditResult.owners.length > 0 && (
+                    <View>
+                      <Text style={[styles.label, { marginBottom: 6 }]}>
+                        Distribución por Jugadores / Baúles ({jewelAuditResult.owners.length}):
+                      </Text>
+                      {jewelAuditResult.owners.slice(0, 15).map((ow, oIdx) => (
+                        <View
+                          key={`ow_${ow.ownerKey}_${oIdx}`}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingVertical: 6,
+                            borderBottomWidth: oIdx < 14 ? 1 : 0,
+                            borderBottomColor: '#2B2521',
+                          }}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: '#FAF6EE', fontSize: 12, fontWeight: '600' }}>
+                              {ow.charName ? `PJ: ${ow.charName}` : `Cuenta: ${ow.accountId}`}
+                            </Text>
+                            <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10 }}>
+                              {ow.location} • Cuenta: {ow.accountId} {ow.isOnline && '• 🟢 ONLINE'}
+                            </Text>
+                          </View>
+                          <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={{ color: '#F0D27A', fontWeight: 'bold', fontSize: 12 }}>
+                              {ow.unitsCount.toLocaleString()} u.
+                            </Text>
+                            <Text style={{ color: THEME.colors.textMuted, fontSize: 9 }}>
+                              {ow.slotsCount} slots
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                      {jewelAuditResult.owners.length > 15 && (
+                        <Text style={{ color: THEME.colors.textMuted, fontSize: 10, textAlign: 'center', marginTop: 8 }}>
+                          ... y {jewelAuditResult.owners.length - 15} ubicaciones más.
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Banner de Resultado de Purga / Simulación */}
+              {jewelPurgeResult && (
+                <View style={[styles.card, { borderColor: jewelPurgeResult.dryRun ? '#A8894D' : '#3FCF8E' }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                    <MaterialCommunityIcons
+                      name={jewelPurgeResult.dryRun ? 'shield-search' : 'check-circle'}
+                      size={24}
+                      color={jewelPurgeResult.dryRun ? '#E8C86A' : '#3FCF8E'}
+                    />
+                    <Text style={[styles.cardTitle, { marginLeft: 8, marginBottom: 0 }]}>
+                      {jewelPurgeResult.dryRun ? 'Proyección de Simulación (Dry-Run)' : 'Depuración SQL Ejecutada'}
+                    </Text>
+                  </View>
+                  <Text style={{ color: '#FAF6EE', fontSize: 12, marginBottom: 10 }}>
+                    {jewelPurgeResult.message}
+                  </Text>
+
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    <View style={{ flex: 1, minWidth: 100, backgroundColor: '#191512', padding: 8, borderRadius: 6 }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10 }}>Slots Eliminados</Text>
+                      <Text style={{ color: '#E2703A', fontSize: 16, fontWeight: 'bold' }}>{jewelPurgeResult.slotsDeleted}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 100, backgroundColor: '#191512', padding: 8, borderRadius: 6 }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10 }}>Unidades Eliminadas</Text>
+                      <Text style={{ color: '#E2703A', fontSize: 16, fontWeight: 'bold' }}>{jewelPurgeResult.unitsDeleted}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 100, backgroundColor: '#191512', padding: 8, borderRadius: 6 }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10 }}>Slots Conservados</Text>
+                      <Text style={{ color: '#3FCF8E', fontSize: 16, fontWeight: 'bold' }}>{jewelPurgeResult.slotsKept}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 100, backgroundColor: '#191512', padding: 8, borderRadius: 6 }}>
+                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10 }}>Unidades Conservadas</Text>
+                      <Text style={{ color: '#3FCF8E', fontSize: 16, fontWeight: 'bold' }}>{jewelPurgeResult.unitsKept}</Text>
+                    </View>
+                  </View>
+
+                  {jewelPurgeResult.skippedOnlineCount > 0 && (
+                    <View style={{ marginTop: 10, padding: 8, backgroundColor: '#241E1A', borderRadius: 6 }}>
+                      <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '600' }}>
+                        🛡️ {jewelPurgeResult.skippedOnlineCount} cuentas online protegidas (sin modificar).
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
           </ErrorBoundary>
         )}
 
@@ -6726,6 +7334,93 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 )}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODAL DE CONFIRMACIÓN CRÍTICA DEPURACIÓN DE JOYAS */}
+      <Modal
+        visible={showJewelConfirmModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowJewelConfirmModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxWidth: 420, maxHeight: '90%' }]}>
+            <ScrollView nestedScrollEnabled>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <MaterialCommunityIcons name="alert-octagon" size={26} color="#E2703A" />
+                <Text style={[styles.modalTitle, { marginLeft: 8, color: '#E2703A', marginBottom: 0 }]}>
+                  Confirmar Depuración SQL
+                </Text>
+              </View>
+
+              <Text style={{ color: THEME.colors.texto, fontSize: 13, lineHeight: 18, marginBottom: 12 }}>
+                Estás a punto de modificar directamente la base de datos SQL Server.
+              </Text>
+
+              <View style={{ backgroundColor: '#191512', padding: 10, borderRadius: 6, borderWidth: 1, borderColor: '#6B5533', marginBottom: 12 }}>
+                <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '600' }}>Resumen de Operación:</Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 4 }}>
+                  • Acción: {jewelActionMode === 'purge_all' ? 'Vaciar / Eliminar 100%' : jewelActionMode === 'cap_server' ? `Dejar hasta ${jewelCapAmount} en todo el server` : `Dejar hasta ${jewelCapAmount} por PJ/Baúl`}
+                </Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 2 }}>
+                  • Ámbito: {jewelScope === 'all' ? 'Todo el Servidor' : jewelScope === 'character' ? `Personaje '${jewelTargetName}'` : `Cuenta '${jewelTargetName}'`}
+                </Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 2 }}>
+                  • Joya: {JEWEL_PRESETS.find(p => p.id === jewelFilterType)?.label || jewelFilterType}
+                </Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 2 }}>
+                  • Equipo equipado: {jewelProtectEquipment ? '🛡️ Protegido' : '⚠️ No protegido'}
+                </Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 2 }}>
+                  • Cuentas Online: {jewelSkipOnline ? '🛡️ Omitidas (Protegidas)' : '⚠️ Incluidas'}
+                </Text>
+              </View>
+
+              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 14 }}>
+                Para proceder, escribe <Text style={{ color: '#E8C86A', fontWeight: 'bold' }}>DEPURAR</Text> en el recuadro inferior:
+              </Text>
+
+              <TextInput
+                style={[styles.textInput, { backgroundColor: '#100D0B', borderColor: '#A8894D', color: '#FAF6EE', height: 42, paddingHorizontal: 10, marginBottom: 16 }]}
+                value={jewelConfirmText}
+                onChangeText={setJewelConfirmText}
+                placeholder="Escribe DEPURAR para confirmar"
+                placeholderTextColor="#B8AEA0"
+                autoCapitalize="characters"
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  style={[styles.filterPill, { flex: 1, justifyContent: 'center', alignItems: 'center', height: 44 }]}
+                  onPress={() => {
+                    setShowJewelConfirmModal(false);
+                    setJewelConfirmText('');
+                  }}
+                >
+                  <Text style={styles.filterPillText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.scanDupesBtn,
+                    { flex: 1.4, opacity: jewelConfirmText.trim().toUpperCase() === 'DEPURAR' ? 1 : 0.5 }
+                  ]}
+                  onPress={() => handleExecutePurgeAction(false)}
+                  disabled={jewelConfirmText.trim().toUpperCase() !== 'DEPURAR' || isPurgingJewels}
+                >
+                  {isPurgingJewels ? (
+                    <ActivityIndicator color="#E2703A" size="small" />
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <MaterialCommunityIcons name="fire" size={18} color="#E2703A" style={{ marginRight: 4 }} />
+                      <Text style={styles.scanDupesBtnText}>Confirmar Purga</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>

@@ -4618,6 +4618,40 @@ function decodeItemBasic(hex32) {
   return { group, index, level, serial, isExc, name, hex: hex32 };
 }
 
+function getJewelInfo(group, index, level = 0) {
+  if (group === 12) {
+    if (index === 15) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Chaos', icon: 'fire' };
+    if (index === 30) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Bundle of Jewel of Bless', icon: 'diamond' };
+    if (index === 31) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Bundle of Jewel of Soul', icon: 'diamond' };
+    if (index === 136) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Jewel of Life Bundle', icon: 'heart' };
+    if (index === 137) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Jewel of Creation Bundle', icon: 'leaf' };
+    if (index === 138) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Jewel of Guardian Bundle', icon: 'shield' };
+    if (index === 139) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Bundled Gemstone', icon: 'gift' };
+    if (index === 140) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Jewel of Harmony Bundle', icon: 'star' };
+    if (index === 141) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Jewel of Chaos Bundle', icon: 'fire' };
+    if (index === 142) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Lower Refining Stone Bundle', icon: 'hammer' };
+    if (index === 143) return { isJewel: true, isBundle: true, units: (level + 1) * 10, name: 'Higher Refining Stone Bundle', icon: 'lightning-bolt' };
+  }
+  if (group === 14) {
+    if (index === 13) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Bless', icon: 'diamond' };
+    if (index === 14) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Soul', icon: 'diamond' };
+    if (index === 16) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Life', icon: 'heart' };
+    if (index === 22) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Creation', icon: 'leaf' };
+    if (index === 31) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Guardian', icon: 'shield' };
+    if (index === 41) return { isJewel: true, isBundle: false, units: 1, name: 'Gemstone', icon: 'gift' };
+    if (index === 42) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Harmony', icon: 'star' };
+    if (index === 43) return { isJewel: true, isBundle: false, units: 1, name: 'Lower refining stone', icon: 'hammer' };
+    if (index === 44) return { isJewel: true, isBundle: false, units: 1, name: 'Higher refining stone', icon: 'lightning-bolt' };
+    if (index === 160) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Extension', icon: 'diamond' };
+    if (index === 161) return { isJewel: true, isBundle: false, units: 1, name: 'Jewel of Elevation', icon: 'diamond' };
+    if ((index >= 170 && index <= 250) || (index >= 300 && index <= 350)) {
+      const customName = (typeof SERVER_ITEM_NAMES !== 'undefined' && SERVER_ITEM_NAMES[`${group}_${index}`]) ? SERVER_ITEM_NAMES[`${group}_${index}`] : `Custom Jewel (${index})`;
+      return { isJewel: true, isCustom: true, isBundle: false, units: 1, name: customName, icon: 'diamond' };
+    }
+  }
+  return null;
+}
+
 function getItemDimensions(group, index) {
   if (group <= 5) {
     if (group === 0 && (index === 0 || index === 1)) return { w: 1, h: 2 };
@@ -5510,6 +5544,654 @@ app.post('/api/tools/clean-hex', async (req, res) => {
       success: true,
       backupHex,
       message: `Vaciado completado a 0xFF para ${targetType === 'warehouse' ? 'Baúl' : 'Inventario'} de '${targetId}'. Se guardó copia previa de respaldo.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// =========================================================================
+// 8. AUDITORÍA Y CONTROL DE JOYAS / ÍTEMS DEL SERVIDOR
+// =========================================================================
+app.post('/api/tools/audit-jewels', async (req, res) => {
+  try {
+    const {
+      targetScope = 'all',
+      targetName = '',
+      itemFilter = 'all_jewels',
+      specificGroup,
+      specificIndex,
+      includeInventory = true,
+      includeWarehouse = true,
+      includeExtWarehouse = true,
+      protectEquipment = true,
+      config
+    } = req.body || {};
+
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const auditData = await executeSql(config, async (pool) => {
+      // 1. Obtener lista de cuentas online (para marcar y proteger)
+      const onlineAccounts = new Set();
+      try {
+        const onlineRes = await pool.request().query("SELECT memb___id FROM MEMB_STAT WITH (NOLOCK) WHERE ConnectStat = 1;");
+        if (onlineRes.recordset) {
+          for (const row of onlineRes.recordset) {
+            if (row.memb___id) onlineAccounts.add(row.memb___id.trim().toLowerCase());
+          }
+        }
+      } catch (_) {}
+
+      const matchFilter = (group, index, level) => {
+        if (itemFilter === 'all_jewels') {
+          return getJewelInfo(group, index, level) !== null;
+        }
+        if (itemFilter === 'custom_jewels') {
+          const info = getJewelInfo(group, index, level);
+          return info && info.isCustom === true;
+        }
+        if (itemFilter === 'specific') {
+          if (specificGroup !== undefined && specificIndex !== undefined) {
+            return group === Number(specificGroup) && index === Number(specificIndex);
+          }
+          return false;
+        }
+        if (itemFilter === 'all_items') {
+          return true;
+        }
+        return false;
+      };
+
+      let totalSlots = 0;
+      let totalUnits = 0;
+      const typeMap = new Map();
+      const ownerMap = new Map();
+
+      // 1. Warehouse (Baúl 0)
+      if (includeWarehouse) {
+        let whQuerySql = 'SELECT w.AccountID, w.Items FROM warehouse w WITH (NOLOCK) WHERE w.Items IS NOT NULL';
+        if (targetScope === 'account' && targetName) {
+          whQuerySql += ` AND (LTRIM(RTRIM(w.AccountID)) = @Target OR w.AccountID = @Target)`;
+        }
+        const reqWh = pool.request();
+        if (targetScope === 'account' && targetName) reqWh.input('Target', sql.VarChar(10), targetName.trim());
+        const whRes = await reqWh.query(whQuerySql);
+
+        for (const row of whRes.recordset) {
+          const buf = row.Items;
+          if (!buf || !Buffer.isBuffer(buf)) continue;
+          const accId = (row.AccountID || '').trim();
+          const isOnline = onlineAccounts.has(accId.toLowerCase());
+          const ownerKey = `wh_${accId}_0`;
+
+          const slotsCount = Math.min(Math.floor(buf.length / 16), 120);
+          for (let s = 0; s < slotsCount; s++) {
+            const offset = s * 16;
+            if (buf[offset] === 0xFF) continue;
+            const hex32 = buf.toString('hex', offset, offset + 16).toUpperCase();
+            const parsed = decodeItemBasic(hex32);
+            if (!parsed) continue;
+
+            if (matchFilter(parsed.group, parsed.index, parsed.level)) {
+              const jInfo = getJewelInfo(parsed.group, parsed.index, parsed.level);
+              const units = jInfo ? jInfo.units : 1;
+              const typeKey = `${parsed.group}_${parsed.index}`;
+
+              totalSlots++;
+              totalUnits += units;
+
+              if (!typeMap.has(typeKey)) {
+                typeMap.set(typeKey, {
+                  id: typeKey,
+                  name: jInfo?.name || parsed.name,
+                  group: parsed.group,
+                  index: parsed.index,
+                  totalSlots: 0,
+                  totalUnits: 0,
+                  icon: jInfo?.icon || 'diamond'
+                });
+              }
+              const tEntry = typeMap.get(typeKey);
+              tEntry.totalSlots++;
+              tEntry.totalUnits += units;
+
+              if (!ownerMap.has(ownerKey)) {
+                ownerMap.set(ownerKey, {
+                  ownerKey,
+                  accountId: accId,
+                  charName: null,
+                  location: 'Baúl #0',
+                  isOnline,
+                  slotsCount: 0,
+                  unitsCount: 0
+                });
+              }
+              const oEntry = ownerMap.get(ownerKey);
+              oEntry.slotsCount++;
+              oEntry.unitsCount += units;
+            }
+          }
+        }
+      }
+
+      // 2. ExtWarehouse (Baúles 1, 2, 3...)
+      if (includeExtWarehouse) {
+        try {
+          const extCheck = await pool.request().query("SELECT 1 FROM sys.tables WHERE name = 'ExtWarehouse';");
+          if (extCheck.recordset && extCheck.recordset.length > 0) {
+            let extQuerySql = 'SELECT e.AccountID, e.Number, e.Items FROM ExtWarehouse e WITH (NOLOCK) WHERE e.Items IS NOT NULL';
+            if (targetScope === 'account' && targetName) {
+              extQuerySql += ` AND (LTRIM(RTRIM(e.AccountID)) = @Target OR e.AccountID = @Target)`;
+            }
+            const reqExt = pool.request();
+            if (targetScope === 'account' && targetName) reqExt.input('Target', sql.VarChar(10), targetName.trim());
+            const extRes = await reqExt.query(extQuerySql);
+
+            for (const row of extRes.recordset) {
+              const buf = row.Items;
+              if (!buf || !Buffer.isBuffer(buf)) continue;
+              const accId = (row.AccountID || '').trim();
+              const wareNum = row.Number || 1;
+              const isOnline = onlineAccounts.has(accId.toLowerCase());
+              const ownerKey = `ext_${accId}_${wareNum}`;
+
+              const slotsCount = Math.min(Math.floor(buf.length / 16), 120);
+              for (let s = 0; s < slotsCount; s++) {
+                const offset = s * 16;
+                if (buf[offset] === 0xFF) continue;
+                const hex32 = buf.toString('hex', offset, offset + 16).toUpperCase();
+                const parsed = decodeItemBasic(hex32);
+                if (!parsed) continue;
+
+                if (matchFilter(parsed.group, parsed.index, parsed.level)) {
+                  const jInfo = getJewelInfo(parsed.group, parsed.index, parsed.level);
+                  const units = jInfo ? jInfo.units : 1;
+                  const typeKey = `${parsed.group}_${parsed.index}`;
+
+                  totalSlots++;
+                  totalUnits += units;
+
+                  if (!typeMap.has(typeKey)) {
+                    typeMap.set(typeKey, {
+                      id: typeKey,
+                      name: jInfo?.name || parsed.name,
+                      group: parsed.group,
+                      index: parsed.index,
+                      totalSlots: 0,
+                      totalUnits: 0,
+                      icon: jInfo?.icon || 'diamond'
+                    });
+                  }
+                  const tEntry = typeMap.get(typeKey);
+                  tEntry.totalSlots++;
+                  tEntry.totalUnits += units;
+
+                  if (!ownerMap.has(ownerKey)) {
+                    ownerMap.set(ownerKey, {
+                      ownerKey,
+                      accountId: accId,
+                      charName: null,
+                      location: `Baúl #${wareNum}`,
+                      isOnline,
+                      slotsCount: 0,
+                      unitsCount: 0
+                    });
+                  }
+                  const oEntry = ownerMap.get(ownerKey);
+                  oEntry.slotsCount++;
+                  oEntry.unitsCount += units;
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 3. Character.Inventory (Equipo, Inventario, Mochilas, PStore)
+      if (includeInventory) {
+        let charQuerySql = 'SELECT c.Name, c.AccountID, c.Inventory FROM Character c WITH (NOLOCK) WHERE c.Inventory IS NOT NULL';
+        if (targetScope === 'character' && targetName) {
+          charQuerySql += ` AND (LTRIM(RTRIM(c.Name)) = @Target OR c.Name = @Target)`;
+        } else if (targetScope === 'account' && targetName) {
+          charQuerySql += ` AND (LTRIM(RTRIM(c.AccountID)) = @Target OR c.AccountID = @Target)`;
+        }
+        const reqChar = pool.request();
+        if (targetName) reqChar.input('Target', sql.VarChar(10), targetName.trim());
+        const charRes = await reqChar.query(charQuerySql);
+
+        for (const row of charRes.recordset) {
+          const buf = row.Inventory;
+          if (!buf || !Buffer.isBuffer(buf)) continue;
+          const charName = (row.Name || '').trim();
+          const accId = (row.AccountID || '').trim();
+          const isOnline = onlineAccounts.has(accId.toLowerCase());
+          const ownerKey = `char_${charName}`;
+
+          const totalSlotsInBuf = Math.floor(buf.length / 16);
+          const startSlot = protectEquipment ? 12 : 0;
+
+          for (let s = startSlot; s < totalSlotsInBuf; s++) {
+            const offset = s * 16;
+            if (buf[offset] === 0xFF) continue;
+            const hex32 = buf.toString('hex', offset, offset + 16).toUpperCase();
+            const parsed = decodeItemBasic(hex32);
+            if (!parsed) continue;
+
+            if (matchFilter(parsed.group, parsed.index, parsed.level)) {
+              const jInfo = getJewelInfo(parsed.group, parsed.index, parsed.level);
+              const units = jInfo ? jInfo.units : 1;
+              const typeKey = `${parsed.group}_${parsed.index}`;
+
+              totalSlots++;
+              totalUnits += units;
+
+              if (!typeMap.has(typeKey)) {
+                typeMap.set(typeKey, {
+                  id: typeKey,
+                  name: jInfo?.name || parsed.name,
+                  group: parsed.group,
+                  index: parsed.index,
+                  totalSlots: 0,
+                  totalUnits: 0,
+                  icon: jInfo?.icon || 'diamond'
+                });
+              }
+              const tEntry = typeMap.get(typeKey);
+              tEntry.totalSlots++;
+              tEntry.totalUnits += units;
+
+              if (!ownerMap.has(ownerKey)) {
+                ownerMap.set(ownerKey, {
+                  ownerKey,
+                  accountId: accId,
+                  charName: charName,
+                  location: `PJ: ${charName}`,
+                  isOnline,
+                  slotsCount: 0,
+                  unitsCount: 0
+                });
+              }
+              const oEntry = ownerMap.get(ownerKey);
+              oEntry.slotsCount++;
+              oEntry.unitsCount += units;
+            }
+          }
+        }
+      }
+
+      return {
+        totalSlots,
+        totalUnits,
+        summaryByType: Array.from(typeMap.values()).sort((a, b) => b.totalUnits - a.totalUnits),
+        owners: Array.from(ownerMap.values()).sort((a, b) => b.unitsCount - a.unitsCount),
+        onlineAccountsSkipped: onlineAccounts.size
+      };
+    });
+
+    res.json({ success: true, ...auditData });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// =========================================================================
+// 9. DEPURACIÓN, TOPE Y VACIADO SELECTIVO DE JOYAS / ÍTEMS
+// =========================================================================
+app.post('/api/tools/purge-jewels', async (req, res) => {
+  try {
+    const {
+      targetScope = 'all',
+      targetName = '',
+      itemFilter = 'all_jewels',
+      specificGroup,
+      specificIndex,
+      action = 'purge_all', // 'purge_all' | 'cap_per_target' | 'cap_server_wide'
+      maxAmount = 0,
+      countBy = 'slots', // 'slots' | 'units'
+      includeInventory = true,
+      includeWarehouse = true,
+      includeExtWarehouse = true,
+      protectEquipment = true,
+      skipOnline = true,
+      dryRun = false,
+      config
+    } = req.body || {};
+
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const maxCap = Math.max(0, parseInt(maxAmount, 10) || 0);
+
+    const purgeResult = await executeSql(config, async (pool) => {
+      // 1. Obtener cuentas online
+      const onlineAccounts = new Set();
+      try {
+        const onlineRes = await pool.request().query("SELECT memb___id FROM MEMB_STAT WITH (NOLOCK) WHERE ConnectStat = 1;");
+        if (onlineRes.recordset) {
+          for (const row of onlineRes.recordset) {
+            if (row.memb___id) onlineAccounts.add(row.memb___id.trim().toLowerCase());
+          }
+        }
+      } catch (_) {}
+
+      const matchFilter = (group, index, level) => {
+        if (itemFilter === 'all_jewels') {
+          return getJewelInfo(group, index, level) !== null;
+        }
+        if (itemFilter === 'custom_jewels') {
+          const info = getJewelInfo(group, index, level);
+          return info && info.isCustom === true;
+        }
+        if (itemFilter === 'specific') {
+          if (specificGroup !== undefined && specificIndex !== undefined) {
+            return group === Number(specificGroup) && index === Number(specificIndex);
+          }
+          return false;
+        }
+        if (itemFilter === 'all_items') {
+          return true;
+        }
+        return false;
+      };
+
+      let totalFoundSlots = 0;
+      let totalFoundUnits = 0;
+      let slotsDeleted = 0;
+      let unitsDeleted = 0;
+      let slotsKept = 0;
+      let unitsKept = 0;
+
+      const affectedAccountsSet = new Set();
+      const affectedCharsSet = new Set();
+      let affectedWarehousesCount = 0;
+
+      let globalServerAccumulator = 0;
+      const skippedOnlineSet = new Set();
+
+      // 1. Warehouse
+      if (includeWarehouse) {
+        let whQuerySql = 'SELECT AccountID, DATALENGTH(Items) AS LenItems, Items FROM warehouse WHERE Items IS NOT NULL';
+        if (targetScope === 'account' && targetName) {
+          whQuerySql += ` AND (LTRIM(RTRIM(AccountID)) = @Target OR AccountID = @Target)`;
+        }
+        const reqWh = pool.request();
+        if (targetScope === 'account' && targetName) reqWh.input('Target', sql.VarChar(10), targetName.trim());
+        const whRes = await reqWh.query(whQuerySql);
+
+        for (const row of whRes.recordset) {
+          const accId = (row.AccountID || '').trim();
+          if (skipOnline && onlineAccounts.has(accId.toLowerCase())) {
+            skippedOnlineSet.add(accId);
+            continue;
+          }
+
+          const rawBuf = row.Items;
+          if (!rawBuf || !Buffer.isBuffer(rawBuf)) continue;
+          const buf = Buffer.from(rawBuf);
+          let targetModified = false;
+          let targetAccumulator = 0;
+
+          const totalSlotsInBuf = Math.min(Math.floor(buf.length / 16), 120);
+          for (let s = 0; s < totalSlotsInBuf; s++) {
+            const offset = s * 16;
+            if (buf[offset] === 0xFF) continue;
+            const hex32 = buf.toString('hex', offset, offset + 16).toUpperCase();
+            const parsed = decodeItemBasic(hex32);
+            if (!parsed) continue;
+
+            if (matchFilter(parsed.group, parsed.index, parsed.level)) {
+              const jInfo = getJewelInfo(parsed.group, parsed.index, parsed.level);
+              const units = jInfo ? jInfo.units : 1;
+              const countVal = countBy === 'units' ? units : 1;
+
+              totalFoundSlots++;
+              totalFoundUnits += units;
+
+              let shouldDelete = false;
+              if (action === 'purge_all') {
+                shouldDelete = true;
+              } else if (action === 'cap_per_target') {
+                if (targetAccumulator + countVal <= maxCap) {
+                  targetAccumulator += countVal;
+                  slotsKept++;
+                  unitsKept += units;
+                } else {
+                  shouldDelete = true;
+                }
+              } else if (action === 'cap_server_wide') {
+                if (globalServerAccumulator + countVal <= maxCap) {
+                  globalServerAccumulator += countVal;
+                  slotsKept++;
+                  unitsKept += units;
+                } else {
+                  shouldDelete = true;
+                }
+              }
+
+              if (shouldDelete) {
+                buf.fill(0xFF, offset, offset + 16);
+                targetModified = true;
+                slotsDeleted++;
+                unitsDeleted += units;
+              }
+            }
+          }
+
+          if (targetModified) {
+            affectedAccountsSet.add(accId);
+            affectedWarehousesCount++;
+            if (!dryRun) {
+              await pool.request()
+                .input('Acc', sql.VarChar(10), accId)
+                .input('NewItems', sql.VarBinary(buf.length), buf)
+                .query('UPDATE warehouse SET Items = @NewItems WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;');
+            }
+          }
+        }
+      }
+
+      // 2. ExtWarehouse
+      if (includeExtWarehouse) {
+        try {
+          const extCheck = await pool.request().query("SELECT 1 FROM sys.tables WHERE name = 'ExtWarehouse';");
+          if (extCheck.recordset && extCheck.recordset.length > 0) {
+            let extQuerySql = 'SELECT AccountID, Number, DATALENGTH(Items) AS LenItems, Items FROM ExtWarehouse WHERE Items IS NOT NULL';
+            if (targetScope === 'account' && targetName) {
+              extQuerySql += ` AND (LTRIM(RTRIM(AccountID)) = @Target OR AccountID = @Target)`;
+            }
+            const reqExt = pool.request();
+            if (targetScope === 'account' && targetName) reqExt.input('Target', sql.VarChar(10), targetName.trim());
+            const extRes = await reqExt.query(extQuerySql);
+
+            for (const row of extRes.recordset) {
+              const accId = (row.AccountID || '').trim();
+              const wareNum = row.Number || 1;
+              if (skipOnline && onlineAccounts.has(accId.toLowerCase())) {
+                skippedOnlineSet.add(accId);
+                continue;
+              }
+
+              const rawBuf = row.Items;
+              if (!rawBuf || !Buffer.isBuffer(rawBuf)) continue;
+              const buf = Buffer.from(rawBuf);
+              let targetModified = false;
+              let targetAccumulator = 0;
+
+              const totalSlotsInBuf = Math.min(Math.floor(buf.length / 16), 120);
+              for (let s = 0; s < totalSlotsInBuf; s++) {
+                const offset = s * 16;
+                if (buf[offset] === 0xFF) continue;
+                const hex32 = buf.toString('hex', offset, offset + 16).toUpperCase();
+                const parsed = decodeItemBasic(hex32);
+                if (!parsed) continue;
+
+                if (matchFilter(parsed.group, parsed.index, parsed.level)) {
+                  const jInfo = getJewelInfo(parsed.group, parsed.index, parsed.level);
+                  const units = jInfo ? jInfo.units : 1;
+                  const countVal = countBy === 'units' ? units : 1;
+
+                  totalFoundSlots++;
+                  totalFoundUnits += units;
+
+                  let shouldDelete = false;
+                  if (action === 'purge_all') {
+                    shouldDelete = true;
+                  } else if (action === 'cap_per_target') {
+                    if (targetAccumulator + countVal <= maxCap) {
+                      targetAccumulator += countVal;
+                      slotsKept++;
+                      unitsKept += units;
+                    } else {
+                      shouldDelete = true;
+                    }
+                  } else if (action === 'cap_server_wide') {
+                    if (globalServerAccumulator + countVal <= maxCap) {
+                      globalServerAccumulator += countVal;
+                      slotsKept++;
+                      unitsKept += units;
+                    } else {
+                      shouldDelete = true;
+                    }
+                  }
+
+                  if (shouldDelete) {
+                    buf.fill(0xFF, offset, offset + 16);
+                    targetModified = true;
+                    slotsDeleted++;
+                    unitsDeleted += units;
+                  }
+                }
+              }
+
+              if (targetModified) {
+                affectedAccountsSet.add(accId);
+                affectedWarehousesCount++;
+                if (!dryRun) {
+                  await pool.request()
+                    .input('Acc', sql.VarChar(10), accId)
+                    .input('Num', sql.Int, wareNum)
+                    .input('NewItems', sql.VarBinary(buf.length), buf)
+                    .query('UPDATE ExtWarehouse SET Items = @NewItems WHERE (LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc) AND Number = @Num;');
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 3. Character.Inventory
+      if (includeInventory) {
+        let charQuerySql = 'SELECT Name, AccountID, DATALENGTH(Inventory) AS LenInv, Inventory FROM Character WHERE Inventory IS NOT NULL';
+        if (targetScope === 'character' && targetName) {
+          charQuerySql += ` AND (LTRIM(RTRIM(Name)) = @Target OR Name = @Target)`;
+        } else if (targetScope === 'account' && targetName) {
+          charQuerySql += ` AND (LTRIM(RTRIM(AccountID)) = @Target OR AccountID = @Target)`;
+        }
+        const reqChar = pool.request();
+        if (targetName) reqChar.input('Target', sql.VarChar(10), targetName.trim());
+        const charRes = await reqChar.query(charQuerySql);
+
+        for (const row of charRes.recordset) {
+          const charName = (row.Name || '').trim();
+          const accId = (row.AccountID || '').trim();
+
+          if (skipOnline && onlineAccounts.has(accId.toLowerCase())) {
+            skippedOnlineSet.add(accId);
+            continue;
+          }
+
+          const rawBuf = row.Inventory;
+          if (!rawBuf || !Buffer.isBuffer(rawBuf)) continue;
+          const buf = Buffer.from(rawBuf);
+          let targetModified = false;
+          let targetAccumulator = 0;
+
+          const totalSlotsInBuf = Math.floor(buf.length / 16);
+          const startSlot = protectEquipment ? 12 : 0;
+
+          for (let s = startSlot; s < totalSlotsInBuf; s++) {
+            const offset = s * 16;
+            if (buf[offset] === 0xFF) continue;
+            const hex32 = buf.toString('hex', offset, offset + 16).toUpperCase();
+            const parsed = decodeItemBasic(hex32);
+            if (!parsed) continue;
+
+            if (matchFilter(parsed.group, parsed.index, parsed.level)) {
+              const jInfo = getJewelInfo(parsed.group, parsed.index, parsed.level);
+              const units = jInfo ? jInfo.units : 1;
+              const countVal = countBy === 'units' ? units : 1;
+
+              totalFoundSlots++;
+              totalFoundUnits += units;
+
+              let shouldDelete = false;
+              if (action === 'purge_all') {
+                shouldDelete = true;
+              } else if (action === 'cap_per_target') {
+                if (targetAccumulator + countVal <= maxCap) {
+                  targetAccumulator += countVal;
+                  slotsKept++;
+                  unitsKept += units;
+                } else {
+                  shouldDelete = true;
+                }
+              } else if (action === 'cap_server_wide') {
+                if (globalServerAccumulator + countVal <= maxCap) {
+                  globalServerAccumulator += countVal;
+                  slotsKept++;
+                  unitsKept += units;
+                } else {
+                  shouldDelete = true;
+                }
+              }
+
+              if (shouldDelete) {
+                buf.fill(0xFF, offset, offset + 16);
+                targetModified = true;
+                slotsDeleted++;
+                unitsDeleted += units;
+              }
+            }
+          }
+
+          if (targetModified) {
+            affectedAccountsSet.add(accId);
+            affectedCharsSet.add(charName);
+            if (!dryRun) {
+              await pool.request()
+                .input('Name', sql.VarChar(10), charName)
+                .input('NewInv', sql.VarBinary(buf.length), buf)
+                .query('UPDATE Character SET Inventory = @NewInv WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@Name)) OR Name = @Name;');
+            }
+          }
+        }
+      }
+
+      return {
+        dryRun,
+        totalFoundSlots,
+        totalFoundUnits,
+        slotsDeleted,
+        unitsDeleted,
+        slotsKept,
+        unitsKept,
+        affectedAccounts: affectedAccountsSet.size,
+        affectedCharacters: affectedCharsSet.size,
+        affectedWarehouses: affectedWarehousesCount,
+        skippedOnlineCount: skippedOnlineSet.size,
+        skippedOnlineList: Array.from(skippedOnlineSet)
+      };
+    });
+
+    const clientIp = getClientIp(req);
+    const logDesc = `${dryRun ? '[SIMULACIÓN DRY-RUN] ' : ''}Depuración de joyas/ítems (Acción: ${action}, Slots eliminados: ${purgeResult.slotsDeleted}, Unidades: ${purgeResult.unitsDeleted}, Conservados: ${purgeResult.slotsKept}).`;
+    addAuditLog('PURGE_JEWELS', targetName || 'SERVER', clientIp, logDesc);
+
+    res.json({
+      success: true,
+      ...purgeResult,
+      message: dryRun
+        ? `Simulación completada: se depurarían ${purgeResult.slotsDeleted} slots (${purgeResult.unitsDeleted} unidades) y se conservarían ${purgeResult.slotsKept} slots.`
+        : `Depuración completada en SQL Server: se eliminaron ${purgeResult.slotsDeleted} slots (${purgeResult.unitsDeleted} unidades) y se conservaron ${purgeResult.slotsKept} slots.`
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

@@ -9,7 +9,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "ts:check": "tsc --noEmit",
-    "test": "node tests/muItemParser.test.js && node tests/securityService.test.js && node tests/serverAuth.test.js && node tests/itemCatalog.test.js && node tests/ancientCatalog.test.js && node tests/vaultExpansionSql.test.js && node tests/vaultS6Update40.test.js && node tests/msproCompatibility.test.js && node tests/msproRuudUniversal.test.js && node tests/socketCatalog.test.js && node tests/securityAuditNoLeaks.test.js && node tests/concurrencyAndShielding.test.js && node tests/licensingAndAdminAudit.test.js && node tests/userRequirementsV17.test.js && node tests/louisS6SyncAndDisconnectShield.test.js && node tests/deleteAccountAndCharacter.test.js",
+    "test": "node tests/muItemParser.test.js && node tests/securityService.test.js && node tests/serverAuth.test.js && node tests/itemCatalog.test.js && node tests/ancientCatalog.test.js && node tests/vaultExpansionSql.test.js && node tests/vaultS6Update40.test.js && node tests/msproCompatibility.test.js && node tests/msproRuudUniversal.test.js && node tests/socketCatalog.test.js && node tests/securityAuditNoLeaks.test.js && node tests/concurrencyAndShielding.test.js && node tests/licensingAndAdminAudit.test.js && node tests/userRequirementsV17.test.js && node tests/louisS6SyncAndDisconnectShield.test.js && node tests/deleteAccountAndCharacter.test.js && node tests/jewelsPurgerSql.test.js",
     "test:parser": "node tests/muItemParser.test.js",
     "server": "node server/bridgeServer.js",
     "web:portal": "node server/webPortalServer.js",

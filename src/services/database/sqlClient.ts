@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SqlServerConfig, DashboardMetrics, SqlLogEntry } from '../../types/database';
 import { CharacterSummary, CharacterDetail, AccountSummary, AccountUpdateData } from '../../types/character';
-import { OnlinePlayer, BanEntry, GmEntry, GmLevel, ItemKitEntry, GuildEntry, GuildMemberEntry, PkPlayerEntry } from '../../types/admin';
+import { OnlinePlayer, BanEntry, GmEntry, GmLevel, ItemKitEntry, GuildEntry, GuildMemberEntry, PkPlayerEntry, JewelAuditParams, JewelAuditResult, JewelPurgeParams, JewelPurgeResult } from '../../types/admin';
 import { MuItemParser } from '../parser/muItemParser';
 import { SQL_QUERIES } from './sqlQueries';
 import { SecurityService } from '../security/securityService';
@@ -1594,6 +1594,98 @@ export class SqlClient {
       const duration = Date.now() - startTime;
       this.logQuery('SCAN_DUPES', duration, false, 0, e.message);
       return { success: false, count: 0, dupes: [], message: e.message };
+    }
+  }
+
+  /**
+   * 14.1 Auditoría de Joyas e Ítems del Servidor
+   */
+  static async auditJewels(params: JewelAuditParams): Promise<JewelAuditResult> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/tools/audit-jewels', {
+        ...params,
+        config: this.config,
+      }, 25000);
+
+      const data = await this.safeJson(res);
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+      const duration = Date.now() - startTime;
+      this.logQuery('AUDIT_JEWELS', duration, true, data.totalSlots || 0);
+      return {
+        success: true,
+        totalSlots: data.totalSlots || 0,
+        totalUnits: data.totalUnits || 0,
+        summaryByType: data.summaryByType || [],
+        owners: data.owners || [],
+        onlineAccountsSkipped: data.onlineAccountsSkipped || 0,
+        message: data.message,
+      };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('AUDIT_JEWELS', duration, false, 0, e.message);
+      return {
+        success: false,
+        totalSlots: 0,
+        totalUnits: 0,
+        summaryByType: [],
+        owners: [],
+        message: e.message,
+      };
+    }
+  }
+
+  /**
+   * 14.2 Depuración y Capping de Joyas e Ítems del Servidor
+   */
+  static async purgeJewels(params: JewelPurgeParams): Promise<JewelPurgeResult> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/tools/purge-jewels', {
+        ...params,
+        config: this.config,
+      }, 35000);
+
+      const data = await this.safeJson(res);
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+      const duration = Date.now() - startTime;
+      this.logQuery('PURGE_JEWELS', duration, true, data.slotsDeleted || 0);
+      return {
+        success: true,
+        dryRun: !!data.dryRun,
+        totalFoundSlots: data.totalFoundSlots || 0,
+        totalFoundUnits: data.totalFoundUnits || 0,
+        slotsDeleted: data.slotsDeleted || 0,
+        unitsDeleted: data.unitsDeleted || 0,
+        slotsKept: data.slotsKept || 0,
+        unitsKept: data.unitsKept || 0,
+        affectedAccounts: data.affectedAccounts || 0,
+        affectedCharacters: data.affectedCharacters || 0,
+        affectedWarehouses: data.affectedWarehouses || 0,
+        skippedOnlineCount: data.skippedOnlineCount || 0,
+        skippedOnlineList: data.skippedOnlineList || [],
+        message: data.message || 'Operación completada con éxito.',
+      };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('PURGE_JEWELS', duration, false, 0, e.message);
+      return {
+        success: false,
+        dryRun: !!params.dryRun,
+        totalFoundSlots: 0,
+        totalFoundUnits: 0,
+        slotsDeleted: 0,
+        unitsDeleted: 0,
+        slotsKept: 0,
+        unitsKept: 0,
+        affectedAccounts: 0,
+        affectedCharacters: 0,
+        affectedWarehouses: 0,
+        skippedOnlineCount: 0,
+        message: e.message,
+      };
     }
   }
 

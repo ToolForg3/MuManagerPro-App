@@ -119,3 +119,80 @@ export interface GmEntry {
   assignedAt: string;
   assignedBy: string;
 }
+
+export interface JewelSummaryItem {
+  id: string;
+  name: string;
+  group: number;
+  index: number;
+  totalSlots: number;
+  totalUnits: number;
+  icon?: string;
+}
+
+export interface JewelOwnerSummary {
+  ownerKey: string;
+  accountId: string;
+  charName?: string | null;
+  location: string;
+  isOnline: boolean;
+  slotsCount: number;
+  unitsCount: number;
+}
+
+export interface JewelAuditParams {
+  targetScope: 'all' | 'character' | 'account';
+  targetName?: string;
+  itemFilter: 'all_jewels' | 'specific' | 'custom_jewels' | 'all_items';
+  specificGroup?: number;
+  specificIndex?: number;
+  includeInventory?: boolean;
+  includeWarehouse?: boolean;
+  includeExtWarehouse?: boolean;
+  protectEquipment?: boolean;
+}
+
+export interface JewelAuditResult {
+  success: boolean;
+  totalSlots: number;
+  totalUnits: number;
+  summaryByType: JewelSummaryItem[];
+  owners: JewelOwnerSummary[];
+  onlineAccountsSkipped?: number;
+  message?: string;
+}
+
+export interface JewelPurgeParams {
+  targetScope: 'all' | 'character' | 'account';
+  targetName?: string;
+  itemFilter: 'all_jewels' | 'specific' | 'custom_jewels' | 'all_items';
+  specificGroup?: number;
+  specificIndex?: number;
+  action: 'purge_all' | 'cap_per_target' | 'cap_server_wide';
+  maxAmount?: number;
+  countBy: 'slots' | 'units';
+  includeInventory?: boolean;
+  includeWarehouse?: boolean;
+  includeExtWarehouse?: boolean;
+  protectEquipment?: boolean;
+  skipOnline?: boolean;
+  dryRun?: boolean;
+}
+
+export interface JewelPurgeResult {
+  success: boolean;
+  dryRun: boolean;
+  totalFoundSlots: number;
+  totalFoundUnits: number;
+  slotsDeleted: number;
+  unitsDeleted: number;
+  slotsKept: number;
+  unitsKept: number;
+  affectedAccounts: number;
+  affectedCharacters: number;
+  affectedWarehouses: number;
+  skippedOnlineCount: number;
+  skippedOnlineList?: string[];
+  message: string;
+}
+
