@@ -13,9 +13,6 @@
   - ❌ **NO verdes lima/fluorescentes** (`#00C853`, `#00E676`). Usar siempre Jade Season 6 (`#3FCF8E`).
   - ❌ **NO grises oscuros o apagados para texto**: `#666`, `#777`, `#888`, `#999`, `#AAA`, `#BBB`, `#CCC`, `#DDD`, `#9C9182`.
   - ❌ **NO bordes circulares inflados** (`borderRadius: 20+`). Usar siempre estándar gótico `borderRadius: 6`.
-- **Iconografía e Interfaz Móvil HD (Vectorial Obligatorio)**:
-  - Las siluetas de ranuras de equipamiento vacías y controles de UI deben usar siempre iconos vectoriales nítidos (`MaterialCommunityIcons`) con estilo bajo relieve en piedra y oro (`#282017` con sombra dorada).
-  - ❌ **NO sustituir por texturas rasterizadas de 46x46 del cliente PC** (`newui_item_*.OZT` / `newui_Bt_*.OZT`): Traen fondos y biseles sólidos incorporados de baja resolución, generan bloques planos opacos con `tintColor` en React Native y degradan la calidad visual en pantallas móviles de alta densidad.
 
 ## 2. EMULADORES Y COMPATIBILIDAD SQL
 - **Louis S6 Intacto**: Es la referencia principal; ninguna consulta debe alterar ni romper Louis.
