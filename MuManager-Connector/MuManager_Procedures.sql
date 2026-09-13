@@ -75,6 +75,28 @@ BEGIN
                OR (ac.GameID5 IS NOT NULL AND c5.Name IS NULL);
 
             SET @BrokenSlotsCount = @@ROWCOUNT;
+
+            -- 2.1. Deduplicar ranuras clonadas en AccountCharacter
+            UPDATE AccountCharacter
+            SET 
+                GameID2 = CASE 
+                  WHEN GameID2 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID2))) > 0 AND LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(ISNULL(GameID1, ''))) 
+                  THEN NULL ELSE GameID2 END,
+                GameID3 = CASE 
+                  WHEN GameID3 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID3))) > 0 AND LTRIM(RTRIM(GameID3)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, '')))) 
+                  THEN NULL ELSE GameID3 END,
+                GameID4 = CASE 
+                  WHEN GameID4 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID4))) > 0 AND LTRIM(RTRIM(GameID4)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, '')))) 
+                  THEN NULL ELSE GameID4 END,
+                GameID5 = CASE 
+                  WHEN GameID5 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID5))) > 0 AND LTRIM(RTRIM(GameID5)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, ''))), LTRIM(RTRIM(ISNULL(GameID4, '')))) 
+                  THEN NULL ELSE GameID5 END
+            WHERE (GameID2 IS NOT NULL AND LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(ISNULL(GameID1, ''))))
+               OR (GameID3 IS NOT NULL AND LTRIM(RTRIM(GameID3)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, '')))))
+               OR (GameID4 IS NOT NULL AND LTRIM(RTRIM(GameID4)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, '')))))
+               OR (GameID5 IS NOT NULL AND LTRIM(RTRIM(GameID5)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, ''))), LTRIM(RTRIM(ISNULL(GameID4, '')))));
+
+            SET @BrokenSlotsCount = @BrokenSlotsCount + @@ROWCOUNT;
         END
 
         -- 3. Limpiar miembros de guild huérfanos (cuyo Name no existe en Character)

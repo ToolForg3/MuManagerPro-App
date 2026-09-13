@@ -2006,6 +2006,32 @@ app.post('/api/characters', async (req, res) => {
         ruudExpr = `ISNULL((SELECT TOP 1 m.[${membRuudCol}] FROM MEMB_INFO m WHERE LTRIM(RTRIM(m.memb___id)) = LTRIM(RTRIM(c.AccountID)) OR m.memb___id = c.AccountID), 0)`;
       }
 
+      // Auto-reparar ranuras clonadas de AccountCharacter si existen (ej. slots duplicados tras bugs de creación)
+      if (accountId && typeof accountId === 'string' && accountId.trim().length > 0) {
+        await pool.request()
+          .input('CleanAccDedupe', sql.VarChar(10), accountId.trim())
+          .query(`
+            IF OBJECT_ID('AccountCharacter', 'U') IS NOT NULL
+            BEGIN
+              UPDATE AccountCharacter
+              SET 
+                GameID2 = CASE 
+                  WHEN GameID2 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID2))) > 0 AND LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(ISNULL(GameID1, ''))) 
+                  THEN NULL ELSE GameID2 END,
+                GameID3 = CASE 
+                  WHEN GameID3 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID3))) > 0 AND LTRIM(RTRIM(GameID3)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, '')))) 
+                  THEN NULL ELSE GameID3 END,
+                GameID4 = CASE 
+                  WHEN GameID4 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID4))) > 0 AND LTRIM(RTRIM(GameID4)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, '')))) 
+                  THEN NULL ELSE GameID4 END,
+                GameID5 = CASE 
+                  WHEN GameID5 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID5))) > 0 AND LTRIM(RTRIM(GameID5)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, ''))), LTRIM(RTRIM(ISNULL(GameID4, '')))) 
+                  THEN NULL ELSE GameID5 END
+              WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@CleanAccDedupe)) OR Id = @CleanAccDedupe;
+            END
+          `);
+      }
+
       const q = pool.request();
       let queryStr = `
         SELECT 
@@ -2457,6 +2483,32 @@ app.post('/api/character/create', async (req, res) => {
             `);
         }
       }
+
+      // 5. Escudo de Deduplicación Canónica en AccountCharacter
+      // Si el SP de la base de datos o el sistema asignó múltiples ranuras al mismo personaje (clones),
+      // limpiamos inmediatamente los duplicados a NULL para que aparezca una sola vez en el juego.
+      await pool.request()
+        .input('Acc', sql.VarChar(10), cleanAccountId)
+        .query(`
+          IF OBJECT_ID('AccountCharacter', 'U') IS NOT NULL
+          BEGIN
+            UPDATE AccountCharacter
+            SET 
+              GameID2 = CASE 
+                WHEN GameID2 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID2))) > 0 AND LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(ISNULL(GameID1, ''))) 
+                THEN NULL ELSE GameID2 END,
+              GameID3 = CASE 
+                WHEN GameID3 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID3))) > 0 AND LTRIM(RTRIM(GameID3)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, '')))) 
+                THEN NULL ELSE GameID3 END,
+              GameID4 = CASE 
+                WHEN GameID4 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID4))) > 0 AND LTRIM(RTRIM(GameID4)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, '')))) 
+                THEN NULL ELSE GameID4 END,
+              GameID5 = CASE 
+                WHEN GameID5 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID5))) > 0 AND LTRIM(RTRIM(GameID5)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, ''))), LTRIM(RTRIM(ISNULL(GameID4, '')))) 
+                THEN NULL ELSE GameID5 END
+            WHERE LTRIM(RTRIM(Id)) = LTRIM(RTRIM(@Acc)) OR Id = @Acc;
+          END
+        `);
     });
 
     res.json({
@@ -2868,7 +2920,7 @@ app.post('/api/character/update-location', async (req, res) => {
 // Endpoint para actualizar Progreso del Personaje (Resets, M.Resets, MasterLevel, PK)
 app.post('/api/character/update-progress', async (req, res) => {
   try {
-    const { charName, resets, masterResets, masterLevel, masterPoints, pkLevel, pkCount, pkTime, config } = req.body;
+    const { charName, resets, masterResets, masterLevel, masterPoints, pkLevel, pkCount, pkTime, level, config } = req.body;
     if (!sql) return res.status(500).json({ success: false, error: 'mssql package not installed' });
     if (!charName) return res.status(400).json({ success: false, error: 'Nombre de personaje requerido' });
 
@@ -2879,6 +2931,7 @@ app.post('/api/character/update-progress', async (req, res) => {
     const cleanPkLevel = (pkLevel !== undefined && pkLevel !== null) ? Math.max(1, Math.min(6, parseInt(pkLevel, 10) || 3)) : null;
     const cleanPkCount = (pkCount !== undefined && pkCount !== null) ? Math.max(0, parseInt(pkCount, 10) || 0) : null;
     const cleanPkTime = (pkTime !== undefined && pkTime !== null) ? Math.max(0, parseInt(pkTime, 10) || 0) : null;
+    const cleanLevel = (level !== undefined && level !== null) ? Math.max(1, Math.min(400, parseInt(level, 10) || 1)) : null;
 
     await executeSql(config, async (pool) => {
       const colsRes = await pool.request().query(`
@@ -2893,6 +2946,11 @@ app.post('/api/character/update-progress', async (req, res) => {
 
       const q = pool.request().input('CharName', sql.VarChar, charName.trim());
       const setParts = [];
+
+      if (cleanLevel !== null && charCols.has('clevel')) {
+        q.input('cLevel', sql.SmallInt, cleanLevel);
+        setParts.push('cLevel = @cLevel');
+      }
 
       if (cleanResets !== null) {
         q.input('Resets', sql.Int, cleanResets);
@@ -3316,9 +3374,14 @@ app.post('/api/character/jewel-bank', async (req, res) => {
     if (!accountId) return res.status(400).json({ success: false, error: 'AccountID requerido' });
 
     const data = await executeSql(config, async (pool) => {
+      const hasTbl = await pool.request().query("SELECT OBJECT_ID('CustomJewelBank', 'U') AS HasTbl;");
+      if (!hasTbl.recordset || !hasTbl.recordset[0] || !hasTbl.recordset[0].HasTbl) {
+        return { hasTable: false, bank: null };
+      }
+
       if (update && jewels) {
         await pool.request()
-          .input('Acc', sql.VarChar, accountId)
+          .input('Acc', sql.VarChar(10), accountId.trim())
           .input('Bless', sql.Int, Math.max(0, parseInt(jewels.Bless, 10) || 0))
           .input('Soul', sql.Int, Math.max(0, parseInt(jewels.Soul, 10) || 0))
           .input('Chaos', sql.Int, Math.max(0, parseInt(jewels.Chaos, 10) || 0))
@@ -3330,13 +3393,13 @@ app.post('/api/character/jewel-bank', async (req, res) => {
           .input('LowStone', sql.Int, Math.max(0, parseInt(jewels.LowStone, 10) || 0))
           .input('HighStone', sql.Int, Math.max(0, parseInt(jewels.HighStone, 10) || 0))
           .query(`
-            IF EXISTS (SELECT 1 FROM CustomJewelBank WHERE AccountID = @Acc)
+            IF EXISTS (SELECT 1 FROM CustomJewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc)
             BEGIN
               UPDATE CustomJewelBank
               SET Bless = @Bless, Soul = @Soul, Chaos = @Chaos, Life = @Life,
                   Creation = @Creation, Guardian = @Guardian, Harmony = @Harmony,
                   GemStone = @GemStone, LowStone = @LowStone, HighStone = @HighStone
-              WHERE AccountID = @Acc;
+              WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;
             END
             ELSE
             BEGIN
@@ -3347,12 +3410,12 @@ app.post('/api/character/jewel-bank', async (req, res) => {
       }
 
       const q = await pool.request()
-        .input('Acc', sql.VarChar, accountId)
-        .query('SELECT AccountID, Bless, Soul, Chaos, Life, Creation, Guardian, Harmony, LowStone, HighStone, GemStone FROM CustomJewelBank WHERE AccountID = @Acc;');
-      return q.recordset[0] || null;
+        .input('Acc', sql.VarChar(10), accountId.trim())
+        .query('SELECT AccountID, Bless, Soul, Chaos, Life, Creation, Guardian, Harmony, LowStone, HighStone, GemStone FROM CustomJewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;');
+      return { hasTable: true, bank: q.recordset[0] || null };
     });
 
-    res.json({ success: true, bank: data });
+    res.json({ success: true, hasTable: data ? data.hasTable : false, bank: data ? data.bank : null });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -10908,6 +10971,27 @@ app.post('/api/tools/fix-orphans', async (req, res) => {
                  OR (ac.GameID4 IS NOT NULL AND c4.Name IS NULL)
                  OR (ac.GameID5 IS NOT NULL AND c5.Name IS NULL);
               SET @BrokenSlotsCount = @@ROWCOUNT;
+
+              -- Deduplicar ranuras clonadas en AccountCharacter
+              UPDATE AccountCharacter
+              SET 
+                GameID2 = CASE 
+                  WHEN GameID2 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID2))) > 0 AND LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(ISNULL(GameID1, ''))) 
+                  THEN NULL ELSE GameID2 END,
+                GameID3 = CASE 
+                  WHEN GameID3 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID3))) > 0 AND LTRIM(RTRIM(GameID3)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, '')))) 
+                  THEN NULL ELSE GameID3 END,
+                GameID4 = CASE 
+                  WHEN GameID4 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID4))) > 0 AND LTRIM(RTRIM(GameID4)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, '')))) 
+                  THEN NULL ELSE GameID4 END,
+                GameID5 = CASE 
+                  WHEN GameID5 IS NOT NULL AND LEN(LTRIM(RTRIM(GameID5))) > 0 AND LTRIM(RTRIM(GameID5)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, ''))), LTRIM(RTRIM(ISNULL(GameID4, '')))) 
+                  THEN NULL ELSE GameID5 END
+              WHERE (GameID2 IS NOT NULL AND LTRIM(RTRIM(GameID2)) = LTRIM(RTRIM(ISNULL(GameID1, ''))))
+                 OR (GameID3 IS NOT NULL AND LTRIM(RTRIM(GameID3)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, '')))))
+                 OR (GameID4 IS NOT NULL AND LTRIM(RTRIM(GameID4)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, '')))))
+                 OR (GameID5 IS NOT NULL AND LTRIM(RTRIM(GameID5)) IN (LTRIM(RTRIM(ISNULL(GameID1, ''))), LTRIM(RTRIM(ISNULL(GameID2, ''))), LTRIM(RTRIM(ISNULL(GameID3, ''))), LTRIM(RTRIM(ISNULL(GameID4, '')))));
+              SET @BrokenSlotsCount = @BrokenSlotsCount + @@ROWCOUNT;
             END
 
             IF OBJECT_ID('GuildMember', 'U') IS NOT NULL

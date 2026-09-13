@@ -22,6 +22,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
 import { AccountSummary, AccountUpdateData, CharacterSummary } from '../../types/character';
+import { JewelBankData } from '../../types/admin';
 import { SqlClient } from '../../services/database/sqlClient';
 import { useLanguage } from '../../context/LanguageContext';
 import { ClassAvatar } from '../../components/common/ClassAvatar';
@@ -77,6 +78,19 @@ export const ITEM_CATEGORIES = [
   { group: 13, name: 'Pets / Rings / Pendants', icon: 'ring' },
   { group: 14, name: 'Jewels / Consumables', icon: 'diamond-stone' },
   { group: 15, name: 'Scrolls / Others', icon: 'book-open-page-variant' },
+];
+
+const JEWEL_CONFIG: { key: keyof JewelBankData; label: string; icon: string; color: string; bg: string }[] = [
+  { key: 'Bless', label: 'Jewel of Bless', icon: 'diamond', color: '#5B8DEF', bg: 'rgba(91, 141, 239, 0.15)' },
+  { key: 'Soul', label: 'Jewel of Soul', icon: 'fire', color: '#E2703A', bg: 'rgba(226, 112, 58, 0.15)' },
+  { key: 'Chaos', label: 'Jewel of Chaos', icon: 'star-four-points', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Life', label: 'Jewel of Life', icon: 'heart', color: '#3FCF8E', bg: 'rgba(63, 207, 142, 0.15)' },
+  { key: 'Creation', label: 'Jewel of Creation', icon: 'feather', color: '#5B8DEF', bg: 'rgba(91, 141, 239, 0.15)' },
+  { key: 'Guardian', label: 'Jewel of Guardian', icon: 'shield', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Harmony', label: 'Jewel of Harmony', icon: 'auto-fix', color: '#F0D27A', bg: 'rgba(240, 210, 122, 0.15)' },
+  { key: 'GemStone', label: 'GemStone', icon: 'rhombus', color: '#C8BEAF', bg: 'rgba(200, 190, 175, 0.15)' },
+  { key: 'LowStone', label: 'Lower Refining Stone', icon: 'octagram', color: '#B8AEA0', bg: 'rgba(184, 174, 160, 0.15)' },
+  { key: 'HighStone', label: 'Higher Refining Stone', icon: 'octagram-outline', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
 ];
 
 export const AccountsScreen = () => {
@@ -136,6 +150,25 @@ export const AccountsScreen = () => {
   const [deletingAccount, setDeletingAccount] = useState<boolean>(false);
   const [accountChars, setAccountChars] = useState<CharacterSummary[]>([]);
   const [loadingAccountChars, setLoadingAccountChars] = useState<boolean>(false);
+
+  // Modal Banco de Joyas (CustomJewelBank)
+  const [jewelBankModalVisible, setJewelBankModalVisible] = useState(false);
+  const [jewelBankLoading, setJewelBankLoading] = useState(false);
+  const [jewelBankSaving, setJewelBankSaving] = useState(false);
+  const [jewelBankAcc, setJewelBankAcc] = useState('');
+  const [jewelBankHasTable, setJewelBankHasTable] = useState(true);
+  const [jewelBankData, setJewelBankData] = useState<JewelBankData>({
+    Bless: 0,
+    Soul: 0,
+    Chaos: 0,
+    Life: 0,
+    Creation: 0,
+    Guardian: 0,
+    Harmony: 0,
+    GemStone: 0,
+    LowStone: 0,
+    HighStone: 0,
+  });
 
   // Modal Warehouse (Baúl)
   const [warehouseModalVisible, setWarehouseModalVisible] = useState(false);
@@ -554,6 +587,98 @@ export const AccountsScreen = () => {
     } finally {
       setLoadingWarehouse(false);
     }
+  };
+
+  const openJewelBankForAccount = async (accId: string) => {
+    setJewelBankAcc(accId);
+    setJewelBankModalVisible(true);
+    setJewelBankLoading(true);
+    try {
+      const res = await SqlClient.getJewelBank(accId);
+      if (!res.hasTable) {
+        setJewelBankHasTable(false);
+      } else {
+        setJewelBankHasTable(true);
+        if (res.bank) {
+          setJewelBankData({
+            Bless: res.bank.Bless || 0,
+            Soul: res.bank.Soul || 0,
+            Chaos: res.bank.Chaos || 0,
+            Life: res.bank.Life || 0,
+            Creation: res.bank.Creation || 0,
+            Guardian: res.bank.Guardian || 0,
+            Harmony: res.bank.Harmony || 0,
+            GemStone: res.bank.GemStone || 0,
+            LowStone: res.bank.LowStone || 0,
+            HighStone: res.bank.HighStone || 0,
+          });
+        } else {
+          setJewelBankData({
+            Bless: 0,
+            Soul: 0,
+            Chaos: 0,
+            Life: 0,
+            Creation: 0,
+            Guardian: 0,
+            Harmony: 0,
+            GemStone: 0,
+            LowStone: 0,
+            HighStone: 0,
+          });
+        }
+      }
+    } catch (e: any) {
+      Alert.alert('Error al cargar Banco de Joyas', e.message);
+    } finally {
+      setJewelBankLoading(false);
+    }
+  };
+
+  const handleSaveJewelBank = async () => {
+    if (!jewelBankAcc) return;
+    setJewelBankSaving(true);
+    try {
+      const res = await SqlClient.updateJewelBank(jewelBankAcc, jewelBankData);
+      if (res.success) {
+        Alert.alert('¡Banco de Joyas Guardado!', `Las joyas de la cuenta '${jewelBankAcc}' se guardaron exitosamente en SQL Server.`);
+      } else {
+        Alert.alert('Error al guardar', res.message);
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setJewelBankSaving(false);
+    }
+  };
+
+  const handleJewelChange = (key: keyof JewelBankData, delta: number) => {
+    setJewelBankData(prev => ({
+      ...prev,
+      [key]: Math.max(0, (Number(prev[key]) || 0) + delta),
+    }));
+  };
+
+  const handleJewelSetDirect = (key: keyof JewelBankData, text: string) => {
+    const val = parseInt(text.replace(/[^0-9]/g, ''), 10) || 0;
+    setJewelBankData(prev => ({
+      ...prev,
+      [key]: Math.max(0, val),
+    }));
+  };
+
+  const handleQuickFillAll = (amount: number) => {
+    setJewelBankData({
+      Bless: amount,
+      Soul: amount,
+      Chaos: amount,
+      Life: amount,
+      Creation: amount,
+      Guardian: amount,
+      Harmony: amount,
+      GemStone: amount,
+      LowStone: amount,
+      HighStone: amount,
+    });
   };
 
   const handleCloseWarehouseModal = () => {
@@ -2081,8 +2206,181 @@ export const AccountsScreen = () => {
                   <MaterialCommunityIcons name="safe" size={18} color={THEME.colors.arcano} />
                   <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.arcano }]}>Bóveda Expandida</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(232, 200, 106, 0.12)', borderColor: THEME.colors.oroClaro }]}
+                  onPress={() => {
+                    if (selectedAccount?.memb___id) {
+                      openJewelBankForAccount(selectedAccount.memb___id);
+                    }
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <MaterialCommunityIcons name="diamond-stone" size={18} color={THEME.colors.oroClaro} />
+                  <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.oroClaro }]}>Banco Joyas</Text>
+                </TouchableOpacity>
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ======================================================== */}
+      {/* MODAL BANCO DE JOYAS (CUSTOMJEWELBANK LOUIS S6 UP40)     */}
+      {/* ======================================================== */}
+      <Modal
+        visible={jewelBankModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setJewelBankModalVisible(false)}
+      >
+        <View style={styles.jbModalOverlay}>
+          <View style={styles.jbModalContent}>
+            {/* Header */}
+            <View style={styles.jbModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialCommunityIcons name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
+                <View>
+                  <Text style={styles.jbModalTitle}>BANCO DE JOYAS</Text>
+                  <Text style={styles.jbModalSubtitle}>Cuenta: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{jewelBankAcc}</Text> (CustomJewelBank)</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => setJewelBankModalVisible(false)}
+                style={styles.jbCloseBtn}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+              </TouchableOpacity>
+            </View>
+
+            {jewelBankLoading ? (
+              <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center' }}>
+                <ActivityIndicator size="large" color={THEME.colors.oroClaro} />
+                <Text style={{ color: THEME.colors.textoSecundario, marginTop: 12 }}>Consultando saldo en SQL Server...</Text>
+              </View>
+            ) : !jewelBankHasTable ? (
+              <View style={{ padding: 24, alignItems: 'center' }}>
+                <MaterialCommunityIcons name="alert-circle-outline" size={48} color={THEME.colors.brasa} />
+                <Text style={{ color: THEME.colors.texto, fontSize: 16, fontWeight: 'bold', marginTop: 12, textAlign: 'center' }}>
+                  Tabla CustomJewelBank no detectada
+                </Text>
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 18 }}>
+                  Esta base de datos no cuenta con la tabla CustomJewelBank (requiere emulador Louis Season 6 Update 40 o superior).
+                </Text>
+                <TouchableOpacity
+                  style={[styles.jbSaveBtn, { backgroundColor: THEME.colors.cardElevated, marginTop: 20 }]}
+                  onPress={() => setJewelBankModalVisible(false)}
+                >
+                  <Text style={{ color: THEME.colors.texto }}>Entendido</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={true}>
+                {/* Presets rápidos */}
+                <View style={styles.jbQuickRow}>
+                  <Text style={styles.jbQuickLabel}>Llenado Rápido:</Text>
+                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(0)} activeOpacity={0.7}>
+                    <Text style={styles.jbQuickPillText}>Vaciar (0)</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(100)} activeOpacity={0.7}>
+                    <Text style={styles.jbQuickPillText}>100 c/u</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(250)} activeOpacity={0.7}>
+                    <Text style={[styles.jbQuickPillText, { color: THEME.colors.oroClaro }]}>250 (Max)</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(1000)} activeOpacity={0.7}>
+                    <Text style={[styles.jbQuickPillText, { color: THEME.colors.jade }]}>1000</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Lista de Joyas */}
+                <View style={styles.jbListContainer}>
+                  {JEWEL_CONFIG.map((jewel) => {
+                    const currentVal = jewelBankData[jewel.key] || 0;
+                    return (
+                      <View key={jewel.key} style={styles.jbItemRow}>
+                        <View style={styles.jbItemLeft}>
+                          <View style={[styles.jbIconWrap, { backgroundColor: jewel.bg }]}>
+                            <MaterialCommunityIcons name={jewel.icon as any} size={18} color={jewel.color} />
+                          </View>
+                          <Text style={styles.jbItemName} numberOfLines={1}>{jewel.label}</Text>
+                        </View>
+
+                        <View style={styles.jbStepperRow}>
+                          <TouchableOpacity
+                            style={styles.jbStepBtn}
+                            onPress={() => handleJewelChange(jewel.key, -10)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.jbStepBtnText}>-10</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.jbStepBtn}
+                            onPress={() => handleJewelChange(jewel.key, -1)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.jbStepBtnText}>-1</Text>
+                          </TouchableOpacity>
+
+                          <TextInput
+                            style={styles.jbInput}
+                            value={String(currentVal)}
+                            onChangeText={(txt) => handleJewelSetDirect(jewel.key, txt)}
+                            keyboardType="numeric"
+                            selectTextOnFocus
+                          />
+
+                          <TouchableOpacity
+                            style={styles.jbStepBtn}
+                            onPress={() => handleJewelChange(jewel.key, 1)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.jbStepBtnText}>+1</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.jbStepBtn}
+                            onPress={() => handleJewelChange(jewel.key, 10)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.jbStepBtnText}>+10</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            )}
+
+            {/* Footer con Botón Guardar */}
+            {jewelBankHasTable && !jewelBankLoading && (
+              <View style={styles.jbFooterRow}>
+                <TouchableOpacity
+                  style={styles.jbCancelBtn}
+                  onPress={() => setJewelBankModalVisible(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.jbCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.jbSaveBtn}
+                  onPress={handleSaveJewelBank}
+                  disabled={jewelBankSaving}
+                  activeOpacity={0.8}
+                >
+                  {jewelBankSaving ? (
+                    <ActivityIndicator size="small" color="#1A1612" />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="content-save" size={18} color="#1A1612" />
+                      <Text style={styles.jbSaveBtnText}>Guardar en SQL</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -5846,5 +6144,188 @@ const styles = StyleSheet.create({
     color: '#FFE082',
     fontSize: 11,
     fontWeight: '600',
+  },
+
+  // ==========================================
+  // ESTILOS BANCO DE JOYAS (SEASON 6 PIEDRA & ORO)
+  // ==========================================
+  jbModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  jbModalContent: {
+    width: '100%',
+    maxWidth: 520,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: THEME.colors.oroClaro,
+    padding: 16,
+    elevation: 8,
+  },
+  jbModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.colors.borde,
+    marginBottom: 12,
+  },
+  jbModalTitle: {
+    color: THEME.colors.texto,
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  jbModalSubtitle: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  jbCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jbQuickRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  jbQuickLabel: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  jbQuickPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+  },
+  jbQuickPillText: {
+    color: THEME.colors.texto,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  jbListContainer: {
+    gap: 8,
+  },
+  jbItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  jbItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    marginRight: 8,
+  },
+  jbIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jbItemName: {
+    color: THEME.colors.texto,
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  jbStepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  jbStepBtn: {
+    minWidth: 28,
+    height: 28,
+    paddingHorizontal: 4,
+    borderRadius: 6,
+    backgroundColor: THEME.colors.cardElevated,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jbStepBtnText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  jbInput: {
+    width: 52,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: THEME.colors.fondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.oroClaro,
+    color: THEME.colors.oroClaro,
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingVertical: 0,
+    paddingHorizontal: 2,
+  },
+  jbFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.borde,
+  },
+  jbCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+  },
+  jbCancelText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  jbSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: THEME.colors.oroClaro,
+  },
+  jbSaveBtnText: {
+    color: '#1A1612',
+    fontSize: 13,
+    fontWeight: 'bold',
   },
 });

@@ -196,3 +196,16 @@ export interface JewelPurgeResult {
   message: string;
 }
 
+export interface JewelBankData {
+  AccountID?: string;
+  Bless: number;
+  Soul: number;
+  Chaos: number;
+  Life: number;
+  Creation: number;
+  Guardian: number;
+  Harmony: number;
+  GemStone: number;
+  LowStone: number;
+  HighStone: number;
+}

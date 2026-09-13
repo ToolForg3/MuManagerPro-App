@@ -79,6 +79,7 @@ export const CharacterEditScreen = () => {
   const [zen, setZen] = useState('0');
   const [ruud, setRuud] = useState('0');
   const [level, setLevel] = useState('400');
+  const [levelModalVisible, setLevelModalVisible] = useState(false);
   const [lvlPoints, setLvlPoints] = useState('0');
   const [mLevel, setMLevel] = useState('0');
   const [mPoints, setMPoints] = useState('0');
@@ -829,6 +830,7 @@ export const CharacterEditScreen = () => {
       const numMPoints = parseInt(mPoints, 10) || 0;
       const numPkCount = parseInt(pkCount, 10) || 0;
       const numPkTime = parseInt(pkTime, 10) || 0;
+      const numLevel = Math.max(1, Math.min(400, parseInt(level, 10) || 1));
 
       const res = await SqlClient.updateCharacterProgress(charName, {
         resets: numResets,
@@ -838,11 +840,13 @@ export const CharacterEditScreen = () => {
         pkLevel,
         pkCount: numPkCount,
         pkTime: numPkTime,
+        level: numLevel,
       });
 
       if (res.success) {
         setCharacter({
           ...character,
+          cLevel: numLevel,
           ResetCount: numResets,
           MasterResetCount: numMResets,
           MasterLevel: numMLevel,
@@ -858,7 +862,7 @@ export const CharacterEditScreen = () => {
     } finally {
       setSavingProgress(false);
     }
-  }, [character, loadError, resets, mResets, mLevel, mPoints, pkCount, pkTime, pkLevel, charName]);
+  }, [character, loadError, level, resets, mResets, mLevel, mPoints, pkCount, pkTime, pkLevel, charName]);
 
   const handleSaveProgress = useCallback(() => {
     executeWithOnlineCheck('Guardar Progreso', doSaveProgress);
@@ -1362,9 +1366,20 @@ export const CharacterEditScreen = () => {
                 {/* Resumen: Nivel, Puntos, Resets */}
                 <View style={styles.muLevelRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.muLevelText}>
-                      Level: <Text style={styles.muYellowVal}>{level}</Text>    Point: <Text style={styles.muYellowVal}>{lvlPoints}</Text>    Reset: <Text style={styles.muYellowVal}>{resets}</Text>
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                      <TouchableOpacity
+                        style={styles.muLevelBadgeBtn}
+                        onPress={() => setLevelModalVisible(true)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.muLevelText}>
+                          Level: <Text style={styles.muYellowValUnderline}>{level}</Text> ✏️
+                        </Text>
+                      </TouchableOpacity>
+                      <Text style={styles.muLevelText}>
+                        Point: <Text style={styles.muYellowVal}>{lvlPoints}</Text>    Reset: <Text style={styles.muYellowVal}>{resets}</Text>
+                      </Text>
+                    </View>
                     <Text style={styles.muLevelText}>
                       GranReset: <Text style={styles.muYellowVal}>{mResets}</Text>
                     </Text>
@@ -1861,6 +1876,49 @@ export const CharacterEditScreen = () => {
                   <MaterialCommunityIcons name="broom" size={14} color={THEME.colors.accentGreenBright} />
                   <Text style={styles.quickPkBtnText}>PK CLEAR</Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* Nivel Base (cLevel) */}
+              <View style={[styles.fieldCol, { marginBottom: 12 }]}>
+                <Text style={styles.fieldLabel}>Nivel Base (cLevel: 1 - 400)</Text>
+                <View style={styles.inputStepperRow}>
+                  <TextInput
+                    style={[styles.fieldInput, { flex: 1, color: THEME.colors.oroClaro }]}
+                    value={level}
+                    onChangeText={(txt) => {
+                      const num = parseInt(txt.replace(/[^0-9]/g, ''), 10);
+                      if (isNaN(num)) setLevel('');
+                      else setLevel(String(Math.max(1, Math.min(400, num))));
+                    }}
+                    keyboardType="numeric"
+                  />
+                  <TouchableOpacity
+                    style={styles.stepperSmallBtn}
+                    onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 1)))}
+                  >
+                    <Text style={styles.stepperText}>-</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.stepperSmallBtn}
+                    onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 1)))}
+                  >
+                    <Text style={styles.stepperText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.quickStepRow}>
+                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('1')}>
+                    <Text style={styles.quickStepText}>Nv 1</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('220')}>
+                    <Text style={styles.quickStepText}>Nv 220</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('380')}>
+                    <Text style={styles.quickStepText}>Nv 380</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('400')}>
+                    <Text style={[styles.quickStepText, { color: THEME.colors.oroClaro }]}>Nv 400 (MAX)</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Resets & M. Resets */}
@@ -2701,6 +2759,134 @@ export const CharacterEditScreen = () => {
                 </View>
               }
             />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Edición Rápida de Nivel Base (cLevel) */}
+      <Modal
+        visible={levelModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setLevelModalVisible(false)}
+      >
+        <View style={styles.levelModalOverlay}>
+          <View style={styles.levelModalContent}>
+            {/* Header */}
+            <View style={styles.levelModalHeader}>
+              <View>
+                <Text style={styles.levelModalTitle}>EDITAR NIVEL BASE (cLevel)</Text>
+                <Text style={styles.levelModalSubtitle}>
+                  Personaje: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{character?.Name || charName}</Text> • Rango: 1 - 400
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.levelModalCloseBtn}
+                onPress={() => setLevelModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Presets Rápidos */}
+            <View style={styles.levelModalQuickRow}>
+              {[
+                { val: '1', label: 'Nv 1' },
+                { val: '220', label: 'Nv 220' },
+                { val: '380', label: 'Nv 380' },
+                { val: '400', label: 'Nv 400 (MAX)' },
+              ].map((p) => {
+                const isActive = level === p.val;
+                return (
+                  <TouchableOpacity
+                    key={p.val}
+                    style={[styles.levelModalQuickBtn, isActive && styles.levelModalQuickBtnActive]}
+                    onPress={() => setLevel(p.val)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.levelModalQuickText, isActive && styles.levelModalQuickTextActive]}>
+                      {p.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Stepper e Input Centrado */}
+            <View style={styles.levelModalStepperRow}>
+              <TouchableOpacity
+                style={styles.levelModalStepBtn}
+                onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 10)))}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.levelModalStepBtnText}>-10</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.levelModalStepBtn}
+                onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 1)))}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.levelModalStepBtnText}>-1</Text>
+              </TouchableOpacity>
+
+              <TextInput
+                style={styles.levelModalInput}
+                value={level}
+                onChangeText={(txt) => {
+                  const num = parseInt(txt.replace(/[^0-9]/g, ''), 10);
+                  if (isNaN(num)) setLevel('');
+                  else setLevel(String(Math.max(1, Math.min(400, num))));
+                }}
+                keyboardType="numeric"
+                selectTextOnFocus
+                maxLength={3}
+              />
+
+              <TouchableOpacity
+                style={styles.levelModalStepBtn}
+                onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 1)))}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.levelModalStepBtnText}>+1</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.levelModalStepBtn}
+                onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 10)))}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.levelModalStepBtnText}>+10</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Nota informativa Season 6 */}
+            <Text style={styles.levelModalDesc}>
+              El nivel base determina las fórmulas de ataque, defensa, evolución de clase y requerimientos de equipo (cLevel oficial: 1 a 400).
+            </Text>
+
+            {/* Acciones */}
+            <View style={styles.levelModalFooterRow}>
+              <TouchableOpacity
+                style={styles.levelModalCancelBtn}
+                onPress={() => setLevelModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.levelModalCancelText}>Cerrar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.levelModalSaveBtn}
+                onPress={() => {
+                  setLevelModalVisible(false);
+                  handleSaveProgress();
+                }}
+                disabled={savingProgress}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="content-save" size={16} color="#1A1612" />
+                <Text style={styles.levelModalSaveText}>Guardar Nivel en SQL</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -3853,6 +4039,168 @@ const styles = StyleSheet.create({
   },
   headerStatusPillText: {
     fontSize: 9,
+    fontWeight: '800',
+  },
+  muLevelBadgeBtn: {
+    backgroundColor: 'rgba(232, 200, 106, 0.12)',
+    borderColor: THEME.colors.bordeBrillante,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  muYellowValUnderline: {
+    color: THEME.colors.oroClaro,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  levelModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.78)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  levelModalContent: {
+    backgroundColor: '#1E1915',
+    borderColor: '#4A3B2C',
+    borderWidth: 1,
+    borderRadius: 6,
+    width: '100%',
+    maxWidth: 420,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  levelModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3D312A',
+    marginBottom: 16,
+  },
+  levelModalTitle: {
+    color: THEME.colors.oroClaro,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  levelModalSubtitle: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  levelModalCloseBtn: {
+    padding: 4,
+  },
+  levelModalQuickRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 6,
+  },
+  levelModalQuickBtn: {
+    flex: 1,
+    backgroundColor: '#14110E',
+    borderColor: '#3D312A',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  levelModalQuickBtnActive: {
+    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    borderColor: THEME.colors.oroClaro,
+  },
+  levelModalQuickText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  levelModalQuickTextActive: {
+    color: THEME.colors.oroClaro,
+    fontWeight: '800',
+  },
+  levelModalStepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  levelModalStepBtn: {
+    backgroundColor: '#2A221B',
+    borderColor: '#4A3B2C',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelModalStepBtnText: {
+    color: THEME.colors.texto,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  levelModalInput: {
+    backgroundColor: '#14110E',
+    borderColor: THEME.colors.bordeBrillante,
+    borderWidth: 1.5,
+    borderRadius: 6,
+    color: THEME.colors.oroClaro,
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+    width: 90,
+    height: 48,
+  },
+  levelModalDesc: {
+    color: THEME.colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+  levelModalFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  levelModalCancelBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#3D312A',
+    backgroundColor: '#14110E',
+    alignItems: 'center',
+  },
+  levelModalCancelText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  levelModalSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: THEME.colors.oroClaro,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+    gap: 6,
+  },
+  levelModalSaveText: {
+    color: '#1A1612',
+    fontSize: 13,
     fontWeight: '800',
   },
 });

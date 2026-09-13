@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SqlServerConfig, DashboardMetrics, SqlLogEntry } from '../../types/database';
 import { CharacterSummary, CharacterDetail, AccountSummary, AccountUpdateData } from '../../types/character';
-import { OnlinePlayer, BanEntry, GmEntry, GmLevel, ItemKitEntry, GuildEntry, GuildMemberEntry, PkPlayerEntry, JewelAuditParams, JewelAuditResult, JewelPurgeParams, JewelPurgeResult } from '../../types/admin';
+import { OnlinePlayer, BanEntry, GmEntry, GmLevel, ItemKitEntry, GuildEntry, GuildMemberEntry, PkPlayerEntry, JewelAuditParams, JewelAuditResult, JewelPurgeParams, JewelPurgeResult, JewelBankData } from '../../types/admin';
 import { MuItemParser } from '../parser/muItemParser';
 import { SQL_QUERIES } from './sqlQueries';
 import { SecurityService } from '../security/securityService';
@@ -687,6 +687,7 @@ export class SqlClient {
       pkLevel?: number;
       pkCount?: number;
       pkTime?: number;
+      level?: number;
     }
   ): Promise<{ success: boolean; message: string }> {
     const startTime = Date.now();
@@ -1218,6 +1219,81 @@ export class SqlClient {
       const duration = Date.now() - startTime;
       this.logQuery(`SET_VAULT_EXPANSION_${accountId}`, duration, false, 0, e.message);
       return { success: false, extWarehouseLevel: 0, message: e.message };
+    }
+  }
+
+  /**
+   * 7g. Consultar Banco de Joyas de una Cuenta (CustomJewelBank Louis S6 Up40)
+   */
+  static async getJewelBank(
+    accountId: string
+  ): Promise<{ success: boolean; hasTable: boolean; bank: JewelBankData | null; message?: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/character/jewel-bank', {
+        accountId: accountId.trim(),
+        config: this.config,
+      });
+
+      if (!res.ok) {
+        const errJson = await this.safeJson(res);
+        throw new Error(errJson.error || `HTTP ${res.status}`);
+      }
+
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      this.logQuery(`GET_JEWEL_BANK_${accountId}`, duration, true, data.bank ? 1 : 0);
+      return {
+        success: true,
+        hasTable: data.hasTable !== undefined ? data.hasTable : true,
+        bank: data.bank || null,
+      };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery(`GET_JEWEL_BANK_${accountId}`, duration, false, 0, e.message);
+      return { success: false, hasTable: false, bank: null, message: e.message };
+    }
+  }
+
+  /**
+   * 7h. Actualizar Banco de Joyas de una Cuenta (CustomJewelBank Louis S6 Up40)
+   */
+  static async updateJewelBank(
+    accountId: string,
+    jewels: Partial<JewelBankData>
+  ): Promise<{ success: boolean; hasTable: boolean; bank: JewelBankData | null; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/character/jewel-bank', {
+        accountId: accountId.trim(),
+        update: true,
+        jewels,
+        config: this.config,
+      });
+
+      if (!res.ok) {
+        const errJson = await this.safeJson(res);
+        throw new Error(errJson.error || `HTTP ${res.status}`);
+      }
+
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      this.logQuery(`UPDATE_JEWEL_BANK_${accountId}`, duration, true, 1);
+      return {
+        success: true,
+        hasTable: data.hasTable !== undefined ? data.hasTable : true,
+        bank: data.bank || null,
+        message: 'Banco de Joyas actualizado exitosamente en SQL Server.',
+      };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery(`UPDATE_JEWEL_BANK_${accountId}`, duration, false, 0, e.message);
+      return {
+        success: false,
+        hasTable: false,
+        bank: null,
+        message: e.message || 'Error al actualizar el Banco de Joyas.',
+      };
     }
   }
 
