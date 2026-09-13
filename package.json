@@ -1,6 +1,6 @@
 {
   "name": "apk-editor-mu",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "author": "ToolForg3",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,8 @@
     "test:parser": "node tests/muItemParser.test.js",
     "server": "node server/bridgeServer.js",
     "web:portal": "node server/webPortalServer.js",
-    "release": "node scripts/release-update.js"
+    "release": "node scripts/release-update.js",
+    "check:wiring": "node scripts/exhaustive_audit.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",

@@ -295,8 +295,8 @@ export class SqlClient {
   private static async sendSecureRequest(
     endpoint: string,
     bodyPayload: any,
-    timeoutMs: number = 10000,
-    maxRetries: number = 0
+    timeoutMs: number = 15000,
+    maxRetries: number = 1
   ): Promise<Response> {
     let attempt = 0;
     while (true) {

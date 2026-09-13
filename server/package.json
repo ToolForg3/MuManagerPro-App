@@ -1,6 +1,6 @@
 {
   "name": "mumanager-gateway",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Mu Manager PRO Cloud Gateway and Remote Kill-Switch",
   "main": "bridgeServer.js",
   "scripts": {
