@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.9.6",
-  "latestVersion": "1.9.6",
-  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.9.6 (Build 98) - Términos Profesionales al Iniciar, Blindaje de Reseteo y Cambio de Contraseña:\n• Términos y Condiciones Season 6: Integración nativa de acuerdo formal EULA/Privacidad en 5 artículos con sistema Piedra y Oro al iniciar la APK y en consulta permanente.\n• Corrección Crítica de Reseteo de Contraseña: Resolución definitiva de error 404 en recuperación con soporte dual (/reset y /confirm), validación simétrica de 6 caracteres y reseteo inmediato.\n• Cambio de Contraseña en Sesión Activa: Nueva función y modal en Configuración para actualizar la clave de usuario conectado directamente desde la APK.\n• Blindaje de Cuentas MU: Límite canónico de 10 caracteres (maxLength=10) en MEMB_INFO.memb__pwd para Louis S6 y MSPro.",
+  "minRequiredVersion": "1.9.7",
+  "latestVersion": "1.9.7",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v1.9.7 (Build 99) - Scroll Obligatorio en Términos y Lectura Multi-Esquema de Banco de Joyas:\n• Términos y Condiciones Interactivos: Despliegue completo sin colapso flex y botón de aceptación bloqueado hasta completar la lectura mediante scroll (con indicador deslizable al final).\n• Banco de Joyas Multi-Esquema Blindado: Detección universal de columnas de joyas (Bless, JewelOfBless, JewelBless, etc.) y normalización de mayúsculas/minúsculas para evitar valores en 0.\n• Compatibilidad Case-Sensitive: Soporte para collation SQL insensible a mayúsculas con LOWER() y fallback automático entre CustomJewelBank y JewelBank.\n• Extracción Numérica Segura: Parseo case-insensitive tanto en backend como en frontend para garantizar la lectura íntegra de joyas.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.9.6",
-  "updateTitle": "MuManager PRO v1.9.6 (Build 98)",
-  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
-  "versionCode": 98,
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
-  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.9.6 (Build 98) - Términos Profesionales al Iniciar, Blindaje de Reseteo y Cambio de Contraseña:\n• Términos y Condiciones Season 6: Integración nativa de acuerdo formal EULA/Privacidad en 5 artículos con sistema Piedra y Oro al iniciar la APK y en consulta permanente.\n• Corrección Crítica de Reseteo de Contraseña: Resolución definitiva de error 404 en recuperación con soporte dual (/reset y /confirm), validación simétrica de 6 caracteres y reseteo inmediato.\n• Cambio de Contraseña en Sesión Activa: Nueva función y modal en Configuración para actualizar la clave de usuario conectado directamente desde la APK.\n• Blindaje de Cuentas MU: Límite canónico de 10 caracteres (maxLength=10) en MEMB_INFO.memb__pwd para Louis S6 y MSPro.",
-  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
-  "appVersion": "1.9.6",
-  "buildNumber": 98,
+  "minVersion": "1.9.7",
+  "updateTitle": "MuManager PRO v1.9.7 (Build 99)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
+  "versionCode": 99,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v1.9.7 (Build 99) - Scroll Obligatorio en Términos y Lectura Multi-Esquema de Banco de Joyas:\n• Términos y Condiciones Interactivos: Despliegue completo sin colapso flex y botón de aceptación bloqueado hasta completar la lectura mediante scroll (con indicador deslizable al final).\n• Banco de Joyas Multi-Esquema Blindado: Detección universal de columnas de joyas (Bless, JewelOfBless, JewelBless, etc.) y normalización de mayúsculas/minúsculas para evitar valores en 0.\n• Compatibilidad Case-Sensitive: Soporte para collation SQL insensible a mayúsculas con LOWER() y fallback automático entre CustomJewelBank y JewelBank.\n• Extracción Numérica Segura: Parseo case-insensitive tanto en backend como en frontend para garantizar la lectura íntegra de joyas.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
+  "appVersion": "1.9.7",
+  "buildNumber": 99,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.9.6",
-  "build": 98
+  "version": "1.9.7",
+  "build": 99
 }

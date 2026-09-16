@@ -605,17 +605,30 @@ export const AccountsScreen = () => {
           setJewelBankTableName(res.tableName);
         }
         if (res.bank) {
+          const raw: any = res.bank;
+          const getBankVal = (key: string): number => {
+            if (raw[key] !== undefined && raw[key] !== null) {
+              const n = Number(raw[key]);
+              return isNaN(n) ? 0 : Math.max(0, n);
+            }
+            const foundKey = Object.keys(raw).find(k => k.toLowerCase() === key.toLowerCase());
+            if (foundKey && raw[foundKey] !== undefined && raw[foundKey] !== null) {
+              const n = Number(raw[foundKey]);
+              return isNaN(n) ? 0 : Math.max(0, n);
+            }
+            return 0;
+          };
           setJewelBankData({
-            Bless: res.bank.Bless || 0,
-            Soul: res.bank.Soul || 0,
-            Chaos: res.bank.Chaos || 0,
-            Life: res.bank.Life || 0,
-            Creation: res.bank.Creation || 0,
-            Guardian: res.bank.Guardian || 0,
-            Harmony: res.bank.Harmony || 0,
-            GemStone: res.bank.GemStone || 0,
-            LowStone: res.bank.LowStone || 0,
-            HighStone: res.bank.HighStone || 0,
+            Bless: getBankVal('Bless'),
+            Soul: getBankVal('Soul'),
+            Chaos: getBankVal('Chaos'),
+            Life: getBankVal('Life'),
+            Creation: getBankVal('Creation'),
+            Guardian: getBankVal('Guardian'),
+            Harmony: getBankVal('Harmony'),
+            GemStone: getBankVal('GemStone'),
+            LowStone: getBankVal('LowStone'),
+            HighStone: getBankVal('HighStone'),
           });
         } else {
           setJewelBankData({

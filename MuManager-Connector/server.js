@@ -2814,44 +2814,74 @@ app.post('/api/character/jewel-bank', async (req, res) => {
           ELSE NULL 
         END AS TableName;
       `);
-      const targetTable = (tblCheck.recordset && tblCheck.recordset[0] && tblCheck.recordset[0].TableName) ? tblCheck.recordset[0].TableName : null;
+      let targetTable = (tblCheck.recordset && tblCheck.recordset[0] && tblCheck.recordset[0].TableName) ? tblCheck.recordset[0].TableName : null;
       if (!targetTable) {
         return { hasTable: false, tableName: null, bank: null };
       }
+
+      // Diccionario exhaustivo de variantes de nombres de columnas en emuladores Season 6 / MSPro
+      const JEWEL_ALIASES = {
+        Bless: ['bless', 'jewelofbless', 'jewelbless', 'b_bless', 'j_bless', 'blesscount'],
+        Soul: ['soul', 'jewelofsoul', 'jewelsoul', 'b_soul', 'j_soul', 'soulcount'],
+        Chaos: ['chaos', 'jewelofchaos', 'jewelchaos', 'b_chaos', 'j_chaos', 'chaoscount'],
+        Life: ['life', 'jeweloflife', 'jewellife', 'b_life', 'j_life', 'lifecount'],
+        Creation: ['creation', 'jewelofcreation', 'jewelcreation', 'b_creation', 'j_creation', 'creationcount'],
+        Guardian: ['guardian', 'jewelofguardian', 'jewelguardian', 'b_guardian', 'j_guardian', 'guardiancount'],
+        Harmony: ['harmony', 'jewelofharmony', 'jewelharmony', 'b_harmony', 'j_harmony', 'harmonycount'],
+        GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount'],
+        LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount'],
+        HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount'],
+      };
 
       // Inspeccionar columnas existentes para compatibilidad total ante variantes de esquema
       const colCheck = await pool.request()
         .input('TblName', sql.VarChar(50), targetTable)
         .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
-      const existingCols = (colCheck.recordset || []).map(r => r.COLUMN_NAME.toLowerCase());
-      const hasCol = (col) => existingCols.includes(col.toLowerCase());
+      const existingColNames = (colCheck.recordset || []).map(r => r.COLUMN_NAME);
 
-      const supportedCols = ['Bless', 'Soul', 'Chaos', 'Life', 'Creation', 'Guardian', 'Harmony', 'GemStone', 'LowStone', 'HighStone'];
+      // Detectar columna de cuenta de forma dinámica (AccountID, AccountId, Account, etc.)
+      const accColCandidate = existingColNames.find(name => 
+        ['accountid', 'account', 'memb___id', 'id', 'userguid'].includes(name.toLowerCase())
+      );
+      const accColName = accColCandidate || 'AccountID';
+
+      // Mapear cada joya con su columna real en la base de datos
+      const jewelColMap = {};
+      for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
+        const matched = existingColNames.find(name => aliases.includes(name.toLowerCase()));
+        if (matched) {
+          jewelColMap[key] = matched;
+        }
+      }
 
       if (update && jewels) {
-        const reqUpdate = pool.request().input('Acc', sql.VarChar(10), accountId.trim());
+        const reqUpdate = pool.request().input('Acc', sql.VarChar(50), accountId.trim());
         const updateSets = [];
-        const insertCols = ['AccountID'];
+        const insertCols = [`[${accColName}]`];
         const insertVals = ['@Acc'];
 
-        for (const col of supportedCols) {
-          if (hasCol(col)) {
-            const actualName = (colCheck.recordset || []).find(r => r.COLUMN_NAME.toLowerCase() === col.toLowerCase())?.COLUMN_NAME || col;
-            const val = Math.max(0, parseInt(jewels[col], 10) || 0);
-            reqUpdate.input(col, sql.Int, val);
-            updateSets.push(`${actualName} = @${col}`);
-            insertCols.push(actualName);
-            insertVals.push(`@${col}`);
-          }
+        for (const [key, actualCol] of Object.entries(jewelColMap)) {
+          const val = Math.max(0, parseInt(jewels[key], 10) || 0);
+          reqUpdate.input(key, sql.Int, val);
+          updateSets.push(`[${actualCol}] = @${key}`);
+          insertCols.push(`[${actualCol}]`);
+          insertVals.push(`@${key}`);
         }
 
         if (updateSets.length > 0) {
           await reqUpdate.query(`
-            IF EXISTS (SELECT 1 FROM ${targetTable} WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc)
+            IF EXISTS (
+              SELECT 1 FROM ${targetTable} 
+              WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                 OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc)) 
+                 OR [${accColName}] = @Acc
+            )
             BEGIN
               UPDATE ${targetTable}
               SET ${updateSets.join(', ')}
-              WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;
+              WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                 OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc)) 
+                 OR [${accColName}] = @Acc;
             END
             ELSE
             BEGIN
@@ -2862,33 +2892,90 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         }
       }
 
-      const selectCols = ['AccountID'];
-      for (const col of supportedCols) {
-        if (hasCol(col)) {
-          const actualName = (colCheck.recordset || []).find(r => r.COLUMN_NAME.toLowerCase() === col.toLowerCase())?.COLUMN_NAME || col;
-          selectCols.push(actualName);
+      // Construir SELECT con alias canónicos forzados (ej: [bless] AS [Bless])
+      const selectCols = [`[${accColName}] AS [AccountID]`];
+      for (const [key, actualCol] of Object.entries(jewelColMap)) {
+        selectCols.push(`[${actualCol}] AS [${key}]`);
+      }
+
+      let q = await pool.request()
+        .input('Acc', sql.VarChar(50), accountId.trim())
+        .query(`
+          SELECT ${selectCols.join(', ')}
+          FROM ${targetTable}
+          WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+             OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+             OR [${accColName}] = @Acc;
+        `);
+
+      let rawBank = q.recordset[0] || null;
+
+      // Fallback resiliente: si targetTable no tenía la fila de este usuario, verificar la tabla alternativa
+      if (!rawBank) {
+        const altTable = targetTable === 'CustomJewelBank' ? 'JewelBank' : 'CustomJewelBank';
+        const altCheck = await pool.request().query(`SELECT OBJECT_ID('${altTable}', 'U') AS TblId;`);
+        if (altCheck.recordset && altCheck.recordset[0] && altCheck.recordset[0].TblId) {
+          const altColCheck = await pool.request()
+            .input('AltTblName', sql.VarChar(50), altTable)
+            .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @AltTblName;");
+          const altColNames = (altColCheck.recordset || []).map(r => r.COLUMN_NAME);
+          const altAccCol = altColNames.find(name => 
+            ['accountid', 'account', 'memb___id', 'id', 'userguid'].includes(name.toLowerCase())
+          ) || 'AccountID';
+
+          const altSelectCols = [`[${altAccCol}] AS [AccountID]`];
+          for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
+            const matched = altColNames.find(name => aliases.includes(name.toLowerCase()));
+            if (matched) {
+              altSelectCols.push(`[${matched}] AS [${key}]`);
+            }
+          }
+
+          const altQ = await pool.request()
+            .input('Acc', sql.VarChar(50), accountId.trim())
+            .query(`
+              SELECT ${altSelectCols.join(', ')}
+              FROM ${altTable}
+              WHERE LOWER(LTRIM(RTRIM([${altAccCol}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                 OR LTRIM(RTRIM([${altAccCol}])) = LTRIM(RTRIM(@Acc))
+                 OR [${altAccCol}] = @Acc;
+            `);
+          if (altQ.recordset && altQ.recordset.length > 0) {
+            rawBank = altQ.recordset[0];
+            targetTable = altTable;
+          }
         }
       }
 
-      const q = await pool.request()
-        .input('Acc', sql.VarChar(10), accountId.trim())
-        .query(`SELECT ${selectCols.join(', ')} FROM ${targetTable} WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;`);
+      // Extracción blindada insensible a mayúsculas/minúsculas en JavaScript
+      const getVal = (obj, key) => {
+        if (!obj) return 0;
+        if (obj[key] !== undefined && obj[key] !== null) {
+          const n = parseInt(obj[key], 10);
+          return isNaN(n) ? 0 : Math.max(0, n);
+        }
+        const foundKey = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
+        if (foundKey && obj[foundKey] !== undefined && obj[foundKey] !== null) {
+          const n = parseInt(obj[foundKey], 10);
+          return isNaN(n) ? 0 : Math.max(0, n);
+        }
+        return 0;
+      };
 
-      const rawBank = q.recordset[0] || null;
       let bank = null;
       if (rawBank) {
         bank = {
           AccountID: rawBank.AccountID || accountId.trim(),
-          Bless: rawBank.Bless ?? 0,
-          Soul: rawBank.Soul ?? 0,
-          Chaos: rawBank.Chaos ?? 0,
-          Life: rawBank.Life ?? 0,
-          Creation: rawBank.Creation ?? 0,
-          Guardian: rawBank.Guardian ?? 0,
-          Harmony: rawBank.Harmony ?? 0,
-          GemStone: rawBank.GemStone ?? rawBank.Gemstone ?? 0,
-          LowStone: rawBank.LowStone ?? rawBank.Lowstone ?? 0,
-          HighStone: rawBank.HighStone ?? rawBank.Highstone ?? 0,
+          Bless: getVal(rawBank, 'Bless'),
+          Soul: getVal(rawBank, 'Soul'),
+          Chaos: getVal(rawBank, 'Chaos'),
+          Life: getVal(rawBank, 'Life'),
+          Creation: getVal(rawBank, 'Creation'),
+          Guardian: getVal(rawBank, 'Guardian'),
+          Harmony: getVal(rawBank, 'Harmony'),
+          GemStone: getVal(rawBank, 'GemStone'),
+          LowStone: getVal(rawBank, 'LowStone'),
+          HighStone: getVal(rawBank, 'HighStone'),
         };
       }
 

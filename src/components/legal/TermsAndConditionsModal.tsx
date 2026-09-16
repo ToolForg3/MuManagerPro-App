@@ -28,6 +28,27 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
   onAccept,
   isOnboarding = false,
 }) => {
+  const [hasScrolledToEnd, setHasScrolledToEnd] = React.useState(!isOnboarding);
+  const scrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    if (visible && isOnboarding) {
+      setHasScrolledToEnd(false);
+    }
+  }, [visible, isOnboarding]);
+
+  const handleScroll = (event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 28) {
+      setHasScrolledToEnd(true);
+    }
+  };
+
+  const handleScrollToBottom = () => {
+    scrollRef.current?.scrollToEnd({ animated: true });
+    setHasScrolledToEnd(true);
+  };
+
   const handleAccept = async () => {
     try {
       await AsyncStorage.setItem(TERMS_STORAGE_KEY, APP_VERSION);
@@ -103,9 +124,12 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
 
           {/* Contenido Desplazable de Artículos */}
           <ScrollView
+            ref={scrollRef}
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={true}
+            scrollEventThrottle={16}
+            onScroll={handleScroll}
           >
             {/* Artículo 1 */}
             <View style={styles.sectionBox}>
@@ -204,6 +228,19 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
                 debes suspender el uso de la aplicación y eliminarla de tu dispositivo.
               </Text>
             </View>
+
+            {/* Distintivo de Fin de Lectura */}
+            <View style={styles.documentEndBadge}>
+              <MaterialCommunityIcons
+                name="shield-check-outline"
+                size={16}
+                color={THEME.colors.jade}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.documentEndText}>
+                Has revisado la totalidad de los Términos y Condiciones Oficiales
+              </Text>
+            </View>
           </ScrollView>
 
           {/* Barra de Remaches Inferior */}
@@ -216,23 +253,49 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
           <View style={styles.footerActions}>
             {isOnboarding ? (
               <View style={styles.onboardingActionsCol}>
-                <TouchableOpacity
-                  style={styles.primaryAcceptBtn}
-                  onPress={handleAccept}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons
-                    name="shield-check"
-                    size={20}
-                    color="#100D0B"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.primaryAcceptBtnText}>
-                    Aceptar y Continuar
-                  </Text>
-                </TouchableOpacity>
+                {!hasScrolledToEnd ? (
+                  <TouchableOpacity
+                    style={styles.scrollDownIndicatorBtn}
+                    onPress={handleScrollToBottom}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons
+                      name="chevron-double-down"
+                      size={18}
+                      color={THEME.colors.oroClaro}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={styles.scrollDownIndicatorText}>
+                      Desliza hasta el final para aceptar
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="chevron-double-down"
+                      size={18}
+                      color={THEME.colors.oroClaro}
+                      style={{ marginLeft: 6 }}
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.primaryAcceptBtn}
+                    onPress={handleAccept}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons
+                      name="shield-check"
+                      size={20}
+                      color="#100D0B"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={styles.primaryAcceptBtnText}>
+                      Aceptar y Continuar
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 <Text style={styles.footerHelpText}>
-                  Al continuar, declaras ser administrador autorizado del servidor.
+                  {hasScrolledToEnd
+                    ? 'Al continuar, declaras ser administrador autorizado del servidor.'
+                    : 'Desplaza el documento para revisar todas las cláusulas.'}
                 </Text>
               </View>
             ) : (
@@ -273,7 +336,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
     maxWidth: 520,
-    maxHeight: Math.min(680, windowHeight * 0.88),
+    height: Math.min(640, windowHeight * 0.82),
     backgroundColor: THEME.colors.fondo,
     borderRadius: 6,
     borderWidth: 1.5,
@@ -404,6 +467,42 @@ const styles = StyleSheet.create({
   onboardingActionsCol: {
     width: '100%',
     alignItems: 'center',
+  },
+  documentEndBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(63, 207, 142, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(63, 207, 142, 0.3)',
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  documentEndText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: THEME.colors.jade,
+    textAlign: 'center',
+  },
+  scrollDownIndicatorBtn: {
+    width: '100%',
+    backgroundColor: 'rgba(232, 200, 106, 0.12)',
+    borderWidth: 1,
+    borderColor: THEME.colors.oro,
+    paddingVertical: 12,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollDownIndicatorText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.3,
   },
   primaryAcceptBtn: {
     width: '100%',
