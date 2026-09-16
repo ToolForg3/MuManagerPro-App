@@ -3117,6 +3117,7 @@
         dev.mode || '',
         dev.blocked ? '1' : '0',
         isExpired ? '1' : '0',
+        dev.isLifetime ? '1' : '0',
         dev.currentUser || '',
         dev.note || '',
         dev.isEmulator ? '1' : '0',
@@ -3157,7 +3158,12 @@
 
       let expText = '';
       if (dev.mode === 'PRO') {
-        if (dev.expiresAt) {
+        if (dev.isLifetime === true) {
+          expText = `<span style="display:inline-flex; align-items:center; gap:4px; color:#3FCF8E; font-weight:800; font-size:11px; background:rgba(63, 207, 142,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(63, 207, 142,0.3);">
+            ♾️ VITALICIA
+            <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px; border-color:#3FCF8E; color:#3FCF8E;" data-action="expiration" title="Modificar vigencia o cambiar a días">✏️</button>
+          </span>`;
+        } else if (dev.expiresAt) {
           const expDate = new Date(dev.expiresAt);
           const isPast = expDate <= new Date();
           const remainingStr = dev.timeRemainingFormatted || (dev.daysRemaining !== undefined ? `${dev.daysRemaining} días` : '');
@@ -3169,9 +3175,9 @@
                </div>
                <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(63, 207, 142,0.15); color:#3FCF8E; border:1px solid rgba(63, 207, 142,0.3); padding:1px 6px; font-weight:700;">⏱️ ${remainingStr}</span></div>`;
         } else {
-          expText = `<span style="display:inline-flex; align-items:center; gap:4px; color:#3FCF8E; font-weight:800; font-size:11px; background:rgba(63, 207, 142,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(63, 207, 142,0.3);">
-            ♾️ VITALICIA
-            <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px; border-color:#3FCF8E; color:#3FCF8E;" data-action="expiration" title="Modificar vigencia o cambiar a días">✏️</button>
+          expText = `<span style="display:inline-flex; align-items:center; gap:4px; color:#FFB300; font-weight:700; font-size:11px; background:rgba(255,179,0,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(255,179,0,0.3);">
+            ⚠️ Vigencia Pendiente
+            <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px; border-color:#FFB300; color:#FFB300;" data-action="expiration" title="Asignar vigencia a la licencia">Asignar</button>
           </span>`;
         }
       } else {
@@ -3851,6 +3857,19 @@
       }
     }
 
+    function formatClientTimeRemaining(expiresAt) {
+      if (!expiresAt) return 'Sin vigencia fijada';
+      const diffMs = new Date(expiresAt).getTime() - Date.now();
+      if (diffMs <= 0) return 'Expirado';
+      const totalMin = Math.floor(diffMs / 60000);
+      const days = Math.floor(totalMin / 1440);
+      const hours = Math.floor((totalMin % 1440) / 60);
+      const mins = totalMin % 60;
+      if (days > 0) return `${days}d ${hours}h ${mins}m`;
+      if (hours > 0) return `${hours}h ${mins}m`;
+      return `${mins} min`;
+    }
+
     function openExpirationModal(hwid) {
       currentActiveHwid = hwid;
       document.getElementById('exp-modal-hwid-text').innerText = 'Dispositivo: ' + hwid;
@@ -3869,18 +3888,24 @@
       if (dev) {
         const timeStr = dev.timeRemainingFormatted || (dev.daysRemaining !== undefined ? `${dev.daysRemaining} días` : 'Activa');
         if (dev.mode === 'PRO') {
-          if (!dev.expiresAt || dev.isLifetime) {
+          if (dev.isLifetime === true) {
             statusBox.innerHTML = '<span style="color:#3FCF8E; font-weight:bold;">♾️ Licencia PRO Actual: VITALICIA / PERMANENTE</span>';
             document.getElementById('exp-hours-select').value = '0';
-          } else {
+          } else if (dev.expiresAt) {
             const expD = new Date(dev.expiresAt);
-            statusBox.innerHTML = `<span style="color:#FFB300; font-weight:bold;">📅 Licencia PRO: Vence el ${expD.toLocaleString()} (${timeStr} restantes)</span>`;
+            const isPast = expD <= new Date();
+            statusBox.innerHTML = isPast
+              ? `<span style="color:#FF5252; font-weight:bold;">⛔ Licencia PRO: VENCIDA el ${expD.toLocaleString()}</span>`
+              : `<span style="color:#FFB300; font-weight:bold;">📅 Licencia PRO: Vence el ${expD.toLocaleString()} (${timeStr} restantes)</span>`;
             document.getElementById('exp-hours-select').value = 'custom';
             if (customDaysBox) customDaysBox.style.display = 'block';
             if (customDaysInput) customDaysInput.value = dev.daysRemaining > 0 ? dev.daysRemaining : '';
+          } else {
+            statusBox.innerHTML = '<span style="color:#FFB300; font-weight:bold;">⚠️ Licencia PRO: Sin fecha de expiración fijada</span>';
+            document.getElementById('exp-hours-select').value = '720';
           }
         } else {
-          statusBox.innerHTML = `<span style="color:#AAA;">Modo actual: <strong>DEMO / PRUEBA</strong> (${dev.expiresAt ? `Restan: ${timeStr}` : 'Sin límite fijado'})</span>`;
+          statusBox.innerHTML = `<span style="color:#C8BEAF;">Modo actual: <strong>DEMO / PRUEBA</strong> (${dev.expiresAt ? `Restan: ${timeStr}` : 'Sin límite fijado'})</span>`;
           document.getElementById('exp-hours-select').value = '72';
         }
       } else {
@@ -3954,6 +3979,15 @@
         if (data.success) {
           closeModal('expiration-modal');
           showToast('Vigencia de la licencia actualizada exitosamente.');
+          // Actualización inmediata en memoria para eliminar intermitencia visual
+          const cachedDev = allDevicesCache.find(d => d.hwid === currentActiveHwid);
+          if (cachedDev) {
+            cachedDev.expiresAt = data.expiresAt || null;
+            cachedDev.isLifetime = !!data.isLifetime;
+            cachedDev.daysRemaining = data.expiresAt ? Math.max(0, Math.ceil((new Date(data.expiresAt).getTime() - Date.now()) / 86400000)) : null;
+            cachedDev.timeRemainingFormatted = data.isLifetime ? '♾️ Vitalicia' : (data.expiresAt ? formatClientTimeRemaining(data.expiresAt) : 'Sin vigencia fijada');
+            renderDevicesTable(allDevicesCache);
+          }
           refreshDevices();
           loadAuditLogs();
         } else {
@@ -4004,11 +4038,9 @@
         if (res.ok && data.success) {
           showToast('Registro de celular limpiado exitosamente (sin bloqueo).');
           const cleanHwid = String(hwid).trim().toUpperCase();
-          const targetKey = Object.keys(allDevicesCache).find(h => h.toUpperCase() === cleanHwid) || hwid;
-          delete allDevicesCache[targetKey];
-          delete allDevicesCache[cleanHwid];
+          allDevicesCache = allDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
           renderDevicesTable(allDevicesCache);
-          updateTextIfDifferent('metric-devices-total', Object.keys(allDevicesCache).length);
+          updateTextIfDifferent('metric-devices-total', allDevicesCache.length);
           refreshDevices();
           loadAllLicensesModule();
         } else {

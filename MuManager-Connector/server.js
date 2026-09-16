@@ -345,20 +345,41 @@ function saveSettings(data) {
   }
 }
 
+const devicesInMemoryCache = {};
+
 function loadDevices() {
+  let diskDevs = {};
   try {
     if (fs.existsSync(DATA_FILE)) {
-      return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      if (parsed && typeof parsed === 'object') {
+        diskDevs = parsed;
+      }
     }
   } catch (e) {
     console.error('Error reading devices data', e);
   }
-  return {};
+
+  // Mergear memoria con disco para nunca perder celulares
+  const merged = { ...diskDevs, ...devicesInMemoryCache };
+  for (const [k, v] of Object.entries(merged)) {
+    devicesInMemoryCache[k] = v;
+  }
+  return merged;
 }
 
 function saveDevices(data) {
-  if (!safeAtomicWriteJson()) throw new Error();
-  return true;
+  try {
+    if (!data || typeof data !== 'object') return false;
+    for (const [k, v] of Object.entries(data)) {
+      devicesInMemoryCache[k] = v;
+    }
+    const success = safeAtomicWriteJson(DATA_FILE, data);
+    return success;
+  } catch (e) {
+    console.error('Error saving devices data', e);
+    return false;
+  }
 }
 
 const DEFAULT_SEED_USERS = [
@@ -7179,11 +7200,14 @@ app.post('/api/telemetry/ping', (req, res) => {
   if (!devices[hwid]) {
     const demoDurationHours = Number(settings.demoDurationHours) || 72;
     const demoExpires = new Date(Date.now() + demoDurationHours * 3600 * 1000).toISOString();
+    const defaultProDays = 30;
+    const defaultProExpires = new Date(Date.now() + defaultProDays * 24 * 3600 * 1000).toISOString();
 
     devices[hwid] = {
       hwid,
       mode: hasValidKey ? 'PRO' : 'DEMO',
       licenseKey: hasValidKey ? licenseKey : '',
+      isLifetime: false,
       firstSeen: now,
       lastSeen: now,
       totalPings: 1,
@@ -7194,7 +7218,7 @@ app.post('/api/telemetry/ping', (req, res) => {
       blockReason: isAutoBlocked ? 'Dispositivo nuevo en espera de aprobación del administrador.' : '',
       note: '',
       currentUser: userEmail || '',
-      expiresAt: hasValidKey ? null : demoExpires,
+      expiresAt: hasValidKey ? defaultProExpires : demoExpires,
       isEmulator: authoritativeIsEmulator,
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
@@ -7364,11 +7388,19 @@ app.post('/api/telemetry/ping', (req, res) => {
     ? (devices[hwid].licenseKey || devices[hwid].generatedKey || '')
     : '';
 
+  const isLifetimeAuth = !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt);
+  const daysRemainingAuth = devices[hwid].expiresAt
+    ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : (isLifetimeAuth ? 9999 : 0);
+
   res.json({
     success: true,
     blocked: !!devices[hwid].blocked,
     reason: sessionInvalidated ? sessionInvalidatedReason : (devices[hwid].blockReason || ''),
     mode: devMode,
+    authoritativeMode: devMode,
+    isLifetime: isLifetimeAuth,
+    daysRemaining: daysRemainingAuth,
     licenseKey: effectiveKey,
     announcement: settings.broadcastAnnouncement || '',
     broadcast,
@@ -7998,23 +8030,33 @@ app.post('/api/admin/device/toggle-block', (req, res) => {
 
 // Asignar o extender expiración de prueba (en horas)
 app.post('/api/admin/device/set-expiration', (req, res) => {
-  const { hwid, hours } = req.body;
+  const { hwid, hours, durationType } = req.body;
   const devices = loadDevices();
   if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
   const numHours = parseFloat(hours);
-  if (numHours > 0) {
-    const expDate = new Date(Date.now() + numHours * 3600 * 1000);
-    devices[hwid].expiresAt = expDate.toISOString();
+  const isExplicitLifetime = durationType === 'LIFETIME' || req.body.lifetime === true || hours === 0 || hours === '0';
+
+  if (isExplicitLifetime) {
+    devices[hwid].expiresAt = null;
+    devices[hwid].isLifetime = true;
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
-    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, `Prueba configurada por ${numHours} horas (Vence: ${expDate.toLocaleString()})`);
+    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Licencia fijada como PERMANENTE/VITALICIA.');
+  } else if (numHours > 0) {
+    const expDate = new Date(Date.now() + numHours * 3600 * 1000);
+    devices[hwid].expiresAt = expDate.toISOString();
+    devices[hwid].isLifetime = false;
+    devices[hwid].blocked = false;
+    devices[hwid].blockReason = '';
+    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, `Vigencia configurada por ${numHours} horas (Vence: ${expDate.toLocaleString()})`);
   } else {
-    devices[hwid].expiresAt = null; // Permanente
-    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Licencia fijada como PERMANENTE.');
+    devices[hwid].expiresAt = null;
+    devices[hwid].isLifetime = false;
+    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Vigencia removida / sin vigencia fijada.');
   }
   saveDevices(devices);
-  res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt });
+  res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt, isLifetime: !!devices[hwid].isLifetime });
 });
 
 // Actualizar nota o nombre de cliente
@@ -8036,6 +8078,7 @@ app.post('/api/admin/device/delete', (req, res) => {
   if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
   delete devices[hwid];
+  delete devicesInMemoryCache[hwid];
   saveDevices(devices);
   addAuditLog('DEVICE_DELETED', hwid, 'N/A', 'Dispositivo eliminado del registro.');
   res.json({ success: true, hwid });
@@ -8043,24 +8086,36 @@ app.post('/api/admin/device/delete', (req, res) => {
 
 // Generar clave PRO para un HWID desde el dashboard web
 app.post('/api/admin/device/generate-key', (req, res) => {
-  const { hwid, plan } = req.body;
+  const { hwid, plan, durationType, durationDays } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
-  const key = generateKey(hwid, plan || 'PRO');
+  const targetPlan = plan || 'PRO';
+  const key = generateKey(hwid, targetPlan);
 
   const devices = loadDevices();
   if (devices[hwid]) {
     devices[hwid].generatedKey = key;
-    devices[hwid].mode = plan || 'PRO';
+    devices[hwid].licenseKey = key;
+    devices[hwid].mode = targetPlan;
+    if (targetPlan === 'PRO') {
+      if (durationType === 'LIFETIME' || durationDays === 0) {
+        devices[hwid].isLifetime = true;
+        devices[hwid].expiresAt = null;
+      } else {
+        const days = Number(durationDays) || 30;
+        devices[hwid].isLifetime = false;
+        devices[hwid].expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+      }
+    }
     saveDevices(devices);
   }
 
-  addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${plan || 'PRO'} generada`);
-  res.json({ success: true, hwid, key, plan: plan || 'PRO' });
+  addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${targetPlan} generada`);
+  res.json({ success: true, hwid, key, plan: targetPlan });
 });
 
 // Activar o degradar plan PRO/DEMO con 1 solo clic desde el panel
 app.post('/api/admin/device/toggle-plan', (req, res) => {
-  const { hwid, plan } = req.body;
+  const { hwid, plan, durationType, durationDays } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
   const targetPlan = (plan === 'PRO') ? 'PRO' : 'DEMO';
 
@@ -8072,9 +8127,18 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
     const key = devices[hwid].generatedKey || devices[hwid].licenseKey || generateKey(hwid, 'PRO');
     devices[hwid].generatedKey = key;
     devices[hwid].licenseKey = key;
+    if (durationType === 'LIFETIME' || durationDays === 0) {
+      devices[hwid].isLifetime = true;
+      devices[hwid].expiresAt = null;
+    } else if (!devices[hwid].expiresAt || new Date(devices[hwid].expiresAt) <= new Date()) {
+      const days = Number(durationDays) || 30;
+      devices[hwid].isLifetime = false;
+      devices[hwid].expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+    }
   } else {
     devices[hwid].licenseKey = '';
     devices[hwid].generatedKey = '';
+    devices[hwid].isLifetime = false;
   }
 
   saveDevices(devices);

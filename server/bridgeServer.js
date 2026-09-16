@@ -567,46 +567,26 @@ const DEFAULT_SEED_DEVICES = {};
 const DEFAULT_SEED_USERS = [];
 
 function loadDevices() {
-  let currentDevs = {};
-  if (inMemoryFallback[DATA_FILE]) {
-    currentDevs = inMemoryFallback[DATA_FILE];
-  } else {
-    try {
-      if (fs.existsSync(DATA_FILE)) {
-        currentDevs = safeJsonParse(fs.readFileSync(DATA_FILE, 'utf8'), {});
-      } else {
-        const seed = path.join(__dirname, 'data', 'devices.json');
-        if (fs.existsSync(seed)) {
-          currentDevs = safeJsonParse(fs.readFileSync(seed, 'utf8'), {});
-        }
-      }
-    } catch (e) {
-      console.error('Error reading devices data', e);
-    }
-  }
-
-  // Comprobar lista de dispositivos revocados/eliminados (Tombstones)
-  const tombstones = loadTombstones();
-
-  // Smart merge determinista con DEFAULT_SEED_DEVICES:
-  // 1. Asegura que los dispositivos y licencias canónicas existan siempre,
-  //    SALVO aquellos eliminados explícitamente por el administrador (Tombstones).
-  // 2. Si en runtime un dispositivo se actualizó (pings, lastSeen, ip, etc.), preserva los datos actualizados.
-  const merged = {};
-  for (const [hwid, dev] of Object.entries(DEFAULT_SEED_DEVICES)) {
-    const cleanHwid = String(hwid).trim().toUpperCase();
-    if (!tombstones[cleanHwid] && !tombstones[hwid]) {
-      merged[hwid] = { ...dev };
-    }
-  }
-  if (currentDevs && typeof currentDevs === 'object') {
-    for (const [hwid, dev] of Object.entries(currentDevs)) {
-      const cleanHwid = String(hwid).trim().toUpperCase();
-      if (!tombstones[cleanHwid] && !tombstones[hwid] && dev && typeof dev === 'object') {
-        merged[hwid] = merged[hwid] ? { ...merged[hwid], ...dev } : dev;
+  let diskDevs = {};
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      diskDevs = safeJsonParse(fs.readFileSync(DATA_FILE, 'utf8'), {});
+    } else {
+      const seed = path.join(__dirname, 'data', 'devices.json');
+      if (fs.existsSync(seed)) {
+        diskDevs = safeJsonParse(fs.readFileSync(seed, 'utf8'), {});
       }
     }
+  } catch (e) {
+    console.error('Error reading devices data', e);
   }
+
+  const memDevs = inMemoryFallback[DATA_FILE] || {};
+
+  // Smart merge acumulativo (Inclusión garantizada de todos los celulares):
+  // 1. Conserva todos los dispositivos que hayan sido registrados en disco, memoria o semillas.
+  // 2. Si un celular se actualizó en runtime (pings, lastSeen, ip, vigencia), preserva los datos más recientes.
+  const merged = { ...DEFAULT_SEED_DEVICES, ...diskDevs, ...memDevs };
   inMemoryFallback[DATA_FILE] = merged;
   return merged;
 }
@@ -7710,7 +7690,8 @@ function getCountryName(countryCode) {
 }
 
 function formatTimeRemaining(expiresAt, isLifetime, nowMs = Date.now()) {
-  if (isLifetime || !expiresAt) return '♾️ Vitalicia';
+  if (isLifetime === true) return '♾️ Vitalicia';
+  if (!expiresAt) return 'Sin vigencia fijada';
   const diffMs = new Date(expiresAt).getTime() - nowMs;
   if (diffMs <= 0) return 'Expirado';
   const totalMin = Math.floor(diffMs / 60000);
@@ -7907,7 +7888,8 @@ app.post('/api/telemetry/ping', (req, res) => {
       blockReason: isAutoBlocked ? 'Dispositivo nuevo en espera de aprobación del administrador.' : '',
       note: '',
       currentUser: userEmail || '',
-      expiresAt: canBePro ? null : demoExpires,
+      expiresAt: demoExpires,
+      isLifetime: false,
       isEmulator: authoritativeIsEmulator,
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
@@ -8125,7 +8107,7 @@ app.post('/api/telemetry/ping', (req, res) => {
       releaseChannel,
       betaStatus,
       expiresAt: devices[hwid].expiresAt || null,
-      isLifetime: devMode === 'PRO' && !devices[hwid].expiresAt,
+      isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
       daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
       serverTime: now,
       // MEJORA 1: TTL de licencia — el APK fuerza DEMO si no confirma con el servidor en 48h
@@ -8180,7 +8162,7 @@ app.post('/api/telemetry/ping', (req, res) => {
     releaseChannel,
     betaStatus,
     expiresAt: devices[hwid].expiresAt || null,
-    isLifetime: devMode === 'PRO' && !devices[hwid].expiresAt,
+    isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
     daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
     serverTime: now,
     // MEJORA 1: TTL de licencia — el APK fuerza DEMO si no confirma con el servidor en 48h
@@ -9686,7 +9668,7 @@ app.get('/api/admin/devices', (req, res) => {
     const countryCode = dev.countryCode || '';
     const flag = dev.flag || (countryCode ? getCountryFlag(countryCode) : '🌐');
     const country = dev.country || (countryCode ? getCountryName(countryCode) : 'Desconocido');
-    const isLifetime = dev.mode === 'PRO' && !dev.expiresAt;
+    const isLifetime = !!(dev.mode === 'PRO' && dev.isLifetime === true && !dev.expiresAt);
     const diffMs = dev.expiresAt ? (new Date(dev.expiresAt).getTime() - nowMs) : null;
     const daysRemaining = diffMs !== null ? Math.max(0, Math.ceil(diffMs / 86400000)) : null;
     const hoursRemaining = diffMs !== null ? Math.max(0, Math.round(diffMs / 3600000)) : null;
@@ -9782,6 +9764,8 @@ app.post('/api/admin/device/set-expiration', (req, res) => {
   const devices = loadDevices();
   if (!devices[hwid]) return res.status(404).json({ success: false, error: 'Dispositivo no encontrado' });
 
+  const isExplicitLifetime = (isLifetime === true || req.body.isLifetime === true || (hours === '0' && minutes === undefined && days === undefined) || (hours === 0 && minutes === undefined && days === undefined));
+
   if (req.body.expiresAt !== undefined) {
     if (req.body.expiresAt === null) {
       devices[hwid].expiresAt = null;
@@ -9794,8 +9778,8 @@ app.post('/api/admin/device/set-expiration', (req, res) => {
       devices[hwid].expiresAt = parsedDate.toISOString();
       devices[hwid].isLifetime = false;
     }
-  } else if (isLifetime === true || hours === 0 || hours === '0' || days === 0 || days === '0' || minutes === 0 || minutes === '0') {
-    devices[hwid].expiresAt = null; // Vitalicio / Permanente
+  } else if (isExplicitLifetime) {
+    devices[hwid].expiresAt = null; // Vitalicio / Permanente explícito
     devices[hwid].isLifetime = true;
     addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Vigencia de licencia fijada como VITALICIA / PERMANENTE.');
   } else {
@@ -9838,7 +9822,7 @@ app.post('/api/admin/device/set-expiration', (req, res) => {
   }
 
   saveDevices(devices);
-  res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt, isLifetime: !devices[hwid].expiresAt });
+  res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt, isLifetime: !!devices[hwid].isLifetime });
 });
 
 // Actualizar nota o nombre de cliente
@@ -9985,7 +9969,7 @@ app.get('/api/admin/licenses', (req, res) => {
       dev.hwid !== 'deletedUsers' && dev.hwid !== 'revokedKeys');
     // Solo listar si está en modo PRO activo, su clave no fue revocada, y su HWID no está en tombstones
     if (dev.mode === 'PRO' && key && !isRevokedKey && !isHwidTombstoned) {
-      const isLifetime = dev.mode === 'PRO' && !dev.expiresAt;
+      const isLifetime = !!(dev.mode === 'PRO' && dev.isLifetime === true && !dev.expiresAt);
       const isExpired = dev.expiresAt && new Date(dev.expiresAt).getTime() < now;
       const diffMs = dev.expiresAt ? (new Date(dev.expiresAt).getTime() - now) : null;
       const daysRemaining = diffMs !== null ? Math.max(0, Math.ceil(diffMs / 86400000)) : null;
@@ -10147,9 +10131,13 @@ app.post('/api/admin/device/generate-key', (req, res) => {
     if (durationType === 'DAYS' && numDays > 0) {
       devices[hwid].expiresAt = new Date(Date.now() + numDays * 86400 * 1000).toISOString();
       devices[hwid].isLifetime = false;
-    } else {
+    } else if (durationType === 'LIFETIME') {
       devices[hwid].expiresAt = null;
       devices[hwid].isLifetime = true;
+    } else {
+      // Por defecto vigencia de 30 días si no se especifica, NUNCA vitalicio automático
+      devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
+      devices[hwid].isLifetime = false;
     }
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
@@ -10157,8 +10145,8 @@ app.post('/api/admin/device/generate-key', (req, res) => {
   }
 
   const vigenciaStr = (devices[hwid] && devices[hwid].expiresAt)
-    ? `por ${days} días (Vence: ${new Date(devices[hwid].expiresAt).toLocaleDateString()})`
-    : 'VITALICIO';
+    ? `por ${days || 30} días (Vence: ${new Date(devices[hwid].expiresAt).toLocaleDateString()})`
+    : (devices[hwid] && devices[hwid].isLifetime ? 'VITALICIO' : '30 días');
 
   addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${plan || 'PRO'} generada (${vigenciaStr})`);
   res.json({
@@ -10167,7 +10155,7 @@ app.post('/api/admin/device/generate-key', (req, res) => {
     key,
     plan: plan || 'PRO',
     expiresAt: (devices[hwid] && devices[hwid].expiresAt) || null,
-    isLifetime: devices[hwid] ? !devices[hwid].expiresAt : (durationType !== 'DAYS')
+    isLifetime: !!(devices[hwid] && devices[hwid].isLifetime === true && !devices[hwid].expiresAt)
   });
 });
 
@@ -10253,9 +10241,13 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
     if (durationType !== 'LIFETIME' && totalMs > 0) {
       devices[hwid].expiresAt = new Date(Date.now() + totalMs).toISOString();
       devices[hwid].isLifetime = false;
-    } else {
+    } else if (durationType === 'LIFETIME') {
       devices[hwid].expiresAt = null;
       devices[hwid].isLifetime = true;
+    } else {
+      // 30 días de vigencia por defecto al activar PRO con 1-clic sin duración, NUNCA vitalicio accidental
+      devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
+      devices[hwid].isLifetime = false;
     }
 
     devices[hwid].blocked = false;

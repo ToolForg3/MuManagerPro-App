@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.9.7",
-  "latestVersion": "1.9.7",
-  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.9.7 (Build 99) - Scroll Obligatorio en Términos y Lectura Multi-Esquema de Banco de Joyas:\n• Términos y Condiciones Interactivos: Despliegue completo sin colapso flex y botón de aceptación bloqueado hasta completar la lectura mediante scroll (con indicador deslizable al final).\n• Banco de Joyas Multi-Esquema Blindado: Detección universal de columnas de joyas (Bless, JewelOfBless, JewelBless, etc.) y normalización de mayúsculas/minúsculas para evitar valores en 0.\n• Compatibilidad Case-Sensitive: Soporte para collation SQL insensible a mayúsculas con LOWER() y fallback automático entre CustomJewelBank y JewelBank.\n• Extracción Numérica Segura: Parseo case-insensitive tanto en backend como en frontend para garantizar la lectura íntegra de joyas.",
+  "minRequiredVersion": "1.9.8",
+  "latestVersion": "1.9.8",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v1.9.8 (Build 100) - Blindaje Total de Licencias y Panel de Control:\n• Blindaje Antidiscrepancia de Licencias: Distinción estricta entre Licencia Vitalicia, Vigencia Temporal (días/horas) y Vigencia Pendiente; eliminación absoluta de vitalicias involuntarias o parpadeo visual.\n• Persistencia Acumulativa de Dispositivos: Nuevo algoritmo de fusión sin pérdida de memoria ni exclusión de celulares conectados al refrescar la APK o el Panel.\n• Sincronización Silenciosa y Segura: Validación autoritativa de isLifetime y daysRemaining en telemetría entre APK, Gateway y Conector.\n• Panel de Control Web Reactivo: Firma de estado optimizada y actualización en tiempo real de vigencias y estados online.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.9.7",
-  "updateTitle": "MuManager PRO v1.9.7 (Build 99)",
-  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
-  "versionCode": 99,
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
-  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.9.7 (Build 99) - Scroll Obligatorio en Términos y Lectura Multi-Esquema de Banco de Joyas:\n• Términos y Condiciones Interactivos: Despliegue completo sin colapso flex y botón de aceptación bloqueado hasta completar la lectura mediante scroll (con indicador deslizable al final).\n• Banco de Joyas Multi-Esquema Blindado: Detección universal de columnas de joyas (Bless, JewelOfBless, JewelBless, etc.) y normalización de mayúsculas/minúsculas para evitar valores en 0.\n• Compatibilidad Case-Sensitive: Soporte para collation SQL insensible a mayúsculas con LOWER() y fallback automático entre CustomJewelBank y JewelBank.\n• Extracción Numérica Segura: Parseo case-insensitive tanto en backend como en frontend para garantizar la lectura íntegra de joyas.",
-  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.7/MuManagerPro.apk",
-  "appVersion": "1.9.7",
-  "buildNumber": 99,
+  "minVersion": "1.9.8",
+  "updateTitle": "MuManager PRO v1.9.8 (Build 100)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
+  "versionCode": 100,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v1.9.8 (Build 100) - Blindaje Total de Licencias y Panel de Control:\n• Blindaje Antidiscrepancia de Licencias: Distinción estricta entre Licencia Vitalicia, Vigencia Temporal (días/horas) y Vigencia Pendiente; eliminación absoluta de vitalicias involuntarias o parpadeo visual.\n• Persistencia Acumulativa de Dispositivos: Nuevo algoritmo de fusión sin pérdida de memoria ni exclusión de celulares conectados al refrescar la APK o el Panel.\n• Sincronización Silenciosa y Segura: Validación autoritativa de isLifetime y daysRemaining en telemetría entre APK, Gateway y Conector.\n• Panel de Control Web Reactivo: Firma de estado optimizada y actualización en tiempo real de vigencias y estados online.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
+  "appVersion": "1.9.8",
+  "buildNumber": 100,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.9.7",
-  "build": 99
+  "version": "1.9.8",
+  "build": 100
 }

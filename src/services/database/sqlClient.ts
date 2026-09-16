@@ -1364,6 +1364,8 @@ export class SqlClient {
         licenseKey: data.licenseKey || '',
         reason: data.reason,
         expiresAt: data.expiresAt,
+        isLifetime: !!data.isLifetime,
+        daysRemaining: data.daysRemaining,
         updateInfo: effectiveUpdateInfo,
         broadcast: data.broadcast,
         sessionInvalidated: !!data.sessionInvalidated,

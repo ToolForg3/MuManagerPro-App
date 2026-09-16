@@ -83,7 +83,7 @@ export class LicenseService {
               activatedAt: parsed.activatedAt,
               deviceChecksum: parsed.deviceChecksum || expectedChecksum,
               isBlocked: false,
-              isLifetime: parsed.isLifetime !== undefined ? parsed.isLifetime : !parsed.expiresAt,
+              isLifetime: !!parsed.isLifetime && !parsed.expiresAt,
               expiresAt: parsed.expiresAt,
               daysRemaining: parsed.daysRemaining,
               licenseValidUntil: parsed.licenseValidUntil,
@@ -184,7 +184,7 @@ export class LicenseService {
     // Sincronización Remota 1-Clic: Activar o Quitar PRO sin escribir claves
     if (res.mode === 'PRO') {
       const key = res.licenseKey || this.currentStatus.licenseKey || '';
-      const isLifetime = (res as any).isLifetime !== undefined ? (res as any).isLifetime : !res.expiresAt;
+      const isLifetime = !!res.isLifetime && !res.expiresAt;
       const daysRemaining = (res as any).daysRemaining;
       const expiresAt = res.expiresAt || undefined;
 

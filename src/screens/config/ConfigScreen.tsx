@@ -531,7 +531,8 @@ export const ConfigScreen = () => {
     try {
       const hwid = licenseStatus.hwid || (await SecurityService.getDeviceHwid());
       const plan = licenseStatus.plan || 'DEMO';
-      const res = await SqlClient.sendTelemetryPing(hwid, plan);
+      const key = licenseStatus.licenseKey || undefined;
+      const res = await SqlClient.sendTelemetryPing(hwid, plan, key);
       RemoteConfigService.handleTelemetryPingResult(res);
 
       if (res.updateInfo && res.updateInfo.hasUpdate) {
@@ -593,7 +594,7 @@ export const ConfigScreen = () => {
                 RemoteConfigService.setLocalBetaStatus('PENDING');
                 try {
                   const hwid = licenseStatus.hwid || (await SecurityService.getDeviceHwid());
-                  const ping = await SqlClient.sendTelemetryPing(hwid, licenseStatus.plan || 'DEMO');
+                  const ping = await SqlClient.sendTelemetryPing(hwid, licenseStatus.plan || 'DEMO', licenseStatus.licenseKey || undefined);
                   RemoteConfigService.handleTelemetryPingResult(ping);
                 } catch {}
               } else {
@@ -1118,7 +1119,11 @@ export const ConfigScreen = () => {
                     <View style={[styles.licensePill, licenseStatus.plan === 'PRO' ? styles.pillPro : styles.pillDemo]}>
                       <Text style={[styles.licensePillText, licenseStatus.plan === 'PRO' ? styles.pillTextPro : styles.pillTextDemo]}>
                         {licenseStatus.plan === 'PRO'
-                          ? (licenseStatus.isLifetime || !licenseStatus.expiresAt ? 'PRO VITALICIA' : `PRO (${licenseStatus.daysRemaining !== undefined ? `${licenseStatus.daysRemaining}d` : 'ACTIVA'})`)
+                          ? (licenseStatus.isLifetime
+                              ? 'PRO VITALICIA'
+                              : (licenseStatus.expiresAt
+                                  ? `PRO (${licenseStatus.daysRemaining !== undefined ? `${licenseStatus.daysRemaining}d` : 'ACTIVA'})`
+                                  : 'PRO ACTIVA'))
                           : 'MODO DEMO'}
                       </Text>
                     </View>
