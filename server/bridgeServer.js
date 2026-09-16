@@ -1132,7 +1132,33 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
     res.setHeader('Expires', '0');
     return res.redirect(302, GITHUB_APK_CDN);
   }
+  if (safeFilename.toLowerCase() === 'mumanager-connector.zip') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return res.redirect(302, 'https://files.catbox.moe/sbxpts.zip');
+  }
   res.status(404).send('Archivo no encontrado.');
+});
+
+// Endpoint público oficial para verificación de versión
+app.get(['/version.json', '/api/version'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  const vPath = path.join(__dirname, 'version.json');
+  const rootVPath = path.join(__dirname, '..', 'version.json');
+  const target = fs.existsSync(vPath) ? vPath : (fs.existsSync(rootVPath) ? rootVPath : null);
+  if (target) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return res.sendFile(target);
+  }
+  return res.json({
+    version: "1.9.5",
+    build: 97,
+    minRequiredVersion: "1.9.5",
+    downloadUrl: "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk"
+  });
 });
 
 // BUG-17: Protección estricta de rutas administrativas /api/admin/*
@@ -1179,6 +1205,8 @@ app.use((req, res, next) => {
     req.path.startsWith('/admin/') ||
     req.path.startsWith('/api/admin') ||
     req.path === '/api/ping' ||
+    req.path === '/version.json' ||
+    req.path === '/api/version' ||
     req.path.startsWith('/api/telemetry') ||
     req.path.startsWith('/api/auth/') ||
     req.path === '/api/test-connection' ||
