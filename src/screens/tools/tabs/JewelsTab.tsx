@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
@@ -18,6 +19,7 @@ import { ItemImage } from '../../../components/common/ItemImage';
 import { SqlClient } from '../../../services/database/sqlClient';
 import { JewelAuditResult, JewelPurgeResult } from '../../../types/admin';
 import { DEFAULT_ITEM_CATALOG } from '../../../services/parser/itemDatabase';
+import { JEWEL_ASSET_IMAGES, getJewelImageByGroupIndex } from '../../../constants/jewelAssets';
 
 interface JewelsTabProps {
   fixesCharSuggestions?: string[];
@@ -281,6 +283,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           <View style={styles.wrapRow}>
             {JEWEL_PRESETS.map((preset) => {
               const isSelected = jewelFilterType === preset.id;
+              const jewelImg = preset.group !== undefined && preset.index !== undefined
+                ? getJewelImageByGroupIndex(preset.group, preset.index)
+                : null;
               return (
                 <TouchableOpacity
                   key={`preset_${preset.id}`}
@@ -291,7 +296,11 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                   ]}
                   onPress={() => setJewelFilterType(preset.id)}
                 >
-                  <MaterialCommunityIcons name={preset.icon as any} size={15} color={preset.color} style={{ marginRight: 4 }} />
+                  {jewelImg ? (
+                    <Image source={jewelImg} style={{ width: 16, height: 16, marginRight: 6 }} resizeMode="contain" />
+                  ) : (
+                    <MaterialCommunityIcons name={preset.icon as any} size={15} color={preset.color} style={{ marginRight: 4 }} />
+                  )}
                   <Text style={[styles.filterPillText, isSelected && { color: preset.color, fontWeight: 'bold' }]}>
                     {preset.label}
                   </Text>
@@ -500,17 +509,26 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
               <View style={{ marginTop: 12 }}>
                 <Text style={styles.label}>Desglose por Tipo de Joya:</Text>
                 <View style={styles.wrapRow}>
-                  {jewelAuditResult.summaryByType.map((tItem) => (
-                    <View key={`sum_${tItem.id}`} style={styles.typeItemPill}>
-                      <ItemImage itemName={tItem.name} size={22} fallbackIcon={tItem.icon} fallbackColor={THEME.colors.oroClaro} />
-                      <View style={{ marginLeft: 6 }}>
-                        <Text style={styles.typeItemName}>{tItem.name}:</Text>
-                        <Text style={styles.typeItemCount}>
-                          {tItem.totalUnits.toLocaleString()} u. ({tItem.totalSlots} slots)
-                        </Text>
+                  {jewelAuditResult.summaryByType.map((tItem) => {
+                    const jewelImg = tItem.group !== undefined && tItem.index !== undefined
+                      ? getJewelImageByGroupIndex(tItem.group, tItem.index)
+                      : null;
+                    return (
+                      <View key={`sum_${tItem.id}`} style={styles.typeItemPill}>
+                        {jewelImg ? (
+                          <Image source={jewelImg} style={{ width: 22, height: 22 }} resizeMode="contain" />
+                        ) : (
+                          <ItemImage itemName={tItem.name} size={22} fallbackIcon={tItem.icon} fallbackColor={THEME.colors.oroClaro} />
+                        )}
+                        <View style={{ marginLeft: 6 }}>
+                          <Text style={styles.typeItemName}>{tItem.name}:</Text>
+                          <Text style={styles.typeItemCount}>
+                            {tItem.totalUnits.toLocaleString()} u. ({tItem.totalSlots} slots)
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               </View>
             ) : null}

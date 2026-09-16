@@ -5,8 +5,8 @@
  */
 
 (function () {
-  const OFFICIAL_HASH = 'D487F584926B7C4D9E870CE1DB70E1B52BD8B1789FD454A9E8A2A1B3CAE3E41F';
-  const OFFICIAL_SIZE_BYTES = 66563645; // ~63.48 MB
+  const OFFICIAL_HASH = '8556705A9F3DD95AAA481389673F6CC3F7FFE3D92EC909DAF6DF9A495A4B1033';
+  const OFFICIAL_SIZE_BYTES = 66393348; // ~63.32 MB
 
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('apk-file-input');

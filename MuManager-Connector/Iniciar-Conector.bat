@@ -10,6 +10,27 @@ echo   MU MANAGER PRO - CONECTOR SEGURO SQL SERVER (PUERTO 3001)
 echo ================================================================
 echo.
 
+:: 0. Si existe el ejecutable nativo compilado, arrancarlo directamente
+if exist "%~dp0MuManager-Connector.exe" (
+    color 0B
+    echo [1/2] Verificando reglas de Firewall para puertos 3001 y 30001...
+    netsh advfirewall firewall add rule name="MuManager Connector 3001" dir=in action=allow protocol=TCP localport=3001 >nul 2>&1
+    netsh advfirewall firewall add rule name="MuManager Connector 30001" dir=in action=allow protocol=TCP localport=30001 >nul 2>&1
+    echo [2/2] Iniciando ejecutable binario protegido en puerto 3001...
+    echo.
+    echo ================================================================
+    echo   [OK] CONECTOR ACTIVO Y LISTO (MODO BINARIO PROTEGIDO)
+    echo   Puerto: 3001 (y 30001)
+    echo   Ya puedes conectar desde la app movil ingresando la IP del VPS.
+    echo.
+    echo   MANTEN ESTA VENTANA ABIERTA MIENTRAS USES LA APP.
+    echo ================================================================
+    echo.
+    "%~dp0MuManager-Connector.exe"
+    pause
+    exit /b 0
+)
+
 :: 1. Verificar si Node.js esta instalado
 where node >nul 2>nul
 if %errorlevel% neq 0 (

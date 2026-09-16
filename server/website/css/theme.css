@@ -18,44 +18,44 @@
   --glass-border-hover: rgba(255, 255, 255, 0.18);
   --glass-blur: blur(18px);
 
-  /* Acentos MU Online - Dorado Legendario & Joyas */
-  --gold-primary: #f5b335;
-  --gold-light: #fce07a;
-  --gold-dark: #b87a14;
-  --gold-glow: rgba(245, 179, 53, 0.28);
-  --gold-gradient: linear-gradient(135deg, #ffe082 0%, #f5b335 50%, #b87a14 100%);
-  --gold-gradient-subtle: linear-gradient(135deg, rgba(245, 179, 53, 0.15) 0%, rgba(184, 122, 20, 0.05) 100%);
+  /* Acentos MU Online - Dorado Legendario Season 6 (Piedra y Oro) */
+  --gold-primary: #E8C86A;
+  --gold-light: #F0D27A;
+  --gold-dark: #A68028;
+  --gold-glow: rgba(232, 200, 106, 0.28);
+  --gold-gradient: linear-gradient(135deg, #F0D27A 0%, #E8C86A 50%, #A68028 100%);
+  --gold-gradient-subtle: linear-gradient(135deg, rgba(232, 200, 106, 0.15) 0%, rgba(166, 128, 40, 0.05) 100%);
 
-  /* MU Item Grades & Lore Colors */
-  --mu-excellent: #2ecc71;
-  --mu-ancient: #00e5ff;
-  --mu-socket: #b388ff;
-  --mu-harmony: #ffb74d;
-  --mu-luck: #80d8ff;
+  /* MU Item Grades & Lore Colors (Season 6) */
+  --mu-excellent: #3FCF8E;
+  --mu-ancient: #5B8DEF;
+  --mu-socket: #5B8DEF;
+  --mu-harmony: #E8C86A;
+  --mu-luck: #7FA8F5;
   --mu-item-box-bg: rgba(6, 8, 14, 0.94);
-  --mu-item-border: rgba(245, 179, 53, 0.35);
+  --mu-item-border: rgba(232, 200, 106, 0.35);
 
-  /* Acentos Cyberpunk & Seguridad */
-  --cyan-primary: #00d2ff;
-  --cyan-glow: rgba(0, 210, 255, 0.28);
-  --cyan-gradient: linear-gradient(135deg, #80e5ff 0%, #00d2ff 100%);
+  /* Acentos Arcanos & Seguridad Season 6 */
+  --cyan-primary: #5B8DEF;
+  --cyan-glow: rgba(91, 141, 239, 0.28);
+  --cyan-gradient: linear-gradient(135deg, #7FA8F5 0%, #5B8DEF 100%);
   
-  --green-verified: #00e676;
-  --green-glow: rgba(0, 230, 118, 0.28);
-  --green-gradient: linear-gradient(135deg, #69f0ae 0%, #00e676 100%);
+  --green-verified: #3FCF8E;
+  --green-glow: rgba(63, 207, 142, 0.28);
+  --green-gradient: linear-gradient(135deg, #5EE4A6 0%, #3FCF8E 100%);
 
-  --red-alert: #ff3366;
-  --red-glow: rgba(255, 51, 102, 0.28);
+  --red-alert: #E05252;
+  --red-glow: rgba(224, 82, 82, 0.28);
 
-  --purple-accent: #9d4edd;
-  --purple-glow: rgba(157, 78, 221, 0.3);
+  --purple-accent: #5B8DEF;
+  --purple-glow: rgba(91, 141, 239, 0.3);
 
-  /* Tipografía & Textos */
-  --text-white: #ffffff;
-  --text-main: #e6ebf5;
-  --text-secondary: #94a3b8;
-  --text-dimmed: #64748b;
-  --text-gold: #f7be4a;
+  /* Tipografía & Textos (WCAG AAA > 7:1) */
+  --text-white: #FAF6EE;
+  --text-main: #FAF6EE;
+  --text-secondary: #C8BEAF;
+  --text-dimmed: #B8AEA0;
+  --text-gold: #F0D27A;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

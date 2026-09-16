@@ -366,10 +366,8 @@ var QRCodeLite = (function () {
 document.addEventListener('DOMContentLoaded', function () {
   var qrContainer = document.getElementById('qrcode-container');
   if (qrContainer) {
-    var downloadUrl = window.location.origin + '/download/MuManagerPro.apk';
-    if (window.location.protocol === 'file:') {
-      downloadUrl = 'https://mumanagerpro-gateway.onrender.com/download/MuManagerPro.apk';
-    }
+    // URL oficial perpetua de GitHub Releases para descarga instantánea de la última versión en cualquier smartphone
+    var downloadUrl = 'https://github.com/ToolForg3/MuManagerPro-App/releases/latest/download/MuManagerPro.apk';
     qrContainer.innerHTML = QRCodeLite.generateSvg(downloadUrl);
   }
 });

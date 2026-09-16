@@ -90,7 +90,7 @@ const server = http.createServer((req, res) => {
 
   // Redirección Inteligente a GitHub Releases para descargas de APK (0% ancho de banda)
   if (safeUrl.toLowerCase().endsWith('.apk') && !req.url.includes('local=1')) {
-    const GITHUB_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/eliaacjaziel/MuManagerPro-Gateway/releases/latest/download/MuManagerPro.apk';
+    const GITHUB_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/latest/download/MuManagerPro.apk';
     res.writeHead(302, {
       'Location': GITHUB_URL,
       'Cache-Control': 'no-cache, no-store, must-revalidate',

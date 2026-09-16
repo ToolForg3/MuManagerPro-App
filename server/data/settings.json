@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.9.4",
-  "latestVersion": "1.9.4",
-  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.4/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.9.4 (Build 96) - Modularización Arquitectónica y Resiliencia de Red:\n• Modularización de Herramientas: Desacoplamiento de 6 pestañas independientes (Joyas, Anti-Dupe, Rankings, Parsers, Clanes y PK) reduciendo consumo de RAM en Android.\n• Resiliencia de Red SQL: Timeout adaptativo de 15s con reintento automático inteligente que elimina falsos positivos de desconexión en redes móviles.\n• Depuración Exhaustiva: Verificación 100% operativa de los 81 métodos y herramientas sin código muerto ni placebos.",
+  "minRequiredVersion": "1.9.5",
+  "latestVersion": "1.9.5",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v1.9.5 (Build 97) - Banco de Joyas Dual, Depurador S6 Up40 & Texturas Reales:\n• Compatibilidad Dual Louis S6 & MSPro: Detección dinámica y tolerante para CustomJewelBank y JewelBank con cero fallos Msg 207/208.\n• Depurador y Auditor de Joyas: Auditoría y vaciado completo de baúles de 240 slots (3840 bytes) en Louis S6 Update 40 con etiquetado de Baúl #0 (Expandido).\n• Texturas Reales Season 6: Integración nativa de imágenes transparentes auténticas para 10 joyas y 86 habilidades en Banco de Joyas, Depurador y catálogo de ítems.\n• Sincronización Integral: Protección atómica de base de datos y validación al 100% en todas las suites de prueba.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.9.4",
-  "updateTitle": "MuManager PRO v1.9.4 (Build 96)",
-  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.4/MuManagerPro.apk",
-  "versionCode": 96,
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.4/MuManagerPro.apk",
-  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.4/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.9.4 (Build 96) - Modularización Arquitectónica y Resiliencia de Red:\n• Modularización de Herramientas: Desacoplamiento de 6 pestañas independientes (Joyas, Anti-Dupe, Rankings, Parsers, Clanes y PK) reduciendo consumo de RAM en Android.\n• Resiliencia de Red SQL: Timeout adaptativo de 15s con reintento automático inteligente que elimina falsos positivos de desconexión en redes móviles.\n• Depuración Exhaustiva: Verificación 100% operativa de los 81 métodos y herramientas sin código muerto ni placebos.",
-  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.4/MuManagerPro.apk",
-  "appVersion": "1.9.4",
-  "buildNumber": 96,
+  "minVersion": "1.9.5",
+  "updateTitle": "MuManager PRO v1.9.5 (Build 97)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
+  "versionCode": 97,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v1.9.5 (Build 97) - Banco de Joyas Dual, Depurador S6 Up40 & Texturas Reales:\n• Compatibilidad Dual Louis S6 & MSPro: Detección dinámica y tolerante para CustomJewelBank y JewelBank con cero fallos Msg 207/208.\n• Depurador y Auditor de Joyas: Auditoría y vaciado completo de baúles de 240 slots (3840 bytes) en Louis S6 Update 40 con etiquetado de Baúl #0 (Expandido).\n• Texturas Reales Season 6: Integración nativa de imágenes transparentes auténticas para 10 joyas y 86 habilidades en Banco de Joyas, Depurador y catálogo de ítems.\n• Sincronización Integral: Protección atómica de base de datos y validación al 100% en todas las suites de prueba.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
+  "appVersion": "1.9.5",
+  "buildNumber": 97,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.9.4",
-  "build": 96
+  "version": "1.9.5",
+  "build": 97
 }

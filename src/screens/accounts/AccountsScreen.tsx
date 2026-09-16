@@ -23,6 +23,7 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { THEME } from '../../constants/theme';
 import { AccountSummary, AccountUpdateData, CharacterSummary } from '../../types/character';
 import { JewelBankData } from '../../types/admin';
+import { JEWEL_ASSET_IMAGES } from '../../constants/jewelAssets';
 import { SqlClient } from '../../services/database/sqlClient';
 import { useLanguage } from '../../context/LanguageContext';
 import { ClassAvatar } from '../../components/common/ClassAvatar';
@@ -157,6 +158,7 @@ export const AccountsScreen = () => {
   const [jewelBankSaving, setJewelBankSaving] = useState(false);
   const [jewelBankAcc, setJewelBankAcc] = useState('');
   const [jewelBankHasTable, setJewelBankHasTable] = useState(true);
+  const [jewelBankTableName, setJewelBankTableName] = useState<string>('CustomJewelBank');
   const [jewelBankData, setJewelBankData] = useState<JewelBankData>({
     Bless: 0,
     Soul: 0,
@@ -599,6 +601,9 @@ export const AccountsScreen = () => {
         setJewelBankHasTable(false);
       } else {
         setJewelBankHasTable(true);
+        if (res.tableName) {
+          setJewelBankTableName(res.tableName);
+        }
         if (res.bank) {
           setJewelBankData({
             Bless: res.bank.Bless || 0,
@@ -2242,7 +2247,7 @@ export const AccountsScreen = () => {
                 <MaterialCommunityIcons name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
                 <View>
                   <Text style={styles.jbModalTitle}>BANCO DE JOYAS</Text>
-                  <Text style={styles.jbModalSubtitle}>Cuenta: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{jewelBankAcc}</Text> (CustomJewelBank)</Text>
+                  <Text style={styles.jbModalSubtitle}>Cuenta: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{jewelBankAcc}</Text> ({jewelBankTableName})</Text>
                 </View>
               </View>
               <TouchableOpacity
@@ -2263,10 +2268,10 @@ export const AccountsScreen = () => {
               <View style={{ padding: 24, alignItems: 'center' }}>
                 <MaterialCommunityIcons name="alert-circle-outline" size={48} color={THEME.colors.brasa} />
                 <Text style={{ color: THEME.colors.texto, fontSize: 16, fontWeight: 'bold', marginTop: 12, textAlign: 'center' }}>
-                  Tabla CustomJewelBank no detectada
+                  Tabla de Joyas no detectada
                 </Text>
                 <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 18 }}>
-                  Esta base de datos no cuenta con la tabla CustomJewelBank (requiere emulador Louis Season 6 Update 40 o superior).
+                  Esta base de datos no cuenta con tabla de Banco de Joyas (CustomJewelBank o JewelBank). Requiere emulador Louis Season 6 Update 40 o MSPro compatible.
                 </Text>
                 <TouchableOpacity
                   style={[styles.jbSaveBtn, { backgroundColor: THEME.colors.cardElevated, marginTop: 20 }]}
@@ -2302,7 +2307,15 @@ export const AccountsScreen = () => {
                       <View key={jewel.key} style={styles.jbItemRow}>
                         <View style={styles.jbItemLeft}>
                           <View style={[styles.jbIconWrap, { backgroundColor: jewel.bg }]}>
-                            <MaterialCommunityIcons name={jewel.icon as any} size={18} color={jewel.color} />
+                            {JEWEL_ASSET_IMAGES[jewel.key] ? (
+                              <Image
+                                source={JEWEL_ASSET_IMAGES[jewel.key]}
+                                style={{ width: 22, height: 22 }}
+                                resizeMode="contain"
+                              />
+                            ) : (
+                              <MaterialCommunityIcons name={jewel.icon as any} size={18} color={jewel.color} />
+                            )}
                           </View>
                           <Text style={styles.jbItemName} numberOfLines={1}>{jewel.label}</Text>
                         </View>

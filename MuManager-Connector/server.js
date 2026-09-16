@@ -57,7 +57,7 @@ if (!process.env.MASTER_SECURITY_SALT) {
   }
 }
 const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || crypto.randomBytes(32).toString('hex');
-const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.5.1/MuManagerPro-v1.5.1.apk';
+const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/latest/download/MuManagerPro.apk';
 
 // [H02/H05] Verificación de variables de entorno críticas al arranque del conector
 if (!process.env.JWT_SECRET) {
@@ -949,23 +949,50 @@ app.use((req, res, next) => {
     }
   }
 
-  // [N02 FIX] Verificar licencia PRO en rutas SQL críticas (espejo del gateway)
+  // [SEC-AUTH] Verificación Autoritativa de Licencia PRO para Rutas SQL Críticas (Default-Deny)
   const _isAdminRole = authUser && authUser.role === 'ADMIN';
-  if (hwid && !_isAdminRole) {
+  const _sqlPaths = ['/api/character/', '/api/account/', '/api/warehouse/', '/api/items/', '/api/mu/', '/api/coins/', '/api/tools/'];
+  const _isSqlRoute = _sqlPaths.some(p => req.path.startsWith(p));
+
+  if (_isSqlRoute && !_isAdminRole) {
+    if (!hwid || typeof hwid !== 'string' || hwid.trim().length < 6) {
+      addAuditLog('DEMO_BLOCKED_SQL', 'NO_HWID', clientIp, `Ruta SQL de modificación denegada por falta de HWID: ${req.path}`, 'BLOCKED');
+      return res.status(403).json({
+        success: false,
+        blocked: false,
+        error: 'DISPOSITIVO_REQUERIDO',
+        message: 'Esta operación requiere un dispositivo móvil identificado mediante HWID.',
+      });
+    }
+
     const _devices = loadDevices();
-    const _dev = _devices[hwid];
-    if (_dev && (_dev.forceDemo || _dev.mode !== 'PRO')) {
-      const _sqlPaths = ['/api/character/', '/api/account/', '/api/warehouse/', '/api/items/', '/api/mu/', '/api/coins/', '/api/tools/'];
-      const _isSqlRoute = _sqlPaths.some(p => req.path.startsWith(p));
-      if (_isSqlRoute) {
-        addAuditLog('DEMO_BLOCKED_SQL', hwid, clientIp, `Ruta SQL bloqueada por licencia DEMO en conector: ${req.path}`, 'BLOCKED');
-        return res.status(403).json({
-          success: false,
-          blocked: false,
-          error: 'LICENCIA_PRO_REQUERIDA',
-          message: 'Esta función requiere una licencia PRO activa. Contacta al administrador para activarla.',
-        });
-      }
+    let _dev = _devices[hwid];
+
+    // Auto-registro en DEMO si es la primera vez que interactúa
+    if (!_dev) {
+      _dev = {
+        hwid,
+        mode: 'DEMO',
+        plan: 'DEMO',
+        registeredAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + (settings.demoDurationHours || 72) * 3600 * 1000).toISOString(),
+        blocked: false,
+      };
+      _devices[hwid] = _dev;
+      saveDevices(_devices);
+    }
+
+    const isPro = _dev && _dev.mode === 'PRO' && !_dev.forceDemo && !_dev.blocked &&
+      (!_dev.expiresAt || new Date(_dev.expiresAt).getTime() > Date.now());
+
+    if (!isPro) {
+      addAuditLog('DEMO_BLOCKED_SQL', hwid, clientIp, `Ruta SQL bloqueada por licencia DEMO en conector: ${req.path}`, 'BLOCKED');
+      return res.status(403).json({
+        success: false,
+        blocked: !!(_dev && _dev.blocked),
+        error: 'LICENCIA_PRO_REQUERIDA',
+        message: 'Esta función requiere una licencia PRO activa. Contacta al administrador para activarla.',
+      });
     }
   }
 
@@ -2771,7 +2798,7 @@ app.post('/api/character/teleport', async (req, res) => {
   }
 });
 
-// Banco de Joyas Louis S6 Update 40 (CustomJewelBank)
+// Banco de Joyas Louis S6 Update 40 (CustomJewelBank) & MSPro (JewelBank)
 app.post('/api/character/jewel-bank', async (req, res) => {
   try {
     const { accountId, config, update, jewels } = req.body;
@@ -2779,48 +2806,101 @@ app.post('/api/character/jewel-bank', async (req, res) => {
     if (!accountId) return res.status(400).json({ success: false, error: 'AccountID requerido' });
 
     const data = await executeSql(config, async (pool) => {
-      const hasTbl = await pool.request().query("SELECT OBJECT_ID('CustomJewelBank', 'U') AS HasTbl;");
-      if (!hasTbl.recordset || !hasTbl.recordset[0] || !hasTbl.recordset[0].HasTbl) {
-        return { hasTable: false, bank: null };
+      // Detección dinámica: CustomJewelBank (Louis S6) vs JewelBank (MSPro)
+      const tblCheck = await pool.request().query(`
+        SELECT CASE 
+          WHEN OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL THEN 'CustomJewelBank'
+          WHEN OBJECT_ID('JewelBank', 'U') IS NOT NULL THEN 'JewelBank'
+          ELSE NULL 
+        END AS TableName;
+      `);
+      const targetTable = (tblCheck.recordset && tblCheck.recordset[0] && tblCheck.recordset[0].TableName) ? tblCheck.recordset[0].TableName : null;
+      if (!targetTable) {
+        return { hasTable: false, tableName: null, bank: null };
       }
 
+      // Inspeccionar columnas existentes para compatibilidad total ante variantes de esquema
+      const colCheck = await pool.request()
+        .input('TblName', sql.VarChar(50), targetTable)
+        .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
+      const existingCols = (colCheck.recordset || []).map(r => r.COLUMN_NAME.toLowerCase());
+      const hasCol = (col) => existingCols.includes(col.toLowerCase());
+
+      const supportedCols = ['Bless', 'Soul', 'Chaos', 'Life', 'Creation', 'Guardian', 'Harmony', 'GemStone', 'LowStone', 'HighStone'];
+
       if (update && jewels) {
-        await pool.request()
-          .input('Acc', sql.VarChar(10), accountId.trim())
-          .input('Bless', sql.Int, Math.max(0, parseInt(jewels.Bless, 10) || 0))
-          .input('Soul', sql.Int, Math.max(0, parseInt(jewels.Soul, 10) || 0))
-          .input('Chaos', sql.Int, Math.max(0, parseInt(jewels.Chaos, 10) || 0))
-          .input('Life', sql.Int, Math.max(0, parseInt(jewels.Life, 10) || 0))
-          .input('Creation', sql.Int, Math.max(0, parseInt(jewels.Creation, 10) || 0))
-          .input('Guardian', sql.Int, Math.max(0, parseInt(jewels.Guardian, 10) || 0))
-          .input('Harmony', sql.Int, Math.max(0, parseInt(jewels.Harmony, 10) || 0))
-          .input('GemStone', sql.Int, Math.max(0, parseInt(jewels.GemStone, 10) || 0))
-          .input('LowStone', sql.Int, Math.max(0, parseInt(jewels.LowStone, 10) || 0))
-          .input('HighStone', sql.Int, Math.max(0, parseInt(jewels.HighStone, 10) || 0))
-          .query(`
-            IF EXISTS (SELECT 1 FROM CustomJewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc)
+        const reqUpdate = pool.request().input('Acc', sql.VarChar(10), accountId.trim());
+        const updateSets = [];
+        const insertCols = ['AccountID'];
+        const insertVals = ['@Acc'];
+
+        for (const col of supportedCols) {
+          if (hasCol(col)) {
+            const actualName = (colCheck.recordset || []).find(r => r.COLUMN_NAME.toLowerCase() === col.toLowerCase())?.COLUMN_NAME || col;
+            const val = Math.max(0, parseInt(jewels[col], 10) || 0);
+            reqUpdate.input(col, sql.Int, val);
+            updateSets.push(`${actualName} = @${col}`);
+            insertCols.push(actualName);
+            insertVals.push(`@${col}`);
+          }
+        }
+
+        if (updateSets.length > 0) {
+          await reqUpdate.query(`
+            IF EXISTS (SELECT 1 FROM ${targetTable} WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc)
             BEGIN
-              UPDATE CustomJewelBank
-              SET Bless = @Bless, Soul = @Soul, Chaos = @Chaos, Life = @Life,
-                  Creation = @Creation, Guardian = @Guardian, Harmony = @Harmony,
-                  GemStone = @GemStone, LowStone = @LowStone, HighStone = @HighStone
+              UPDATE ${targetTable}
+              SET ${updateSets.join(', ')}
               WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;
             END
             ELSE
             BEGIN
-              INSERT INTO CustomJewelBank (AccountID, Bless, Soul, Chaos, Life, Creation, Guardian, Harmony, GemStone, LowStone, HighStone)
-              VALUES (@Acc, @Bless, @Soul, @Chaos, @Life, @Creation, @Guardian, @Harmony, @GemStone, @LowStone, @HighStone);
+              INSERT INTO ${targetTable} (${insertCols.join(', ')})
+              VALUES (${insertVals.join(', ')});
             END
           `);
+        }
+      }
+
+      const selectCols = ['AccountID'];
+      for (const col of supportedCols) {
+        if (hasCol(col)) {
+          const actualName = (colCheck.recordset || []).find(r => r.COLUMN_NAME.toLowerCase() === col.toLowerCase())?.COLUMN_NAME || col;
+          selectCols.push(actualName);
+        }
       }
 
       const q = await pool.request()
         .input('Acc', sql.VarChar(10), accountId.trim())
-        .query('SELECT AccountID, Bless, Soul, Chaos, Life, Creation, Guardian, Harmony, LowStone, HighStone, GemStone FROM CustomJewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;');
-      return { hasTable: true, bank: q.recordset[0] || null };
+        .query(`SELECT ${selectCols.join(', ')} FROM ${targetTable} WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc;`);
+
+      const rawBank = q.recordset[0] || null;
+      let bank = null;
+      if (rawBank) {
+        bank = {
+          AccountID: rawBank.AccountID || accountId.trim(),
+          Bless: rawBank.Bless ?? 0,
+          Soul: rawBank.Soul ?? 0,
+          Chaos: rawBank.Chaos ?? 0,
+          Life: rawBank.Life ?? 0,
+          Creation: rawBank.Creation ?? 0,
+          Guardian: rawBank.Guardian ?? 0,
+          Harmony: rawBank.Harmony ?? 0,
+          GemStone: rawBank.GemStone ?? rawBank.Gemstone ?? 0,
+          LowStone: rawBank.LowStone ?? rawBank.Lowstone ?? 0,
+          HighStone: rawBank.HighStone ?? rawBank.Highstone ?? 0,
+        };
+      }
+
+      return { hasTable: true, tableName: targetTable, bank };
     });
 
-    res.json({ success: true, hasTable: data ? data.hasTable : false, bank: data ? data.bank : null });
+    res.json({
+      success: true,
+      hasTable: data ? data.hasTable : false,
+      tableName: data ? data.tableName : null,
+      bank: data ? data.bank : null
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -3484,6 +3564,11 @@ app.post('/api/account/create', async (req, res) => {
           BEGIN
             EXEC sp_executesql N'IF NOT EXISTS (SELECT 1 FROM CustomJewelBank WHERE AccountID = @U) INSERT INTO CustomJewelBank (AccountID, Bless, Soul, Chaos, Life, Creation, Guardian, Harmony, LowStone, HighStone, GemStone) VALUES (@U, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)', N'@U VARCHAR(10)', @U = @User;
           END
+
+          IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'JewelBank')
+          BEGIN
+            EXEC sp_executesql N'IF NOT EXISTS (SELECT 1 FROM JewelBank WHERE AccountID = @U) INSERT INTO JewelBank (AccountID, Bless, Soul, Chaos, Life, Creation, Guardian, Harmony) VALUES (@U, 0, 0, 0, 0, 0, 0, 0)', N'@U VARCHAR(10)', @U = @User;
+          END
         `);
     });
 
@@ -3618,6 +3703,9 @@ app.post('/api/account/delete', async (req, res) => {
 
           IF OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL
             DELETE FROM CustomJewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('JewelBank', 'U') IS NOT NULL
+            DELETE FROM JewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
 
           IF OBJECT_ID('MEMB_STAT', 'U') IS NOT NULL
             DELETE FROM MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;
@@ -3885,6 +3973,8 @@ app.post('/api/account/update', async (req, res) => {
                 UPDATE MEMB_STAT SET memb___id = @NewUser WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
               IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CustomJewelBank')
                 UPDATE CustomJewelBank SET AccountID = @NewUser WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@OldUser)) OR AccountID = @OldUser;
+              IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'JewelBank')
+                UPDATE JewelBank SET AccountID = @NewUser WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@OldUser)) OR AccountID = @OldUser;
             END
 
             COMMIT TRANSACTION;
@@ -4004,7 +4094,7 @@ app.post('/api/account/disconnect', async (req, res) => {
 // PACK COMPLETO DE SUPER-HERRAMIENTAS (LOUIS S6)
 // ==========================================
 
-const SERVER_ITEM_NAMES = {
+let SERVER_ITEM_NAMES = {
   '0_0': 'Kris', '0_1': 'Short Sword', '0_2': 'Rapier', '0_3': 'Assassin Blade', '0_4': 'Gladius',
   '0_5': 'Falchion', '0_6': 'Serpent Sword', '0_7': 'Salamander Blade', '0_8': 'Light Saber',
   '0_9': 'Legendary Sword', '0_10': 'Heliacal Sword', '0_11': 'Double Blade', '0_12': 'Lighting Sword',
@@ -5086,7 +5176,7 @@ app.post('/api/tools/audit-jewels', async (req, res) => {
           const isOnline = onlineAccounts.has(accId.toLowerCase());
           const ownerKey = `wh_${accId}_0`;
 
-          const slotsCount = Math.min(Math.floor(buf.length / 16), 120);
+          const slotsCount = Math.floor(buf.length / 16);
           for (let s = 0; s < slotsCount; s++) {
             const offset = s * 16;
             if (buf[offset] === 0xFF) continue;
@@ -5117,18 +5207,20 @@ app.post('/api/tools/audit-jewels', async (req, res) => {
               tEntry.totalSlots++;
               tEntry.totalUnits += units;
 
-              if (!ownerMap.has(ownerKey)) {
-                ownerMap.set(ownerKey, {
-                  ownerKey,
+              const isExpanded = s >= 120;
+              const subOwnerKey = isExpanded ? `${ownerKey}_exp` : ownerKey;
+              if (!ownerMap.has(subOwnerKey)) {
+                ownerMap.set(subOwnerKey, {
+                  ownerKey: subOwnerKey,
                   accountId: accId,
                   charName: null,
-                  location: 'Baúl #0',
+                  location: isExpanded ? 'Baúl #0 (Expandido)' : 'Baúl #0',
                   isOnline,
                   slotsCount: 0,
                   unitsCount: 0
                 });
               }
-              const oEntry = ownerMap.get(ownerKey);
+              const oEntry = ownerMap.get(subOwnerKey);
               oEntry.slotsCount++;
               oEntry.unitsCount += units;
             }
@@ -5157,7 +5249,7 @@ app.post('/api/tools/audit-jewels', async (req, res) => {
               const isOnline = onlineAccounts.has(accId.toLowerCase());
               const ownerKey = `ext_${accId}_${wareNum}`;
 
-              const slotsCount = Math.min(Math.floor(buf.length / 16), 120);
+              const slotsCount = Math.floor(buf.length / 16);
               for (let s = 0; s < slotsCount; s++) {
                 const offset = s * 16;
                 if (buf[offset] === 0xFF) continue;
@@ -5392,7 +5484,7 @@ app.post('/api/tools/purge-jewels', async (req, res) => {
           let targetModified = false;
           let targetAccumulator = 0;
 
-          const totalSlotsInBuf = Math.min(Math.floor(buf.length / 16), 120);
+          const totalSlotsInBuf = Math.floor(buf.length / 16);
           for (let s = 0; s < totalSlotsInBuf; s++) {
             const offset = s * 16;
             if (buf[offset] === 0xFF) continue;
@@ -5478,7 +5570,7 @@ app.post('/api/tools/purge-jewels', async (req, res) => {
               let targetModified = false;
               let targetAccumulator = 0;
 
-              const totalSlotsInBuf = Math.min(Math.floor(buf.length / 16), 120);
+              const totalSlotsInBuf = Math.floor(buf.length / 16);
               for (let s = 0; s < totalSlotsInBuf; s++) {
                 const offset = s * 16;
                 if (buf[offset] === 0xFF) continue;
@@ -8978,7 +9070,7 @@ app.post('/api/tools/install-procedures', async (req, res) => {
 // =========================================================================
 // PROTECCIÓN ANTI-HTML: CATCH-ALL 404 Y MANEJADOR GLOBAL DE ERRORES PARA /api/*
 // =========================================================================
-app.all('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({
     success: false,
     error: `Endpoint no encontrado en la pasarela: ${req.method} ${req.path}`,

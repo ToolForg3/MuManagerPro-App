@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ParsedItem } from '../../types/item';
 import { ItemDatabase } from '../../services/parser/itemDatabase';
 import { SqlClient } from '../../services/database/sqlClient';
+import { getJewelImageByGroupIndex, getJewelImageByName } from '../../constants/jewelAssets';
 
 interface ItemImageProps {
   item?: ParsedItem | { name?: string; spriteKey?: string; category?: string; group?: number; index?: number; hasTexture?: boolean; [key: string]: any } | null;
@@ -87,6 +88,23 @@ export const ItemImage: React.FC<ItemImageProps> = memo(({
     if (rawIconName === 'wand') return 'magic-staff';
     return rawIconName;
   })() as any;
+
+  // Prioridad 1: Si es una joya empaquetada localmente (Season 6), usar el sprite auténtico directo
+  const localJewel = (group !== undefined && index !== undefined)
+    ? getJewelImageByGroupIndex(group, index)
+    : (resolvedName ? getJewelImageByName(resolvedName) : null);
+
+  if (localJewel) {
+    return (
+      <View style={[styles.container, { width: size, height: size }]}>
+        <Image
+          source={localJewel}
+          style={[styles.image, { width: size, height: size }, style]}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
 
   // Si no tiene textura conocida o es genérico o dio error, mostrar icono vectorial limpio
   if (isGeneric || hasError || hasTexture === false) {

@@ -22,6 +22,8 @@ server/data/tombstones.json
 */*/*.apk
 */*/*/*.apk
 !/MuManagerPro.apk
+*.exe
+*/*.exe
 
 # Logs y temporales
 *.log

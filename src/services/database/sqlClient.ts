@@ -1237,7 +1237,7 @@ export class SqlClient {
    */
   static async getJewelBank(
     accountId: string
-  ): Promise<{ success: boolean; hasTable: boolean; bank: JewelBankData | null; message?: string }> {
+  ): Promise<{ success: boolean; hasTable: boolean; bank: JewelBankData | null; tableName?: string; message?: string }> {
     const startTime = Date.now();
     try {
       const res = await this.sendSecureRequest('/api/character/jewel-bank', {
@@ -1257,6 +1257,7 @@ export class SqlClient {
         success: true,
         hasTable: data.hasTable !== undefined ? data.hasTable : true,
         bank: data.bank || null,
+        tableName: data.tableName || 'CustomJewelBank',
       };
     } catch (e: any) {
       const duration = Date.now() - startTime;

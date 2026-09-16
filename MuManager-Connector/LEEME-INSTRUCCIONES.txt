@@ -11,8 +11,9 @@ donde tienes instalado tu servidor de MU Online y SQL Server.
 
 PASO 2:
 Haz doble clic en:
-👉 "Iniciar-Conector.bat"
-(Se abrira una ventana que dejara el conector activo en el puerto 3001).
+👉 "Iniciar-Conector.bat" o directamente en "MuManager-Connector.exe"
+(No requiere instalar Node.js ni configuraciones tecnicas adicionales).
+Se abrira una ventana que dejara el conector activo en el puerto 3001.
 
 PASO 3 (Opcional - Si necesitas cuentas de prueba):
 Si quieres tener cuentas de test creadas al instante en tu servidor:
