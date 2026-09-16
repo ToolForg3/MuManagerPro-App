@@ -8818,8 +8818,8 @@ app.post('/api/auth/forgot-password/verify-code', (req, res) => {
   });
 });
 
-// Restablecer contraseña con código verificado
-app.post('/api/auth/forgot-password/reset', (req, res) => {
+// Restablecer contraseña con código verificado (soporte dual para /reset y /confirm)
+const handleForgotPasswordReset = (req, res) => {
   const { email, code, newPassword } = req.body;
   if (!email || !code || !newPassword) {
     return res.status(400).json({ success: false, error: 'Todos los campos son requeridos.' });
@@ -8829,8 +8829,8 @@ app.post('/api/auth/forgot-password/reset', (req, res) => {
   const cleanCode = String(code).trim();
   const cleanPass = String(newPassword).trim();
 
-  if (cleanPass.length < 8) {
-    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+  if (cleanPass.length < 6) {
+    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
   }
 
   const record = passwordResetStore.get(cleanEmail);
@@ -8859,6 +8859,60 @@ app.post('/api/auth/forgot-password/reset', (req, res) => {
   res.json({
     success: true,
     message: '¡Tu contraseña ha sido restablecida exitosamente! Ya puedes iniciar sesión con tu nueva contraseña.'
+  });
+};
+
+app.post('/api/auth/forgot-password/reset', handleForgotPasswordReset);
+app.post('/api/auth/forgot-password/confirm', handleForgotPasswordReset);
+
+// Cambiar contraseña de usuario con sesión activa o credenciales
+app.post('/api/auth/change-password', (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+  const token = req.headers['x-session-token'] || (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '');
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ success: false, error: 'Correo y nueva contraseña requeridos.' });
+  }
+
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanNew = String(newPassword).trim();
+
+  if (cleanNew.length < 6) {
+    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+  }
+
+  const users = loadUsers();
+  const user = users.find(u => u.email.toLowerCase() === cleanEmail || (u.username && u.username.toLowerCase() === cleanEmail));
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
+  }
+
+  // Si se provee contraseña actual, verificarla estrictamente
+  if (currentPassword) {
+    const check = verifyPassword(String(currentPassword).trim(), user.passwordHash);
+    if (!check.valid) {
+      return res.status(401).json({ success: false, error: 'La contraseña actual ingresada es incorrecta.' });
+    }
+  } else if (token) {
+    // Si no provee contraseña actual, el token de sesión debe ser válido y pertenecer al usuario
+    const tokenCheck = verifySessionToken(token);
+    if (!tokenCheck.valid || tokenCheck.payload.email.toLowerCase() !== user.email.toLowerCase()) {
+      return res.status(401).json({ success: false, error: 'Sesión no autorizada o expirada.' });
+    }
+  } else {
+    return res.status(400).json({ success: false, error: 'Se requiere la contraseña actual o un token de sesión válido.' });
+  }
+
+  user.passwordHash = hashPassword(cleanNew);
+  user.updatedAt = new Date().toISOString();
+  saveUsers(users);
+
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+  addAuditLog('USER_PW_CHANGED', user.hwid || 'APP', clientIp, `Contraseña actualizada exitosamente por el usuario: ${user.email}`);
+
+  res.json({
+    success: true,
+    message: 'Contraseña actualizada exitosamente.'
   });
 });
 

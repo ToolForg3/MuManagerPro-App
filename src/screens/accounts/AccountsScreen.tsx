@@ -1849,8 +1849,9 @@ export const AccountsScreen = () => {
                     onChangeText={setEditPassword}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
-                    placeholder="Contraseña"
+                    placeholder="Contraseña (máx 10)"
                     placeholderTextColor={THEME.colors.textMuted}
+                    maxLength={10}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 6 }}>
                     <MaterialCommunityIcons name={showPassword ? "eye-off" : "eye"} size={20} color={THEME.colors.textoSecundario} />

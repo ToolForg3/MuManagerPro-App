@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "1.9.5",
-  "latestVersion": "1.9.5",
-  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.9.5 (Build 97) - Banco de Joyas Dual, Depurador S6 Up40 & Texturas Reales:\n• Compatibilidad Dual Louis S6 & MSPro: Detección dinámica y tolerante para CustomJewelBank y JewelBank con cero fallos Msg 207/208.\n• Depurador y Auditor de Joyas: Auditoría y vaciado completo de baúles de 240 slots (3840 bytes) en Louis S6 Update 40 con etiquetado de Baúl #0 (Expandido).\n• Texturas Reales Season 6: Integración nativa de imágenes transparentes auténticas para 10 joyas y 86 habilidades en Banco de Joyas, Depurador y catálogo de ítems.\n• Sincronización Integral: Protección atómica de base de datos y validación al 100% en todas las suites de prueba.",
+  "minRequiredVersion": "1.9.6",
+  "latestVersion": "1.9.6",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v1.9.6 (Build 98) - Términos Profesionales al Iniciar, Blindaje de Reseteo y Cambio de Contraseña:\n• Términos y Condiciones Season 6: Integración nativa de acuerdo formal EULA/Privacidad en 5 artículos con sistema Piedra y Oro al iniciar la APK y en consulta permanente.\n• Corrección Crítica de Reseteo de Contraseña: Resolución definitiva de error 404 en recuperación con soporte dual (/reset y /confirm), validación simétrica de 6 caracteres y reseteo inmediato.\n• Cambio de Contraseña en Sesión Activa: Nueva función y modal en Configuración para actualizar la clave de usuario conectado directamente desde la APK.\n• Blindaje de Cuentas MU: Límite canónico de 10 caracteres (maxLength=10) en MEMB_INFO.memb__pwd para Louis S6 y MSPro.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -46,16 +46,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "1.9.5",
-  "updateTitle": "MuManager PRO v1.9.5 (Build 97)",
-  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
-  "versionCode": 97,
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
-  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.9.5 (Build 97) - Banco de Joyas Dual, Depurador S6 Up40 & Texturas Reales:\n• Compatibilidad Dual Louis S6 & MSPro: Detección dinámica y tolerante para CustomJewelBank y JewelBank con cero fallos Msg 207/208.\n• Depurador y Auditor de Joyas: Auditoría y vaciado completo de baúles de 240 slots (3840 bytes) en Louis S6 Update 40 con etiquetado de Baúl #0 (Expandido).\n• Texturas Reales Season 6: Integración nativa de imágenes transparentes auténticas para 10 joyas y 86 habilidades en Banco de Joyas, Depurador y catálogo de ítems.\n• Sincronización Integral: Protección atómica de base de datos y validación al 100% en todas las suites de prueba.",
-  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk",
-  "appVersion": "1.9.5",
-  "buildNumber": 97,
+  "minVersion": "1.9.6",
+  "updateTitle": "MuManager PRO v1.9.6 (Build 98)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
+  "versionCode": 98,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v1.9.6 (Build 98) - Términos Profesionales al Iniciar, Blindaje de Reseteo y Cambio de Contraseña:\n• Términos y Condiciones Season 6: Integración nativa de acuerdo formal EULA/Privacidad en 5 artículos con sistema Piedra y Oro al iniciar la APK y en consulta permanente.\n• Corrección Crítica de Reseteo de Contraseña: Resolución definitiva de error 404 en recuperación con soporte dual (/reset y /confirm), validación simétrica de 6 caracteres y reseteo inmediato.\n• Cambio de Contraseña en Sesión Activa: Nueva función y modal en Configuración para actualizar la clave de usuario conectado directamente desde la APK.\n• Blindaje de Cuentas MU: Límite canónico de 10 caracteres (maxLength=10) en MEMB_INFO.memb__pwd para Louis S6 y MSPro.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.6/MuManagerPro.apk",
+  "appVersion": "1.9.6",
+  "buildNumber": 98,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.9.5",
-  "build": 97
+  "version": "1.9.6",
+  "build": 98
 }

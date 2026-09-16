@@ -31,6 +31,7 @@ import { SecurityService } from '../../services/security/securityService';
 import { APP_VERSION, APP_BUILD, APP_DISPLAY_VERSION } from '../../constants/appVersion';
 import { ServerProfile } from '../../types/admin';
 import { logAdminAction } from '../../services/adminLog';
+import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
 
 export const ConfigScreen = () => {
   const navigation = useNavigation<any>();
@@ -53,6 +54,18 @@ export const ConfigScreen = () => {
   const [verifyingAdminKey, setVerifyingAdminKey] = useState(false);
   const secretTapCountRef = useRef(0);
   const secretTapTimerRef = useRef<any>(null);
+
+  // User Password Change State
+  const [changePwModalVisible, setChangePwModalVisible] = useState(false);
+  const [currentPwInput, setCurrentPwInput] = useState('');
+  const [newPwInput, setNewPwInput] = useState('');
+  const [confirmPwInput, setConfirmPwInput] = useState('');
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [isChangingPw, setIsChangingPw] = useState(false);
+
+  // Terms Modal State
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   useEffect(() => {
     const unsubLicense = LicenseService.subscribe(setLicenseStatus);
@@ -396,6 +409,67 @@ export const ConfigScreen = () => {
         },
       ]
     );
+  };
+
+  const handleChangePassword = async () => {
+    const cleanCurrent = currentPwInput.trim();
+    const cleanNew = newPwInput.trim();
+    const cleanConfirm = confirmPwInput.trim();
+
+    if (!cleanCurrent) {
+      Alert.alert('Campo Requerido', 'Por favor ingresa tu contraseña actual.');
+      return;
+    }
+    if (!cleanNew) {
+      Alert.alert('Campo Requerido', 'Por favor ingresa la nueva contraseña.');
+      return;
+    }
+    if (cleanNew.length < 6) {
+      Alert.alert('Contraseña Débil', 'La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (cleanNew !== cleanConfirm) {
+      Alert.alert('No Coinciden', 'La nueva contraseña y su confirmación no coinciden.');
+      return;
+    }
+    if (cleanCurrent === cleanNew) {
+      Alert.alert('Sin Cambios', 'La nueva contraseña no puede ser idéntica a la contraseña actual.');
+      return;
+    }
+
+    setIsChangingPw(true);
+    try {
+      const bridgeUrl = SqlClient.getBridgeUrl();
+      const token = await SqlClient.getSessionToken();
+      const res = await fetch(`${bridgeUrl}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Token': token || '',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          currentPassword: cleanCurrent,
+          newPassword: cleanNew,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await AsyncStorage.setItem('@mumanager_auth_password', cleanNew);
+        Alert.alert('¡Éxito!', 'Tu contraseña ha sido actualizada correctamente.');
+        setChangePwModalVisible(false);
+        setCurrentPwInput('');
+        setNewPwInput('');
+        setConfirmPwInput('');
+      } else {
+        Alert.alert('Error al Actualizar', data.error || 'No se pudo actualizar la contraseña.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error de Red', e.message || 'No se pudo conectar con el servidor.');
+    } finally {
+      setIsChangingPw(false);
+    }
   };
 
   const handleSecretTap = () => {
@@ -1246,6 +1320,50 @@ export const ConfigScreen = () => {
                 <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '700' }}>{userEmail || 'Usuario'}</Text>
               </View>
 
+              {/* Botón Cambiar Contraseña */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: THEME.colors.superficie,
+                  borderWidth: 1,
+                  borderColor: THEME.colors.bordeBrillante,
+                  borderRadius: 6,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginBottom: 10,
+                }}
+                onPress={() => setChangePwModalVisible(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="lock-reset" size={18} color={THEME.colors.oroClaro} />
+                <Text style={{ color: THEME.colors.oroClaro, fontSize: 14, fontWeight: '700' }}>Cambiar Mi Contraseña</Text>
+              </TouchableOpacity>
+
+              {/* Botón Ver Términos y Condiciones */}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                  borderWidth: 1,
+                  borderColor: THEME.colors.borde,
+                  borderRadius: 6,
+                  paddingVertical: 11,
+                  paddingHorizontal: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginBottom: 14,
+                }}
+                onPress={() => setTermsModalVisible(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="file-document-outline" size={18} color={THEME.colors.textoSecundario} />
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, fontWeight: '600' }}>Ver Términos y Condiciones</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 style={{
                   backgroundColor: 'rgba(255, 82, 82, 0.12)',
@@ -1504,6 +1622,112 @@ export const ConfigScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Modal Cambiar Contraseña del Usuario */}
+      <Modal visible={changePwModalVisible} transparent animationType="fade" onRequestClose={() => setChangePwModalVisible(false)}>
+        <View style={styles.adminModalOverlay}>
+          <View style={styles.adminModalContent}>
+            <View style={styles.adminModalHeader}>
+              <View style={styles.adminModalIconWrap}>
+                <MaterialCommunityIcons name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.adminModalTitle}>Cambiar Contraseña</Text>
+                <Text style={styles.adminModalSubtitle}>{userEmail || 'Cuenta de Administrador'}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setChangePwModalVisible(false)} style={{ padding: 4 }}>
+                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.adminModalDesc}>
+              Ingresa tu contraseña actual y define una nueva clave de acceso de al menos 6 caracteres:
+            </Text>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Contraseña Actual</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 6, paddingHorizontal: 10 }}>
+                <TextInput
+                  style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
+                  placeholder="Tu contraseña actual"
+                  placeholderTextColor={THEME.colors.textMuted}
+                  value={currentPwInput}
+                  onChangeText={setCurrentPwInput}
+                  secureTextEntry={!showCurrentPw}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={() => setShowCurrentPw(!showCurrentPw)} style={{ padding: 6 }}>
+                  <MaterialCommunityIcons name={showCurrentPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Nueva Contraseña (mínimo 6 caracteres)</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 6, paddingHorizontal: 10 }}>
+                <TextInput
+                  style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
+                  placeholder="Nueva contraseña"
+                  placeholderTextColor={THEME.colors.textMuted}
+                  value={newPwInput}
+                  onChangeText={setNewPwInput}
+                  secureTextEntry={!showNewPw}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={() => setShowNewPw(!showNewPw)} style={{ padding: 6 }}>
+                  <MaterialCommunityIcons name={showNewPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Confirmar Nueva Contraseña</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 6, paddingHorizontal: 10 }}>
+                <TextInput
+                  style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
+                  placeholder="Repite la nueva contraseña"
+                  placeholderTextColor={THEME.colors.textMuted}
+                  value={confirmPwInput}
+                  onChangeText={setConfirmPwInput}
+                  secureTextEntry={!showNewPw}
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            <View style={styles.adminModalButtons}>
+              <TouchableOpacity
+                style={styles.adminModalBtnCancel}
+                onPress={() => {
+                  setChangePwModalVisible(false);
+                  setCurrentPwInput('');
+                  setNewPwInput('');
+                  setConfirmPwInput('');
+                }}
+              >
+                <Text style={styles.adminModalBtnCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.adminModalBtnSubmit}
+                onPress={handleChangePassword}
+                disabled={isChangingPw}
+              >
+                {isChangingPw ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.adminModalBtnSubmitText}>Guardar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Términos y Condiciones */}
+      <TermsAndConditionsModal
+        visible={termsModalVisible}
+        onClose={() => setTermsModalVisible(false)}
+      />
     </View>
   );
 };

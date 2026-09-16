@@ -23,6 +23,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { APP_VERSION } from '../../constants/appVersion';
 import { SqlClient } from '../../services/database/sqlClient';
+import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
 
 export const LoginScreen = () => {
   const insets = useSafeAreaInsets();
@@ -55,6 +56,7 @@ export const LoginScreen = () => {
   const [forgotConfirmPass, setForgotConfirmPass] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSecure, setForgotSecure] = useState(true);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   const handleVerifyRegistration = async () => {
     const cleanCode = verifyCode.trim();
@@ -150,6 +152,7 @@ export const LoginScreen = () => {
     const cleanCode = forgotCode.trim();
     const cleanPass = forgotNewPass.trim();
     const cleanConfirm = forgotConfirmPass.trim();
+    const cleanMail = forgotEmail.trim().toLowerCase();
 
     if (!cleanCode) {
       Alert.alert('Código Requerido', 'Por favor ingresa el código de 6 dígitos.');
@@ -159,8 +162,8 @@ export const LoginScreen = () => {
       Alert.alert('Contraseña Requerida', 'Por favor ingresa tu nueva contraseña.');
       return;
     }
-    if (cleanPass.length < 4) {
-      Alert.alert('Contraseña Débil', 'La nueva contraseña debe tener al menos 4 caracteres.');
+    if (cleanPass.length < 6) {
+      Alert.alert('Contraseña Débil', 'La nueva contraseña debe tener al menos 6 caracteres.');
       return;
     }
     if (cleanPass !== cleanConfirm) {
@@ -171,15 +174,27 @@ export const LoginScreen = () => {
     setForgotLoading(true);
     try {
       const bridgeUrl = SqlClient.getBridgeUrl();
-      const res = await fetch(`${bridgeUrl}/api/auth/forgot-password/confirm`, {
+      const payload = {
+        email: cleanMail,
+        code: cleanCode,
+        newPassword: cleanPass,
+      };
+
+      let res = await fetch(`${bridgeUrl}/api/auth/forgot-password/reset`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: forgotEmail.trim(),
-          code: cleanCode,
-          newPassword: cleanPass,
-        }),
+        body: JSON.stringify(payload),
       });
+
+      // Fallback a /confirm en caso de servidores antiguos
+      if (res.status === 404) {
+        res = await fetch(`${bridgeUrl}/api/auth/forgot-password/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
       const data = await res.json();
       if (res.ok && data.success) {
         Alert.alert(
@@ -190,7 +205,9 @@ export const LoginScreen = () => {
               text: 'Iniciar Sesión',
               onPress: () => {
                 setForgotModalVisible(false);
-                setEmail(forgotEmail.trim());
+                setIsRegisterMode(false);
+                setEmail(cleanMail);
+                setUsername(cleanMail.includes('@') ? cleanMail.split('@')[0] : cleanMail);
                 setPassword(cleanPass);
                 setForgotStep(1);
                 setForgotCode('');
@@ -547,7 +564,7 @@ export const LoginScreen = () => {
 
           {/* Terms Link */}
           <View style={styles.linksContainer}>
-            <TouchableOpacity onPress={() => Alert.alert('Términos', `Mu Manager PRO v${APP_VERSION}. Uso administrativo autorizado únicamente.`)}>
+            <TouchableOpacity onPress={() => setTermsModalVisible(true)} activeOpacity={0.7}>
               <Text style={styles.linkMuted}>{t('terms') || 'Términos y condiciones de uso'}</Text>
             </TouchableOpacity>
           </View>
@@ -805,6 +822,12 @@ export const LoginScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Professional Terms and Conditions Modal */}
+      <TermsAndConditionsModal
+        visible={termsModalVisible}
+        onClose={() => setTermsModalVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
