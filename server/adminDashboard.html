@@ -1345,7 +1345,7 @@
           <div class="module-hub-icon" style="color: #3FCF8E; background: rgba(63, 207, 142, 0.12);">🚀</div>
           <div>
             <div class="module-hub-title">Distribución & APK</div>
-            <div class="module-hub-desc">Auto-Updater, bloqueo v1.5.3 y avisos push</div>
+            <div class="module-hub-desc">Versión Oficial, Canal Beta y Avisos Push</div>
           </div>
         </div>
       </div>
@@ -1395,7 +1395,8 @@
 
     <!-- Submódulos Módulo 4: Distribución & APK -->
     <div class="submodule-group" id="subgroup-mod-deploy" style="display: none; gap: 8px; flex-wrap: wrap; width: 100%; align-items: center;">
-      <button class="submodule-pill active" data-tab="tab-updates" onclick="switchTab('tab-updates')">🚀 Auto-Updater & Bloqueo de Versiones</button>
+      <button class="submodule-pill active" data-tab="tab-updates" onclick="switchTab('tab-updates')">🚀 Versión Oficial & Rollback</button>
+      <button class="submodule-pill" data-tab="tab-beta" onclick="switchTab('tab-beta')">🧪 Canal Beta & Evaluadores</button>
       <button class="submodule-pill" data-tab="tab-broadcast" onclick="switchTab('tab-broadcast')">📢 Avisos & Notificaciones Push</button>
     </div>
 
@@ -1762,35 +1763,40 @@
     </div>
   </div>
 
-  <!-- Tab 3: Distribución APK (Auto-Updater) -->
+  <!-- Tab 3: Distribución APK (Canal Oficial) -->
   <div id="tab-updates" class="tab-content">
     <div class="main-section">
-      <div class="section-title" style="margin-bottom: 8px;">🚀 Distribución y Actualizaciones Remotas de la APK</div>
+      <div class="section-title" style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🚀 Distribución de Versión Oficial (Producción)</span>
+        <span class="badge" style="background: rgba(63, 207, 142, 0.15); color: #3FCF8E; border: 1px solid rgba(63, 207, 142, 0.35); font-size: 11px; padding: 4px 10px;">
+          Público General (100% Usuarios)
+        </span>
+      </div>
       <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
-        Cuando compiles o tengas una nueva APK, publica aquí su enlace. Todas las APKs instaladas en los celulares detectarán automáticamente la versión y le mostrarán al usuario el aviso de actualización con descarga directa en 1 clic.
+        Control de entrega y actualización remota para todas las APKs instaladas en celulares de producción. Los cambios publicados aquí impactan a todos los usuarios de MU Manager PRO.
       </p>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Versión Más Reciente (ej. 1.0.1):</label>
-          <input type="text" id="update-latest-version" class="form-control" placeholder="1.0.1" />
+          <label>Versión Oficial Más Reciente (ej. 2.0.3):</label>
+          <input type="text" id="update-latest-version" class="form-control" placeholder="2.0.3" />
         </div>
         <div class="form-group">
-          <label>Versión Mínima Requerida (ej. 1.0.0):</label>
-          <input type="text" id="update-min-version" class="form-control" placeholder="1.0.0" />
+          <label>Versión Mínima Requerida (ej. 1.9.9):</label>
+          <input type="text" id="update-min-version" class="form-control" placeholder="1.9.9" />
         </div>
       </div>
 
       <div class="form-group">
-        <label>Enlace Directo de Descarga del APK (.apk):</label>
-        <input type="url" id="update-apk-url" class="form-control" placeholder="https://expo.dev/artifacts/eas/...apk" />
+        <label>Enlace Directo de Descarga del APK Oficial (.apk):</label>
+        <input type="url" id="update-apk-url" class="form-control" placeholder="https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk" />
       </div>
 
       <!-- Switch de Actualización Forzada -->
       <div class="switch-container">
         <div class="switch-info">
           <h4>🚨 Actualización Obligatoria (Forzada)</h4>
-          <p>Si la activas, los usuarios con versiones antiguas no podrán usar la app hasta que descarguen e instalen la nueva APK.</p>
+          <p>Solo activar ante emergencias críticas. Mantener desactivado para permitir que los usuarios elijan 'Recordarme más tarde'.</p>
         </div>
         <label class="switch">
           <input type="checkbox" id="update-force-toggle">
@@ -1799,74 +1805,117 @@
       </div>
 
       <div class="form-group">
-        <label>Novedades y Cambios (Changelog mostrado en la APK):</label>
-        <textarea id="update-changelog" class="form-control" rows="4" placeholder="• Correcciones en el editor de inventario&#10;• Nuevo panel de usuario&#10;• Mayor velocidad"></textarea>
+        <label>Novedades y Cambios (Changelog Oficial en la APK):</label>
+        <textarea id="update-changelog" class="form-control" rows="4" placeholder="• Correcciones en el editor de inventario&#10;• Compatibilidad Jewel of Harmony&#10;• Mayor estabilidad"></textarea>
       </div>
 
-      <button class="btn btn-green" onclick="saveAppVersionSettings()">🚀 Publicar Actualización para todas las APKs</button>
+      <button class="btn btn-green" onclick="saveAppVersionSettings()">🚀 Publicar Actualización para todas las APKs Oficiales</button>
 
-      <!-- Sección Rollback de Emergencia -->
-      <div style="margin-top: 30px; padding: 15px; border-radius: 8px; background: rgba(244, 67, 54, 0.08); border: 1px solid rgba(244, 67, 54, 0.3);">
-        <h4 style="color: #FF5252; margin-bottom: 8px;">🚨 Rollback de Emergencia Inmediato</h4>
-        <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">
-          En caso de detectar una falla crítica en la última versión, activa esta función. Cualquier APK con versión superior a la indicada será forzada a reinstalar la versión estable anterior.
+      <!-- Sección Rollback de Emergencia Oficial -->
+      <div style="margin-top: 30px; padding: 18px; border-radius: 6px; background: rgba(244, 67, 54, 0.08); border: 1px solid rgba(244, 67, 54, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h4 style="color: #FF5252; margin: 0;">🚨 Rollback de Emergencia Inmediato (Canal Oficial)</h4>
+          <span style="font-size: 11px; background: rgba(244, 67, 54, 0.2); color: #FF5252; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Reversión Global</span>
+        </div>
+        <p style="font-size: 12px; color: #C8BEAF; margin-bottom: 12px;">
+          En caso de detectar una falla crítica en la última versión oficial, activa esta función. Cualquier APK con versión superior a la indicada será forzada a reinstalar la versión estable anterior.
         </p>
         <div class="form-row">
           <div class="form-group">
-            <label>Versión Objetivo de Rollback (ej. 1.1.7):</label>
-            <input type="text" id="rollback-target-version" class="form-control" placeholder="1.1.7" />
+            <label style="color: #FAF6EE;">Versión Objetivo de Rollback (ej. 2.0.2):</label>
+            <input type="text" id="rollback-target-version" class="form-control" placeholder="2.0.2" />
           </div>
           <div class="form-group">
-            <label>Motivo del Rollback:</label>
+            <label style="color: #FAF6EE;">Motivo del Rollback:</label>
             <input type="text" id="rollback-reason" class="form-control" placeholder="Falla crítica detectada en servidor" />
           </div>
         </div>
         <div class="switch-container" style="background: transparent; border: none; padding: 0; margin-bottom: 12px;">
           <div class="switch-info">
-            <h5 style="margin: 0; color: #fff;">Estado del Rollback</h5>
-            <p style="margin: 0; font-size: 11px;">Activa o desactiva la redirección de emergencia.</p>
+            <h5 style="margin: 0; color: #FAF6EE;">Estado del Rollback Oficial</h5>
+            <p style="margin: 0; font-size: 11px; color: #C8BEAF;">Activa o desactiva la redirección de emergencia para todos los usuarios.</p>
           </div>
           <label class="switch">
             <input type="checkbox" id="rollback-active-toggle">
             <span class="slider"></span>
           </label>
         </div>
-        <button class="btn btn-red" onclick="saveRollbackSettings()">⚠️ Aplicar Configuración de Rollback</button>
+        <button class="btn btn-red" onclick="saveRollbackSettings()">⚠️ Aplicar Configuración de Rollback Oficial</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Canal Beta & Evaluadores (Staging Ring) -->
+  <div id="tab-beta" class="tab-content">
+    <div class="main-section">
+      <div class="section-title" style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🧪 Canal Beta & Evaluadores Certificados (Acceso Anticipado)</span>
+        <span class="badge" style="background: rgba(232, 200, 106, 0.15); color: #E8C86A; border: 1px solid rgba(232, 200, 106, 0.35); font-size: 11px; padding: 4px 10px;">
+          Staging Ring Aislado
+        </span>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
+        Entorno de pruebas y validación. Las versiones publicadas aquí solo llegan a los dispositivos con HWID aprobado en el Canal Beta. El público oficial nunca recibirá avisos ni modificaciones de prueba.
+      </p>
+
+      <!-- Tarjeta 1: Configuración de Versión Beta -->
+      <div style="padding: 18px; border-radius: 6px; background: rgba(30, 26, 22, 0.7); border: 1px solid rgba(232, 200, 106, 0.2); margin-bottom: 24px;">
+        <h4 style="color: #E8C86A; margin: 0 0 10px 0;">📦 Publicación de Compilación en Canal Beta</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label style="color: #FAF6EE;">Versión Beta Objetivo (ej. 2.0.4-beta.1):</label>
+            <input type="text" id="beta-input-version" class="form-control" placeholder="2.0.4-beta.1" />
+          </div>
+          <div class="form-group">
+            <label style="color: #FAF6EE;">Número de Build Beta (ej. 106):</label>
+            <input type="number" id="beta-input-build" class="form-control" placeholder="106" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="color: #FAF6EE;">Enlace Directo del APK Beta (.apk):</label>
+          <input type="url" id="beta-input-apk-url" class="form-control" placeholder="https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk" />
+        </div>
+        <div class="form-group">
+          <label style="color: #FAF6EE;">Changelog de Pruebas (mostrado únicamente a Testers Beta):</label>
+          <textarea id="beta-input-changelog" class="form-control" rows="3" placeholder="• Pruebas de campo de nueva característica&#10;• Corrección preliminar en baúl"></textarea>
+        </div>
+        <button class="btn btn-pro" onclick="saveBetaVersionSettings()">💾 Guardar y Publicar Configuración del Canal Beta</button>
       </div>
 
-      <!-- Sección Promoción y Gestión del Canal Beta -->
-      <div style="margin-top: 30px; padding: 18px; border-radius: 6px; background: rgba(232, 200, 106, 0.05); border: 1px solid rgba(232, 200, 106, 0.25);">
+      <!-- Tarjeta 2: Promoción a Oficial (Quality Gate) -->
+      <div style="padding: 18px; border-radius: 6px; background: rgba(63, 207, 142, 0.05); border: 1px solid rgba(63, 207, 142, 0.3); margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h4 style="color: #E8C86A; margin: 0;">🚀 Promoción de Versión Beta a Oficial</h4>
-          <span id="beta-status-badge" style="background: rgba(232, 200, 106, 0.2); color: #E8C86A; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">Canal Beta Activo</span>
+          <h4 style="color: #3FCF8E; margin: 0;">🚀 Promover Beta a Versión Oficial (Graduación a Producción)</h4>
+          <span style="background: rgba(63, 207, 142, 0.2); color: #3FCF8E; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">Quality Gate</span>
         </div>
         <p style="font-size: 12px; color: #C8BEAF; margin-bottom: 14px;">
-          Permite evaluar cambios exclusivamente con los testers aprobados. Una vez que la prueba haya sido validada y esté libre de fallas, pulsa el botón para graduar la versión Beta al canal Oficial para todos los usuarios.
+          Una vez que los evaluadores hayan confirmado que la versión de prueba no tiene fallas, utiliza este botón para graduar la Beta y notificar al 100% de los usuarios.
         </p>
         <div class="form-row">
           <div class="form-group">
-            <label style="color: #FAF6EE;">Versión Beta Actual Publicada:</label>
+            <label style="color: #FAF6EE;">Versión Beta Activa a Promover:</label>
             <input type="text" id="beta-current-version-input" class="form-control" readonly style="background: #14110E; color: #E8C86A; font-weight: bold;" value="Cargando..." />
           </div>
           <div class="form-group">
-            <label style="color: #FAF6EE;">Build Beta:</label>
+            <label style="color: #FAF6EE;">Build Promovido:</label>
             <input type="text" id="beta-current-build-input" class="form-control" readonly style="background: #14110E; color: #E8C86A; font-weight: bold;" value="Cargando..." />
           </div>
         </div>
         <div class="form-group">
-          <label style="color: #FAF6EE;">Changelog de la Beta:</label>
+          <label style="color: #FAF6EE;">Changelog a Traspasar a Producción:</label>
           <textarea id="beta-current-changelog-input" class="form-control" rows="2" readonly style="background: #14110E; color: #C8BEAF; font-size: 12px;"></textarea>
         </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="btn btn-pro" onclick="promoteBetaToOfficial()">⭐ Promover Beta a Versión Oficial (Todos los Usuarios)</button>
-        </div>
+        <button class="btn btn-green" onclick="promoteBetaToOfficial()">⭐ Promover Beta a Versión Oficial (100% de Usuarios)</button>
       </div>
 
-      <!-- Sección Rollback Exclusivo de Canal Beta -->
-      <div style="margin-top: 20px; padding: 15px; border-radius: 6px; background: rgba(230, 81, 0, 0.08); border: 1px solid rgba(230, 81, 0, 0.3);">
-        <h4 style="color: #FFA726; margin-bottom: 8px;">↩️ Rollback Exclusivo del Canal Beta</h4>
+      <!-- Tarjeta 3: Rollback Exclusivo del Canal Beta -->
+      <div style="padding: 18px; border-radius: 6px; background: rgba(230, 81, 0, 0.08); border: 1px solid rgba(230, 81, 0, 0.3); margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h4 style="color: #FFA726; margin: 0;">↩️ Rollback Exclusivo del Canal Beta</h4>
+          <span style="font-size: 11px; background: rgba(230, 81, 0, 0.2); color: #FFA726; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Solo Evaluadores</span>
+        </div>
         <p style="font-size: 12px; color: #C8BEAF; margin-bottom: 12px;">
-          Si una versión beta presenta anomalías durante el período de prueba, puedes revertir <strong>únicamente</strong> a los evaluadores beta a la versión oficial estable, sin alterar al público general.
+          Si una versión beta presenta anomalías durante la prueba, puedes revertir <strong>únicamente</strong> a los evaluadores beta a la versión oficial anterior, sin alterar a los usuarios estándar.
         </p>
         <div class="form-row">
           <div class="form-group">
@@ -1891,9 +1940,12 @@
         <button class="btn btn-warning" onclick="saveBetaRollbackSettings()">⚠️ Aplicar Configuración de Rollback Beta</button>
       </div>
 
-      <!-- Sección Solicitudes del Canal Beta -->
-      <div style="margin-top: 30px;">
-        <div class="section-title" style="margin-bottom: 8px;">🧪 Evaluadores del Canal Beta (Acceso Anticipado)</div>
+      <!-- Tarjeta 4: Evaluadores y Solicitudes Beta -->
+      <div style="padding: 18px; border-radius: 6px; background: rgba(30, 26, 22, 0.7); border: 1px solid rgba(232, 200, 106, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h4 style="color: #FAF6EE; margin: 0;">👥 Evaluadores del Canal Beta (Acceso Anticipado)</h4>
+          <button class="btn btn-dark btn-sm" onclick="loadBetaRequests()">🔄 Refrescar Lista</button>
+        </div>
         <p style="font-size: 13px; color: var(--muted); margin-bottom: 15px;">
           Dispositivos que solicitaron unirse al canal beta. Al aprobarlos, recibirán las compilaciones de prueba antes que el público general.
         </p>
@@ -1910,8 +1962,8 @@
               </tr>
             </thead>
             <tbody id="beta-requests-tbody">
-            <tr id="beta-loading-row"><td colspan="6" class="empty-beta-cell" style="text-align:center; color: var(--muted); padding: 15px;">Cargando evaluadores beta...</td></tr>
-          </tbody>
+              <tr id="beta-loading-row"><td colspan="6" class="empty-beta-cell" style="text-align:center; color: var(--muted); padding: 15px;">Cargando evaluadores beta...</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -2151,7 +2203,7 @@
           </select>
           <div id="keygen-custom-days-box" style="display:none; align-items:center; gap:6px;">
             <input type="number" id="keygen-custom-days-input" class="form-control" style="width: 100px; font-size: 13px;" placeholder="Días" min="1" max="3650" />
-            <span style="font-size:12px; color:#888;">días</span>
+            <span style="font-size:12px; color:#C8BEAF;">días</span>
           </div>
         </div>
       </div>
@@ -2231,7 +2283,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
           <div>
             <h4 style="font-size:15px; font-weight:800; color:#FF5252; margin:0;">🚫 Dispositivos Excluidos / Historial de Exclusiones (Tombstones)</h4>
-            <p style="font-size:11px; color:#888; margin:2px 0 0 0;">Historial de celulares excluidos. Puedes restaurarlos o eliminarlos definitivamente para limpiar el registro sin bloquearlos.</p>
+            <p style="font-size:11px; color:#C8BEAF; margin:2px 0 0 0;">Historial de celulares excluidos. Puedes restaurarlos o eliminarlos definitivamente para limpiar el registro sin bloquearlos.</p>
           </div>
           <button class="btn btn-dark btn-sm" onclick="clearAllExcludedDevices()" style="color:#FFB74D; border:1px solid rgba(255, 183, 77, 0.4); font-size:12px; display:inline-flex; align-items:center; gap:6px;" title="Limpiar todos los registros de la lista de exclusión">
             🧹 Limpiar Todo el Historial
@@ -2386,6 +2438,7 @@
       'tab-whatsapp': 'mod-security',
       'tab-email': 'mod-security',
       'tab-updates': 'mod-deploy',
+      'tab-beta': 'mod-deploy',
       'tab-broadcast': 'mod-deploy',
       'tab-logs': 'mod-system',
       'tab-sqltest': 'mod-system'
@@ -2473,7 +2526,7 @@
       if (tabId === 'tab-security') loadSecurityLogs();
       if (tabId === 'tab-whatsapp') loadWhatsAppSettings();
       if (tabId === 'tab-email') loadEmailSettings();
-      if (tabId === 'tab-updates' || tabId === 'tab-broadcast' || tabId === 'tab-masters') loadGlobalSettings();
+      if (tabId === 'tab-updates' || tabId === 'tab-beta' || tabId === 'tab-broadcast' || tabId === 'tab-masters') loadGlobalSettings();
       if (tabId === 'tab-logs') { loadAuditLogs(); checkCloudStorageStatus(); }
     }
 
@@ -2663,7 +2716,7 @@
       const isOnline = !!u.isOnline;
       const presenceHtml = isOnline
         ? `<span class="badge" style="background: rgba(63, 207, 142, 0.15); color: #3FCF8E; border: 1px solid rgba(63, 207, 142, 0.4); font-weight: 700;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#3FCF8E; margin-right:4px;"></span>EN LÍNEA</span>`
-        : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: #888;">⚪ Desconectado</span>`;
+        : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: #C8BEAF;">⚪ Desconectado</span>`;
 
       const createdDate = new Date(u.createdAt).toLocaleDateString() + ' ' + new Date(u.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
@@ -4384,7 +4437,7 @@
           let statusBadge = '<span class="badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid #FFB300;">PENDIENTE</span>';
           if (r.status === 'CONTACTED') statusBadge = '<span class="badge" style="background:rgba(41,182,246,0.15); color:#29B6F6; border:1px solid #29B6F6;">CONTACTADO</span>';
           if (r.status === 'APPROVED') statusBadge = '<span class="badge" style="background:rgba(63, 207, 142,0.15); color:#3FCF8E; border:1px solid #3FCF8E;">APROBADO PRO</span>';
-          if (r.status === 'DISMISSED') statusBadge = '<span class="badge" style="background:rgba(142,142,147,0.15); color:#888; border:1px solid #555;">DESCARTADO</span>';
+          if (r.status === 'DISMISSED') statusBadge = '<span class="badge" style="background:rgba(142,142,147,0.15); color:#C8BEAF; border:1px solid #555;">DESCARTADO</span>';
 
           const dateStr = new Date(r.createdAt).toLocaleDateString() + ' ' + new Date(r.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
@@ -4880,6 +4933,35 @@
       }
     }
 
+    async function saveBetaVersionSettings() {
+      const latestBetaVersion = document.getElementById('beta-input-version').value.trim();
+      const betaBuild = document.getElementById('beta-input-build').value.trim();
+      const betaApkUrl = document.getElementById('beta-input-apk-url').value.trim();
+      const betaChangelog = document.getElementById('beta-input-changelog').value.trim();
+
+      if (!latestBetaVersion) return alert('Debes especificar la versión beta.');
+      if (!betaApkUrl) return alert('Debes proporcionar el enlace del APK Beta.');
+
+      const key = getAdminKey();
+      try {
+        const res = await fetch('/api/admin/beta/release', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ latestBetaVersion, betaBuild, betaApkUrl, betaChangelog })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✅ Configuración del Canal Beta guardada y publicada.');
+          loadGlobalSettings();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.message || 'No se pudo guardar la configuración beta'), true);
+        }
+      } catch (e) {
+        showToast('Error de red: ' + e.message, true);
+      }
+    }
+
     async function saveBetaRollbackSettings() {
       const active = document.getElementById('beta-rollback-active-toggle').checked;
       const targetVersion = document.getElementById('beta-rollback-target-version').value.trim();
@@ -5132,6 +5214,16 @@
           // Beta Settings & Rollback Beta
           const beta = s.beta || {};
           const betaRb = beta.rollback || {};
+
+          const betaInputVer = document.getElementById('beta-input-version');
+          const betaInputBuild = document.getElementById('beta-input-build');
+          const betaInputApk = document.getElementById('beta-input-apk-url');
+          const betaInputChangelog = document.getElementById('beta-input-changelog');
+          if (betaInputVer) betaInputVer.value = beta.latestBetaVersion || '2.0.4-beta.1';
+          if (betaInputBuild) betaInputBuild.value = beta.betaBuild || 106;
+          if (betaInputApk) betaInputApk.value = beta.betaApkUrl || 'https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk';
+          if (betaInputChangelog) betaInputChangelog.value = beta.betaChangelog || '';
+
           const betaVerEl = document.getElementById('beta-current-version-input');
           const betaBuildEl = document.getElementById('beta-current-build-input');
           const betaChangelogEl = document.getElementById('beta-current-changelog-input');
@@ -5482,7 +5574,7 @@
             <div style="font-size: 15px; font-weight: 800; color: #3FCF8E; margin-bottom: 6px;">✅ ¡Conexión Exitosa desde la Nube!</div>
             <div style="font-size: 13px; color: #EEE;">Latencia de respuesta: <strong>${escapeHtml(data.latencyMs)} ms</strong></div>
             <div style="font-size: 12px; color: #AAA; margin-top: 4px;">Base de Datos: <strong>${escapeHtml(data.database)}</strong></div>
-            <div style="font-size: 11px; color: #888; font-family: monospace; margin-top: 6px;">${escapeHtml(data.version)}</div>
+            <div style="font-size: 11px; color: #C8BEAF; font-family: monospace; margin-top: 6px;">${escapeHtml(data.version)}</div>
           `;
           showToast('Conexión SQL exitosa');
         } else {
@@ -5778,7 +5870,7 @@
           <td><span class="hwid-code" style="font-size:11px; color:#FF5252;">${safeHwid}</span></td>
           <td><small style="color:#AAA;">${safeDate}</small></td>
           <td>${safeModel}</td>
-          <td><code style="font-size:10px; color:#888;">${safeKey}</code></td>
+          <td><code style="font-size:10px; color:#C8BEAF;">${safeKey}</code></td>
           <td><small style="color:#FFB74D;">${safeReason}</small></td>
           <td>
             <button class="btn btn-green btn-sm" style="font-size:11px; padding:3px 8px;" data-action="unexclude-device" data-hwid="${safeHwid}" title="Restaurar dispositivo para que pueda volver a conectarse">♻️ Restaurar</button>
@@ -6309,7 +6401,7 @@
               <button class="btn btn-dark btn-sm" id="btn-copy-keygen-key">📋 Copiar Solo Clave</button>
               <button class="btn btn-green btn-sm" id="btn-copy-keygen-wa">📲 Copiar Mensaje para WhatsApp / Telegram</button>
             </div>
-            <span style="font-size: 12px; color: #888;">Entrégale esta clave o mensaje a tu cliente para activar su APK.</span>
+            <span style="font-size: 12px; color: #C8BEAF;">Entrégale esta clave o mensaje a tu cliente para activar su APK.</span>
           `;
           const btnCopyKey = document.getElementById('btn-copy-keygen-key');
           if (btnCopyKey) {

@@ -188,8 +188,11 @@ assert(bridgeServerContent.includes('/api/admin/beta/rollback'), 'bridgeServer.j
 assert(bridgeServerContent.includes('/api/admin/beta/promote'), 'bridgeServer.js must include beta promote endpoint');
 
 const dashboardContent = fs.readFileSync(path.join(projectRoot, 'server', 'adminDashboard.html'), 'utf8');
+assert(dashboardContent.includes('id="tab-beta"'), 'adminDashboard.html must have dedicated tab-beta container');
+assert(dashboardContent.includes('saveBetaVersionSettings'), 'adminDashboard.html must implement saveBetaVersionSettings');
 assert(dashboardContent.includes('promoteBetaToOfficial'), 'adminDashboard.html must implement promoteBetaToOfficial');
 assert(dashboardContent.includes('saveBetaRollbackSettings'), 'adminDashboard.html must implement saveBetaRollbackSettings');
 assert(dashboardContent.includes('beta-rollback-active-toggle'), 'adminDashboard.html must include beta rollback toggle');
+assert(dashboardContent.includes("'tab-beta': 'mod-deploy'"), 'adminDashboard.html must map tab-beta to mod-deploy in TAB_TO_MODULE');
 
 console.log('\n[PASS] ALL BETA CHANNEL & ROLLBACK MANAGEMENT TESTS PASSED SUCCESSFULLY!');
