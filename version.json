@@ -1,10 +1,10 @@
 {
-  "version": "1.9.9",
-  "minRequiredVersion": "1.9.8",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.9",
-  "publishedAt": "2026-09-17T00:10:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
-  "build": 101,
+  "version": "2.0.0",
+  "minRequiredVersion": "1.9.9",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v2.0.0",
+  "publishedAt": "2026-09-17T02:40:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
+  "build": 102,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v1.9.9 (Build 101) - Banco de Joyas Universal y Acceso Demo Seguro:\n• Soporte Dual para Banco de Joyas: Integración de esquema normalizado (ItemIndex por fila: Chaos 6159, Bless 7181, Soul 7182, etc.) y esquema columnar clásico (Louis S6 y MSPro).\n• Acceso Directo (Demo) Limpio: Nueva sesión efímera independiente con generación de token seguro en servidor y sin rellenar datos ni credenciales antiguas.\n• Sincronización Multi-Servidor: Homologación completa entre APK móvil, Pasarela Gateway y Conector local."
+  "changelog": "MuManager PRO v2.0.0 (Build 102) - Actualización Mayor de Seguridad y Blindaje:\n• Blindaje Criptográfico: Eliminado guardado de contraseñas en texto plano en almacenamiento local y activado cifrado AES-256 con hash seguro en SecureStorage.\n• Corrección en Autenticación: Corrección integral en cambio de contraseña y validación de tokens de sesión.\n• Blindaje Nativo Android: Eliminado permiso SYSTEM_ALERT_WINDOW para mayor seguridad y prevención de tapjacking.\n• Protección contra Mutaciones Duplicadas: Blindaje de red en transacciones SQL no idempotentes ante cortes de conexión.\n• Conector de PC y Pasarela Blindados: Saneamiento de telemetría y protección contra ataques de fuerza bruta."
 }

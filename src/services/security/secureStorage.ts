@@ -140,6 +140,8 @@ export class SecureStorage {
       '@mumanager_session_token',
       '@mumanager_admin_key',
       '@mumanager_server_profiles',
+      '@mumanager_auth_password',
+      '@mumanager_auth_pwhash',
     ];
     for (const k of keys) {
       try {

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SecurityService } from '../services/security/securityService';
+import { SecurityService, sha256 } from '../services/security/securityService';
 import { SqlClient } from '../services/database/sqlClient';
 import { LicenseService } from '../services/security/licenseService';
 import { SecureStorage } from '../services/security/secureStorage';
@@ -57,13 +57,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Purgar de forma preventiva cualquier contraseña residual en texto plano de versiones anteriores
+        AsyncStorage.removeItem('@mumanager_auth_password').catch(() => {});
+
         const authEmail = await AsyncStorage.getItem('@mumanager_auth_email');
         const authUser = await AsyncStorage.getItem('@mumanager_auth_username');
         const savedEmailVal = await AsyncStorage.getItem(SAVED_EMAIL_KEY);
         const savedUserVal = await AsyncStorage.getItem(SAVED_USERNAME_KEY);
         const storedEmail = (authEmail || savedEmailVal || '').trim();
         const storedUser = (authUser || savedUserVal || storedEmail.split('@')[0] || '').trim();
-        const storedPass = await AsyncStorage.getItem('@mumanager_auth_password');
         const session = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
         let token = await SqlClient.getSessionToken();
         if (savedUserVal) {
@@ -77,29 +79,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSavedEmail(storedEmail);
         }
         if (session === 'active' && storedEmail) {
-          if (storedPass) {
-            try {
-              const bridgeUrl = SqlClient.getBridgeUrl();
-              const hwid = await SecurityService.getDeviceHwid();
-              const res = await fetch(`${bridgeUrl}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: storedEmail, password: storedPass, hwid }),
-              });
-              const data = await res.json();
-              if (res.ok && data.success && data.token) {
-                SqlClient.setSessionToken(data.token);
-                token = data.token;
-              }
-            } catch {}
-          }
           if (!token) {
             const hwid = await SecurityService.getDeviceHwid();
             token = `LOCAL_DEV_${hwid}_${Date.now()}`;
             SqlClient.setSessionToken(token);
           }
           setUserEmail(storedEmail);
-          SqlClient.setActiveUser(storedEmail);
+          setUserName(storedUser);
+          SqlClient.setActiveUser(storedUser || storedEmail);
           setIsAuthenticated(true);
           SecurityService.getDeviceHwid().then(hwid => {
             const currentLicense = LicenseService.getStatus();
@@ -108,7 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               currentLicense.plan || 'DEMO',
               currentLicense.licenseKey,
               storedEmail,
-              storedEmail.split('@')[0]
+              storedUser || storedEmail.split('@')[0]
             ).catch(() => {});
           }).catch(() => {});
         } else {
@@ -198,12 +185,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.warn('Remote login error, checking local password', e);
     }
 
-    // 2. Contraseña configurada localmente para este usuario específico (modo offline legítimo)
-    const storedPass = await AsyncStorage.getItem('@mumanager_auth_password');
+    // 2. Contraseña configurada localmente para este usuario específico (modo offline legítimo con hash cifrado)
+    const storedHash = await SecureStorage.getItem('@mumanager_auth_pwhash');
     const storedEmail = await AsyncStorage.getItem('@mumanager_auth_email');
     const storedUsername = await AsyncStorage.getItem('@mumanager_auth_username');
-    const isConfiguredKey = storedPass && (storedEmail || storedUsername)
-      ? cleanPass === storedPass && (
+    const isConfiguredKey = storedHash && (storedEmail || storedUsername)
+      ? sha256(cleanPass + ':' + cleanUser.toLowerCase()) === storedHash && (
           (storedUsername && cleanUser.toLowerCase() === storedUsername.toLowerCase()) ||
           (storedEmail && cleanUser.toLowerCase() === storedEmail.toLowerCase())
         )
@@ -225,7 +212,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setRememberEmail(remember);
       try {
         await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
-        await AsyncStorage.setItem('@mumanager_auth_password', cleanPass);
+        await AsyncStorage.removeItem('@mumanager_auth_password'); // Eliminar residuo texto plano
+        await SecureStorage.setItem('@mumanager_auth_pwhash', sha256(cleanPass + ':' + resolvedUser.toLowerCase()));
         await AsyncStorage.setItem('@mumanager_auth_username', resolvedUser);
         if (resolvedEmail) await AsyncStorage.setItem('@mumanager_auth_email', resolvedEmail);
         if (remember) {
@@ -285,9 +273,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setRememberUser(false);
       setRememberEmail(false);
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
+      await AsyncStorage.removeItem('@mumanager_auth_password');
       await AsyncStorage.setItem('@mumanager_auth_username', 'Demo');
       await AsyncStorage.setItem('@mumanager_auth_email', 'demo@muonline.local');
-      await AsyncStorage.setItem('@mumanager_auth_password', 'demo');
 
       const currentLicense = LicenseService.getStatus();
       SqlClient.sendTelemetryPing(
@@ -425,11 +413,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     setIsAuthenticated(false);
     setUserEmail('');
+    setUserName('');
     SqlClient.setActiveUser('');
     SqlClient.setSessionToken('');
     try {
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+      await AsyncStorage.removeItem('@mumanager_auth_password');
       await SecureStorage.removeItem('@mumanager_session_token');
+      await SecureStorage.removeItem('@mumanager_auth_pwhash');
     } catch (e) {
       console.warn('Error on logout', e);
     }

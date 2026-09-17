@@ -8527,8 +8527,10 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       return res.json({
         success: true,
         pendingSmtp: true,
-        devCode: code,
-        message: 'Código de activación generado. Revisa tu correo o utiliza el código de verificación en pantalla.'
+        devCode: isDev ? code : undefined,
+        message: isDev
+          ? 'Código de activación generado. Revisa tu correo o utiliza el código de verificación en pantalla.'
+          : 'Código de activación generado. Por favor contacta al administrador si no recibes el correo.'
       });
     }
 
@@ -8618,7 +8620,7 @@ app.post('/api/auth/verify-registration', (req, res) => {
 });
 
 // Reenviar código de activación
-app.post('/api/auth/resend-verification', async (req, res) => {
+app.post('/api/auth/resend-verification', authRateLimitMiddleware, async (req, res) => {
   try {
     const { email, hwid } = req.body;
     if (!email) return res.status(400).json({ success: false, error: 'Correo requerido.' });
@@ -8671,8 +8673,10 @@ app.post('/api/auth/resend-verification', async (req, res) => {
       return res.json({
         success: true,
         pendingSmtp: true,
-        devCode: code,
-        message: 'Nuevo código de activación generado. Revisa tu correo o utiliza el código en pantalla.'
+        devCode: isDev ? code : undefined,
+        message: isDev
+          ? 'Nuevo código de activación generado. Revisa tu correo o utiliza el código en pantalla.'
+          : 'Nuevo código de activación generado. Por favor contacta al administrador si no recibes el correo.'
       });
     }
 
@@ -8754,7 +8758,7 @@ app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
     const attempts = (failedLogins.get(clientIp) || 0) + 1;
     failedLogins.set(clientIp, attempts);
     if (attempts >= 3) {
-      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos de contraseña incorrecta para: ${cleanEmail}`, hwid, clientIp);
+      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos de contraseña incorrecta para: ${(user && user.email) || cleanIdentifier}`, hwid, clientIp);
     }
     return res.status(401).json({ success: false, error: 'Contraseña incorrecta.' });
   }
@@ -8988,7 +8992,7 @@ app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (re
     'PASSWORD_RESET_OTP',
     user.hwid || 'N/A',
     clientIp,
-    `Código de recuperación generado para ${cleanEmail}: [ ${code} ] (Envío: ${emailResult.sentVia || 'Pendiente SMTP - Ver en Panel/WhatsApp'})`
+    `Código de recuperación generado para ${cleanEmail}: [ ****** ] (Envío: ${emailResult.sentVia || 'Pendiente SMTP - Ver en Panel/WhatsApp'})`
   );
 
   sendWhatsAppAlert(
@@ -9137,7 +9141,7 @@ app.post('/api/auth/change-password', (req, res) => {
   } else if (token) {
     // Si no provee contraseña actual, el token de sesión debe ser válido y pertenecer al usuario
     const tokenCheck = verifySessionToken(token);
-    if (!tokenCheck.valid || tokenCheck.payload.email.toLowerCase() !== user.email.toLowerCase()) {
+    if (!tokenCheck || (tokenCheck.sub || '').toLowerCase() !== user.email.toLowerCase()) {
       return res.status(401).json({ success: false, error: 'Sesión no autorizada o expirada.' });
     }
   } else {

@@ -298,6 +298,16 @@ export class SqlClient {
     timeoutMs: number = 15000,
     maxRetries: number = 1
   ): Promise<Response> {
+    const isMutation = endpoint.includes('/create') ||
+      endpoint.includes('/delete') ||
+      endpoint.includes('/inject') ||
+      endpoint.includes('/save') ||
+      endpoint.includes('/purge') ||
+      endpoint.includes('/update') ||
+      endpoint.includes('/toggle') ||
+      endpoint.includes('/reset') ||
+      endpoint.includes('/clear');
+    const effectiveMaxRetries = isMutation ? 0 : maxRetries;
     let attempt = 0;
     while (true) {
       attempt++;
@@ -345,7 +355,7 @@ export class SqlClient {
       } catch (e: any) {
         clearTimeout(timeoutId);
         const isNetworkOrTimeout = e?.name === 'AbortError' || e?.message?.includes('Network') || e?.message?.includes('Failed to fetch');
-        if (attempt <= maxRetries && isNetworkOrTimeout) {
+        if (attempt <= effectiveMaxRetries && isNetworkOrTimeout) {
           await new Promise((res) => setTimeout(res, 1000 * attempt));
           continue;
         }

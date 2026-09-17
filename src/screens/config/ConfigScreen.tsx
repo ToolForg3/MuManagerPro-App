@@ -456,7 +456,7 @@ export const ConfigScreen = () => {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        await AsyncStorage.setItem('@mumanager_auth_password', cleanNew);
+        await AsyncStorage.removeItem('@mumanager_auth_password');
         Alert.alert('¡Éxito!', 'Tu contraseña ha sido actualizada correctamente.');
         setChangePwModalVisible(false);
         setCurrentPwInput('');

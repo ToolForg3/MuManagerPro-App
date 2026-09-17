@@ -47,16 +47,39 @@ const SETTINGS_FILE = path.join(__dirname, 'data', 'settings.json');
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const PRO_REQUESTS_FILE = path.join(__dirname, 'data', 'proRequests.json');
 const SECURITY_LOGS_FILE = path.join(__dirname, 'data', 'securityLogs.json');
-// [SEC-01] MASTER_SECURITY_SALT — NUNCA hardcodear. En producción es obligatorio.
-if (!process.env.MASTER_SECURITY_SALT) {
-  if (process.env.NODE_ENV === 'production') {
-    console.error('\x1b[31m[FATAL SECURITY] MASTER_SECURITY_SALT es obligatorio en producción. Configura la variable de entorno y reinicia.\x1b[0m');
-    process.exit(1);
-  } else {
-    console.warn('\x1b[33m[⚠ SECURITY] MASTER_SECURITY_SALT no configurada en desarrollo. Usando salt efímero aleatorio. Las licencias NO serán válidas entre reinicios.\x1b[0m');
+const SECRETS_FILE = path.join(__dirname, 'data', 'connector-secrets.json');
+
+function loadOrInitConnectorSecrets() {
+  let sec = {};
+  try {
+    if (fs.existsSync(SECRETS_FILE)) {
+      sec = JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf8')) || {};
+    }
+  } catch (_) {}
+  let changed = false;
+  if (!sec.masterSalt || typeof sec.masterSalt !== 'string' || sec.masterSalt.length < 16) {
+    sec.masterSalt = process.env.MASTER_SECURITY_SALT || crypto.randomBytes(32).toString('hex');
+    changed = true;
   }
+  if (!sec.jwtSecret || typeof sec.jwtSecret !== 'string' || sec.jwtSecret.length < 16) {
+    sec.jwtSecret = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+    changed = true;
+  }
+  if (changed) {
+    try {
+      const dir = path.dirname(SECRETS_FILE);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(SECRETS_FILE, JSON.stringify(sec, null, 2), 'utf8');
+    } catch (_) {}
+  }
+  return sec;
 }
-const MASTER_SECURITY_SALT = process.env.MASTER_SECURITY_SALT || crypto.randomBytes(32).toString('hex');
+const connectorSecrets = loadOrInitConnectorSecrets();
+
+// [SEC-01] MASTER_SECURITY_SALT — Persistente o por variable de entorno
+const MASTER_SECURITY_SALT = (process.env.MASTER_SECURITY_SALT && process.env.MASTER_SECURITY_SALT.trim().length >= 16)
+  ? process.env.MASTER_SECURITY_SALT.trim()
+  : connectorSecrets.masterSalt;
 const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/latest/download/MuManagerPro.apk';
 
 // [H02/H05] Verificación de variables de entorno críticas al arranque del conector
@@ -399,7 +422,7 @@ function loadUsers() {
 }
 
 function saveUsers(data) {
-  if (!safeAtomicWriteJson()) throw new Error();
+  if (!safeAtomicWriteJson(USERS_FILE, data)) throw new Error("Disk error saving users");
   return true;
 }
 
@@ -416,7 +439,7 @@ function loadProRequests() {
 }
 
 function saveProRequests(data) {
-  if (!safeAtomicWriteJson()) throw new Error();
+  if (!safeAtomicWriteJson(PRO_REQUESTS_FILE, data)) throw new Error("Disk error saving proRequests");
   return true;
 }
 
@@ -486,12 +509,9 @@ function verifyPassword(password, storedHash) {
   return { valid: false, needsUpgrade: false };
 }
 
-const EPHEMERAL_JWT_SECRET = crypto.randomBytes(32).toString('hex');
 const JWT_SESSION_SECRET = (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 16)
   ? process.env.JWT_SECRET.trim()
-  : (process.env.NODE_ENV === 'production'
-      ? (() => { console.error('\x1b[31m[FATAL SECURITY] JWT_SECRET obligatorio en producción en el conector.\x1b[0m'); process.exit(1); })()
-      : EPHEMERAL_JWT_SECRET);
+  : connectorSecrets.jwtSecret;
 
 function generateSessionToken(email, role = 'USER', hwid = '') {
   const payload = {
@@ -623,6 +643,33 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// [SEC-04] Rate limit estricto para autenticación y registro en el conector
+const authRateCounts = new Map();
+const AUTH_RATE_WINDOW_MS = 15 * 60 * 1000;
+const AUTH_MAX_ATTEMPTS = 5;
+
+function authRateLimitMiddleware(req, res, next) {
+  const clientIp = getClientIp(req);
+  const key = `auth:${clientIp}`;
+  const now = Date.now();
+  let record = authRateCounts.get(key);
+  if (!record || now - record.startTime > AUTH_RATE_WINDOW_MS) {
+    record = { count: 1, startTime: now };
+    authRateCounts.set(key, record);
+  } else {
+    record.count++;
+    if (record.count > AUTH_MAX_ATTEMPTS) {
+      const retryAfterSec = Math.ceil((AUTH_RATE_WINDOW_MS - (now - record.startTime)) / 1000);
+      res.set('Retry-After', String(retryAfterSec));
+      return res.status(429).json({
+        success: false,
+        error: `Demasiados intentos. Espera ${Math.ceil(retryAfterSec / 60)} minuto(s) antes de intentar nuevamente.`
+      });
+    }
+  }
+  next();
+}
 
 // Directorios de contenido estático y descargas
 const publicDir = path.join(__dirname, 'public');
@@ -909,7 +956,21 @@ app.use((req, res, next) => {
 
   // [SEC-AUTH] Verificación Autoritativa de Licencia PRO para Rutas SQL Críticas (Default-Deny)
   const _isAdminRole = authUser && authUser.role === 'ADMIN';
-  const _sqlPaths = ['/api/character/', '/api/account/', '/api/warehouse/', '/api/items/', '/api/mu/', '/api/coins/', '/api/tools/'];
+  const _sqlPaths = [
+    '/api/character/', '/api/character',
+    '/api/account/', '/api/account',
+    '/api/accounts/', '/api/accounts',
+    '/api/warehouse/', '/api/warehouse',
+    '/api/items/', '/api/items',
+    '/api/mu/', '/api/mu',
+    '/api/coins/', '/api/coins',
+    '/api/tools/', '/api/tools',
+    '/api/guilds/', '/api/guilds',
+    '/api/pk/', '/api/pk',
+    '/api/gm/', '/api/gm',
+    '/api/ip/', '/api/ip',
+    '/api/dashboard'
+  ];
   const _isSqlRoute = _sqlPaths.some(p => req.path.startsWith(p));
 
   if (_isSqlRoute && !_isAdminRole) {
@@ -7557,7 +7618,7 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 // AUTENTICACIÓN Y REGISTRO DE USUARIOS
 // ==========================================
 
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', authRateLimitMiddleware, (req, res) => {
   const { email, password, username, hwid } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
@@ -7571,8 +7632,8 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(400).json({ success: false, error: 'El nombre de usuario debe tener al menos 3 caracteres.' });
   }
 
-  if (cleanPass.length < 4) {
-    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 4 caracteres.' });
+  if (cleanPass.length < 8) {
+    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres.' });
   }
 
   const users = loadUsers();
@@ -7615,7 +7676,7 @@ app.post('/api/auth/register', (req, res) => {
 const failedLogins = new Map();
 
 // Acceso Directo Modo Demo (sin credenciales personales)
-app.post('/api/auth/demo-login', (req, res) => {
+app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   const { hwid } = req.body || {};
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
   const token = generateSessionToken('demo@muonline.local', 'USER', hwid || 'DEMO');
@@ -7628,7 +7689,7 @@ app.post('/api/auth/demo-login', (req, res) => {
   });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
   const { email, username, password, hwid } = req.body;
   const loginIdentifier = String(username || email || '').trim();
   if (!loginIdentifier || !password) {
@@ -7676,7 +7737,7 @@ app.post('/api/auth/login', (req, res) => {
     const attempts = (failedLogins.get(clientIp) || 0) + 1;
     failedLogins.set(clientIp, attempts);
     if (attempts >= 3) {
-      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos de contraseña incorrecta para: ${cleanEmail}`, hwid, clientIp);
+      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos de contraseña incorrecta para: ${(user && user.email) || loginIdentifier}`, hwid, clientIp);
     }
     return res.status(401).json({ success: false, error: 'Contraseña incorrecta.' });
   }
