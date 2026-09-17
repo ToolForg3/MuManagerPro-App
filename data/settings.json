@@ -6,7 +6,7 @@
   "latestVersion": "2.0.2",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "updateChangelog": "MuManager PRO v2.0.2 (Build 104) - Parches de Seguridad y Estabilidad (Auditoría 2026-09-17):\n• SEC-01: Protección doble en verificación de OTP — authRateLimitMiddleware añadido a /forgot-password/verify-code para blindaje por IP complementario al guard interno de 5 intentos.\n• SEC-02: Política de contraseña unificada a 8 caracteres mínimos en restablecimiento por OTP (consistencia con registro y cambio de contraseña).\n• DISEÑO: Corrección de borderRadius en pill badge \"En Vivo\" (10px → 6px estándar gótico Season 6).\n• REGLAS: GEMINI.md actualizado con excepción documentada para círculos funcionales, rate limiting explícito en OTP y política de 8 chars aplicable a todas las operaciones de contraseña.",
-  "forceUpdate": true,
+  "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
   "broadcast": {
