@@ -382,70 +382,7 @@ function saveDevices(data) {
   }
 }
 
-const DEFAULT_SEED_USERS = [
-  {
-    "id": "usr_1788722531719_629",
-    "email": "admin_test@muonline.com",
-    "username": "Admin Test",
-    "role": "ADMIN",
-    "status": "ACTIVE",
-    "createdAt": "2026-09-06T19:22:11.719Z",
-    "lastLogin": "2026-09-06T19:22:11.719Z",
-    "lastSeen": "2026-09-06T19:22:11.719Z",
-    "hwid": "CEL-8E1A-1D90-4C1D"
-  },
-  {
-    "id": "usr_1788723281953_359",
-    "email": "cris@meltroso.com",
-    "passwordHash": "270af93414ba48f76be0a6900c29ae19b8bb2512ede4dbd4d9b4d95fad257bd8",
-    "username": "cris",
-    "role": "USER",
-    "status": "ACTIVE",
-    "createdAt": "2026-09-06T19:34:41.954Z",
-    "lastLogin": "2026-09-07T21:30:02.242Z",
-    "hwid": "CEL-1499-D81D-F1AF",
-    "lastSeen": "2026-09-08T16:54:53.081Z",
-    "activeHwid": "CEL-1499-D81D-F1AF"
-  },
-  {
-    "id": "usr_1788723745820_266",
-    "email": "alejandasofia499@gmail.com",
-    "username": "Kakashi",
-    "passwordHash": "af497d6f5c6a04c765d207fd79093c6aaea507541a29c70f48bc401c90e88301",
-    "hwid": "CEL-9660-AF29-5DBA",
-    "status": "ACTIVE",
-    "createdAt": "2026-09-06T19:42:25.821Z",
-    "lastLogin": "2026-09-07T21:09:20.182Z",
-    "lastSeen": "2026-09-08T16:57:31.018Z",
-    "activeHwid": "CEL-9660-AF29-5DBA"
-  },
-  {
-    "id": "usr_1788819729334_884",
-    "email": "cris1@meltroso.com",
-    "username": "cris1",
-    "passwordHash": "270af93414ba48f76be0a6900c29ae19b8bb2512ede4dbd4d9b4d95fad257bd8",
-    "hwid": "CEL-E12E-455F-C4E6",
-    "activeHwid": "CEL-E12E-455F-C4E6",
-    "activeSessionAt": "2026-09-07T22:22:09.528Z",
-    "status": "ACTIVE",
-    "createdAt": "2026-09-07T22:22:09.334Z",
-    "lastLogin": "2026-09-07T22:22:09.528Z",
-    "lastSeen": "2026-09-08T17:31:14.140Z"
-  },
-  {
-    "id": "usr_1788887648422_56",
-    "email": "admin@test.com",
-    "username": "admin",
-    "role": "USER",
-    "status": "ACTIVE",
-    "createdAt": "2026-09-08T17:14:08.422Z",
-    "lastLogin": "2026-09-08T17:14:08.422Z",
-    "lastSeen": "2026-09-08T17:14:08.422Z",
-    "hwid": "TEST-DEVICE-UUID-12345",
-    "activeHwid": "TEST-DEVICE-UUID-12345",
-    "activeSessionAt": "2026-09-08T17:14:08.422Z"
-  }
-];
+const DEFAULT_SEED_USERS = [];
 
 function loadUsers() {
   try {
@@ -2819,7 +2756,7 @@ app.post('/api/character/teleport', async (req, res) => {
   }
 });
 
-// Banco de Joyas Louis S6 Update 40 (CustomJewelBank) & MSPro (JewelBank)
+// Banco de Joyas Louis S6 Update 40 (CustomJewelBank) & MSPro (JewelBank) & Normalized (CustomItemBank)
 app.post('/api/character/jewel-bank', async (req, res) => {
   try {
     const { accountId, config, update, jewels } = req.body;
@@ -2827,18 +2764,58 @@ app.post('/api/character/jewel-bank', async (req, res) => {
     if (!accountId) return res.status(400).json({ success: false, error: 'AccountID requerido' });
 
     const data = await executeSql(config, async (pool) => {
-      // Detección dinámica: CustomJewelBank (Louis S6) vs JewelBank (MSPro)
+      // Detección dinámica: CustomJewelBank (Louis S6) vs JewelBank (MSPro) vs Tablas Normalizadas
       const tblCheck = await pool.request().query(`
         SELECT CASE 
           WHEN OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL THEN 'CustomJewelBank'
           WHEN OBJECT_ID('JewelBank', 'U') IS NOT NULL THEN 'JewelBank'
-          ELSE NULL 
+          WHEN OBJECT_ID('CustomItemBank', 'U') IS NOT NULL THEN 'CustomItemBank'
+          WHEN OBJECT_ID('ItemBank', 'U') IS NOT NULL THEN 'ItemBank'
+          WHEN OBJECT_ID('CustomJewel', 'U') IS NOT NULL THEN 'CustomJewel'
+          WHEN OBJECT_ID('Custom_JewelBank', 'U') IS NOT NULL THEN 'Custom_JewelBank'
+          WHEN OBJECT_ID('JewelDeposit', 'U') IS NOT NULL THEN 'JewelDeposit'
+          WHEN OBJECT_ID('IGCN_JewelBank', 'U') IS NOT NULL THEN 'IGCN_JewelBank'
+          ELSE (
+            SELECT TOP 1 t.name 
+            FROM sys.tables t
+            JOIN sys.columns c ON t.object_id = c.object_id
+            WHERE LOWER(c.name) IN ('itemindex', 'item_index', 'bless', 'jewelofbless', 'chaos')
+            GROUP BY t.name
+            ORDER BY 
+              CASE 
+                WHEN LOWER(t.name) LIKE '%jewelbank%' THEN 1
+                WHEN LOWER(t.name) LIKE '%itembank%' THEN 2
+                WHEN LOWER(t.name) LIKE '%jewel%' THEN 3
+                WHEN LOWER(t.name) LIKE '%bank%' THEN 4
+                ELSE 5 
+              END ASC
+          )
         END AS TableName;
       `);
       let targetTable = (tblCheck.recordset && tblCheck.recordset[0] && tblCheck.recordset[0].TableName) ? tblCheck.recordset[0].TableName : null;
       if (!targetTable) {
         return { hasTable: false, tableName: null, bank: null };
       }
+
+      // Inspeccionar columnas existentes para compatibilidad total ante variantes de esquema
+      const colCheck = await pool.request()
+        .input('TblName', sql.VarChar(50), targetTable)
+        .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
+      const existingColNames = (colCheck.recordset || []).map(r => r.COLUMN_NAME);
+
+      // Detectar si la tabla es Normalizada por Fila (ItemIndex, ItemCount) o Columnar (Bless, Soul, etc.)
+      const indexCol = existingColNames.find(c => ['itemindex', 'item_index', 'itemid', 'item_id', 'iditem'].includes(c.toLowerCase()));
+      const countCol = existingColNames.find(c => ['itemcount', 'item_count', 'count', 'amount', 'quantity'].includes(c.toLowerCase()));
+      const levelCol = existingColNames.find(c => ['itemlevel', 'item_level', 'level'].includes(c.toLowerCase()));
+      const autoPickCol = existingColNames.find(c => ['autopick', 'auto_pick'].includes(c.toLowerCase()));
+
+      const isNormalizedSchema = !!(indexCol && countCol);
+
+      // Detectar columna de cuenta de forma dinámica (AccountID, AccountId, Account, etc.)
+      const accColCandidate = existingColNames.find(name => 
+        ['accountid', 'account', 'memb___id', 'id', 'userguid'].includes(name.toLowerCase())
+      );
+      const accColName = accColCandidate || 'AccountID';
 
       // Diccionario exhaustivo de variantes de nombres de columnas en emuladores Season 6 / MSPro
       const JEWEL_ALIASES = {
@@ -2854,18 +2831,139 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount'],
       };
 
-      // Inspeccionar columnas existentes para compatibilidad total ante variantes de esquema
-      const colCheck = await pool.request()
-        .input('TblName', sql.VarChar(50), targetTable)
-        .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
-      const existingColNames = (colCheck.recordset || []).map(r => r.COLUMN_NAME);
+      // Mapeo estándar de ItemIndex para MU Online Season 6 (Section * 512 + Index)
+      const JEWEL_TO_ITEM_INDEX = {
+        Chaos: 6159,     // Section 12, Index 15 = (12 * 512) + 15
+        Bless: 7181,     // Section 14, Index 13 = (14 * 512) + 13
+        Soul: 7182,      // Section 14, Index 14 = (14 * 512) + 14
+        Life: 7184,      // Section 14, Index 16 = (14 * 512) + 16
+        Creation: 7190,  // Section 14, Index 22 = (14 * 512) + 22
+        Guardian: 7199,  // Section 14, Index 31 = (14 * 512) + 31
+        GemStone: 7209,  // Section 14, Index 41 = (14 * 512) + 41
+        Harmony: 7210,   // Section 14, Index 42 = (14 * 512) + 42
+        LowStone: 7211,  // Section 14, Index 43 = (14 * 512) + 43
+        HighStone: 7212, // Section 14, Index 44 = (14 * 512) + 44
+      };
 
-      // Detectar columna de cuenta de forma dinámica (AccountID, AccountId, Account, etc.)
-      const accColCandidate = existingColNames.find(name => 
-        ['accountid', 'account', 'memb___id', 'id', 'userguid'].includes(name.toLowerCase())
-      );
-      const accColName = accColCandidate || 'AccountID';
+      const ITEM_INDEX_TO_JEWEL = {
+        6159: 'Chaos',
+        15: 'Chaos',
+        7181: 'Bless',
+        13: 'Bless',
+        7182: 'Soul',
+        14: 'Soul',
+        7184: 'Life',
+        16: 'Life',
+        7190: 'Creation',
+        22: 'Creation',
+        7199: 'Guardian',
+        31: 'Guardian',
+        7209: 'GemStone',
+        41: 'GemStone',
+        7210: 'Harmony',
+        42: 'Harmony',
+        7211: 'LowStone',
+        43: 'LowStone',
+        7212: 'HighStone',
+        44: 'HighStone',
+      };
 
+      if (isNormalizedSchema) {
+        // ==============================================================
+        // FORMATO NORMALIZADO (Row-per-Item: AccountID, ItemIndex, ItemCount)
+        // ==============================================================
+        if (update && jewels) {
+          for (const [key, itemIndex] of Object.entries(JEWEL_TO_ITEM_INDEX)) {
+            const rawVal = jewels[key];
+            if (rawVal !== undefined && rawVal !== null) {
+              const countVal = Math.max(0, parseInt(rawVal, 10) || 0);
+              const extraCols = [];
+              const extraVals = [];
+              if (levelCol) {
+                extraCols.push(`[${levelCol}]`);
+                extraVals.push('0');
+              }
+              if (autoPickCol) {
+                extraCols.push(`[${autoPickCol}]`);
+                extraVals.push('1');
+              }
+              const insertColsStr = [`[${accColName}]`, `[${indexCol}]`, `[${countCol}]`, ...extraCols].join(', ');
+              const insertValsStr = ['@Acc', '@Idx', '@Cnt', ...extraVals].join(', ');
+
+              await pool.request()
+                .input('Acc', sql.VarChar(50), accountId.trim())
+                .input('Idx', sql.Int, itemIndex)
+                .input('Cnt', sql.Int, countVal)
+                .query(`
+                  IF EXISTS (
+                    SELECT 1 FROM ${targetTable}
+                    WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                       OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+                       OR [${accColName}] = @Acc)
+                      AND [${indexCol}] = @Idx
+                  )
+                  BEGIN
+                    UPDATE ${targetTable}
+                    SET [${countCol}] = @Cnt
+                    WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                       OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+                       OR [${accColName}] = @Acc)
+                      AND [${indexCol}] = @Idx;
+                  END
+                  ELSE
+                  BEGIN
+                    INSERT INTO ${targetTable} (${insertColsStr})
+                    VALUES (${insertValsStr});
+                  END
+                `);
+            }
+          }
+        }
+
+        // Consultar filas normalizadas para esta cuenta
+        const qRows = await pool.request()
+          .input('Acc', sql.VarChar(50), accountId.trim())
+          .query(`
+            SELECT [${indexCol}] AS ItemIndex, [${countCol}] AS ItemCount
+            FROM ${targetTable}
+            WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+               OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+               OR [${accColName}] = @Acc;
+          `);
+
+        const bankData = {
+          AccountID: accountId.trim(),
+          Bless: 0,
+          Soul: 0,
+          Chaos: 0,
+          Life: 0,
+          Creation: 0,
+          Guardian: 0,
+          Harmony: 0,
+          GemStone: 0,
+          LowStone: 0,
+          HighStone: 0,
+        };
+
+        for (const row of (qRows.recordset || [])) {
+          const idx = parseInt(row.ItemIndex, 10);
+          const cnt = Math.max(0, parseInt(row.ItemCount, 10) || 0);
+          const jewelKey = ITEM_INDEX_TO_JEWEL[idx];
+          if (jewelKey && bankData[jewelKey] !== undefined) {
+            bankData[jewelKey] = cnt;
+          }
+        }
+
+        return {
+          hasTable: true,
+          tableName: targetTable,
+          bank: bankData,
+        };
+      }
+
+      // ==============================================================
+      // FORMATO COLUMNAR (Column-per-Jewel: Bless, Soul, Chaos, etc.)
+      // ==============================================================
       // Mapear cada joya con su columna real en la base de datos
       const jewelColMap = {};
       for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
@@ -2983,22 +3081,19 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         return 0;
       };
 
-      let bank = null;
-      if (rawBank) {
-        bank = {
-          AccountID: rawBank.AccountID || accountId.trim(),
-          Bless: getVal(rawBank, 'Bless'),
-          Soul: getVal(rawBank, 'Soul'),
-          Chaos: getVal(rawBank, 'Chaos'),
-          Life: getVal(rawBank, 'Life'),
-          Creation: getVal(rawBank, 'Creation'),
-          Guardian: getVal(rawBank, 'Guardian'),
-          Harmony: getVal(rawBank, 'Harmony'),
-          GemStone: getVal(rawBank, 'GemStone'),
-          LowStone: getVal(rawBank, 'LowStone'),
-          HighStone: getVal(rawBank, 'HighStone'),
-        };
-      }
+      const bank = {
+        AccountID: (rawBank && (rawBank.AccountID || rawBank.accountid || rawBank.AccountId)) || accountId.trim(),
+        Bless: getVal(rawBank, 'Bless'),
+        Soul: getVal(rawBank, 'Soul'),
+        Chaos: getVal(rawBank, 'Chaos'),
+        Life: getVal(rawBank, 'Life'),
+        Creation: getVal(rawBank, 'Creation'),
+        Guardian: getVal(rawBank, 'Guardian'),
+        Harmony: getVal(rawBank, 'Harmony'),
+        GemStone: getVal(rawBank, 'GemStone'),
+        LowStone: getVal(rawBank, 'LowStone'),
+        HighStone: getVal(rawBank, 'HighStone'),
+      };
 
       return { hasTable: true, tableName: targetTable, bank };
     });
@@ -7518,6 +7613,20 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 const failedLogins = new Map();
+
+// Acceso Directo Modo Demo (sin credenciales personales)
+app.post('/api/auth/demo-login', (req, res) => {
+  const { hwid } = req.body || {};
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+  const token = generateSessionToken('demo@muonline.local', 'USER', hwid || 'DEMO');
+  addAuditLog('DEMO_LOGIN', hwid || 'DEMO', clientIp, 'Acceso Directo Demo concedido');
+  return res.json({
+    success: true,
+    role: 'USER',
+    token,
+    user: { email: 'demo@muonline.local', username: 'Demo' }
+  });
+});
 
 app.post('/api/auth/login', (req, res) => {
   const { email, username, password, hwid } = req.body;

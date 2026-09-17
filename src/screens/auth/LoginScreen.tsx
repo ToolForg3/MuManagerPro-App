@@ -28,7 +28,7 @@ import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditio
 export const LoginScreen = () => {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { login, register, verifyRegistration, resendVerificationCode, savedEmail, savedUsername } = useAuth();
+  const { login, loginDemo, register, verifyRegistration, resendVerificationCode, savedEmail, savedUsername } = useAuth();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState(savedUsername || (savedEmail && !savedEmail.includes('@') ? savedEmail : ''));
@@ -39,6 +39,7 @@ export const LoginScreen = () => {
   const [secureText, setSecureText] = useState(true);
   const [secureConfirmText, setSecureConfirmText] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [loadingDemo, setLoadingDemo] = useState(false);
 
   // Registration Email Verification OTP Modal State
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
@@ -336,6 +337,20 @@ export const LoginScreen = () => {
     }
   };
 
+  const handleDemoAccess = async () => {
+    setLoadingDemo(true);
+    try {
+      const res = await loginDemo();
+      if (!res.success && res.error) {
+        Alert.alert('Acceso Demo', res.error);
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'No se pudo iniciar sesión en modo prueba.');
+    } finally {
+      setLoadingDemo(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -532,11 +547,8 @@ export const LoginScreen = () => {
           {!isRegisterMode && (
             <BotonPiedra
               titulo="Acceso Directo (Demo)"
-              onPress={() => {
-                setUsername('cris');
-                setPassword('1234');
-                login('cris', '1234', true);
-              }}
+              onPress={handleDemoAccess}
+              cargando={loadingDemo}
               icono="zap"
               altura={44}
               style={{ marginTop: 12 }}

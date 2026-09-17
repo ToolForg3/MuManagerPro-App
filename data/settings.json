@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "1.9.8",
-  "latestVersion": "1.9.8",
-  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v1.9.8 (Build 100) - Blindaje Total de Licencias y Panel de Control:\n• Blindaje Antidiscrepancia de Licencias: Distinción estricta entre Licencia Vitalicia, Vigencia Temporal (días/horas) y Vigencia Pendiente; eliminación absoluta de vitalicias involuntarias o parpadeo visual.\n• Persistencia Acumulativa de Dispositivos: Nuevo algoritmo de fusión sin pérdida de memoria ni exclusión de celulares conectados al refrescar la APK o el Panel.\n• Sincronización Silenciosa y Segura: Validación autoritativa de isLifetime y daysRemaining en telemetría entre APK, Gateway y Conector.\n• Panel de Control Web Reactivo: Firma de estado optimizada y actualización en tiempo real de vigencias y estados online.",
+  "latestVersion": "1.9.9",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v1.9.9 (Build 101) - Banco de Joyas Universal y Acceso Demo Seguro:\n• Soporte Dual para Banco de Joyas: Integración de esquema normalizado (ItemIndex por fila: Chaos 6159, Bless 7181, Soul 7182, etc.) y esquema columnar clásico (Louis S6 y MSPro).\n• Acceso Directo (Demo) Limpio: Nueva sesión efímera independiente con generación de token seguro en servidor y sin rellenar datos ni credenciales antiguas.\n• Sincronización Multi-Servidor: Homologación completa entre APK móvil, Pasarela Gateway y Conector local.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -47,15 +47,15 @@
     "triggeredAt": ""
   },
   "minVersion": "1.9.8",
-  "updateTitle": "MuManager PRO v1.9.8 (Build 100)",
-  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
-  "versionCode": 100,
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
-  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v1.9.8 (Build 100) - Blindaje Total de Licencias y Panel de Control:\n• Blindaje Antidiscrepancia de Licencias: Distinción estricta entre Licencia Vitalicia, Vigencia Temporal (días/horas) y Vigencia Pendiente; eliminación absoluta de vitalicias involuntarias o parpadeo visual.\n• Persistencia Acumulativa de Dispositivos: Nuevo algoritmo de fusión sin pérdida de memoria ni exclusión de celulares conectados al refrescar la APK o el Panel.\n• Sincronización Silenciosa y Segura: Validación autoritativa de isLifetime y daysRemaining en telemetría entre APK, Gateway y Conector.\n• Panel de Control Web Reactivo: Firma de estado optimizada y actualización en tiempo real de vigencias y estados online.",
-  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
-  "appVersion": "1.9.8",
-  "buildNumber": 100,
+  "updateTitle": "MuManager PRO v1.9.9 (Build 101)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
+  "versionCode": 101,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v1.9.9 (Build 101) - Banco de Joyas Universal y Acceso Demo Seguro:\n• Soporte Dual para Banco de Joyas: Integración de esquema normalizado (ItemIndex por fila: Chaos 6159, Bless 7181, Soul 7182, etc.) y esquema columnar clásico (Louis S6 y MSPro).\n• Acceso Directo (Demo) Limpio: Nueva sesión efímera independiente con generación de token seguro en servidor y sin rellenar datos ni credenciales antiguas.\n• Sincronización Multi-Servidor: Homologación completa entre APK móvil, Pasarela Gateway y Conector local.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
+  "appVersion": "1.9.9",
+  "buildNumber": 101,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "1.9.8",
-  "build": 100
+  "version": "1.9.9",
+  "build": 101
 }

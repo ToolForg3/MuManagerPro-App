@@ -1,10 +1,10 @@
 {
-  "version": "1.9.8",
+  "version": "1.9.9",
   "minRequiredVersion": "1.9.8",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.8",
-  "publishedAt": "2026-09-16T23:45:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.8/MuManagerPro.apk",
-  "build": 100,
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v1.9.9",
+  "publishedAt": "2026-09-17T00:10:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.9/MuManagerPro.apk",
+  "build": 101,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v1.9.8 (Build 100) - Blindaje Total de Licencias y Panel de Control:\n• Blindaje Antidiscrepancia de Licencias: Distinción estricta entre Licencia Vitalicia, Vigencia Temporal (días/horas) y Vigencia Pendiente; eliminación absoluta de vitalicias involuntarias o parpadeo visual.\n• Persistencia Acumulativa de Dispositivos: Nuevo algoritmo de fusión sin pérdida de memoria ni exclusión de celulares conectados al refrescar la APK o el Panel.\n• Sincronización Silenciosa y Segura: Validación autoritativa de isLifetime y daysRemaining en telemetría entre APK, Gateway y Conector.\n• Panel de Control Web Reactivo: Firma de estado optimizada y actualización en tiempo real de vigencias y estados online."
+  "changelog": "MuManager PRO v1.9.9 (Build 101) - Banco de Joyas Universal y Acceso Demo Seguro:\n• Soporte Dual para Banco de Joyas: Integración de esquema normalizado (ItemIndex por fila: Chaos 6159, Bless 7181, Soul 7182, etc.) y esquema columnar clásico (Louis S6 y MSPro).\n• Acceso Directo (Demo) Limpio: Nueva sesión efímera independiente con generación de token seguro en servidor y sin rellenar datos ni credenciales antiguas.\n• Sincronización Multi-Servidor: Homologación completa entre APK móvil, Pasarela Gateway y Conector local."
 }

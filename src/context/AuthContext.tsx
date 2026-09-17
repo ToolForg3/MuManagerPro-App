@@ -14,6 +14,7 @@ interface AuthContextType {
   rememberUser: boolean;
   isLoading: boolean;
   login: (usernameOrEmail: string, pass: string, remember: boolean) => Promise<{ success: boolean; requiresVerification?: boolean; error?: string }>;
+  loginDemo: () => Promise<{ success: boolean; error?: string }>;
   register: (email: string, pass: string, username?: string) => Promise<{ success: boolean; requiresVerification?: boolean; email?: string; error?: string; message?: string; pendingSmtp?: boolean; devCode?: string }>;
   verifyRegistration: (email: string, code: string) => Promise<{ success: boolean; token?: string; error?: string; message?: string }>;
   resendVerificationCode: (email: string) => Promise<{ success: boolean; message?: string; error?: string; pendingSmtp?: boolean; devCode?: string }>;
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   rememberUser: true,
   isLoading: true,
   login: async () => ({ success: false }),
+  loginDemo: async () => ({ success: false }),
   register: async () => ({ success: false }),
   verifyRegistration: async () => ({ success: false }),
   resendVerificationCode: async () => ({ success: false }),
@@ -251,6 +253,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: false, error: 'Usuario o contraseña incorrectos.' };
   };
 
+  const loginDemo = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const bridgeUrl = SqlClient.getBridgeUrl();
+      const hwid = await SecurityService.getDeviceHwid();
+      let token = '';
+      try {
+        const res = await fetch(`${bridgeUrl}/api/auth/demo-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hwid }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.token) {
+          token = data.token;
+          SqlClient.setSessionToken(data.token);
+        }
+      } catch (e) {
+        console.warn('Remote demo login error, using local fallback token', e);
+      }
+
+      if (!token) {
+        token = `LOCAL_DEMO_${hwid}_${Date.now()}`;
+        SqlClient.setSessionToken(token);
+      }
+
+      setIsAuthenticated(true);
+      setUserName('Demo');
+      setUserEmail('demo@muonline.local');
+      SqlClient.setActiveUser('Demo');
+      setRememberUser(false);
+      setRememberEmail(false);
+      await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
+      await AsyncStorage.setItem('@mumanager_auth_username', 'Demo');
+      await AsyncStorage.setItem('@mumanager_auth_email', 'demo@muonline.local');
+      await AsyncStorage.setItem('@mumanager_auth_password', 'demo');
+
+      const currentLicense = LicenseService.getStatus();
+      SqlClient.sendTelemetryPing(
+        hwid,
+        currentLicense.plan || 'DEMO',
+        currentLicense.licenseKey,
+        'demo@muonline.local',
+        'Demo'
+      ).catch(() => {});
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Error al iniciar sesión demo.' };
+    }
+  };
+
   const register = async (
     email: string,
     pass: string,
@@ -392,6 +445,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         rememberUser,
         isLoading,
         login,
+        loginDemo,
         register,
         verifyRegistration,
         resendVerificationCode,
