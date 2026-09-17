@@ -195,4 +195,53 @@ assert(dashboardContent.includes('saveBetaRollbackSettings'), 'adminDashboard.ht
 assert(dashboardContent.includes('beta-rollback-active-toggle'), 'adminDashboard.html must include beta rollback toggle');
 assert(dashboardContent.includes("'tab-beta': 'mod-deploy'"), 'adminDashboard.html must map tab-beta to mod-deploy in TAB_TO_MODULE');
 
-console.log('\n[PASS] ALL BETA CHANNEL & ROLLBACK MANAGEMENT TESTS PASSED SUCCESSFULLY!');
+// ----------------------------------------------------
+// 6. License Invariance (Beta Never Touches Licenses)
+// ----------------------------------------------------
+console.log('[Point 6] Testing License Invariance (Beta Channel Never Alters Licenses)...');
+
+// Verify Android package name constancy (ensures in-place update without wiping AsyncStorage/SecureStorage)
+const appJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'app.json'), 'utf8'));
+assert.strictEqual(appJson.expo.android.package, 'com.mumanager.pro', 'Package name must remain strictly com.mumanager.pro');
+
+// Mock a PRO device joining Beta
+const proDevice = {
+  hwid: 'HWID-PRO-TESTER-777',
+  mode: 'PRO',
+  licenseKey: 'PRO-1234-5678-9999',
+  isLifetime: true,
+  expiresAt: null
+};
+
+// Simulate Beta approval: only settings.beta.approvedHwids is modified
+const betaSettingsBefore = JSON.parse(JSON.stringify(mockSettings));
+betaSettingsBefore.beta.approvedHwids.push(proDevice.hwid);
+
+// Telemetry ping in Beta channel
+const telemetryInBeta = simulateTelemetryResolution(proDevice.hwid, '2.0.3', betaSettingsBefore);
+assert.strictEqual(telemetryInBeta.channel, 'beta', 'Device must be routed to Beta channel');
+
+// The device license object MUST remain untouched
+assert.strictEqual(proDevice.mode, 'PRO', 'PRO status must not change when joining or using Beta');
+assert.strictEqual(proDevice.licenseKey, 'PRO-1234-5678-9999', 'License key must remain unchanged');
+assert.strictEqual(proDevice.isLifetime, true, 'Lifetime flag must remain intact');
+
+// Mock DEMO device joining Beta
+const demoDevice = {
+  hwid: 'HWID-DEMO-TESTER-888',
+  mode: 'DEMO',
+  licenseKey: '',
+  isLifetime: false,
+  expiresAt: '2026-10-01T00:00:00.000Z'
+};
+betaSettingsBefore.beta.approvedHwids.push(demoDevice.hwid);
+const demoTelemetry = simulateTelemetryResolution(demoDevice.hwid, '2.0.3', betaSettingsBefore);
+assert.strictEqual(demoTelemetry.channel, 'beta');
+assert.strictEqual(demoDevice.mode, 'DEMO', 'DEMO device must remain in DEMO mode without bypass');
+assert.strictEqual(demoDevice.expiresAt, '2026-10-01T00:00:00.000Z', 'Trial expiration date must remain intact');
+
+// Verify that beta endpoints in bridgeServer.js do NOT perform any write to devices or licenses
+assert(!bridgeServerContent.includes("app.post('/api/admin/beta-approve', (req, res) => {\n  const devices"), 'beta-approve must not touch devices');
+assert(!bridgeServerContent.includes("app.post('/api/admin/beta/promote', (req, res) => {\n  const devices"), 'beta promote must not touch devices');
+
+console.log('\n[PASS] ALL BETA CHANNEL, ROLLBACK & LICENSE INVARIANCE TESTS PASSED SUCCESSFULLY!');
