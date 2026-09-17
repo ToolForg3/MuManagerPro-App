@@ -1,10 +1,10 @@
 {
-  "version": "2.0.4",
+  "version": "2.0.5",
   "minRequiredVersion": "1.9.9",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-17T20:40:39.572Z",
+  "publishedAt": "2026-09-17T21:05:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 106,
+  "build": 107,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.0.4 (Build 106) - Versión Oficial Estable:\n• Versión Oficial Estable:\n• QUALITY GATE & PROMOCIÓN: Promoción atómica de versiones probadas al 100% de usuarios.\n• ROLLBACK INDEPENDIENTE: Reversión selectiva en dos niveles sin alterar producción.\n• INVARIANZA DE LICENCIAS: Blindaje total de licencias PRO y DEMO en actualizaciones.\n• PANEL DE CONTROL: Rediseño modular Season 6 Piedra y Oro con contraste WCAG AAA (>7:1).\n• ESTABILIDAD: forceUpdate=false garantizado y retrocompatibilidad dual Louis S6 & MSPro."
+  "changelog": "MuManager PRO v2.0.5 (Build 107) - Parche de Conectividad y Red:\n• CERTIFICATE PINNING & TLS: Soporte oficial para Google Trust Services (GTS Root R1-R4) y USERTrust ECC en Android.\n• CONEXIÓN SQL & PASARELA: Resuelto Network request failed en pruebas de conexión y sincronización con el Gateway.\n• CANAL BETA & LICENCIAS: Endpoint público habilitado para solicitudes de acceso Beta y licencias PRO.\n• SEGURIDAD OWASP: Blindaje anti-MITM (system trust-anchors) preservado al 100% sin alterar compatibilidad ni licencias."
 }

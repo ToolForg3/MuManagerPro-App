@@ -2315,6 +2315,31 @@
     let currentTargetUser = null;
     let allDevicesCache = [];
     let allUsersCache = [];
+    const locallyDeletedHwids = new Set();
+    const locallyDeletedUserIds = new Set();
+
+    try {
+      const savedDevs = localStorage.getItem('mumanager_devices_cache');
+      if (savedDevs) {
+        const parsed = JSON.parse(savedDevs);
+        if (Array.isArray(parsed) && parsed.length > 0) allDevicesCache = parsed;
+      }
+      const savedUsers = localStorage.getItem('mumanager_users_cache');
+      if (savedUsers) {
+        const parsed = JSON.parse(savedUsers);
+        if (Array.isArray(parsed) && parsed.length > 0) allUsersCache = parsed;
+      }
+      const savedHwids = localStorage.getItem('mumanager_deleted_hwids');
+      if (savedHwids) {
+        const parsedH = JSON.parse(savedHwids);
+        if (Array.isArray(parsedH)) parsedH.forEach(h => locallyDeletedHwids.add(String(h).toUpperCase()));
+      }
+      const savedUids = localStorage.getItem('mumanager_deleted_users');
+      if (savedUids) {
+        const parsedU = JSON.parse(savedUids);
+        if (Array.isArray(parsedU)) parsedU.forEach(u => locallyDeletedUserIds.add(String(u).toLowerCase()));
+      }
+    } catch (_) {}
 
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
@@ -2674,7 +2699,25 @@
         }
         const users = await res.json();
         if (Array.isArray(users)) {
-          allUsersCache = users;
+          const userMap = new Map();
+          // 1. Cargar usuarios conocidos en caché que no hayan sido eliminados localmente
+          allUsersCache.forEach(u => {
+            const k = (u.email || u.id || '').toLowerCase().trim();
+            if (k && !locallyDeletedUserIds.has(k)) userMap.set(k, u);
+          });
+          // 2. Fusionar con los usuarios devueltos por el servidor
+          users.forEach(incoming => {
+            const k = (incoming.email || incoming.id || '').toLowerCase().trim();
+            if (k && !locallyDeletedUserIds.has(k)) {
+              if (userMap.has(k)) {
+                userMap.set(k, { ...userMap.get(k), ...incoming });
+              } else {
+                userMap.set(k, incoming);
+              }
+            }
+          });
+          allUsersCache = Array.from(userMap.values());
+          try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           updateTextIfDifferent('metric-users', allUsersCache.length);
           
           const searchInput = document.getElementById('search-users-filter');
@@ -2917,11 +2960,18 @@
           showToast('Cuenta de "' + (email || id) + '" eliminada permanentemente.');
           // Eliminación reactiva/optimista inmediata en memoria local
           const cleanEmail = (email || '').toLowerCase().trim();
+          if (cleanEmail) locallyDeletedUserIds.add(cleanEmail);
+          if (id) locallyDeletedUserIds.add(String(id).toLowerCase().trim());
+          try {
+            localStorage.setItem('mumanager_deleted_users', JSON.stringify(Array.from(locallyDeletedUserIds)));
+          } catch (_) {}
           allUsersCache = allUsersCache.filter(u => 
             (id ? u.id !== id : true) && 
             (cleanEmail ? (u.email || '').toLowerCase().trim() !== cleanEmail : true)
           );
+          try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           renderUsersTable(allUsersCache);
+          updateTextIfDifferent('metric-users', allUsersCache.length);
           updateTextIfDifferent('metric-users-total', allUsersCache.length);
           refreshUsers();
           loadAuditLogs();
@@ -3153,7 +3203,27 @@
 
         const list = await res.json();
         if (Array.isArray(list)) {
-          allDevicesCache = list;
+          // Smart bidirectional merge anti-desincronización (Multi-Instance & Serverless Partition Shield)
+          const devMap = new Map();
+          // 1. Cargar dispositivos conocidos en caché que no hayan sido eliminados localmente
+          allDevicesCache.forEach(d => {
+            if (d && d.hwid && !locallyDeletedHwids.has(String(d.hwid).toUpperCase())) {
+              devMap.set(d.hwid, d);
+            }
+          });
+          // 2. Fusionar con los dispositivos devueltos en esta respuesta
+          list.forEach(incoming => {
+            if (incoming && incoming.hwid && !locallyDeletedHwids.has(String(incoming.hwid).toUpperCase())) {
+              if (devMap.has(incoming.hwid)) {
+                devMap.set(incoming.hwid, { ...devMap.get(incoming.hwid), ...incoming });
+              } else {
+                devMap.set(incoming.hwid, incoming);
+              }
+            }
+          });
+          allDevicesCache = Array.from(devMap.values());
+          try { localStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
+
           const searchInput = document.getElementById('search-filter');
           if (searchInput && searchInput.value.trim().length > 0) {
             filterDevicesTable();
@@ -4168,7 +4238,12 @@
         if (res.ok && data.success) {
           showToast('Registro de celular limpiado exitosamente (sin bloqueo).');
           const cleanHwid = String(hwid).trim().toUpperCase();
+          locallyDeletedHwids.add(cleanHwid);
+          try {
+            localStorage.setItem('mumanager_deleted_hwids', JSON.stringify(Array.from(locallyDeletedHwids)));
+          } catch (_) {}
           allDevicesCache = allDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
+          try { localStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
           renderDevicesTable(allDevicesCache);
           updateTextIfDifferent('metric-devices-total', allDevicesCache.length);
           refreshDevices();
@@ -5623,16 +5698,53 @@
           return;
         }
 
-        if (Array.isArray(data.licenses)) allLicensesCache = data.licenses;
+        if (Array.isArray(data.licenses)) {
+          const licenseMap = new Map();
+          data.licenses.forEach(l => { if (l && l.hwid) licenseMap.set(l.hwid, l); });
+
+          // Conciliación bidireccional inteligente: Garantizar que todo celular en modo PRO conocido en allDevicesCache aparezca en las licencias
+          allDevicesCache.forEach(dev => {
+            if (dev && dev.mode === 'PRO' && !dev.blocked) {
+              if (!licenseMap.has(dev.hwid)) {
+                const key = dev.licenseKey || dev.generatedKey || 'PRO-DIRECTA';
+                const isLifetime = !dev.expiresAt || dev.isLifetime;
+                const isExp = dev.expiresAt && new Date(dev.expiresAt).getTime() < Date.now();
+                licenseMap.set(dev.hwid, {
+                  hwid: dev.hwid,
+                  mode: 'PRO',
+                  licenseKey: key,
+                  isLifetime: !!isLifetime,
+                  isExpired: !!isExp,
+                  expiresAt: dev.expiresAt || null,
+                  daysRemaining: dev.daysRemaining !== undefined ? dev.daysRemaining : null,
+                  timeRemainingFormatted: dev.timeRemainingFormatted || (dev.expiresAt ? formatClientTimeRemaining(dev.expiresAt) : '♾️ Vitalicia'),
+                  currentUser: dev.currentUser || 'N/A',
+                  deviceBrand: dev.deviceBrand || '',
+                  deviceModel: dev.deviceModel || dev.platform || 'N/A',
+                  note: dev.note || '',
+                  lastSeen: dev.lastSeen || '',
+                  isOnline: !!dev.isOnline
+                });
+              }
+            }
+          });
+          allLicensesCache = Array.from(licenseMap.values());
+        }
         if (Array.isArray(data.excludedDevices)) excludedDevicesCache = data.excludedDevices;
 
-        const s = data.summary || {};
-        updateTextIfDifferent('lic-metric-total', s.totalLicenses || 0);
-        updateTextIfDifferent('lic-metric-pro', s.activeProCount || 0);
-        updateTextIfDifferent('lic-metric-lifetime', s.lifetimeCount || 0);
-        updateTextIfDifferent('lic-metric-days', s.daysCount || 0);
-        updateTextIfDifferent('lic-metric-expired', s.expiredCount || 0);
-        updateTextIfDifferent('lic-metric-excluded', s.excludedCount || 0);
+        const totalLic = allLicensesCache.length;
+        const proCount = allLicensesCache.filter(l => l.mode === 'PRO' && !l.isExpired).length;
+        const lifeCount = allLicensesCache.filter(l => l.isLifetime).length;
+        const daysCount = allLicensesCache.filter(l => l.mode === 'PRO' && !l.isLifetime && !l.isExpired).length;
+        const expCount = allLicensesCache.filter(l => l.isExpired).length;
+        const exclCount = (data.summary && data.summary.excludedCount !== undefined) ? data.summary.excludedCount : excludedDevicesCache.length;
+
+        updateTextIfDifferent('lic-metric-total', totalLic);
+        updateTextIfDifferent('lic-metric-pro', proCount);
+        updateTextIfDifferent('lic-metric-lifetime', lifeCount);
+        updateTextIfDifferent('lic-metric-days', daysCount);
+        updateTextIfDifferent('lic-metric-expired', expCount);
+        updateTextIfDifferent('lic-metric-excluded', exclCount);
 
         renderLicensesTable(allLicensesCache);
         renderExcludedDevicesTable(excludedDevicesCache);
@@ -6429,6 +6541,15 @@
       const msg = `¡Hola! Tu licencia oficial de *MuManager PRO* ha sido generada con éxito para tu dispositivo.\n\n📱 *HWID:* ${hwid}\n🔑 *Clave PRO:* ${key}\n⏳ *Vigencia:* ${vigenciaStr}\n\nIngresa a la app en *Configuración ➔ LICENCIA*, pega tu clave y presiona Activar para disfrutar de acceso ilimitado.\n\n_Producido por ToolForg3_`;
       navigator.clipboard.writeText(msg);
       showToast('¡Mensaje comercial para WhatsApp / Telegram copiado!');
+    }
+
+    // Renderizado instantáneo de arranque con caché persistente (Zero Layout Shift & Zero Flash)
+    if (allDevicesCache && allDevicesCache.length > 0) {
+      renderDevicesTable(allDevicesCache);
+    }
+    if (allUsersCache && allUsersCache.length > 0) {
+      updateTextIfDifferent('metric-users', allUsersCache.length);
+      renderUsersTable(allUsersCache);
     }
 
     // Inicialización al cargar la página

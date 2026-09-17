@@ -398,7 +398,9 @@ export class SqlClient {
       this.isConnected = false;
       const errorMsg = err.name === 'AbortError'
         ? 'Tiempo de espera agotado (Timeout 10s). Verifique IP y puerto del servidor.'
-        : `No se pudo contactar el servidor: ${err.message}`;
+        : (err.message && err.message.includes('Network request failed')
+          ? 'No se pudo contactar la pasarela de control (Error de red). Verifique su conexión a Internet o los ajustes del servidor.'
+          : `No se pudo contactar el servidor: ${err.message}`);
       this.logQuery('TEST_CONNECTION', duration, false, 0, errorMsg);
       return {
         success: false,
@@ -1566,10 +1568,13 @@ export class SqlClient {
         message: data.message || 'Solicitud enviada al administrador.',
       };
     } catch (e: any) {
+      const msg = (e.message && e.message.includes('Network request failed'))
+        ? 'No se pudo contactar la pasarela de control (Error de red). Verifique su conexión a Internet.'
+        : (e.message || 'Error al enviar solicitud al Canal Beta.');
       return {
         success: false,
         betaStatus: 'NONE',
-        message: e.message || 'Error al enviar solicitud al Canal Beta.',
+        message: msg,
       };
     }
   }

@@ -1254,6 +1254,8 @@ app.use((req, res, next) => {
     req.path.startsWith('/api/telemetry') ||
     req.path.startsWith('/api/auth/') ||
     req.path === '/api/test-connection' ||
+    req.path === '/api/beta/request' ||
+    req.path === '/api/license/request-pro' ||
     req.path === '/api/admin/storage/status' ||
     req.path.startsWith('/public') ||
     req.path.startsWith('/download') ||
@@ -10413,14 +10415,20 @@ app.get('/api/admin/licenses', (req, res) => {
 
   const activeLicenses = [];
   Object.values(devices).forEach(dev => {
-    const key = dev.licenseKey || dev.generatedKey;
+    let key = dev.licenseKey || dev.generatedKey;
+    if (dev.mode === 'PRO' && !key && dev.hwid) {
+      key = generateKey(dev.hwid, 'PRO');
+      dev.licenseKey = key;
+      dev.generatedKey = key;
+      saveDevices(devices);
+    }
     const isRevokedKey = !!(key && tombstones.revokedKeys && tombstones.revokedKeys[key]);
     // Excluir también si el HWID está directamente en tombstones (dispositivo eliminado/degradado)
     const isHwidTombstoned = !!(dev.hwid && tombstones[dev.hwid] && 
       typeof tombstones[dev.hwid] === 'object' &&
       dev.hwid !== 'deletedUsers' && dev.hwid !== 'revokedKeys');
     // Solo listar si está en modo PRO activo, su clave no fue revocada, y su HWID no está en tombstones
-    if (dev.mode === 'PRO' && key && !isRevokedKey && !isHwidTombstoned) {
+    if (dev.mode === 'PRO' && !isRevokedKey && !isHwidTombstoned) {
       const isLifetime = !!(dev.mode === 'PRO' && dev.isLifetime === true && !dev.expiresAt);
       const isExpired = dev.expiresAt && new Date(dev.expiresAt).getTime() < now;
       const diffMs = dev.expiresAt ? (new Date(dev.expiresAt).getTime() - now) : null;
