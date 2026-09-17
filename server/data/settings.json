@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "1.9.9",
-  "latestVersion": "2.0.2",
+  "latestVersion": "2.0.3",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.0.2 (Build 104) - Parches de Seguridad y Estabilidad (Auditoría 2026-09-17):\n• SEC-01: Protección doble en verificación de OTP — authRateLimitMiddleware añadido a /forgot-password/verify-code para blindaje por IP complementario al guard interno de 5 intentos.\n• SEC-02: Política de contraseña unificada a 8 caracteres mínimos en restablecimiento por OTP (consistencia con registro y cambio de contraseña).\n• DISEÑO: Corrección de borderRadius en pill badge \"En Vivo\" (10px → 6px estándar gótico Season 6).\n• REGLAS: GEMINI.md actualizado con excepción documentada para círculos funcionales, rate limiting explícito en OTP y política de 8 chars aplicable a todas las operaciones de contraseña.",
+  "updateChangelog": "MuManager PRO v2.0.3 (Build 105) - Soporte Integral Jewel of Harmony en Item Maker:\n• MAKER: Incorporación completa de opciones Jewel of Harmony (Joya de la Armonía) en la pestaña Item Maker.\n• FILTRADO INTELIGENTE: Catálogo dinámico contextual para Armas (SD Ignore, Crit Dmg, Min/Max Dmg, etc.) y Armaduras/Escudos (Damage Reduction, Defensa, Max HP, etc.), con validación y bloqueo para categorías no aplicables (alas y joyería).\n• CODIFICACIÓN HEX: Generación en tiempo real del Byte 10 y serial único de 32 bits para inyección en baúl.\n• STARTER KIT: Compatibilidad completa al añadir ítems con opción Harmony al Starter Kit y en entrega al baúl.\n• ESTABILIDAD: forceUpdate=false garantizado para navegación sin bloqueos forzados.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -47,15 +47,15 @@
     "triggeredAt": ""
   },
   "minVersion": "1.9.9",
-  "updateTitle": "MuManager PRO v2.0.2 (Build 104)",
+  "updateTitle": "MuManager PRO v2.0.3 (Build 105)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 104,
+  "versionCode": 105,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.0.2 (Build 104) - Parches de Seguridad y Estabilidad (Auditoría 2026-09-17):\n• SEC-01: Protección doble en verificación de OTP — authRateLimitMiddleware añadido a /forgot-password/verify-code para blindaje por IP complementario al guard interno de 5 intentos.\n• SEC-02: Política de contraseña unificada a 8 caracteres mínimos en restablecimiento por OTP (consistencia con registro y cambio de contraseña).\n• DISEÑO: Corrección de borderRadius en pill badge \"En Vivo\" (10px → 6px estándar gótico Season 6).\n• REGLAS: GEMINI.md actualizado con excepción documentada para círculos funcionales, rate limiting explícito en OTP y política de 8 chars aplicable a todas las operaciones de contraseña.",
+  "releaseNotes": "MuManager PRO v2.0.3 (Build 105) - Soporte Integral Jewel of Harmony en Item Maker:\n• MAKER: Incorporación completa de opciones Jewel of Harmony (Joya de la Armonía) en la pestaña Item Maker.\n• FILTRADO INTELIGENTE: Catálogo dinámico contextual para Armas (SD Ignore, Crit Dmg, Min/Max Dmg, etc.) y Armaduras/Escudos (Damage Reduction, Defensa, Max HP, etc.), con validación y bloqueo para categorías no aplicables (alas y joyería).\n• CODIFICACIÓN HEX: Generación en tiempo real del Byte 10 y serial único de 32 bits para inyección en baúl.\n• STARTER KIT: Compatibilidad completa al añadir ítems con opción Harmony al Starter Kit y en entrega al baúl.\n• ESTABILIDAD: forceUpdate=false garantizado para navegación sin bloqueos forzados.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.0.2",
-  "buildNumber": 104,
+  "appVersion": "2.0.3",
+  "buildNumber": 105,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "2.0.2",
-  "build": 104
+  "version": "2.0.3",
+  "build": 105
 }

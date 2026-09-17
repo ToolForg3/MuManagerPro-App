@@ -12,6 +12,8 @@ export interface ItemKitEntry {
   enableSockets: boolean;
   sockets: number[];
   quantity: number;
+  harmonyType?: number;
+  harmonyLevel?: number;
 }
 
 export interface ServerProfile {

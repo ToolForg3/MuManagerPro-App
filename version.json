@@ -1,10 +1,10 @@
 {
-  "version": "2.0.2",
+  "version": "2.0.3",
   "minRequiredVersion": "1.9.9",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-17T19:02:57.000Z",
+  "publishedAt": "2026-09-17T19:47:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 104,
+  "build": 105,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.0.2 (Build 104) - Parches de Seguridad y Estabilidad (Auditoría 2026-09-17):\n• SEC-01: Protección doble en verificación de OTP — authRateLimitMiddleware añadido a /forgot-password/verify-code para blindaje por IP complementario al guard interno de 5 intentos.\n• SEC-02: Política de contraseña unificada a 8 caracteres mínimos en restablecimiento por OTP (consistencia con registro y cambio de contraseña).\n• DISEÑO: Corrección de borderRadius en pill badge \"En Vivo\" (10px → 6px estándar gótico Season 6).\n• REGLAS: GEMINI.md actualizado con excepción documentada para círculos funcionales, rate limiting explícito en OTP y política de 8 chars aplicable a todas las operaciones de contraseña."
+  "changelog": "MuManager PRO v2.0.3 (Build 105) - Soporte Integral Jewel of Harmony en Item Maker:\n• MAKER: Incorporación completa de opciones Jewel of Harmony (Joya de la Armonía) en la pestaña Item Maker.\n• FILTRADO INTELIGENTE: Catálogo dinámico contextual para Armas (SD Ignore, Crit Dmg, Min/Max Dmg, etc.) y Armaduras/Escudos (Damage Reduction, Defensa, Max HP, etc.), con validación y bloqueo para categorías no aplicables (alas y joyería).\n• CODIFICACIÓN HEX: Generación en tiempo real del Byte 10 y serial único de 32 bits para inyección en baúl.\n• STARTER KIT: Compatibilidad completa al añadir ítems con opción Harmony al Starter Kit y en entrega al baúl.\n• ESTABILIDAD: forceUpdate=false garantizado para navegación sin bloqueos forzados."
 }

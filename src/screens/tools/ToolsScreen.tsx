@@ -31,6 +31,8 @@ import { ITEM_CATEGORIES } from '../accounts/AccountsScreen';
 import {
   EXCELLENT_OPTIONS_WEAPON,
   EXCELLENT_OPTIONS_ARMOR,
+  HARMONY_OPTIONS_WEAPON,
+  HARMONY_OPTIONS_ARMOR,
   getMuClassInfo,
   MU_MAPS,
 } from '../../constants/muConstants';
@@ -178,6 +180,8 @@ export const ToolsScreen = () => {
   const [makerSockets, setMakerSockets] = useState<number[]>([0xFE, 0xFE, 0xFE, 0xFE, 0xFE]);
   const [makerSocketLevels, setMakerSocketLevels] = useState<number[]>([1, 1, 1, 1, 1]);
   const [makerAncient, setMakerAncient] = useState<number>(0);
+  const [makerHarmonyType, setMakerHarmonyType] = useState<number>(0);
+  const [makerHarmonyLevel, setMakerHarmonyLevel] = useState<number>(0);
   const [quickSetModalVisible, setQuickSetModalVisible] = useState<boolean>(false);
   const [selectedQuickSet, setSelectedQuickSet] = useState<QuickSetDef>(QUICK_SETS_CATALOG[0]);
   const [quickSetCategoryFilter, setQuickSetCategoryFilter] = useState<'ALL' | 'DW' | 'DK' | 'FE' | 'MG' | 'DL' | 'ACC'>('ALL');
@@ -217,6 +221,12 @@ export const ToolsScreen = () => {
   // Recalculate Hex whenever attributes change
   useEffect(() => {
     if (!selectedItemDef) return;
+    const isHarmW = selectedItemDef.group <= 5;
+    const isHarmA = selectedItemDef.group >= 6 && selectedItemDef.group <= 11;
+    const isHarmEligible = isHarmW || isHarmA;
+    const effectiveHarmType = isHarmEligible ? (isHarmA && makerHarmonyType > 8 ? 7 : makerHarmonyType) : 0;
+    const effectiveHarmLevel = effectiveHarmType > 0 ? makerHarmonyLevel : 0;
+
     const hex = MuItemParser.createItemHex({
       group: selectedItemDef.group,
       index: selectedItemDef.index,
@@ -228,10 +238,12 @@ export const ToolsScreen = () => {
       excellentFlags: makerExcFlags,
       ancientOption: makerAncient,
       option380: maker380,
+      harmonyType: effectiveHarmType,
+      harmonyLevel: effectiveHarmLevel,
       sockets: enableSockets ? makerSockets : [0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
     });
     setGeneratedHex(hex);
-  }, [selectedItemDef, makerLevel, makerOption, makerSkill, makerLuck, makerExcFlags, maker380, enableSockets, makerSockets, makerAncient]);
+  }, [selectedItemDef, makerLevel, makerOption, makerSkill, makerLuck, makerExcFlags, maker380, makerHarmonyType, makerHarmonyLevel, enableSockets, makerSockets, makerAncient]);
 
   
   const itemSearchSuggestions = useMemo(() => {
@@ -382,6 +394,12 @@ export const ToolsScreen = () => {
 
     try {
       setInjecting(true);
+      const isW = selectedItemDef.group <= 5;
+      const isA = selectedItemDef.group >= 6 && selectedItemDef.group <= 11;
+      const isHarmEligible = isW || isA;
+      const effectiveHarmType = isHarmEligible ? (isA && makerHarmonyType > 8 ? 7 : makerHarmonyType) : 0;
+      const effectiveHarmLevel = effectiveHarmType > 0 ? makerHarmonyLevel : 0;
+
       const qty = Math.max(1, Math.min(20, makerQuantity || 1));
       let successCount = 0;
       let lastSlot = 0;
@@ -401,6 +419,8 @@ export const ToolsScreen = () => {
           excellentFlags: makerExcFlags,
           ancientOption: makerAncient,
           option380: maker380,
+          harmonyType: effectiveHarmType,
+          harmonyLevel: effectiveHarmLevel,
           sockets: enableSockets ? makerSockets : [0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
         });
         setGeneratedHex(freshHex);
@@ -1211,6 +1231,12 @@ export const ToolsScreen = () => {
 
   const handleAddMakerItemToKit = () => {
     if (!selectedItemDef) return;
+    const isW = selectedItemDef.group <= 5;
+    const isA = selectedItemDef.group >= 6 && selectedItemDef.group <= 11;
+    const isHarmEligible = isW || isA;
+    const effectiveHarmType = isHarmEligible ? (isA && makerHarmonyType > 8 ? 7 : makerHarmonyType) : 0;
+    const effectiveHarmLevel = effectiveHarmType > 0 ? makerHarmonyLevel : 0;
+
     const newEntry: ItemKitEntry = {
       id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
       itemDef: selectedItemDef,
@@ -1220,6 +1246,8 @@ export const ToolsScreen = () => {
       luck: makerLuck,
       excFlags: makerExcFlags,
       option380: maker380,
+      harmonyType: effectiveHarmType,
+      harmonyLevel: effectiveHarmLevel,
       enableSockets: enableSockets,
       sockets: [...makerSockets],
       quantity: 1,
@@ -2570,7 +2598,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <Text style={styles.previewStats}>
                     Opción: +{makerOption * 4} • {makerLuck ? 'Luck • ' : ''}{makerSkill ? 'Skill • ' : ''}
                     {maker380 ? <Text style={{ color: THEME.colors.arcano }}>PvP 380 • </Text> : null}
-                    {makerAncient > 0 ? <Text style={{ color: THEME.colors.itemAncient }}>Ancient</Text> : null}
+                    {makerAncient > 0 ? <Text style={{ color: THEME.colors.itemAncient }}>Ancient • </Text> : null}
+                    {(selectedItemDef.group <= 5 || (selectedItemDef.group >= 6 && selectedItemDef.group <= 11)) && makerHarmonyType > 0 ? (
+                      <Text style={{ color: '#FFD700' }}>Harmony +{makerHarmonyLevel}</Text>
+                    ) : null}
                   </Text>
                 </View>
               </View>
@@ -2987,6 +3018,103 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
               )}
             </View>
+
+            {/* Jewel of Harmony Section */}
+            {(() => {
+              const isHarmW = selectedItemDef.group <= 5;
+              const isHarmA = selectedItemDef.group >= 6 && selectedItemDef.group <= 11;
+              const isHarmEligible = isHarmW || isHarmA;
+              const harmonyOptionsList = isHarmW ? HARMONY_OPTIONS_WEAPON : HARMONY_OPTIONS_ARMOR;
+              const effectiveHarmType = isHarmEligible ? (isHarmA && makerHarmonyType > 8 ? 7 : makerHarmonyType) : 0;
+
+              return (
+                <View style={styles.card}>
+                  <View style={styles.switchRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={[styles.cardTitle, { color: '#FFD700', marginBottom: 0 }]}>JEWEL OF HARMONY</Text>
+                      {isHarmEligible && effectiveHarmType > 0 && (
+                        <Text style={{ color: '#FFD700', fontSize: 11, fontWeight: 'bold' }}>
+                          (+{makerHarmonyLevel})
+                        </Text>
+                      )}
+                    </View>
+                    <Switch
+                      value={isHarmEligible && effectiveHarmType > 0}
+                      disabled={!isHarmEligible}
+                      onValueChange={(val: boolean) => {
+                        if (!isHarmEligible) return;
+                        setMakerHarmonyType(val ? 1 : 0);
+                        setMakerHarmonyLevel(val ? 13 : 0);
+                      }}
+                      trackColor={{ false: '#332B24', true: '#6B5533' }}
+                      thumbColor={isHarmEligible && effectiveHarmType > 0 ? '#FFD700' : THEME.colors.textMuted}
+                    />
+                  </View>
+
+                  {!isHarmEligible ? (
+                    <Text style={styles.cardDesc}>
+                      No aplicable para esta categoría (las opciones Harmony solo aplican a Armas, Escudos y Sets).
+                    </Text>
+                  ) : effectiveHarmType === 0 ? (
+                    <Text style={styles.cardDesc}>
+                      Sin opción Harmony. Activa el interruptor para seleccionar una opción de Joya de la Armonía.
+                    </Text>
+                  ) : (
+                    <View style={{ marginTop: 8, gap: 10 }}>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          {harmonyOptionsList.filter((h) => h.id > 0).map((h) => {
+                            const isSel = effectiveHarmType === h.id;
+                            return (
+                              <TouchableOpacity
+                                key={`tools_harm_${h.id}`}
+                                style={[
+                                  styles.harmonyBtn,
+                                  isSel && styles.harmonyBtnActive,
+                                ]}
+                                onPress={() => {
+                                  setMakerHarmonyType(h.id);
+                                  if (makerHarmonyLevel === 0) setMakerHarmonyLevel(13);
+                                }}
+                              >
+                                <Text style={[styles.harmonyBtnText, isSel && styles.harmonyBtnTextActive]}>
+                                  {h.name}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+
+                      <View style={styles.controlRow}>
+                        <Text style={styles.controlLabel}>Nivel de Harmony (+0 a +13):</Text>
+                        <View style={styles.counterWrap}>
+                          <TouchableOpacity
+                            style={styles.counterBtn}
+                            onPress={() => setMakerHarmonyLevel((prev) => Math.max(0, prev - 1))}
+                          >
+                            <Text style={styles.counterBtnText}>-</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.counterValue}>+{makerHarmonyLevel}</Text>
+                          <TouchableOpacity
+                            style={styles.counterBtn}
+                            onPress={() => setMakerHarmonyLevel((prev) => Math.min(13, prev + 1))}
+                          >
+                            <Text style={styles.counterBtnText}>+</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.counterBtn, { backgroundColor: '#B58F3C', width: 44 }]}
+                            onPress={() => setMakerHarmonyLevel(13)}
+                          >
+                            <Text style={[styles.counterBtnText, { color: '#100D0B' }]}>MAX</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              );
+            })()}
 
             {/* Cantidad de Ítems a Generar */}
             <View style={styles.card}>
@@ -4180,6 +4308,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       <Text style={styles.dupeItemLoc}>
                         {entry.skill ? 'Skill ' : ''}{entry.luck ? 'Luck ' : ''}{entry.option ? '+' + (entry.option * 4) + ' ' : ''}
                         {entry.excFlags ? 'Exc ' : ''}{entry.option380 ? '380 ' : ''}
+                        {entry.harmonyType ? `Harmony +${entry.harmonyLevel || 0} ` : ''}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -6509,6 +6638,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   socketOptionTextActive: {
+    color: '#E8C86A',
+    fontWeight: '800',
+  },
+  harmonyBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#1E1A16',
+    borderWidth: 1,
+    borderColor: '#6B5533',
+  },
+  harmonyBtnActive: {
+    backgroundColor: 'rgba(232, 200, 106, 0.2)',
+    borderColor: '#E8C86A',
+  },
+  harmonyBtnText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  harmonyBtnTextActive: {
     color: '#E8C86A',
     fontWeight: '800',
   },

@@ -2496,6 +2496,8 @@ export class SqlClient {
       excellentFlags: e.excFlags,
       ancientOption: 0,
       option380: e.option380,
+      harmonyType: e.harmonyType || 0,
+      harmonyLevel: e.harmonyLevel || 0,
       sockets: e.enableSockets ? e.sockets : [0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
     }));
     return this.deliverStarterKit(accountId, hexList, bonus, warehouseIndex);
