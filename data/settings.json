@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "1.9.9",
-  "latestVersion": "2.0.5",
+  "latestVersion": "2.0.6",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.0.5 (Build 107) - Parche de Conectividad y Red:\n• CERTIFICATE PINNING & TLS: Soporte oficial para Google Trust Services (GTS Root R1-R4) y USERTrust ECC en Android.\n• CONEXIÓN SQL & PASARELA: Resuelto Network request failed en pruebas de conexión y sincronización con el Gateway.\n• CANAL BETA & LICENCIAS: Endpoint público habilitado para solicitudes de acceso Beta y licencias PRO.\n• SEGURIDAD OWASP: Blindaje anti-MITM (system trust-anchors) preservado al 100% sin alterar compatibilidad ni licencias.",
+  "updateChangelog": "MuManager PRO v2.0.6 (Build 108) - Parche de Licencias, Sesión Demo y Seguridad:\n• LÍMITE DEMO 10 MIN: Temporizador regresivo de 10 minutos para acceso directo en modo Demo con cierre automático y aviso para crear cuenta.\n• SEGURIDAD SQL DEMO: Rutas de mutación y edición bloqueadas para cuentas en modo Demo (solo lectura y visualización).\n• ACCESO PRO GARANTIZADO: Auto-reconciliación por cabecera de licencia, eliminando bloqueos en lectura de cuentas para dispositivos PRO.\n• PRIVACIDAD & SANEAMIENTO: Contraseñas enmascaradas en modo demo y purga integral de cuentas y celulares legados.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "1.9.9",
-  "updateTitle": "MuManager PRO v2.0.5 (Build 107)",
+  "updateTitle": "MuManager PRO v2.0.6 (Build 108)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 107,
+  "versionCode": 108,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.0.5 (Build 107) - Parche de Conectividad y Red:\n• CERTIFICATE PINNING & TLS: Soporte oficial para Google Trust Services (GTS Root R1-R4) y USERTrust ECC en Android.\n• CONEXIÓN SQL & PASARELA: Resuelto Network request failed en pruebas de conexión y sincronización con el Gateway.\n• CANAL BETA & LICENCIAS: Endpoint público habilitado para solicitudes de acceso Beta y licencias PRO.\n• SEGURIDAD OWASP: Blindaje anti-MITM (system trust-anchors) preservado al 100% sin alterar compatibilidad ni licencias.",
+  "releaseNotes": "MuManager PRO v2.0.6 (Build 108) - Parche de Licencias, Sesión Demo y Seguridad:\n• LÍMITE DEMO 10 MIN: Temporizador regresivo de 10 minutos para acceso directo en modo Demo con cierre automático y aviso para crear cuenta.\n• SEGURIDAD SQL DEMO: Rutas de mutación y edición bloqueadas para cuentas en modo Demo (solo lectura y visualización).\n• ACCESO PRO GARANTIZADO: Auto-reconciliación por cabecera de licencia, eliminando bloqueos en lectura de cuentas para dispositivos PRO.\n• PRIVACIDAD & SANEAMIENTO: Contraseñas enmascaradas en modo demo y purga integral de cuentas y celulares legados.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.0.5",
-  "buildNumber": 107,
+  "appVersion": "2.0.6",
+  "buildNumber": 108,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,7 +77,7 @@
       "pass": ""
     }
   },
-  "version": "2.0.5",
-  "build": 107,
+  "version": "2.0.6",
+  "build": 108,
   "usersPurgedV168": true
 }
