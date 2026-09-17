@@ -1,10 +1,10 @@
 {
-  "version": "2.0.3",
+  "version": "2.0.4",
   "minRequiredVersion": "1.9.9",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-17T19:47:00.000Z",
+  "publishedAt": "2026-09-17T20:40:39.572Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 105,
+  "build": 106,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.0.3 (Build 105) - Soporte Integral Jewel of Harmony en Item Maker:\n• MAKER: Incorporación completa de opciones Jewel of Harmony (Joya de la Armonía) en la pestaña Item Maker.\n• FILTRADO INTELIGENTE: Catálogo dinámico contextual para Armas (SD Ignore, Crit Dmg, Min/Max Dmg, etc.) y Armaduras/Escudos (Damage Reduction, Defensa, Max HP, etc.), con validación y bloqueo para categorías no aplicables (alas y joyería).\n• CODIFICACIÓN HEX: Generación en tiempo real del Byte 10 y serial único de 32 bits para inyección en baúl.\n• STARTER KIT: Compatibilidad completa al añadir ítems con opción Harmony al Starter Kit y en entrega al baúl.\n• ESTABILIDAD: forceUpdate=false garantizado para navegación sin bloqueos forzados."
+  "changelog": "MuManager PRO v2.0.4 (Build 106) - Versión Oficial Estable:\n• Versión Oficial Estable:\n• QUALITY GATE & PROMOCIÓN: Promoción atómica de versiones probadas al 100% de usuarios.\n• ROLLBACK INDEPENDIENTE: Reversión selectiva en dos niveles sin alterar producción.\n• INVARIANZA DE LICENCIAS: Blindaje total de licencias PRO y DEMO en actualizaciones.\n• PANEL DE CONTROL: Rediseño modular Season 6 Piedra y Oro con contraste WCAG AAA (>7:1).\n• ESTABILIDAD: forceUpdate=false garantizado y retrocompatibilidad dual Louis S6 & MSPro."
 }

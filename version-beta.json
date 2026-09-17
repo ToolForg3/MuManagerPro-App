@@ -8,5 +8,5 @@
   "versionCode": 106,
   "isBeta": true,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.0.4-beta.1 (Build 106) - Canal Beta (Pruebas de Campo):\n• Canal Beta activo para evaluadores certificados.\n• Nuevas pruebas y optimizaciones antes del lanzamiento oficial."
+  "changelog": "MuManager PRO v2.0.4 (Build 106) - Versión Oficial Estable:\n• CANAL BETA & STAGING: Arquitectura empresarial para pruebas segregadas y control de calidad.\n• QUALITY GATE & PROMOCIÓN: Promoción atómica de versiones probadas al 100% de usuarios.\n• ROLLBACK INDEPENDIENTE: Reversión selectiva en dos niveles sin alterar producción.\n• INVARIANZA DE LICENCIAS: Blindaje total de licencias PRO y DEMO en actualizaciones.\n• PANEL DE CONTROL: Rediseño modular Season 6 Piedra y Oro con contraste WCAG AAA (>7:1).\n• ESTABILIDAD: forceUpdate=false garantizado y retrocompatibilidad dual Louis S6 & MSPro."
 }
