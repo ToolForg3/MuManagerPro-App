@@ -1463,7 +1463,7 @@
             </tr>
           </thead>
           <tbody id="devices-body">
-            <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">Cargando dispositivos...</td></tr>
+            <tr id="devices-loading-row"><td colspan="7" class="empty-devices-cell" style="text-align:center; padding: 24px; color: var(--muted);">Cargando dispositivos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1509,7 +1509,7 @@
             </tr>
           </thead>
           <tbody id="users-body">
-            <tr><td colspan="8" style="text-align:center; padding: 24px; color: var(--muted);">Cargando cuentas...</td></tr>
+            <tr id="users-loading-row"><td colspan="8" class="empty-users-cell" style="text-align:center; padding: 24px; color: var(--muted);">Cargando cuentas...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1522,7 +1522,7 @@
       <div class="section-header">
         <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
           ⭐ Solicitudes de Licencia PRO
-          <span class="badge" style="background: rgba(255, 87, 34, 0.15); color: #FF5722; border: 1px solid rgba(255, 87, 34, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
+          <span class="badge" style="background: rgba(255, 87, 34, 0.15); color: #FF5252; border: 1px solid rgba(255, 87, 34, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
             Clientes Interesados
           </span>
         </div>
@@ -1547,7 +1547,7 @@
             </tr>
           </thead>
           <tbody id="pro-requests-body">
-            <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">Cargando solicitudes...</td></tr>
+            <tr id="pro-loading-row"><td colspan="7" class="empty-pro-cell" style="text-align:center; padding: 24px; color: var(--muted);">Cargando solicitudes...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1585,7 +1585,7 @@
             </tr>
           </thead>
           <tbody id="security-logs-body">
-            <tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--muted);">Cargando registros de seguridad...</td></tr>
+            <tr id="sec-loading-row"><td colspan="6" class="empty-sec-cell" style="text-align:center; padding: 24px; color: var(--muted);">Cargando registros de seguridad...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1853,8 +1853,8 @@
               </tr>
             </thead>
             <tbody id="beta-requests-tbody">
-              <tr><td colspan="6" style="text-align:center; color: var(--muted);">Cargando evaluadores beta...</td></tr>
-            </tbody>
+            <tr id="beta-loading-row"><td colspan="6" class="empty-beta-cell" style="text-align:center; color: var(--muted); padding: 15px;">Cargando evaluadores beta...</td></tr>
+          </tbody>
           </table>
         </div>
       </div>
@@ -2163,7 +2163,7 @@
               </tr>
             </thead>
             <tbody id="licenses-table-body">
-              <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Cargando licencias...</td></tr>
+              <tr id="licenses-loading-row"><td colspan="8" class="empty-licenses-cell" style="text-align:center; padding:20px; color:var(--muted);">Cargando licencias...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2193,7 +2193,7 @@
               </tr>
             </thead>
             <tbody id="excluded-devices-table-body">
-              <tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">No hay dispositivos excluidos.</td></tr>
+              <tr id="excluded-loading-row"><td colspan="6" class="empty-excluded-cell" style="text-align:center; padding:20px; color:var(--muted);">No hay dispositivos excluidos.</td></tr>
             </tbody>
           </table>
         </div>
@@ -2558,15 +2558,23 @@
           logoutAdmin();
           return;
         }
+        if (!res.ok) {
+          console.warn('Error del servidor al consultar usuarios:', res.status);
+          return;
+        }
         const users = await res.json();
-        allUsersCache = Array.isArray(users) ? users : [];
-        updateTextIfDifferent('metric-users', allUsersCache.length);
-        
-        const searchInput = document.getElementById('search-users-filter');
-        if (searchInput && searchInput.value.trim().length > 0) {
-          filterUsersTable();
+        if (Array.isArray(users)) {
+          allUsersCache = users;
+          updateTextIfDifferent('metric-users', allUsersCache.length);
+          
+          const searchInput = document.getElementById('search-users-filter');
+          if (searchInput && searchInput.value.trim().length > 0) {
+            filterUsersTable();
+          } else {
+            renderUsersTable(allUsersCache);
+          }
         } else {
-          renderUsersTable(allUsersCache);
+          console.warn('Respuesta inesperada al consultar usuarios:', users);
         }
       } catch (e) {
         console.error('Error cargando usuarios', e);
@@ -2664,21 +2672,23 @@
       updateTextIfDifferent('metric-users-online', onlineCount);
 
       if (list.length === 0) {
-        if (!tbody.querySelector('.empty-users-cell')) {
+        if (!tbody.querySelector('.empty-users-cell') || tbody.querySelector('#users-loading-row')) {
           tbody.innerHTML = '<tr><td colspan="8" class="empty-users-cell" style="text-align:center; padding: 28px; color: var(--muted);">No hay usuarios registrados todavía. Presiona "➕ Nueva Cuenta" para crear una o espera que un cliente se registre desde la APK.</td></tr>';
         }
         return;
       }
 
-      // Remover fila vacía si existía previamente
-      if (tbody.querySelector('.empty-users-cell')) {
-        tbody.innerHTML = '';
-      }
+      // Remover cualquier fila que no sea de datos de usuario (placeholders o de carga)
+      Array.from(tbody.children).forEach(row => {
+        if (!row.dataset.userId) {
+          row.remove();
+        }
+      });
 
       // Orden determinista y ESTÁTICO (por fecha de registro o usuario, sin saltos por online/offline)
       const sorted = [...list].sort((a, b) => {
-        const timeA = Date.parse(a.createdAt) || 0;
-        const timeB = Date.parse(b.createdAt) || 0;
+        const timeA = Date.parse(a.createdAt || a.registeredAt) || 0;
+        const timeB = Date.parse(b.createdAt || b.registeredAt) || 0;
         if (timeB !== timeA) return timeB - timeA;
         return String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''));
       });
@@ -2696,7 +2706,7 @@
 
         let tr = tbody.querySelector(`tr[data-user-id="${CSS.escape(userId)}"]`);
         if (tr) {
-          // Si el estado visual no cambió, actualizar SOLO el texto de última actividad sin parpadeo
+          // Si el estado visual no cambió, actualizar SOLO el texto de última actividad sin tocar el DOM
           if (tr.dataset.stateSignature === sig) {
             const timeText = tr.querySelector('.user-last-seen-text');
             if (timeText && timeText.innerText !== lastActivity) {
@@ -2733,12 +2743,16 @@
         }
       });
 
-      // Reordenar DOM de forma silenciosa e in-place si el orden cambió
-      for (let i = 0; i < sorted.length; i++) {
-        const uId = String(sorted[i].id || sorted[i].email);
-        const row = tbody.querySelector(`tr[data-user-id="${CSS.escape(uId)}"]`);
-        if (row && tbody.children[i] !== row) {
-          tbody.insertBefore(row, tbody.children[i] || null);
+      // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+      const currentOrder = Array.from(tbody.querySelectorAll('tr[data-user-id]')).map(r => r.dataset.userId).join(';');
+      const targetOrder = sorted.map(u => String(u.id || u.email)).join(';');
+      if (currentOrder !== targetOrder) {
+        for (let i = 0; i < sorted.length; i++) {
+          const uId = String(sorted[i].id || sorted[i].email);
+          const row = tbody.querySelector(`tr[data-user-id="${CSS.escape(uId)}"]`);
+          if (row && tbody.children[i] !== row) {
+            tbody.insertBefore(row, tbody.children[i] || null);
+          }
         }
       }
     }
@@ -3318,24 +3332,26 @@
         } else if (currentDeviceView === 'online') {
           emptyMsg = 'No hay celulares conectados activamente en este instante.';
         }
-        if (!tbody.querySelector('.empty-devices-cell') || tbody.dataset.emptyView !== currentDeviceView) {
+        if (!tbody.querySelector('.empty-devices-cell') || tbody.dataset.emptyView !== currentDeviceView || tbody.querySelector('#devices-loading-row')) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-devices-cell" style="text-align:center; padding: 28px; color: var(--muted);">${emptyMsg}</td></tr>`;
           tbody.dataset.emptyView = currentDeviceView;
         }
         return;
       }
 
-      // Remover fila vacía previa si existía
-      if (tbody.querySelector('.empty-devices-cell')) {
-        tbody.innerHTML = '';
-        delete tbody.dataset.emptyView;
-      }
+      // Remover cualquier fila que no sea de datos de celular (placeholders o fila de carga)
+      Array.from(tbody.children).forEach(row => {
+        if (!row.dataset.hwid) {
+          row.remove();
+        }
+      });
+      delete tbody.dataset.emptyView;
 
       // Orden determinista y 100% ESTÁTICO (por fecha de registro original firstSeen o HWID)
       // Garantiza que ninguna fila salte arriba o abajo frente a los ojos del usuario al cambiar de estado
       const sorted = [...displayList].sort((a, b) => {
-        const timeA = Date.parse(a.firstSeen) || Date.parse(a.lastSeen) || 0;
-        const timeB = Date.parse(b.firstSeen) || Date.parse(b.lastSeen) || 0;
+        const timeA = Date.parse(a.firstSeen || a.registeredAt || a.createdAt) || 0;
+        const timeB = Date.parse(b.firstSeen || b.registeredAt || b.createdAt) || 0;
         if (timeB !== timeA) {
           return timeB - timeA;
         }
@@ -3429,12 +3445,16 @@
         }
       });
 
-      // Reordenar DOM de forma silenciosa e in-place si el orden cambió
-      for (let i = 0; i < sorted.length; i++) {
-        const hwid = String(sorted[i].hwid || '');
-        const row = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
-        if (row && tbody.children[i] !== row) {
-          tbody.insertBefore(row, tbody.children[i] || null);
+      // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+      const currentOrder = Array.from(tbody.querySelectorAll('tr[data-hwid]')).map(r => r.dataset.hwid).join(';');
+      const targetOrder = sorted.map(d => String(d.hwid || '')).join(';');
+      if (currentOrder !== targetOrder) {
+        for (let i = 0; i < sorted.length; i++) {
+          const hwid = String(sorted[i].hwid || '');
+          const row = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
+          if (row && tbody.children[i] !== row) {
+            tbody.insertBefore(row, tbody.children[i] || null);
+          }
         }
       }
 
@@ -4250,12 +4270,20 @@
         const res = await fetch('/api/admin/pro-requests', {
           headers: { 'X-Admin-Key': key }
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.warn('Error del servidor al consultar solicitudes PRO:', res.status);
+          return;
+        }
         const list = await res.json();
+        if (!Array.isArray(list)) {
+          console.warn('Respuesta inesperada al consultar solicitudes PRO:', list);
+          return;
+        }
         const tbody = document.getElementById('pro-requests-body');
-        const badge = document.getElementById('pro-badge');
+        if (!tbody) return;
 
-        const pendingCount = (Array.isArray(list) ? list : []).filter(r => r.status === 'PENDING').length;
+        const badge = document.getElementById('pro-badge');
+        const pendingCount = list.filter(r => r.status === 'PENDING').length;
         if (badge) {
           badge.innerText = pendingCount;
           badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
@@ -4266,14 +4294,33 @@
           hubReqBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
         }
 
-        if (!list || list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 28px; color: var(--muted);">No hay solicitudes de clientes por el momento. Cuando un usuario use "Solicitar PRO" desde el APK, aparecerá aquí al instante.</td></tr>';
+        if (list.length === 0) {
+          if (!tbody.querySelector('.empty-pro-cell') || tbody.querySelector('#pro-loading-row')) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-pro-cell" style="text-align:center; padding: 28px; color: var(--muted);">No hay solicitudes de clientes por el momento. Cuando un usuario use "Solicitar PRO" desde el APK, aparecerá aquí al instante.</td></tr>';
+          }
           return;
         }
 
-        tbody.innerHTML = '';
-        list.forEach(r => {
-          const tr = document.createElement('tr');
+        // Remover cualquier fila que no sea de datos de solicitudes (placeholders o fila de carga)
+        Array.from(tbody.children).forEach(row => {
+          if (!row.dataset.reqId) {
+            row.remove();
+          }
+        });
+
+        const sorted = [...list].sort((a, b) => {
+          const timeA = Date.parse(a.createdAt) || 0;
+          const timeB = Date.parse(b.createdAt) || 0;
+          if (timeB !== timeA) return timeB - timeA;
+          return String(a.id || '').localeCompare(String(b.id || ''));
+        });
+
+        const activeReqIds = new Set();
+        sorted.forEach(r => {
+          const reqId = String(r.id || (r.phone + '_' + r.createdAt));
+          activeReqIds.add(reqId);
+          const sig = `${reqId}_${r.status}_${r.name}_${r.phone}_${r.email}_${r.hwid}_${r.serverName}_${r.notes}`;
+
           const cleanPhone = String(r.phone || '').replace(/[^0-9]/g, '');
           const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Hola ' + (r.name || '') + ', te contactamos de Mu Manager PRO respecto a tu solicitud de activación de licencia.')}`;
           
@@ -4284,7 +4331,7 @@
 
           const dateStr = new Date(r.createdAt).toLocaleDateString() + ' ' + new Date(r.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
-          tr.innerHTML = `
+          const rowHtml = `
             <td>
               <strong style="font-size:13px; color:#FFF;">${escapeHtml(r.name)}</strong><br>
               <a href="${waLink}" target="_blank" style="color:#3FCF8E; text-decoration:none; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:4px; margin-top:3px;">
@@ -4306,8 +4353,42 @@
               <button class="btn btn-dark btn-sm" style="color:#FF5252;" data-action="pro-dismiss" data-id="${escapeHtml(r.id)}">❌</button>
             </td>
           `;
-          tbody.appendChild(tr);
+
+          let tr = tbody.querySelector(`tr[data-req-id="${CSS.escape(reqId)}"]`);
+          if (tr) {
+            if (tr.dataset.reqSig !== sig) {
+              tr.innerHTML = rowHtml;
+              tr.dataset.reqSig = sig;
+            }
+          } else {
+            tr = document.createElement('tr');
+            tr.dataset.reqId = reqId;
+            tr.dataset.reqSig = sig;
+            tr.innerHTML = rowHtml;
+            tbody.appendChild(tr);
+          }
         });
+
+        // Eliminar filas que ya no existen
+        Array.from(tbody.children).forEach(row => {
+          const rId = row.dataset.reqId;
+          if (rId && !activeReqIds.has(rId)) {
+            row.remove();
+          }
+        });
+
+        // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+        const currentOrder = Array.from(tbody.querySelectorAll('tr[data-req-id]')).map(r => r.dataset.reqId).join(';');
+        const targetOrder = sorted.map(r => String(r.id || (r.phone + '_' + r.createdAt))).join(';');
+        if (currentOrder !== targetOrder) {
+          for (let i = 0; i < sorted.length; i++) {
+            const reqId = String(sorted[i].id || (sorted[i].phone + '_' + sorted[i].createdAt));
+            const row = tbody.querySelector(`tr[data-req-id="${CSS.escape(reqId)}"]`);
+            if (row && tbody.children[i] !== row) {
+              tbody.insertBefore(row, tbody.children[i] || null);
+            }
+          }
+        }
 
         if (!tbody.dataset.delegated) {
           tbody.dataset.delegated = 'true';
@@ -4493,29 +4574,40 @@
         const res = await fetch('/api/admin/security-logs', {
           headers: { 'X-Admin-Key': key }
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.warn('Error del servidor al consultar logs de seguridad:', res.status);
+          return;
+        }
         const list = await res.json();
+        if (!Array.isArray(list)) {
+          console.warn('Respuesta inesperada al consultar logs de seguridad:', list);
+          return;
+        }
         const tbody = document.getElementById('security-logs-body');
         if (!tbody) return;
 
-        const listSig = (Array.isArray(list) && list.length > 0)
-          ? `${list.length}_${list[0].id || list[0].timestamp}`
-          : 'empty';
-
-        if (tbody.dataset.renderedSig === listSig) {
-          return; // Sin cambios: cero parpadeo
-        }
-        tbody.dataset.renderedSig = listSig;
-
-        if (!list || list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 28px; color: var(--muted);">No hay reportes de bugs, caídas ni eventos de seguridad registrados. El APK opera con integridad total.</td></tr>';
+        if (list.length === 0) {
+          if (!tbody.querySelector('.empty-sec-cell') || tbody.querySelector('#sec-loading-row')) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-sec-cell" style="text-align:center; padding: 28px; color: var(--muted);">No hay reportes de bugs, caídas ni eventos de seguridad registrados. El APK opera con integridad total.</td></tr>';
+          }
           return;
         }
 
-        tbody.innerHTML = '';
+        // Remover filas que no sean de logs (placeholders o fila de carga)
+        Array.from(tbody.children).forEach(row => {
+          if (!row.dataset.logId) {
+            row.remove();
+          }
+        });
+
         window.__lastSecurityLogs = list;
+        const activeLogIds = new Set();
+
         list.forEach((log, idx) => {
-          const tr = document.createElement('tr');
+          const logId = String(log.id || (log.timestamp + '_' + (log.hwid || '') + '_' + idx));
+          activeLogIds.add(logId);
+          const sig = `${logId}_${log.type}_${log.timestamp}_${log.hwid}_${log.ip}_${log.message}`;
+
           const isTamper = log.type === 'TAMPER_ALERT' || (log.type === 'CRASH_OR_TAMPER' && log.details?.context?.includes('TAMPER'));
           const isSql = log.type === 'SQL_EXPLOIT_ATTEMPT';
           const isReplay = log.type === 'REPLAY_DETECTED';
@@ -4566,7 +4658,7 @@
 
           const stackPreview = log.details?.stack ? `<details style="margin-top:4px;"><summary style="font-size:11px; color:#FF5722; cursor:pointer;">Ver Stack Trace</summary><pre style="font-size:10px; color:#BBB; background:#0A0A0C; padding:6px; border-radius:4px; max-height:120px; overflow-y:auto; margin-top:4px;">${escapeHtml(log.details.stack)}</pre></details>` : '';
 
-          tr.innerHTML = `
+          const rowHtml = `
             <td>${typeBadge}</td>
             <td>
               <span class="hwid-code" style="font-size:11px;">${escapeHtml(log.hwid || 'N/A')}</span><br>
@@ -4593,8 +4685,42 @@
               </div>
             </td>
           `;
-          tbody.appendChild(tr);
+
+          let tr = tbody.querySelector(`tr[data-log-id="${CSS.escape(logId)}"]`);
+          if (tr) {
+            if (tr.dataset.logSig !== sig) {
+              tr.innerHTML = rowHtml;
+              tr.dataset.logSig = sig;
+            }
+          } else {
+            tr = document.createElement('tr');
+            tr.dataset.logId = logId;
+            tr.dataset.logSig = sig;
+            tr.innerHTML = rowHtml;
+            tbody.appendChild(tr);
+          }
         });
+
+        // Eliminar logs que salieron del buffer
+        Array.from(tbody.children).forEach(row => {
+          const lId = row.dataset.logId;
+          if (lId && !activeLogIds.has(lId)) {
+            row.remove();
+          }
+        });
+
+        // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+        const currentOrder = Array.from(tbody.querySelectorAll('tr[data-log-id]')).map(r => r.dataset.logId).join(';');
+        const targetOrder = list.map((l, i) => String(l.id || (l.timestamp + '_' + (l.hwid || '') + '_' + i))).join(';');
+        if (currentOrder !== targetOrder) {
+          for (let i = 0; i < list.length; i++) {
+            const lId = String(list[i].id || (list[i].timestamp + '_' + (list[i].hwid || '') + '_' + i));
+            const row = tbody.querySelector(`tr[data-log-id="${CSS.escape(lId)}"]`);
+            if (row && tbody.children[i] !== row) {
+              tbody.insertBefore(row, tbody.children[i] || null);
+            }
+          }
+        }
 
         if (!tbody.dataset.delegated) {
           tbody.dataset.delegated = 'true';
@@ -4614,7 +4740,7 @@
           });
         }
       } catch (e) {
-        console.error('Error cargando logs de seguridad', e);
+        console.error('Error cargando registros de seguridad', e);
       }
     }
 
@@ -4704,49 +4830,98 @@
         const res = await fetch('/api/admin/beta-requests', {
           headers: { 'X-Admin-Key': key }
         });
-        if (res.ok) {
-          const data = await res.json();
-          const tbody = document.getElementById('beta-requests-tbody');
-          if (!tbody) return;
-          const reqs = data.requests || [];
-          const reqSig = reqs.map(r => `${r.hwid}_${r.status}`).join(';');
-          if (tbody.dataset.renderedSig === reqSig) return;
-          tbody.dataset.renderedSig = reqSig;
+        if (!res.ok) {
+          console.warn('Error del servidor al consultar solicitudes beta:', res.status);
+          return;
+        }
+        const data = await res.json();
+        const tbody = document.getElementById('beta-requests-tbody');
+        if (!tbody) return;
+        const reqs = Array.isArray(data.requests) ? data.requests : [];
 
-          if (reqs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--muted); padding: 15px;">No hay solicitudes de acceso Beta pendientes.</td></tr>';
-            return;
+        if (reqs.length === 0) {
+          if (!tbody.querySelector('.empty-beta-cell') || tbody.querySelector('#beta-loading-row')) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-beta-cell" style="text-align:center; color: var(--muted); padding: 15px;">No hay solicitudes de acceso Beta pendientes.</td></tr>';
           }
-          tbody.innerHTML = reqs.map(r => {
-            const isApproved = r.status === 'APPROVED';
-            const safeHwid = escapeHtml(r.hwid || '');
-            const safeEmail = escapeHtml(r.email || 'N/A');
-            const safeReason = escapeHtml(r.reason || 'N/A');
-            return `<tr>
-              <td><code>${safeHwid.slice(0, 16)}...</code></td>
-              <td>${safeEmail}</td>
-              <td>${safeReason}</td>
-              <td>${r.requestedAt ? new Date(r.requestedAt).toLocaleString() : 'N/A'}</td>
-              <td><span class="badge ${isApproved ? 'badge-pro' : r.status === 'REJECTED' ? 'badge-blocked' : 'badge-demo'}">${r.status}</span></td>
-              <td>
-                ${!isApproved ? `<button class="btn btn-sm btn-green" data-action="beta-approve" data-hwid="${safeHwid}">Aprobar</button>` : ''}
-                ${isApproved ? `<button class="btn btn-sm btn-red" data-action="beta-revoke" data-hwid="${safeHwid}">Revocar</button>` : ''}
-              </td>
-            </tr>`;
-          }).join('');
+          return;
+        }
 
-          if (!tbody.dataset.delegated) {
-            tbody.dataset.delegated = 'true';
-            tbody.addEventListener('click', (e) => {
-              const btn = e.target.closest('button[data-action]');
-              if (!btn) return;
-              const action = btn.dataset.action;
-              const hwid = btn.dataset.hwid;
-              if (!hwid) return;
-              if (action === 'beta-approve') setBetaStatus(hwid, true);
-              else if (action === 'beta-revoke') setBetaStatus(hwid, false);
-            });
+        // Remover filas que no sean de datos (placeholders o fila de carga)
+        Array.from(tbody.children).forEach(row => {
+          if (!row.dataset.hwid) {
+            row.remove();
           }
+        });
+
+        const activeHwids = new Set();
+        reqs.forEach(r => {
+          const hwid = String(r.hwid || '');
+          activeHwids.add(hwid);
+          const sig = `${hwid}_${r.status}_${r.email}_${r.reason}_${r.requestedAt}`;
+          const isApproved = r.status === 'APPROVED';
+          const safeHwid = escapeHtml(r.hwid || '');
+          const safeEmail = escapeHtml(r.email || 'N/A');
+          const safeReason = escapeHtml(r.reason || 'N/A');
+
+          const rowHtml = `
+            <td><code>${safeHwid.slice(0, 16)}...</code></td>
+            <td>${safeEmail}</td>
+            <td>${safeReason}</td>
+            <td>${r.requestedAt ? new Date(r.requestedAt).toLocaleString() : 'N/A'}</td>
+            <td><span class="badge ${isApproved ? 'badge-pro' : r.status === 'REJECTED' ? 'badge-blocked' : 'badge-demo'}">${r.status}</span></td>
+            <td>
+              ${!isApproved ? `<button class="btn btn-sm btn-green" data-action="beta-approve" data-hwid="${safeHwid}">Aprobar</button>` : ''}
+              ${isApproved ? `<button class="btn btn-sm btn-red" data-action="beta-revoke" data-hwid="${safeHwid}">Revocar</button>` : ''}
+            </td>
+          `;
+
+          let tr = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
+          if (tr) {
+            if (tr.dataset.betaSig !== sig) {
+              tr.innerHTML = rowHtml;
+              tr.dataset.betaSig = sig;
+            }
+          } else {
+            tr = document.createElement('tr');
+            tr.dataset.hwid = hwid;
+            tr.dataset.betaSig = sig;
+            tr.innerHTML = rowHtml;
+            tbody.appendChild(tr);
+          }
+        });
+
+        // Eliminar solicitudes que ya no existan
+        Array.from(tbody.children).forEach(row => {
+          const h = row.dataset.hwid;
+          if (h && !activeHwids.has(h)) {
+            row.remove();
+          }
+        });
+
+        // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+        const currentOrder = Array.from(tbody.querySelectorAll('tr[data-hwid]')).map(r => r.dataset.hwid).join(';');
+        const targetOrder = reqs.map(r => String(r.hwid || '')).join(';');
+        if (currentOrder !== targetOrder) {
+          for (let i = 0; i < reqs.length; i++) {
+            const hwid = String(reqs[i].hwid || '');
+            const row = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
+            if (row && tbody.children[i] !== row) {
+              tbody.insertBefore(row, tbody.children[i] || null);
+            }
+          }
+        }
+
+        if (!tbody.dataset.delegated) {
+          tbody.dataset.delegated = 'true';
+          tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const hwid = btn.dataset.hwid;
+            if (!hwid) return;
+            if (action === 'beta-approve') setBetaStatus(hwid, true);
+            else if (action === 'beta-revoke') setBetaStatus(hwid, false);
+          });
         }
       } catch (e) {
         console.error('Error loading beta requests', e);
@@ -5208,12 +5383,18 @@
         const res = await fetch('/api/admin/licenses', {
           headers: { 'X-Admin-Key': key }
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.warn('Error del servidor al consultar licencias:', res.status);
+          return;
+        }
         const data = await res.json();
-        if (!data.success) return;
+        if (!data || !data.success) {
+          console.warn('Respuesta inesperada al consultar licencias:', data);
+          return;
+        }
 
-        allLicensesCache = data.licenses || [];
-        excludedDevicesCache = data.excludedDevices || [];
+        if (Array.isArray(data.licenses)) allLicensesCache = data.licenses;
+        if (Array.isArray(data.excludedDevices)) excludedDevicesCache = data.excludedDevices;
 
         const s = data.summary || {};
         updateTextIfDifferent('lic-metric-total', s.totalLicenses || 0);
@@ -5283,18 +5464,24 @@
       }
 
       if (list.length === 0) {
-        if (!tbody.querySelector('.empty-licenses-cell')) {
+        if (!tbody.querySelector('.empty-licenses-cell') || tbody.querySelector('#licenses-loading-row')) {
           tbody.innerHTML = '<tr><td colspan="8" class="empty-licenses-cell" style="text-align:center; padding:20px; color:var(--muted);">No hay licencias emitidas registradas en este momento.</td></tr>';
         }
         return;
       }
 
-      if (tbody.querySelector('.empty-licenses-cell')) {
-        tbody.innerHTML = '';
-      }
+      // Remover cualquier fila que no sea de datos de licencia (placeholders o fila de carga)
+      Array.from(tbody.children).forEach(row => {
+        if (!row.dataset.licId) {
+          row.remove();
+        }
+      });
 
+      // Orden determinista y estable por HWID
+      const sorted = [...list].sort((a, b) => String(a.hwid || '').localeCompare(String(b.hwid || '')));
       const activeKeys = new Set();
-      list.forEach(l => {
+
+      sorted.forEach(l => {
         const licId = `${l.hwid}_${l.licenseKey || 'NOKEY'}`;
         activeKeys.add(licId);
 
@@ -5330,12 +5517,26 @@
         }
       });
 
+      // Eliminar filas que ya no existen
       Array.from(tbody.children).forEach(row => {
         const id = row.dataset.licId;
         if (id && !activeKeys.has(id)) {
           row.remove();
         }
       });
+
+      // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+      const currentOrder = Array.from(tbody.querySelectorAll('tr[data-lic-id]')).map(r => r.dataset.licId).join(';');
+      const targetOrder = sorted.map(l => `${l.hwid}_${l.licenseKey || 'NOKEY'}`).join(';');
+      if (currentOrder !== targetOrder) {
+        for (let i = 0; i < sorted.length; i++) {
+          const licId = `${sorted[i].hwid}_${sorted[i].licenseKey || 'NOKEY'}`;
+          const row = tbody.querySelector(`tr[data-lic-id="${CSS.escape(licId)}"]`);
+          if (row && tbody.children[i] !== row) {
+            tbody.insertBefore(row, tbody.children[i] || null);
+          }
+        }
+      }
     }
 
     async function deleteLicense(hwid, licenseKey) {
@@ -5353,9 +5554,6 @@
           showToast(`🗑️ Licencia revocada y eliminada para ${hwid}`);
           // Actualización optimista: eliminar de la cache local inmediatamente
           allLicensesCache = allLicensesCache.filter(l => l.hwid !== hwid && l.licenseKey !== licenseKey);
-          // Forzar re-render borrando la firma
-          const tbody = document.getElementById('licenses-table-body');
-          if (tbody) delete tbody.dataset.renderedSig;
           renderLicensesTable(allLicensesCache);
           // También actualizar dispositivo en caché de devices
           const cachedDev = allDevicesCache.find(d => d.hwid === hwid);
@@ -5396,38 +5594,6 @@
       const tbody = document.getElementById('excluded-devices-table-body');
       if (!tbody) return;
 
-      const sig = (list.length > 0)
-        ? list.map(d => `${d.hwid}_${d.deletedAt}`).join(';')
-        : 'empty';
-      if (tbody.dataset.renderedSig === sig) return;
-      tbody.dataset.renderedSig = sig;
-
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">No hay dispositivos excluidos en la lista negra (Tombstones).</td></tr>';
-        return;
-      }
-      tbody.innerHTML = list.map(d => {
-        const safeHwid = escapeHtml(d.hwid);
-        const safeDate = d.deletedAt ? new Date(d.deletedAt).toLocaleString() : 'N/A';
-        const safeModel = escapeHtml(d.previousModel || 'Desconocido');
-        const safeKey = escapeHtml(d.revokedKey || 'N/A');
-        const safeReason = escapeHtml(d.reason || 'Eliminado por el administrador');
-
-        return `
-          <tr>
-            <td><span class="hwid-code" style="font-size:11px; color:#FF5252;">${safeHwid}</span></td>
-            <td><small style="color:#AAA;">${safeDate}</small></td>
-            <td>${safeModel}</td>
-            <td><code style="font-size:10px; color:#888;">${safeKey}</code></td>
-            <td><small style="color:#FFB74D;">${safeReason}</small></td>
-            <td>
-              <button class="btn btn-green btn-sm" style="font-size:11px; padding:3px 8px;" data-action="unexclude-device" data-hwid="${safeHwid}" title="Restaurar dispositivo para que pueda volver a conectarse">♻️ Restaurar</button>
-              <button class="btn btn-dark btn-sm" style="color:#FF5252; border:1px solid rgba(255,82,82,0.3); font-size:11px; padding:3px 8px; margin-left:6px;" data-action="delete-tombstone" data-hwid="${safeHwid}" title="Eliminar definitivamente del registro sin bloquear el teléfono">🗑️ Eliminar</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
       if (!tbody.dataset.delegated) {
         tbody.dataset.delegated = 'true';
         tbody.addEventListener('click', (e) => {
@@ -5441,6 +5607,81 @@
             if (hwid) deleteTombstoneRecord(hwid);
           }
         });
+      }
+
+      if (list.length === 0) {
+        if (!tbody.querySelector('.empty-excluded-cell') || tbody.querySelector('#excluded-loading-row')) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-excluded-cell" style="text-align:center; padding:20px; color:var(--muted);">No hay dispositivos excluidos en la lista negra (Tombstones).</td></tr>';
+        }
+        return;
+      }
+
+      // Remover cualquier fila que no sea de datos de exclusión (placeholders o de carga)
+      Array.from(tbody.children).forEach(row => {
+        if (!row.dataset.hwid) {
+          row.remove();
+        }
+      });
+
+      const sorted = [...list].sort((a, b) => String(a.hwid || '').localeCompare(String(b.hwid || '')));
+      const activeHwids = new Set();
+
+      sorted.forEach(d => {
+        const hwid = String(d.hwid || '');
+        activeHwids.add(hwid);
+        const sig = `${d.hwid}_${d.deletedAt}_${d.revokedKey}_${d.reason}`;
+        const safeHwid = escapeHtml(d.hwid);
+        const safeDate = d.deletedAt ? new Date(d.deletedAt).toLocaleString() : 'N/A';
+        const safeModel = escapeHtml(d.previousModel || 'Desconocido');
+        const safeKey = escapeHtml(d.revokedKey || 'N/A');
+        const safeReason = escapeHtml(d.reason || 'Eliminado por el administrador');
+
+        const rowHtml = `
+          <td><span class="hwid-code" style="font-size:11px; color:#FF5252;">${safeHwid}</span></td>
+          <td><small style="color:#AAA;">${safeDate}</small></td>
+          <td>${safeModel}</td>
+          <td><code style="font-size:10px; color:#888;">${safeKey}</code></td>
+          <td><small style="color:#FFB74D;">${safeReason}</small></td>
+          <td>
+            <button class="btn btn-green btn-sm" style="font-size:11px; padding:3px 8px;" data-action="unexclude-device" data-hwid="${safeHwid}" title="Restaurar dispositivo para que pueda volver a conectarse">♻️ Restaurar</button>
+            <button class="btn btn-dark btn-sm" style="color:#FF5252; border:1px solid rgba(255,82,82,0.3); font-size:11px; padding:3px 8px; margin-left:6px;" data-action="delete-tombstone" data-hwid="${safeHwid}" title="Eliminar definitivamente del registro sin bloquear el teléfono">🗑️ Eliminar</button>
+          </td>
+        `;
+
+        let tr = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
+        if (tr) {
+          if (tr.dataset.excSig !== sig) {
+            tr.innerHTML = rowHtml;
+            tr.dataset.excSig = sig;
+          }
+        } else {
+          tr = document.createElement('tr');
+          tr.dataset.hwid = hwid;
+          tr.dataset.excSig = sig;
+          tr.innerHTML = rowHtml;
+          tbody.appendChild(tr);
+        }
+      });
+
+      // Eliminar filas que ya no existen
+      Array.from(tbody.children).forEach(row => {
+        const h = row.dataset.hwid;
+        if (h && !activeHwids.has(h)) {
+          row.remove();
+        }
+      });
+
+      // Reordenar DOM de forma silenciosa e in-place SOLO si el orden cambió
+      const currentOrder = Array.from(tbody.querySelectorAll('tr[data-hwid]')).map(r => r.dataset.hwid).join(';');
+      const targetOrder = sorted.map(d => String(d.hwid || '')).join(';');
+      if (currentOrder !== targetOrder) {
+        for (let i = 0; i < sorted.length; i++) {
+          const hwid = String(sorted[i].hwid || '');
+          const row = tbody.querySelector(`tr[data-hwid="${CSS.escape(hwid)}"]`);
+          if (row && tbody.children[i] !== row) {
+            tbody.insertBefore(row, tbody.children[i] || null);
+          }
+        }
       }
     }
 
@@ -6000,14 +6241,20 @@
         await refreshDevices();
         await refreshUsers();
         checkSecurityAlerts();
+        if (document.getElementById('tab-all-licenses') && document.getElementById('tab-all-licenses').classList.contains('active')) {
+          await loadAllLicensesModule();
+        }
+        if (document.getElementById('tab-pro-requests') && document.getElementById('tab-pro-requests').classList.contains('active')) {
+          await loadProRequests();
+        }
         if (document.getElementById('tab-security') && document.getElementById('tab-security').classList.contains('active')) {
-          loadSecurityLogs();
+          await loadSecurityLogs();
         }
         if (document.getElementById('tab-logs') && document.getElementById('tab-logs').classList.contains('active')) {
-          loadAuditLogs();
+          await loadAuditLogs();
         }
         if (document.getElementById('tab-updates') && document.getElementById('tab-updates').classList.contains('active')) {
-          loadBetaRequests();
+          await loadBetaRequests();
         }
       } finally {
         _isPolling = false;

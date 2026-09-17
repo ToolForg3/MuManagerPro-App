@@ -1,10 +1,10 @@
 {
-  "version": "2.0.1",
+  "version": "2.0.2",
   "minRequiredVersion": "1.9.9",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-17T17:45:00.000Z",
+  "publishedAt": "2026-09-17T19:02:57.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 103,
+  "build": 104,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v2.0.1 (Build 103) - Optimización de Banco de Joyas y Compatibilidad Season 6:\n• Banco de Joyas Multitabla Universal: Detección inteligente ponderada y compatibilidad dual con MSPro_JewelBank, CustomJewelBank, JewelBank y XTR_JewelStore.\n• Soporte Completo para 10 Joyas: Integración de códigos numéricos de ítems Season 6 (Bless 7181, Soul 7182, Chaos 6159, Life 7184/7183, Creation 7190, Guardian 7199, Harmony 7210, GemStone 7209, LowStone 7211, HighStone 7212).\n• Sincronización Inmediata: Lectura e inyección atómica de conteos de joyas sin desfases de balance.\n• Conector de PC Actualizado: Binario y puente con scoring multitabla blindado ante tablas vacías."
+  "changelog": "MuManager PRO v2.0.2 (Build 104) - Parches de Seguridad y Estabilidad (Auditoría 2026-09-17):\n• SEC-01: Protección doble en verificación de OTP — authRateLimitMiddleware añadido a /forgot-password/verify-code para blindaje por IP complementario al guard interno de 5 intentos.\n• SEC-02: Política de contraseña unificada a 8 caracteres mínimos en restablecimiento por OTP (consistencia con registro y cambio de contraseña).\n• DISEÑO: Corrección de borderRadius en pill badge \"En Vivo\" (10px → 6px estándar gótico Season 6).\n• REGLAS: GEMINI.md actualizado con excepción documentada para círculos funcionales, rate limiting explícito en OTP y política de 8 chars aplicable a todas las operaciones de contraseña."
 }

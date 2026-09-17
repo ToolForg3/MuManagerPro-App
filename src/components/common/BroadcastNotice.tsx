@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 30, // círculo funcional (width/2): contenedor de ícono de anuncio
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',

@@ -4647,7 +4647,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <Text style={styles.cardTitle}>
                     Jugadores Online ({prizeOnlinePlayers.length})
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1B5E20', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1B5E20', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 }}>
                     <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CAF50', marginRight: 4 }} />
                     <Text style={{ fontSize: 10, color: '#A5D6A7', fontWeight: 'bold' }}>En Vivo (5s)</Text>
                   </View>
@@ -6719,7 +6719,7 @@ const styles = StyleSheet.create({
   rankMedal: {
     width: 26,
     height: 26,
-    borderRadius: 13,
+    borderRadius: 13, // círculo funcional (width/2): medalla de ranking circular
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -6934,7 +6934,7 @@ const styles = StyleSheet.create({
   onlinePlayerIndexBadge: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 14, // círculo funcional (width/2): badge numerado de jugador online
     backgroundColor: '#1A1613',
     borderWidth: 1,
     borderColor: '#B58F3C',

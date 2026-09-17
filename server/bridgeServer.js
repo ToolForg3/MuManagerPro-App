@@ -9143,7 +9143,7 @@ app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (re
 });
 
 // Verificar código OTP antes de cambiar contraseña
-app.post('/api/auth/forgot-password/verify-code', (req, res) => {
+app.post('/api/auth/forgot-password/verify-code', authRateLimitMiddleware, (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
     return res.status(400).json({ success: false, error: 'Correo y código requeridos.' });
@@ -9201,8 +9201,8 @@ const handleForgotPasswordReset = (req, res) => {
   const cleanCode = String(code).trim();
   const cleanPass = String(newPassword).trim();
 
-  if (cleanPass.length < 6) {
-    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+  if (cleanPass.length < 8) {
+    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
   }
 
   const record = passwordResetStore.get(cleanEmail);

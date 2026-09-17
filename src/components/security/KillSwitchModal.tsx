@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   shieldCircle: {
     width: 90,
     height: 90,
-    borderRadius: 45,
+    borderRadius: 45, // círculo funcional (width/2): ícono de escudo de seguridad
     backgroundColor: 'rgba(226, 112, 58, 0.15)',
     borderWidth: 2,
     borderColor: '#E2703A',

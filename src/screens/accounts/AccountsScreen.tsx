@@ -4731,7 +4731,7 @@ const styles = StyleSheet.create({
   avatarCircleSmall: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 16, // círculo funcional (width/2): avatar inicial de usuario
     backgroundColor: '#FF5722',
     alignItems: 'center',
     justifyContent: 'center',

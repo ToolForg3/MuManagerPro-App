@@ -2415,7 +2415,7 @@ export const CharacterEditScreen = () => {
                             {portrait ? (
                               <Image
                                 source={portrait}
-                                style={{ width: 22, height: 22, borderRadius: 11 }}
+                                style={{ width: 22, height: 22, borderRadius: 11 /* círculo funcional: clip de portrait de raza */ }}
                                 resizeMode="cover"
                               />
                             ) : (
@@ -2481,7 +2481,7 @@ export const CharacterEditScreen = () => {
                           }}
                         >
                           {racePortrait ? (
-                            <View style={{ width: 34, height: 34, borderRadius: 17, overflow: 'hidden', borderWidth: 1.5, borderColor: isSelected ? THEME.colors.primaryOrange : THEME.colors.border }}>
+                            <View style={{ width: 34, height: 34, borderRadius: 17 /* círculo funcional: clip de portrait de evolución */, overflow: 'hidden', borderWidth: 1.5, borderColor: isSelected ? THEME.colors.primaryOrange : THEME.colors.border }}>
                               <Image
                                 source={racePortrait}
                                 style={{ width: 34, height: 34 }}
@@ -3459,7 +3459,7 @@ const styles = StyleSheet.create({
   quickRaceIconCircle: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 19, // círculo funcional (width/2): contenedor circular de ícono de raza
     alignItems: 'center',
     justifyContent: 'center',
   },

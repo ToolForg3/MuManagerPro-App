@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   jewelSocket: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 12, // círculo funcional (width/2): socket de joya circular
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1.5,
     alignItems: 'center',
