@@ -33,10 +33,20 @@
   },
   "beta": {
     "enabled": true,
-    "latestBetaVersion": "1.5.3",
+    "latestBetaVersion": "2.0.4-beta.1",
+    "betaBuild": 106,
     "betaChangelog": "• Canal Beta: Pruebas de nuevas funciones y optimizaciones en vivo.",
+    "betaApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk",
     "approvedHwids": [],
-    "requests": []
+    "requests": [],
+    "rollback": {
+      "active": false,
+      "targetVersion": "2.0.3",
+      "targetApkUrl": "",
+      "reason": "Reversión por ajuste en prueba beta",
+      "forceRollback": false,
+      "triggeredAt": null
+    }
   },
   "rollback": {
     "active": false,

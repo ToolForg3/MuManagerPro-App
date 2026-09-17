@@ -1834,6 +1834,63 @@
         <button class="btn btn-red" onclick="saveRollbackSettings()">⚠️ Aplicar Configuración de Rollback</button>
       </div>
 
+      <!-- Sección Promoción y Gestión del Canal Beta -->
+      <div style="margin-top: 30px; padding: 18px; border-radius: 6px; background: rgba(232, 200, 106, 0.05); border: 1px solid rgba(232, 200, 106, 0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h4 style="color: #E8C86A; margin: 0;">🚀 Promoción de Versión Beta a Oficial</h4>
+          <span id="beta-status-badge" style="background: rgba(232, 200, 106, 0.2); color: #E8C86A; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">Canal Beta Activo</span>
+        </div>
+        <p style="font-size: 12px; color: #C8BEAF; margin-bottom: 14px;">
+          Permite evaluar cambios exclusivamente con los testers aprobados. Una vez que la prueba haya sido validada y esté libre de fallas, pulsa el botón para graduar la versión Beta al canal Oficial para todos los usuarios.
+        </p>
+        <div class="form-row">
+          <div class="form-group">
+            <label style="color: #FAF6EE;">Versión Beta Actual Publicada:</label>
+            <input type="text" id="beta-current-version-input" class="form-control" readonly style="background: #14110E; color: #E8C86A; font-weight: bold;" value="Cargando..." />
+          </div>
+          <div class="form-group">
+            <label style="color: #FAF6EE;">Build Beta:</label>
+            <input type="text" id="beta-current-build-input" class="form-control" readonly style="background: #14110E; color: #E8C86A; font-weight: bold;" value="Cargando..." />
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="color: #FAF6EE;">Changelog de la Beta:</label>
+          <textarea id="beta-current-changelog-input" class="form-control" rows="2" readonly style="background: #14110E; color: #C8BEAF; font-size: 12px;"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-pro" onclick="promoteBetaToOfficial()">⭐ Promover Beta a Versión Oficial (Todos los Usuarios)</button>
+        </div>
+      </div>
+
+      <!-- Sección Rollback Exclusivo de Canal Beta -->
+      <div style="margin-top: 20px; padding: 15px; border-radius: 6px; background: rgba(230, 81, 0, 0.08); border: 1px solid rgba(230, 81, 0, 0.3);">
+        <h4 style="color: #FFA726; margin-bottom: 8px;">↩️ Rollback Exclusivo del Canal Beta</h4>
+        <p style="font-size: 12px; color: #C8BEAF; margin-bottom: 12px;">
+          Si una versión beta presenta anomalías durante el período de prueba, puedes revertir <strong>únicamente</strong> a los evaluadores beta a la versión oficial estable, sin alterar al público general.
+        </p>
+        <div class="form-row">
+          <div class="form-group">
+            <label style="color: #FAF6EE;">Versión Objetivo de Rollback (Beta):</label>
+            <input type="text" id="beta-rollback-target-version" class="form-control" placeholder="2.0.3" />
+          </div>
+          <div class="form-group">
+            <label style="color: #FAF6EE;">Motivo del Rollback Beta:</label>
+            <input type="text" id="beta-rollback-reason" class="form-control" placeholder="Inestabilidad detectada en pruebas internas" />
+          </div>
+        </div>
+        <div class="switch-container" style="background: transparent; border: none; padding: 0; margin-bottom: 12px;">
+          <div class="switch-info">
+            <h5 style="margin: 0; color: #FAF6EE;">Estado del Rollback Beta</h5>
+            <p style="margin: 0; font-size: 11px; color: #C8BEAF;">Activa o desactiva la reversión obligatoria para testers beta.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="beta-rollback-active-toggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <button class="btn btn-warning" onclick="saveBetaRollbackSettings()">⚠️ Aplicar Configuración de Rollback Beta</button>
+      </div>
+
       <!-- Sección Solicitudes del Canal Beta -->
       <div style="margin-top: 30px;">
         <div class="section-title" style="margin-bottom: 8px;">🧪 Evaluadores del Canal Beta (Acceso Anticipado)</div>
@@ -4823,6 +4880,70 @@
       }
     }
 
+    async function saveBetaRollbackSettings() {
+      const active = document.getElementById('beta-rollback-active-toggle').checked;
+      const targetVersion = document.getElementById('beta-rollback-target-version').value.trim();
+      const reason = document.getElementById('beta-rollback-reason').value.trim();
+
+      if (active) {
+        const confirmed = confirm("¿Estás seguro de forzar el Rollback a los evaluadores del Canal Beta?");
+        if (!confirmed) {
+          document.getElementById('beta-rollback-active-toggle').checked = false;
+          return;
+        }
+      }
+
+      const key = getAdminKey();
+      try {
+        const res = await fetch('/api/admin/beta/rollback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ active, targetVersion, reason })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(active ? '↩️ ¡Rollback Beta ACTIVADO para testers!' : 'Rollback Beta desactivado.');
+          loadGlobalSettings();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.message || 'No se pudo configurar el rollback beta'), true);
+        }
+      } catch (e) {
+        showToast('Error: ' + e.message, true);
+      }
+    }
+
+    async function promoteBetaToOfficial() {
+      const currentBeta = document.getElementById('beta-current-version-input').value;
+      if (!currentBeta || currentBeta === 'Sin versión beta activa' || currentBeta === 'Cargando...') {
+        return alert('No hay una versión Beta activa disponible para promover.');
+      }
+
+      const confirmed = confirm(
+        `¿Deseas promover la versión Beta (${currentBeta}) a Versión Oficial para el 100% de los usuarios?\n\n` +
+        `Esta acción graduará la versión y actualizará la configuración oficial de la APK.`
+      );
+      if (!confirmed) return;
+
+      const key = getAdminKey();
+      try {
+        const res = await fetch('/api/admin/beta/promote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('🎉 ¡Versión Beta promovida exitosamente a Oficial!');
+          loadGlobalSettings();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.message || 'No se pudo promover la versión'), true);
+        }
+      } catch (e) {
+        showToast('Error al promover: ' + e.message, true);
+      }
+    }
+
     async function loadBetaRequests() {
       const key = getAdminKey();
       if (!key) return;
@@ -5007,6 +5128,23 @@
           document.getElementById('rollback-active-toggle').checked = !!rb.active;
           document.getElementById('rollback-target-version').value = rb.targetVersion || '1.1.7';
           document.getElementById('rollback-reason').value = rb.reason || '';
+
+          // Beta Settings & Rollback Beta
+          const beta = s.beta || {};
+          const betaRb = beta.rollback || {};
+          const betaVerEl = document.getElementById('beta-current-version-input');
+          const betaBuildEl = document.getElementById('beta-current-build-input');
+          const betaChangelogEl = document.getElementById('beta-current-changelog-input');
+          if (betaVerEl) betaVerEl.value = beta.latestBetaVersion || 'Sin versión beta activa';
+          if (betaBuildEl) betaBuildEl.value = beta.betaBuild ? `Build ${beta.betaBuild}` : 'N/A';
+          if (betaChangelogEl) betaChangelogEl.value = beta.betaChangelog || '';
+
+          const betaRbToggle = document.getElementById('beta-rollback-active-toggle');
+          const betaRbTarget = document.getElementById('beta-rollback-target-version');
+          const betaRbReason = document.getElementById('beta-rollback-reason');
+          if (betaRbToggle) betaRbToggle.checked = !!betaRb.active;
+          if (betaRbTarget) betaRbTarget.value = betaRb.targetVersion || s.latestVersion || '2.0.3';
+          if (betaRbReason) betaRbReason.value = betaRb.reason || '';
 
           loadBetaRequests();
 

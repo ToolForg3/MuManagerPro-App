@@ -207,10 +207,20 @@ const DEFAULT_SETTINGS = {
   },
   beta: {
     enabled: true,
-    latestBetaVersion: '1.1.9',
+    latestBetaVersion: '2.0.4-beta.1',
+    betaBuild: 106,
     betaChangelog: '• Canal Beta: Pruebas de nuevas funciones y optimizaciones.',
+    betaApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk',
     approvedHwids: [],
-    requests: []
+    requests: [],
+    rollback: {
+      active: false,
+      targetVersion: '2.0.3',
+      targetApkUrl: '',
+      reason: 'Reversión por ajuste en prueba beta',
+      forceRollback: false,
+      triggeredAt: null
+    }
   },
   rollback: {
     active: false,
@@ -8348,12 +8358,26 @@ app.post('/api/telemetry/ping', (req, res) => {
     if (isApprovedBeta) {
       releaseChannel = 'BETA';
       betaStatus = 'APPROVED';
-      const bVer = (settings.beta?.latestBetaVersion || settings.latestVersion || '1.7.5').replace(/^v/i, '').trim();
-      if (isNewerVersion(bVer, currentVer)) {
-        targetVer = bVer;
-        hasUpdate = true;
-        isBeta = true;
-        targetChangelog = settings.beta?.betaChangelog || '• Versión Beta de prueba para evaluadores certificados.';
+
+      // 2.1 Verificar si hay Rollback activo EXCLUSIVO para el Canal Beta
+      if (settings.beta?.rollback && settings.beta.rollback.active) {
+        const betaRbVer = (settings.beta.rollback.targetVersion || settings.latestVersion || '2.0.3').replace(/^v/i, '').trim();
+        if (isNewerVersion(currentVer, betaRbVer)) {
+          targetVer = betaRbVer;
+          hasUpdate = true;
+          isRollback = true;
+          isBeta = true;
+          isForced = settings.beta.rollback.forceRollback !== false;
+          targetChangelog = `🚨 ROLLBACK DE CANAL BETA:\n${settings.beta.rollback.reason || 'Restaurando versión previa en evaluadores beta.'}`;
+        }
+      } else {
+        const bVer = (settings.beta?.latestBetaVersion || settings.latestVersion || '2.0.3').replace(/^v/i, '').trim();
+        if (isNewerVersion(bVer, currentVer)) {
+          targetVer = bVer;
+          hasUpdate = true;
+          isBeta = true;
+          targetChangelog = settings.beta?.betaChangelog || '• Versión Beta de prueba para evaluadores certificados.';
+        }
       }
     } else if (betaReq && betaReq.status === 'PENDING') {
       betaStatus = 'PENDING';
@@ -8367,12 +8391,17 @@ app.post('/api/telemetry/ping', (req, res) => {
     }
   }
 
-  // Construir URL dinámico con nombre versionado exacto y bust de caché permanente
-  const baseHost = req.headers.host || 'mumanagerpro-gateway.onrender.com';
-  const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
-  const dynamicApkUrl = (isRollback && settings.rollback?.targetApkUrl)
-    ? settings.rollback.targetApkUrl
-    : (settings.latestApkUrl || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk');
+  // Construir URL dinámico según canal y estado de rollback
+  let dynamicApkUrl = settings.latestApkUrl || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk';
+  if (isRollback) {
+    if (isBeta && settings.beta?.rollback?.targetApkUrl) {
+      dynamicApkUrl = settings.beta.rollback.targetApkUrl;
+    } else if (settings.rollback?.targetApkUrl) {
+      dynamicApkUrl = settings.rollback.targetApkUrl;
+    }
+  } else if (isBeta && settings.beta?.betaApkUrl) {
+    dynamicApkUrl = settings.beta.betaApkUrl;
+  }
 
   const updateInfo = {
     hasUpdate,
@@ -9944,6 +9973,72 @@ app.post('/api/admin/rollback/trigger', (req, res) => {
   saveSettings(settings);
   addAuditLog('ROLLBACK_ACTION', 'ALL_DEVICES', req.socket.remoteAddress || '127.0.0.1', `Rollback de emergencia ${settings.rollback.active ? 'ACTIVADO hacia v' + settings.rollback.targetVersion : 'DESACTIVADO'}`);
   res.json({ success: true, rollback: settings.rollback });
+});
+
+// Publicar o actualizar versión en Canal Beta (Admin)
+app.post('/api/admin/beta/release', (req, res) => {
+  const { latestBetaVersion, betaBuild, betaChangelog, betaApkUrl } = req.body;
+  const settings = loadSettings();
+  if (!settings.beta) settings.beta = { enabled: true, approvedHwids: [], requests: [] };
+  if (latestBetaVersion) settings.beta.latestBetaVersion = String(latestBetaVersion).trim();
+  if (betaBuild) settings.beta.betaBuild = parseInt(String(betaBuild), 10);
+  if (betaChangelog) settings.beta.betaChangelog = String(betaChangelog).trim();
+  if (betaApkUrl) settings.beta.betaApkUrl = String(betaApkUrl).trim();
+  settings.beta.publishedAt = new Date().toISOString();
+  saveSettings(settings);
+  addAuditLog('BETA_RELEASE', 'ADMIN', req.socket.remoteAddress || '127.0.0.1', `Versión Beta actualizada a v${settings.beta.latestBetaVersion} (Build ${settings.beta.betaBuild || 'N/A'})`);
+  res.json({ success: true, beta: settings.beta });
+});
+
+// Activar o desactivar Rollback exclusivo para el Canal Beta (Admin)
+app.post('/api/admin/beta/rollback', (req, res) => {
+  const { active, targetVersion, reason, targetApkUrl, forceRollback } = req.body;
+  const settings = loadSettings();
+  if (!settings.beta) settings.beta = { enabled: true, approvedHwids: [], requests: [] };
+  settings.beta.rollback = {
+    active: !!active,
+    targetVersion: targetVersion ? String(targetVersion).trim() : (settings.latestVersion || '2.0.3'),
+    targetApkUrl: targetApkUrl !== undefined ? String(targetApkUrl).trim() : (settings.latestApkUrl || ''),
+    reason: reason ? String(reason).trim() : 'Reversión por ajuste en prueba beta',
+    forceRollback: forceRollback !== undefined ? !!forceRollback : true,
+    triggeredAt: active ? new Date().toISOString() : null
+  };
+  saveSettings(settings);
+  addAuditLog('BETA_ROLLBACK', 'BETA_DEVICES', req.socket.remoteAddress || '127.0.0.1', `Rollback Beta ${settings.beta.rollback.active ? 'ACTIVADO hacia v' + settings.beta.rollback.targetVersion : 'DESACTIVADO'}`);
+  res.json({ success: true, betaRollback: settings.beta.rollback });
+});
+
+// Promover versión Beta a Versión Oficial (Graduación a Estable) (Admin)
+app.post('/api/admin/beta/promote', (req, res) => {
+  const settings = loadSettings();
+  if (!settings.beta || !settings.beta.latestBetaVersion) {
+    return res.status(400).json({ success: false, message: 'No hay versión Beta activa para promover.' });
+  }
+  const promotedVersion = settings.beta.latestBetaVersion.replace(/-beta.*$/i, '').trim();
+  const promotedBuild = settings.beta.betaBuild || (settings.versionCode ? settings.versionCode + 1 : 106);
+  const promotedChangelog = settings.beta.betaChangelog || settings.updateChangelog;
+
+  settings.latestVersion = promotedVersion;
+  settings.appVersion = promotedVersion;
+  settings.versionCode = promotedBuild;
+  settings.buildNumber = promotedBuild;
+  settings.updateChangelog = promotedChangelog;
+  settings.releaseNotes = promotedChangelog;
+  settings.updateTitle = `MuManager PRO v${promotedVersion} (Build ${promotedBuild})`;
+  settings.forceUpdate = false;
+
+  // Desactivar rollback de beta si estuviera activo
+  if (settings.beta.rollback) {
+    settings.beta.rollback.active = false;
+  }
+  saveSettings(settings);
+  addAuditLog('BETA_PROMOTED', 'ALL_DEVICES', req.socket.remoteAddress || '127.0.0.1', `Versión Beta promovida a Oficial: v${promotedVersion} (Build ${promotedBuild})`);
+  res.json({
+    success: true,
+    promotedVersion,
+    promotedBuild,
+    message: `Versión v${promotedVersion} (Build ${promotedBuild}) promovida exitosamente a Oficial.`
+  });
 });
 
 // Descargar Copia de Seguridad JSON
