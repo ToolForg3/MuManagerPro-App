@@ -1649,7 +1649,7 @@ function verifyKey(hwid, key) {
 const getDbConfig = (cfg) => ({
   user: cfg.user || 'sa',
   password: cfg.password || '',
-  server: cfg.host || 'localhost',
+  server: cfg.host || cfg.server || 'localhost',
   port: parseInt(cfg.port, 10) || 1433,
   database: cfg.database || 'MuOnline',
   options: {
@@ -1686,7 +1686,9 @@ async function getOrCreatePool(config) {
   const poolKey = `${config.user}:${config.password}@${host}:${port}/${config.database}`;
 
   let pool = sqlPoolsCache.get(poolKey);
-  if (pool && pool.connected && !pool.closed) {
+  const maxIdleMs = (typeof isVercel !== 'undefined' && isVercel) ? 8000 : 25000;
+  if (pool && pool.connected && !pool.closed && (Date.now() - (pool._lastActiveTime || 0) < maxIdleMs)) {
+    pool._lastActiveTime = Date.now();
     return pool;
   }
 
@@ -1704,9 +1706,9 @@ async function getOrCreatePool(config) {
     ...config,
     pool: {
       max: 15,
-      min: 1,
+      min: (typeof isVercel !== 'undefined' && isVercel) ? 0 : 1, // min: 1 conexion base
       idleTimeoutMillis: 30000,
-      acquireTimeoutMillis: 10000,
+      acquireTimeoutMillis: 7000,
     },
   };
 
@@ -1720,12 +1722,15 @@ async function getOrCreatePool(config) {
         p = await sql.connect(poolOptions);
       }
 
-      if (p && typeof p.on === 'function') {
-        p.on('error', (err) => {
-          console.warn('[SQL Pool Warning]', err.message);
-          try { if (typeof p.close === 'function') p.close(); } catch (_) {}
-          sqlPoolsCache.delete(poolKey);
-        });
+      if (p) {
+        p._lastActiveTime = Date.now();
+        if (typeof p.on === 'function') {
+          p.on('error', (err) => {
+            console.warn('[SQL Pool Warning]', err.message);
+            try { if (typeof p.close === 'function') p.close(); } catch (_) {}
+            sqlPoolsCache.delete(poolKey);
+          });
+        }
       }
 
       sqlPoolsCache.set(poolKey, p);
@@ -1753,7 +1758,9 @@ async function executeSql(configInput, callback) {
   let pool;
   try {
     pool = await getOrCreatePool(config);
-    return await callback(pool, config);
+    const res = await callback(pool, config);
+    if (pool) pool._lastActiveTime = Date.now();
+    return res;
   } catch (err) {
     // Si la conexión falló o se cortó, invalidar pool en caché para reconectar limpiamente
     if (sqlPoolsCache.has(poolKey)) {
@@ -3374,217 +3381,239 @@ app.post('/api/character/teleport', async (req, res) => {
   }
 });
 
+// Diccionario exhaustivo de variantes de nombres y números de columnas en emuladores Season 6 / MSPro / X-Team
+const JEWEL_ALIASES = {
+  Bless: ['bless', 'jewelofbless', 'jewelbless', 'b_bless', 'j_bless', 'blesscount', '7181', '13'],
+  Soul: ['soul', 'jewelofsoul', 'jewelsoul', 'b_soul', 'j_soul', 'soulcount', '7182', '14'],
+  Chaos: ['chaos', 'jewelofchaos', 'jewelchaos', 'b_chaos', 'j_chaos', 'chaoscount', '6159', '15'],
+  Life: ['life', 'jeweloflife', 'jewellife', 'b_life', 'j_life', 'lifecount', '7184', '7183', '16'],
+  Creation: ['creation', 'jewelofcreation', 'jewelcreation', 'b_creation', 'j_creation', 'creationcount', '7190', '22'],
+  Guardian: ['guardian', 'jewelofguardian', 'jewelguardian', 'b_guardian', 'j_guardian', 'guardiancount', '7199', '31'],
+  Harmony: ['harmony', 'jewelofharmony', 'jewelharmony', 'b_harmony', 'j_harmony', 'harmonycount', '7210', '42'],
+  GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount', '7209', '41'],
+  LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount', '7211', '43'],
+  HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount', '7212', '44'],
+};
+
+// Mapeo estándar de ItemIndex para MU Online Season 6 (Section * 512 + Index)
+const JEWEL_TO_ITEM_INDEX = {
+  Chaos: 6159,     // Section 12, Index 15 = (12 * 512) + 15
+  Bless: 7181,     // Section 14, Index 13 = (14 * 512) + 13
+  Soul: 7182,      // Section 14, Index 14 = (14 * 512) + 14
+  Life: 7184,      // Section 14, Index 16 = (14 * 512) + 16 (o 7183)
+  Creation: 7190,  // Section 14, Index 22 = (14 * 512) + 22
+  Guardian: 7199,  // Section 14, Index 31 = (14 * 512) + 31
+  GemStone: 7209,  // Section 14, Index 41 = (14 * 512) + 41
+  Harmony: 7210,   // Section 14, Index 42 = (14 * 512) + 42
+  LowStone: 7211,  // Section 14, Index 43 = (14 * 512) + 43
+  HighStone: 7212, // Section 14, Index 44 = (14 * 512) + 44
+};
+
+const ITEM_INDEX_TO_JEWEL = {
+  6159: 'Chaos',
+  15: 'Chaos',
+  7181: 'Bless',
+  13: 'Bless',
+  7182: 'Soul',
+  14: 'Soul',
+  7184: 'Life',
+  7183: 'Life',
+  16: 'Life',
+  7190: 'Creation',
+  22: 'Creation',
+  7199: 'Guardian',
+  31: 'Guardian',
+  7209: 'GemStone',
+  41: 'GemStone',
+  7210: 'Harmony',
+  42: 'Harmony',
+  7211: 'LowStone',
+  43: 'LowStone',
+  7212: 'HighStone',
+  44: 'HighStone',
+};
+
+// Cache en memoria para esquema de Banco de Joyas por base de datos (acelera peticiones de 2.5s a ~30ms)
+const jewelBankTableCache = new Map();
+
 /// Banco de Joyas Louis S6 Update 40 (CustomJewelBank) & MSPro (MSPro_JewelBank, JewelBank) & Normalized (CustomItemBank) & X-Team (XTR_JewelStore)
 app.post('/api/character/jewel-bank', async (req, res) => {
+  const dbKey = `${(req.body.config && (req.body.config.server || req.body.config.host)) || 'localhost'}:${(req.body.config && req.body.config.database) || 'MuOnline'}`.toLowerCase();
   try {
     const { accountId, config, update, jewels } = req.body;
     if (!sql) return res.status(500).json({ error: 'mssql package not installed' });
     if (!accountId) return res.status(400).json({ success: false, error: 'AccountID requerido' });
 
     const data = await executeSql(config, async (pool) => {
-      // 1. Detección exhaustiva y compatibilidad dual: CustomJewelBank (Louis S6) vs JewelBank (MSPro) vs MSPro_JewelBank
-      const tblCheck = await pool.request().query(`
-        SELECT 
-          CASE 
-            WHEN OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL THEN 'CustomJewelBank'
-            WHEN OBJECT_ID('JewelBank', 'U') IS NOT NULL THEN 'JewelBank'
-            WHEN OBJECT_ID('MSPro_JewelBank', 'U') IS NOT NULL THEN 'MSPro_JewelBank'
-            WHEN OBJECT_ID('CustomItemBank', 'U') IS NOT NULL THEN 'CustomItemBank'
-            ELSE NULL
-          END AS DefaultTable,
-          t.name AS TableName
-        FROM sys.tables t
-        WHERE t.name IN (
-          'MSPro_JewelBank',
-          'CustomJewelBank',
-          'JewelBank',
-          'CustomItemBank',
-          'XTR_JewelStore',
-          'ItemBank',
-          'CustomJewel',
-          'Custom_JewelBank',
-          'JewelDeposit',
-          'IGCN_JewelBank'
-        )
-        OR LOWER(t.name) LIKE '%jewelbank%'
-        OR LOWER(t.name) LIKE '%itembank%'
-        OR LOWER(t.name) LIKE '%jewelstore%';
-      `);
+      let chosen = jewelBankTableCache.get(dbKey);
 
-      const rawTables = (tblCheck.recordset || []).map(r => r.TableName);
-      const candidateNames = rawTables.filter(name => {
-        const l = name.toLowerCase();
-        return !l.includes('config') && !l.includes('log') && !l.includes('market') && !l.includes('webshop') && !l.includes('ranking');
-      });
+      if (!chosen) {
+        // 1. Detección exhaustiva y compatibilidad dual: CustomJewelBank (Louis S6) vs JewelBank (MSPro) vs MSPro_JewelBank
+        const tblCheck = await pool.request().query(`
+          SELECT 
+            CASE 
+              WHEN OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL THEN 'CustomJewelBank'
+              WHEN OBJECT_ID('JewelBank', 'U') IS NOT NULL THEN 'JewelBank'
+              WHEN OBJECT_ID('MSPro_JewelBank', 'U') IS NOT NULL THEN 'MSPro_JewelBank'
+              WHEN OBJECT_ID('CustomItemBank', 'U') IS NOT NULL THEN 'CustomItemBank'
+              ELSE NULL
+            END AS DefaultTable,
+            t.name AS TableName
+          FROM sys.tables t
+          WHERE t.name IN (
+            'MSPro_JewelBank',
+            'CustomJewelBank',
+            'JewelBank',
+            'CustomItemBank',
+            'XTR_JewelStore',
+            'ItemBank',
+            'CustomJewel',
+            'Custom_JewelBank',
+            'JewelDeposit',
+            'IGCN_JewelBank'
+          )
+          OR LOWER(t.name) LIKE '%jewelbank%'
+          OR LOWER(t.name) LIKE '%itembank%'
+          OR LOWER(t.name) LIKE '%jewelstore%';
+        `);
 
-      if (candidateNames.length === 0) {
-        return { hasTable: false, tableName: null, bank: null };
-      }
-
-      // Diccionario exhaustivo de variantes de nombres y números de columnas en emuladores Season 6 / MSPro / X-Team
-      const JEWEL_ALIASES = {
-        Bless: ['bless', 'jewelofbless', 'jewelbless', 'b_bless', 'j_bless', 'blesscount', '7181', '13'],
-        Soul: ['soul', 'jewelofsoul', 'jewelsoul', 'b_soul', 'j_soul', 'soulcount', '7182', '14'],
-        Chaos: ['chaos', 'jewelofchaos', 'jewelchaos', 'b_chaos', 'j_chaos', 'chaoscount', '6159', '15'],
-        Life: ['life', 'jeweloflife', 'jewellife', 'b_life', 'j_life', 'lifecount', '7184', '7183', '16'],
-        Creation: ['creation', 'jewelofcreation', 'jewelcreation', 'b_creation', 'j_creation', 'creationcount', '7190', '22'],
-        Guardian: ['guardian', 'jewelofguardian', 'jewelguardian', 'b_guardian', 'j_guardian', 'guardiancount', '7199', '31'],
-        Harmony: ['harmony', 'jewelofharmony', 'jewelharmony', 'b_harmony', 'j_harmony', 'harmonycount', '7210', '42'],
-        GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount', '7209', '41'],
-        LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount', '7211', '43'],
-        HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount', '7212', '44'],
-      };
-
-      // Mapeo estándar de ItemIndex para MU Online Season 6 (Section * 512 + Index)
-      const JEWEL_TO_ITEM_INDEX = {
-        Chaos: 6159,     // Section 12, Index 15 = (12 * 512) + 15
-        Bless: 7181,     // Section 14, Index 13 = (14 * 512) + 13
-        Soul: 7182,      // Section 14, Index 14 = (14 * 512) + 14
-        Life: 7184,      // Section 14, Index 16 = (14 * 512) + 16 (o 7183)
-        Creation: 7190,  // Section 14, Index 22 = (14 * 512) + 22
-        Guardian: 7199,  // Section 14, Index 31 = (14 * 512) + 31
-        GemStone: 7209,  // Section 14, Index 41 = (14 * 512) + 41
-        Harmony: 7210,   // Section 14, Index 42 = (14 * 512) + 42
-        LowStone: 7211,  // Section 14, Index 43 = (14 * 512) + 43
-        HighStone: 7212, // Section 14, Index 44 = (14 * 512) + 44
-      };
-
-      const ITEM_INDEX_TO_JEWEL = {
-        6159: 'Chaos',
-        15: 'Chaos',
-        7181: 'Bless',
-        13: 'Bless',
-        7182: 'Soul',
-        14: 'Soul',
-        7184: 'Life',
-        7183: 'Life',
-        16: 'Life',
-        7190: 'Creation',
-        22: 'Creation',
-        7199: 'Guardian',
-        31: 'Guardian',
-        7209: 'GemStone',
-        41: 'GemStone',
-        7210: 'Harmony',
-        42: 'Harmony',
-        7211: 'LowStone',
-        43: 'LowStone',
-        7212: 'HighStone',
-        44: 'HighStone',
-      };
-
-      // Analizar esquema de cada tabla candidata y puntuar su relevancia real
-      const analyzedTables = [];
-      for (const tName of candidateNames) {
-        const colCheck = await pool.request()
-          .input('TblName', sql.VarChar(50), tName)
-          .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
-        const existingColNames = (colCheck.recordset || []).map(r => r.COLUMN_NAME);
-
-        const accColCandidate = existingColNames.find(name => 
-          ['accountid', 'account', 'memb___id', 'id', 'userguid', 'account_id', 'memb_id'].includes(name.toLowerCase())
-        );
-        if (!accColCandidate) continue;
-
-        const indexCol = existingColNames.find(c => ['itemindex', 'item_index', 'itemid', 'item_id', 'iditem', 'item', 'item_num', 'num', 'code'].includes(c.toLowerCase()));
-        const countCol = existingColNames.find(c => ['itemcount', 'item_count', 'count', 'amount', 'quantity', 'cnt', 'total'].includes(c.toLowerCase()));
-        const levelCol = existingColNames.find(c => ['itemlevel', 'item_level', 'level', 'lvl'].includes(c.toLowerCase()));
-        const autoPickCol = existingColNames.find(c => ['autopick', 'auto_pick'].includes(c.toLowerCase()));
-
-        const isNormalizedSchema = !!(indexCol && countCol);
-
-        let jewelColMap = {};
-        if (!isNormalizedSchema) {
-          for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
-            const matched = existingColNames.find(name => aliases.includes(name.toLowerCase()));
-            if (matched) {
-              jewelColMap[key] = matched;
-            }
-          }
-          if (Object.keys(jewelColMap).length < 2) continue;
-        }
-
-        // Consultar presencia de datos de este usuario y actividad en la tabla
-        let userJewelSum = 0;
-        let userHasRow = false;
-        let tableActiveRows = 0;
-
-        if (isNormalizedSchema) {
-          const userCheck = await pool.request()
-            .input('Acc', sql.VarChar(50), accountId.trim())
-            .query(`
-              SELECT COUNT(*) AS row_cnt, SUM(CAST(ISNULL([${countCol}], 0) AS BIGINT)) AS jewel_sum
-              FROM [${tName}]
-              WHERE (LOWER(LTRIM(RTRIM([${accColCandidate}]))) = LOWER(LTRIM(RTRIM(@Acc)))
-                 OR LTRIM(RTRIM([${accColCandidate}])) = LTRIM(RTRIM(@Acc))
-                 OR [${accColCandidate}] = @Acc);
-            `);
-          userHasRow = (userCheck.recordset[0]?.row_cnt || 0) > 0;
-          userJewelSum = Number(userCheck.recordset[0]?.jewel_sum || 0);
-
-          const activeCheck = await pool.request().query(`
-            SELECT COUNT(*) AS active_cnt FROM [${tName}] WHERE [${countCol}] > 0;
-          `);
-          tableActiveRows = activeCheck.recordset[0]?.active_cnt || 0;
-        } else {
-          const userCheck = await pool.request()
-            .input('Acc', sql.VarChar(50), accountId.trim())
-            .query(`
-              SELECT * FROM [${tName}]
-              WHERE (LOWER(LTRIM(RTRIM([${accColCandidate}]))) = LOWER(LTRIM(RTRIM(@Acc)))
-                 OR LTRIM(RTRIM([${accColCandidate}])) = LTRIM(RTRIM(@Acc))
-                 OR [${accColCandidate}] = @Acc);
-            `);
-          if (userCheck.recordset && userCheck.recordset[0]) {
-            userHasRow = true;
-            for (const col of Object.values(jewelColMap)) {
-              userJewelSum += Math.max(0, parseInt(userCheck.recordset[0][col], 10) || 0);
-            }
-          }
-
-          const sumParts = Object.values(jewelColMap).map(c => `ISNULL([${c}], 0)`).join(' + ');
-          const activeCheck = await pool.request().query(`
-            SELECT COUNT(*) AS active_cnt FROM [${tName}] WHERE (${sumParts}) > 0;
-          `);
-          tableActiveRows = activeCheck.recordset[0]?.active_cnt || 0;
-        }
-
-        analyzedTables.push({
-          targetTable: tName,
-          existingColNames,
-          accColName: accColCandidate,
-          indexCol,
-          countCol,
-          levelCol,
-          autoPickCol,
-          isNormalizedSchema,
-          jewelColMap,
-          userHasRow,
-          userJewelSum,
-          tableActiveRows,
+        const rawTables = (tblCheck.recordset || []).map(r => r.TableName);
+        const candidateNames = rawTables.filter(name => {
+          const l = name.toLowerCase();
+          return !l.includes('config') && !l.includes('log') && !l.includes('market') && !l.includes('webshop') && !l.includes('ranking');
         });
+
+        if (candidateNames.length === 0) {
+          return { hasTable: false, tableName: null, bank: null };
+        }
+
+        // Obtención de columnas en una única consulta por lotes (evita 10+ roundtrips de red)
+        const inClause = candidateNames.map(t => `'${t.replace(/'/g, "''")}'`).join(',');
+        const colCheck = await pool.request().query(
+          `SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN (${inClause});`
+        );
+        const colsByTable = new Map();
+        for (const r of (colCheck.recordset || [])) {
+          if (!colsByTable.has(r.TABLE_NAME)) colsByTable.set(r.TABLE_NAME, []);
+          colsByTable.get(r.TABLE_NAME).push(r.COLUMN_NAME);
+        }
+
+        // Analizar esquema de cada tabla candidata y puntuar su relevancia real
+        const analyzedTables = [];
+        for (const tName of candidateNames) {
+          const existingColNames = colsByTable.get(tName) || [];
+
+          const accColCandidate = existingColNames.find(name => 
+            ['accountid', 'account', 'memb___id', 'id', 'userguid', 'account_id', 'memb_id'].includes(name.toLowerCase())
+          );
+          if (!accColCandidate) continue;
+
+          const indexCol = existingColNames.find(c => ['itemindex', 'item_index', 'itemid', 'item_id', 'iditem', 'item', 'item_num', 'num', 'code'].includes(c.toLowerCase()));
+          const countCol = existingColNames.find(c => ['itemcount', 'item_count', 'count', 'amount', 'quantity', 'cnt', 'total'].includes(c.toLowerCase()));
+          const levelCol = existingColNames.find(c => ['itemlevel', 'item_level', 'level', 'lvl'].includes(c.toLowerCase()));
+          const autoPickCol = existingColNames.find(c => ['autopick', 'auto_pick'].includes(c.toLowerCase()));
+
+          const isNormalizedSchema = !!(indexCol && countCol);
+
+          let jewelColMap = {};
+          if (!isNormalizedSchema) {
+            for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
+              const matched = existingColNames.find(name => aliases.includes(name.toLowerCase()));
+              if (matched) {
+                jewelColMap[key] = matched;
+              }
+            }
+            if (Object.keys(jewelColMap).length < 2) continue;
+          }
+
+          analyzedTables.push({
+            targetTable: tName,
+            existingColNames,
+            accColName: accColCandidate,
+            indexCol,
+            countCol,
+            levelCol,
+            autoPickCol,
+            isNormalizedSchema,
+            jewelColMap,
+            userHasRow: false,
+            userJewelSum: 0,
+            tableActiveRows: 0,
+          });
+        }
+
+        if (analyzedTables.length === 0) {
+          return { hasTable: false, tableName: null, bank: null };
+        }
+
+        if (analyzedTables.length === 1) {
+          chosen = analyzedTables[0];
+        } else {
+          // Evaluar candidatos solo si hay más de una tabla candidata
+          for (const cand of analyzedTables) {
+            try {
+              if (cand.isNormalizedSchema) {
+                const userCheck = await pool.request()
+                  .input('Acc', sql.VarChar(50), accountId.trim())
+                  .query(`
+                    SELECT COUNT(*) AS row_cnt, SUM(CAST(ISNULL([${cand.countCol}], 0) AS BIGINT)) AS jewel_sum
+                    FROM [${cand.targetTable}]
+                    WHERE (LOWER(LTRIM(RTRIM([${cand.accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                       OR LTRIM(RTRIM([${cand.accColName}])) = LTRIM(RTRIM(@Acc))
+                       OR [${cand.accColName}] = @Acc);
+                  `);
+                cand.userHasRow = (userCheck.recordset[0]?.row_cnt || 0) > 0;
+                cand.userJewelSum = Number(userCheck.recordset[0]?.jewel_sum || 0);
+
+                const activeCheck = await pool.request().query(`
+                  SELECT COUNT(*) AS active_cnt FROM [${cand.targetTable}] WHERE [${cand.countCol}] > 0;
+                `);
+                cand.tableActiveRows = activeCheck.recordset[0]?.active_cnt || 0;
+              } else {
+                const userCheck = await pool.request()
+                  .input('Acc', sql.VarChar(50), accountId.trim())
+                  .query(`
+                    SELECT * FROM [${cand.targetTable}]
+                    WHERE (LOWER(LTRIM(RTRIM([${cand.accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                       OR LTRIM(RTRIM([${cand.accColName}])) = LTRIM(RTRIM(@Acc))
+                       OR [${cand.accColName}] = @Acc);
+                  `);
+                if (userCheck.recordset && userCheck.recordset[0]) {
+                  cand.userHasRow = true;
+                  for (const col of Object.values(cand.jewelColMap)) {
+                    cand.userJewelSum += Math.max(0, parseInt(userCheck.recordset[0][col], 10) || 0);
+                  }
+                }
+
+                const sumParts = Object.values(cand.jewelColMap).map(c => `ISNULL([${c}], 0)`).join(' + ');
+                const activeCheck = await pool.request().query(`
+                  SELECT COUNT(*) AS active_cnt FROM [${cand.targetTable}] WHERE (${sumParts}) > 0;
+                `);
+                cand.tableActiveRows = activeCheck.recordset[0]?.active_cnt || 0;
+              }
+            } catch (_) {}
+          }
+
+          analyzedTables.sort((a, b) => {
+            if (a.userJewelSum !== b.userJewelSum) return b.userJewelSum - a.userJewelSum;
+            if (a.tableActiveRows !== b.tableActiveRows) return b.tableActiveRows - a.tableActiveRows;
+            if (a.userHasRow !== b.userHasRow) return a.userHasRow ? -1 : 1;
+            const priority = {
+              MSPro_JewelBank: 1,
+              CustomJewelBank: 2,
+              JewelBank: 3,
+              CustomItemBank: 4,
+              XTR_JewelStore: 5,
+            };
+            return (priority[a.targetTable] || 10) - (priority[b.targetTable] || 10);
+          });
+
+          chosen = analyzedTables[0];
+        }
+
+        jewelBankTableCache.set(dbKey, chosen);
       }
 
-      if (analyzedTables.length === 0) {
-        return { hasTable: false, tableName: null, bank: null };
-      }
-
-      // Ordenar para elegir la tabla que contiene los datos reales
-      analyzedTables.sort((a, b) => {
-        if (a.userJewelSum !== b.userJewelSum) return b.userJewelSum - a.userJewelSum;
-        if (a.tableActiveRows !== b.tableActiveRows) return b.tableActiveRows - a.tableActiveRows;
-        if (a.userHasRow !== b.userHasRow) return a.userHasRow ? -1 : 1;
-        const priority = {
-          MSPro_JewelBank: 1,
-          CustomJewelBank: 2,
-          JewelBank: 3,
-          CustomItemBank: 4,
-          XTR_JewelStore: 5,
-        };
-        return (priority[a.targetTable] || 10) - (priority[b.targetTable] || 10);
-      });
-
-      const chosen = analyzedTables[0];
       const {
         targetTable,
         accColName,
@@ -3805,6 +3834,7 @@ app.post('/api/character/jewel-bank', async (req, res) => {
       bank: data.bank,
     });
   } catch (err) {
+    jewelBankTableCache.delete(dbKey);
     res.status(500).json({ success: false, error: err.message });
   }
 });
