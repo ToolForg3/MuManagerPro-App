@@ -1,10 +1,10 @@
 {
-  "version": "2.0.0",
+  "version": "2.0.1",
   "minRequiredVersion": "1.9.9",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v2.0.0",
-  "publishedAt": "2026-09-17T02:40:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
-  "build": 102,
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v2.0.1",
+  "publishedAt": "2026-09-17T17:45:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "build": 103,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v2.0.0 (Build 102) - Actualización Mayor de Seguridad y Blindaje:\n• Blindaje Criptográfico: Eliminado guardado de contraseñas en texto plano en almacenamiento local y activado cifrado AES-256 con hash seguro en SecureStorage.\n• Corrección en Autenticación: Corrección integral en cambio de contraseña y validación de tokens de sesión.\n• Blindaje Nativo Android: Eliminado permiso SYSTEM_ALERT_WINDOW para mayor seguridad y prevención de tapjacking.\n• Protección contra Mutaciones Duplicadas: Blindaje de red en transacciones SQL no idempotentes ante cortes de conexión.\n• Conector de PC y Pasarela Blindados: Saneamiento de telemetría y protección contra ataques de fuerza bruta."
+  "changelog": "MuManager PRO v2.0.1 (Build 103) - Optimización de Banco de Joyas y Compatibilidad Season 6:\n• Banco de Joyas Multitabla Universal: Detección inteligente ponderada y compatibilidad dual con MSPro_JewelBank, CustomJewelBank, JewelBank y XTR_JewelStore.\n• Soporte Completo para 10 Joyas: Integración de códigos numéricos de ítems Season 6 (Bless 7181, Soul 7182, Chaos 6159, Life 7184/7183, Creation 7190, Guardian 7199, Harmony 7210, GemStone 7209, LowStone 7211, HighStone 7212).\n• Sincronización Inmediata: Lectura e inyección atómica de conteos de joyas sin desfases de balance.\n• Conector de PC Actualizado: Binario y puente con scoring multitabla blindado ante tablas vacías."
 }

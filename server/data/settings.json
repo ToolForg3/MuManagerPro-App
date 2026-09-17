@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "1.9.9",
-  "latestVersion": "2.0.0",
-  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.0.0 (Build 102) - Actualización Mayor de Seguridad y Blindaje:\n• Blindaje Criptográfico: Eliminado guardado de contraseñas en texto plano en almacenamiento local y activado cifrado AES-256 con hash seguro en SecureStorage.\n• Corrección en Autenticación: Corrección integral en cambio de contraseña y validación de tokens de sesión.\n• Blindaje Nativo Android: Eliminado permiso SYSTEM_ALERT_WINDOW para mayor seguridad y prevención de tapjacking.\n• Protección contra Mutaciones Duplicadas: Blindaje de red en transacciones SQL no idempotentes ante cortes de conexión.\n• Conector de PC y Pasarela Blindados: Saneamiento de telemetría y protección contra ataques de fuerza bruta.",
+  "latestVersion": "2.0.1",
+  "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "updateChangelog": "MuManager PRO v2.0.1 (Build 103) - Optimización de Banco de Joyas y Compatibilidad Season 6:\n• Banco de Joyas Multitabla Universal: Detección inteligente ponderada y compatibilidad dual con MSPro_JewelBank, CustomJewelBank, JewelBank y XTR_JewelStore.\n• Soporte Completo para 10 Joyas: Integración de códigos numéricos de ítems Season 6 (Bless 7181, Soul 7182, Chaos 6159, Life 7184/7183, Creation 7190, Guardian 7199, Harmony 7210, GemStone 7209, LowStone 7211, HighStone 7212).\n• Sincronización Inmediata: Lectura e inyección atómica de conteos de joyas sin desfases de balance.\n• Conector de PC Actualizado: Binario y puente con scoring multitabla blindado ante tablas vacías.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -47,15 +47,15 @@
     "triggeredAt": ""
   },
   "minVersion": "1.9.9",
-  "updateTitle": "MuManager PRO v2.0.0 (Build 102)",
-  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
-  "versionCode": 102,
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
-  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.0.0 (Build 102) - Actualización Mayor de Seguridad y Blindaje:\n• Blindaje Criptográfico: Eliminado guardado de contraseñas en texto plano en almacenamiento local y activado cifrado AES-256 con hash seguro en SecureStorage.\n• Corrección en Autenticación: Corrección integral en cambio de contraseña y validación de tokens de sesión.\n• Blindaje Nativo Android: Eliminado permiso SYSTEM_ALERT_WINDOW para mayor seguridad y prevención de tapjacking.\n• Protección contra Mutaciones Duplicadas: Blindaje de red en transacciones SQL no idempotentes ante cortes de conexión.\n• Conector de PC y Pasarela Blindados: Saneamiento de telemetría y protección contra ataques de fuerza bruta.",
-  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.0/MuManagerPro.apk",
-  "appVersion": "2.0.0",
-  "buildNumber": 102,
+  "updateTitle": "MuManager PRO v2.0.1 (Build 103)",
+  "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "versionCode": 103,
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "releaseNotes": "MuManager PRO v2.0.1 (Build 103) - Optimización de Banco de Joyas y Compatibilidad Season 6:\n• Banco de Joyas Multitabla Universal: Detección inteligente ponderada y compatibilidad dual con MSPro_JewelBank, CustomJewelBank, JewelBank y XTR_JewelStore.\n• Soporte Completo para 10 Joyas: Integración de códigos numéricos de ítems Season 6 (Bless 7181, Soul 7182, Chaos 6159, Life 7184/7183, Creation 7190, Guardian 7199, Harmony 7210, GemStone 7209, LowStone 7211, HighStone 7212).\n• Sincronización Inmediata: Lectura e inyección atómica de conteos de joyas sin desfases de balance.\n• Conector de PC Actualizado: Binario y puente con scoring multitabla blindado ante tablas vacías.",
+  "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "appVersion": "2.0.1",
+  "buildNumber": 103,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -67,6 +67,6 @@
       "pass": ""
     }
   },
-  "version": "2.0.0",
-  "build": 102
+  "version": "2.0.1",
+  "build": 103
 }

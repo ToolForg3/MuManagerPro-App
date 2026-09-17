@@ -2817,7 +2817,7 @@ app.post('/api/character/teleport', async (req, res) => {
   }
 });
 
-// Banco de Joyas Louis S6 Update 40 (CustomJewelBank) & MSPro (JewelBank) & Normalized (CustomItemBank)
+// Banco de Joyas Louis S6 Update 40 (CustomJewelBank) & MSPro (MSPro_JewelBank, JewelBank) & Normalized (CustomItemBank) & X-Team (XTR_JewelStore)
 app.post('/api/character/jewel-bank', async (req, res) => {
   try {
     const { accountId, config, update, jewels } = req.body;
@@ -2825,71 +2825,57 @@ app.post('/api/character/jewel-bank', async (req, res) => {
     if (!accountId) return res.status(400).json({ success: false, error: 'AccountID requerido' });
 
     const data = await executeSql(config, async (pool) => {
-      // Detección dinámica: CustomJewelBank (Louis S6) vs JewelBank (MSPro) vs Tablas Normalizadas
+      // 1. Detección exhaustiva y compatibilidad dual: CustomJewelBank (Louis S6) vs JewelBank (MSPro) vs MSPro_JewelBank
       const tblCheck = await pool.request().query(`
-        SELECT CASE 
-          WHEN OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL THEN 'CustomJewelBank'
-          WHEN OBJECT_ID('JewelBank', 'U') IS NOT NULL THEN 'JewelBank'
-          WHEN OBJECT_ID('CustomItemBank', 'U') IS NOT NULL THEN 'CustomItemBank'
-          WHEN OBJECT_ID('ItemBank', 'U') IS NOT NULL THEN 'ItemBank'
-          WHEN OBJECT_ID('CustomJewel', 'U') IS NOT NULL THEN 'CustomJewel'
-          WHEN OBJECT_ID('Custom_JewelBank', 'U') IS NOT NULL THEN 'Custom_JewelBank'
-          WHEN OBJECT_ID('JewelDeposit', 'U') IS NOT NULL THEN 'JewelDeposit'
-          WHEN OBJECT_ID('IGCN_JewelBank', 'U') IS NOT NULL THEN 'IGCN_JewelBank'
-          ELSE (
-            SELECT TOP 1 t.name 
-            FROM sys.tables t
-            JOIN sys.columns c ON t.object_id = c.object_id
-            WHERE LOWER(c.name) IN ('itemindex', 'item_index', 'bless', 'jewelofbless', 'chaos')
-            GROUP BY t.name
-            ORDER BY 
-              CASE 
-                WHEN LOWER(t.name) LIKE '%jewelbank%' THEN 1
-                WHEN LOWER(t.name) LIKE '%itembank%' THEN 2
-                WHEN LOWER(t.name) LIKE '%jewel%' THEN 3
-                WHEN LOWER(t.name) LIKE '%bank%' THEN 4
-                ELSE 5 
-              END ASC
-          )
-        END AS TableName;
+        SELECT 
+          CASE 
+            WHEN OBJECT_ID('CustomJewelBank', 'U') IS NOT NULL THEN 'CustomJewelBank'
+            WHEN OBJECT_ID('JewelBank', 'U') IS NOT NULL THEN 'JewelBank'
+            WHEN OBJECT_ID('MSPro_JewelBank', 'U') IS NOT NULL THEN 'MSPro_JewelBank'
+            WHEN OBJECT_ID('CustomItemBank', 'U') IS NOT NULL THEN 'CustomItemBank'
+            ELSE NULL
+          END AS DefaultTable,
+          t.name AS TableName
+        FROM sys.tables t
+        WHERE t.name IN (
+          'MSPro_JewelBank',
+          'CustomJewelBank',
+          'JewelBank',
+          'CustomItemBank',
+          'XTR_JewelStore',
+          'ItemBank',
+          'CustomJewel',
+          'Custom_JewelBank',
+          'JewelDeposit',
+          'IGCN_JewelBank'
+        )
+        OR LOWER(t.name) LIKE '%jewelbank%'
+        OR LOWER(t.name) LIKE '%itembank%'
+        OR LOWER(t.name) LIKE '%jewelstore%';
       `);
-      let targetTable = (tblCheck.recordset && tblCheck.recordset[0] && tblCheck.recordset[0].TableName) ? tblCheck.recordset[0].TableName : null;
-      if (!targetTable) {
+
+      const rawTables = (tblCheck.recordset || []).map(r => r.TableName);
+      const candidateNames = rawTables.filter(name => {
+        const l = name.toLowerCase();
+        return !l.includes('config') && !l.includes('log') && !l.includes('market') && !l.includes('webshop') && !l.includes('ranking');
+      });
+
+      if (candidateNames.length === 0) {
         return { hasTable: false, tableName: null, bank: null };
       }
 
-      // Inspeccionar columnas existentes para compatibilidad total ante variantes de esquema
-      const colCheck = await pool.request()
-        .input('TblName', sql.VarChar(50), targetTable)
-        .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
-      const existingColNames = (colCheck.recordset || []).map(r => r.COLUMN_NAME);
-
-      // Detectar si la tabla es Normalizada por Fila (ItemIndex, ItemCount) o Columnar (Bless, Soul, etc.)
-      const indexCol = existingColNames.find(c => ['itemindex', 'item_index', 'itemid', 'item_id', 'iditem'].includes(c.toLowerCase()));
-      const countCol = existingColNames.find(c => ['itemcount', 'item_count', 'count', 'amount', 'quantity'].includes(c.toLowerCase()));
-      const levelCol = existingColNames.find(c => ['itemlevel', 'item_level', 'level'].includes(c.toLowerCase()));
-      const autoPickCol = existingColNames.find(c => ['autopick', 'auto_pick'].includes(c.toLowerCase()));
-
-      const isNormalizedSchema = !!(indexCol && countCol);
-
-      // Detectar columna de cuenta de forma dinámica (AccountID, AccountId, Account, etc.)
-      const accColCandidate = existingColNames.find(name => 
-        ['accountid', 'account', 'memb___id', 'id', 'userguid'].includes(name.toLowerCase())
-      );
-      const accColName = accColCandidate || 'AccountID';
-
-      // Diccionario exhaustivo de variantes de nombres de columnas en emuladores Season 6 / MSPro
+      // Diccionario exhaustivo de variantes de nombres y números de columnas en emuladores Season 6 / MSPro / X-Team
       const JEWEL_ALIASES = {
-        Bless: ['bless', 'jewelofbless', 'jewelbless', 'b_bless', 'j_bless', 'blesscount'],
-        Soul: ['soul', 'jewelofsoul', 'jewelsoul', 'b_soul', 'j_soul', 'soulcount'],
-        Chaos: ['chaos', 'jewelofchaos', 'jewelchaos', 'b_chaos', 'j_chaos', 'chaoscount'],
-        Life: ['life', 'jeweloflife', 'jewellife', 'b_life', 'j_life', 'lifecount'],
-        Creation: ['creation', 'jewelofcreation', 'jewelcreation', 'b_creation', 'j_creation', 'creationcount'],
-        Guardian: ['guardian', 'jewelofguardian', 'jewelguardian', 'b_guardian', 'j_guardian', 'guardiancount'],
-        Harmony: ['harmony', 'jewelofharmony', 'jewelharmony', 'b_harmony', 'j_harmony', 'harmonycount'],
-        GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount'],
-        LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount'],
-        HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount'],
+        Bless: ['bless', 'jewelofbless', 'jewelbless', 'b_bless', 'j_bless', 'blesscount', '7181', '13'],
+        Soul: ['soul', 'jewelofsoul', 'jewelsoul', 'b_soul', 'j_soul', 'soulcount', '7182', '14'],
+        Chaos: ['chaos', 'jewelofchaos', 'jewelchaos', 'b_chaos', 'j_chaos', 'chaoscount', '6159', '15'],
+        Life: ['life', 'jeweloflife', 'jewellife', 'b_life', 'j_life', 'lifecount', '7184', '7183', '16'],
+        Creation: ['creation', 'jewelofcreation', 'jewelcreation', 'b_creation', 'j_creation', 'creationcount', '7190', '22'],
+        Guardian: ['guardian', 'jewelofguardian', 'jewelguardian', 'b_guardian', 'j_guardian', 'guardiancount', '7199', '31'],
+        Harmony: ['harmony', 'jewelofharmony', 'jewelharmony', 'b_harmony', 'j_harmony', 'harmonycount', '7210', '42'],
+        GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount', '7209', '41'],
+        LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount', '7211', '43'],
+        HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount', '7212', '44'],
       };
 
       // Mapeo estándar de ItemIndex para MU Online Season 6 (Section * 512 + Index)
@@ -2897,7 +2883,7 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         Chaos: 6159,     // Section 12, Index 15 = (12 * 512) + 15
         Bless: 7181,     // Section 14, Index 13 = (14 * 512) + 13
         Soul: 7182,      // Section 14, Index 14 = (14 * 512) + 14
-        Life: 7184,      // Section 14, Index 16 = (14 * 512) + 16
+        Life: 7184,      // Section 14, Index 16 = (14 * 512) + 16 (o 7183)
         Creation: 7190,  // Section 14, Index 22 = (14 * 512) + 22
         Guardian: 7199,  // Section 14, Index 31 = (14 * 512) + 31
         GemStone: 7209,  // Section 14, Index 41 = (14 * 512) + 41
@@ -2914,6 +2900,7 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         7182: 'Soul',
         14: 'Soul',
         7184: 'Life',
+        7183: 'Life',
         16: 'Life',
         7190: 'Creation',
         22: 'Creation',
@@ -2929,15 +2916,156 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         44: 'HighStone',
       };
 
+      // Analizar esquema de cada tabla candidata y puntuar su relevancia real
+      const analyzedTables = [];
+      for (const tName of candidateNames) {
+        const colCheck = await pool.request()
+          .input('TblName', sql.VarChar(50), tName)
+          .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @TblName;");
+        const existingColNames = (colCheck.recordset || []).map(r => r.COLUMN_NAME);
+
+        const accColCandidate = existingColNames.find(name => 
+          ['accountid', 'account', 'memb___id', 'id', 'userguid', 'account_id', 'memb_id'].includes(name.toLowerCase())
+        );
+        if (!accColCandidate) continue;
+
+        const indexCol = existingColNames.find(c => ['itemindex', 'item_index', 'itemid', 'item_id', 'iditem', 'item', 'item_num', 'num', 'code'].includes(c.toLowerCase()));
+        const countCol = existingColNames.find(c => ['itemcount', 'item_count', 'count', 'amount', 'quantity', 'cnt', 'total'].includes(c.toLowerCase()));
+        const levelCol = existingColNames.find(c => ['itemlevel', 'item_level', 'level', 'lvl'].includes(c.toLowerCase()));
+        const autoPickCol = existingColNames.find(c => ['autopick', 'auto_pick'].includes(c.toLowerCase()));
+
+        const isNormalizedSchema = !!(indexCol && countCol);
+
+        let jewelColMap = {};
+        if (!isNormalizedSchema) {
+          for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
+            const matched = existingColNames.find(name => aliases.includes(name.toLowerCase()));
+            if (matched) {
+              jewelColMap[key] = matched;
+            }
+          }
+          if (Object.keys(jewelColMap).length < 2) continue;
+        }
+
+        // Consultar presencia de datos de este usuario y actividad en la tabla
+        let userJewelSum = 0;
+        let userHasRow = false;
+        let tableActiveRows = 0;
+
+        if (isNormalizedSchema) {
+          const userCheck = await pool.request()
+            .input('Acc', sql.VarChar(50), accountId.trim())
+            .query(`
+              SELECT COUNT(*) AS row_cnt, SUM(CAST(ISNULL([${countCol}], 0) AS BIGINT)) AS jewel_sum
+              FROM [${tName}]
+              WHERE (LOWER(LTRIM(RTRIM([${accColCandidate}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                 OR LTRIM(RTRIM([${accColCandidate}])) = LTRIM(RTRIM(@Acc))
+                 OR [${accColCandidate}] = @Acc);
+            `);
+          userHasRow = (userCheck.recordset[0]?.row_cnt || 0) > 0;
+          userJewelSum = Number(userCheck.recordset[0]?.jewel_sum || 0);
+
+          const activeCheck = await pool.request().query(`
+            SELECT COUNT(*) AS active_cnt FROM [${tName}] WHERE [${countCol}] > 0;
+          `);
+          tableActiveRows = activeCheck.recordset[0]?.active_cnt || 0;
+        } else {
+          const userCheck = await pool.request()
+            .input('Acc', sql.VarChar(50), accountId.trim())
+            .query(`
+              SELECT * FROM [${tName}]
+              WHERE (LOWER(LTRIM(RTRIM([${accColCandidate}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                 OR LTRIM(RTRIM([${accColCandidate}])) = LTRIM(RTRIM(@Acc))
+                 OR [${accColCandidate}] = @Acc);
+            `);
+          if (userCheck.recordset && userCheck.recordset[0]) {
+            userHasRow = true;
+            for (const col of Object.values(jewelColMap)) {
+              userJewelSum += Math.max(0, parseInt(userCheck.recordset[0][col], 10) || 0);
+            }
+          }
+
+          const sumParts = Object.values(jewelColMap).map(c => `ISNULL([${c}], 0)`).join(' + ');
+          const activeCheck = await pool.request().query(`
+            SELECT COUNT(*) AS active_cnt FROM [${tName}] WHERE (${sumParts}) > 0;
+          `);
+          tableActiveRows = activeCheck.recordset[0]?.active_cnt || 0;
+        }
+
+        analyzedTables.push({
+          targetTable: tName,
+          existingColNames,
+          accColName: accColCandidate,
+          indexCol,
+          countCol,
+          levelCol,
+          autoPickCol,
+          isNormalizedSchema,
+          jewelColMap,
+          userHasRow,
+          userJewelSum,
+          tableActiveRows,
+        });
+      }
+
+      if (analyzedTables.length === 0) {
+        return { hasTable: false, tableName: null, bank: null };
+      }
+
+      // Ordenar para elegir la tabla que contiene los datos reales
+      analyzedTables.sort((a, b) => {
+        if (a.userJewelSum !== b.userJewelSum) return b.userJewelSum - a.userJewelSum;
+        if (a.tableActiveRows !== b.tableActiveRows) return b.tableActiveRows - a.tableActiveRows;
+        if (a.userHasRow !== b.userHasRow) return a.userHasRow ? -1 : 1;
+        const priority = {
+          MSPro_JewelBank: 1,
+          CustomJewelBank: 2,
+          JewelBank: 3,
+          CustomItemBank: 4,
+          XTR_JewelStore: 5,
+        };
+        return (priority[a.targetTable] || 10) - (priority[b.targetTable] || 10);
+      });
+
+      const chosen = analyzedTables[0];
+      const {
+        targetTable,
+        accColName,
+        indexCol,
+        countCol,
+        levelCol,
+        autoPickCol,
+        isNormalizedSchema,
+        jewelColMap
+      } = chosen;
+
       if (isNormalizedSchema) {
         // ==============================================================
-        // FORMATO NORMALIZADO (Row-per-Item: AccountID, ItemIndex, ItemCount)
+        // FORMATO NORMALIZADO (Row-per-Item: Account, Item, Level, Count)
         // ==============================================================
         if (update && jewels) {
-          for (const [key, itemIndex] of Object.entries(JEWEL_TO_ITEM_INDEX)) {
+          // Detectar si el usuario o la tabla ya usan 7183 o 7184 para Life
+          let lifeItemIndex = 7184;
+          const lifeCheck = await pool.request()
+            .input('Acc', sql.VarChar(50), accountId.trim())
+            .query(`
+              SELECT TOP 1 [${indexCol}] AS LifeIdx
+              FROM [${targetTable}]
+              WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                 OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+                 OR [${accColName}] = @Acc)
+                AND [${indexCol}] IN (7184, 7183, 16, 15);
+            `);
+          if (lifeCheck.recordset && lifeCheck.recordset[0] && lifeCheck.recordset[0].LifeIdx) {
+            lifeItemIndex = parseInt(lifeCheck.recordset[0].LifeIdx, 10);
+          }
+
+          for (const [key, defaultIndex] of Object.entries(JEWEL_TO_ITEM_INDEX)) {
             const rawVal = jewels[key];
             if (rawVal !== undefined && rawVal !== null) {
               const countVal = Math.max(0, parseInt(rawVal, 10) || 0);
+              const itemIndex = key === 'Life' ? lifeItemIndex : defaultIndex;
+
               const extraCols = [];
               const extraVals = [];
               if (levelCol) {
@@ -2957,23 +3085,23 @@ app.post('/api/character/jewel-bank', async (req, res) => {
                 .input('Cnt', sql.Int, countVal)
                 .query(`
                   IF EXISTS (
-                    SELECT 1 FROM ${targetTable}
+                    SELECT 1 FROM [${targetTable}]
                     WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
                        OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
                        OR [${accColName}] = @Acc)
                       AND [${indexCol}] = @Idx
                   )
                   BEGIN
-                    UPDATE ${targetTable}
+                    UPDATE [${targetTable}]
                     SET [${countCol}] = @Cnt
                     WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
                        OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
                        OR [${accColName}] = @Acc)
                       AND [${indexCol}] = @Idx;
                   END
-                  ELSE
+                  ELSE IF @Cnt > 0
                   BEGIN
-                    INSERT INTO ${targetTable} (${insertColsStr})
+                    INSERT INTO [${targetTable}] (${insertColsStr})
                     VALUES (${insertValsStr});
                   END
                 `);
@@ -2986,7 +3114,7 @@ app.post('/api/character/jewel-bank', async (req, res) => {
           .input('Acc', sql.VarChar(50), accountId.trim())
           .query(`
             SELECT [${indexCol}] AS ItemIndex, [${countCol}] AS ItemCount
-            FROM ${targetTable}
+            FROM [${targetTable}]
             WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
                OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
                OR [${accColName}] = @Acc;
@@ -3023,17 +3151,8 @@ app.post('/api/character/jewel-bank', async (req, res) => {
       }
 
       // ==============================================================
-      // FORMATO COLUMNAR (Column-per-Jewel: Bless, Soul, Chaos, etc.)
+      // FORMATO COLUMNAR (Column-per-Jewel: Bless, Soul, [7181], etc.)
       // ==============================================================
-      // Mapear cada joya con su columna real en la base de datos
-      const jewelColMap = {};
-      for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
-        const matched = existingColNames.find(name => aliases.includes(name.toLowerCase()));
-        if (matched) {
-          jewelColMap[key] = matched;
-        }
-      }
-
       if (update && jewels) {
         const reqUpdate = pool.request().input('Acc', sql.VarChar(50), accountId.trim());
         const updateSets = [];
@@ -3051,13 +3170,13 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         if (updateSets.length > 0) {
           await reqUpdate.query(`
             IF EXISTS (
-              SELECT 1 FROM ${targetTable} 
+              SELECT 1 FROM [${targetTable}] 
               WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
                  OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc)) 
                  OR [${accColName}] = @Acc
             )
             BEGIN
-              UPDATE ${targetTable}
+              UPDATE [${targetTable}]
               SET ${updateSets.join(', ')}
               WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
                  OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc)) 
@@ -3065,14 +3184,14 @@ app.post('/api/character/jewel-bank', async (req, res) => {
             END
             ELSE
             BEGIN
-              INSERT INTO ${targetTable} (${insertCols.join(', ')})
+              INSERT INTO [${targetTable}] (${insertCols.join(', ')})
               VALUES (${insertVals.join(', ')});
             END
           `);
         }
       }
 
-      // Construir SELECT con alias canónicos forzados (ej: [bless] AS [Bless])
+      // Construir SELECT con alias canónicos forzados (ej: [bless] AS [Bless], [7181] AS [Bless])
       const selectCols = [`[${accColName}] AS [AccountID]`];
       for (const [key, actualCol] of Object.entries(jewelColMap)) {
         selectCols.push(`[${actualCol}] AS [${key}]`);
@@ -3082,50 +3201,13 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         .input('Acc', sql.VarChar(50), accountId.trim())
         .query(`
           SELECT ${selectCols.join(', ')}
-          FROM ${targetTable}
+          FROM [${targetTable}]
           WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
              OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
              OR [${accColName}] = @Acc;
         `);
 
       let rawBank = q.recordset[0] || null;
-
-      // Fallback resiliente: si targetTable no tenía la fila de este usuario, verificar la tabla alternativa
-      if (!rawBank) {
-        const altTable = targetTable === 'CustomJewelBank' ? 'JewelBank' : 'CustomJewelBank';
-        const altCheck = await pool.request().query(`SELECT OBJECT_ID('${altTable}', 'U') AS TblId;`);
-        if (altCheck.recordset && altCheck.recordset[0] && altCheck.recordset[0].TblId) {
-          const altColCheck = await pool.request()
-            .input('AltTblName', sql.VarChar(50), altTable)
-            .query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @AltTblName;");
-          const altColNames = (altColCheck.recordset || []).map(r => r.COLUMN_NAME);
-          const altAccCol = altColNames.find(name => 
-            ['accountid', 'account', 'memb___id', 'id', 'userguid'].includes(name.toLowerCase())
-          ) || 'AccountID';
-
-          const altSelectCols = [`[${altAccCol}] AS [AccountID]`];
-          for (const [key, aliases] of Object.entries(JEWEL_ALIASES)) {
-            const matched = altColNames.find(name => aliases.includes(name.toLowerCase()));
-            if (matched) {
-              altSelectCols.push(`[${matched}] AS [${key}]`);
-            }
-          }
-
-          const altQ = await pool.request()
-            .input('Acc', sql.VarChar(50), accountId.trim())
-            .query(`
-              SELECT ${altSelectCols.join(', ')}
-              FROM ${altTable}
-              WHERE LOWER(LTRIM(RTRIM([${altAccCol}]))) = LOWER(LTRIM(RTRIM(@Acc)))
-                 OR LTRIM(RTRIM([${altAccCol}])) = LTRIM(RTRIM(@Acc))
-                 OR [${altAccCol}] = @Acc;
-            `);
-          if (altQ.recordset && altQ.recordset.length > 0) {
-            rawBank = altQ.recordset[0];
-            targetTable = altTable;
-          }
-        }
-      }
 
       // Extracción blindada insensible a mayúsculas/minúsculas en JavaScript
       const getVal = (obj, key) => {
@@ -3971,6 +4053,15 @@ app.post('/api/account/delete', async (req, res) => {
           IF OBJECT_ID('JewelBank', 'U') IS NOT NULL
             DELETE FROM JewelBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
 
+          IF OBJECT_ID('MSPro_JewelBank', 'U') IS NOT NULL
+            DELETE FROM MSPro_JewelBank WHERE LTRIM(RTRIM(Account)) = LTRIM(RTRIM(@User)) OR Account = @User;
+
+          IF OBJECT_ID('CustomItemBank', 'U') IS NOT NULL
+            DELETE FROM CustomItemBank WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@User)) OR AccountID = @User;
+
+          IF OBJECT_ID('XTR_JewelStore', 'U') IS NOT NULL
+            DELETE FROM XTR_JewelStore WHERE LTRIM(RTRIM(Account)) = LTRIM(RTRIM(@User)) OR Account = @User;
+
           IF OBJECT_ID('MEMB_STAT', 'U') IS NOT NULL
             DELETE FROM MEMB_STAT WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@User)) OR memb___id = @User;
 
@@ -4239,6 +4330,12 @@ app.post('/api/account/update', async (req, res) => {
                 UPDATE CustomJewelBank SET AccountID = @NewUser WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@OldUser)) OR AccountID = @OldUser;
               IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'JewelBank')
                 UPDATE JewelBank SET AccountID = @NewUser WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@OldUser)) OR AccountID = @OldUser;
+              IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'MSPro_JewelBank')
+                UPDATE MSPro_JewelBank SET Account = @NewUser WHERE LTRIM(RTRIM(Account)) = LTRIM(RTRIM(@OldUser)) OR Account = @OldUser;
+              IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CustomItemBank')
+                UPDATE CustomItemBank SET AccountID = @NewUser WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@OldUser)) OR AccountID = @OldUser;
+              IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'XTR_JewelStore')
+                UPDATE XTR_JewelStore SET Account = @NewUser WHERE LTRIM(RTRIM(Account)) = LTRIM(RTRIM(@OldUser)) OR Account = @OldUser;
             END
 
             COMMIT TRANSACTION;

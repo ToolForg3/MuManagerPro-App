@@ -31,3 +31,25 @@ Toda subida de versión debe sincronizar simultáneamente:
 - `npm run ts:check` (0 errores)
 - `npm test` (100% pruebas unitarias pasando)
 - Cero ocurrencias de colores prohibidos o textos de bajo contraste en `src/`.
+
+## 5. SEGURIDAD Y BLINDAJE DE CREDENCIALES (OWASP MOBILE & BACKEND)
+- **Cero Contraseñas en Texto Plano**: Prohibido guardar contraseñas en claro en `AsyncStorage` (ej. `@mumanager_auth_password`). Las credenciales u hashes locales para modo offline deben residir exclusivamente en `SecureStorage` (AES-256-CBC + HMAC) con hash PBKDF2/SHA-256 salado.
+- **Protección de OTPs y Secretos en Producción**:
+  - `devCode` prohibido en respuestas JSON si `process.env.NODE_ENV === 'production'`.
+  - Códigos OTP de recuperación deben enmascararse (`[ ****** ]`) antes de registrarse en auditorías o logs.
+  - El conector local debe persistir sus sales y claves en `data/connector-secrets.json` (cero regeneración aleatoria por reinicio).
+- **Protección de Rutas y Rate Limiting**:
+  - `authRateLimitMiddleware` mandatorio en todo endpoint `/api/auth/*` (login, registro, reenvíos, recuperación).
+  - Toda mutación o consulta SQL en el conector debe estar registrada en `_sqlPaths` para bloquear accesos no autorizados o cuentas DEMO.
+  - Contraseñas de registro con política estricta de longitud mínima de 8 caracteres.
+
+## 6. RED E IDEMPOTENCIA TRANSACCIONAL (SQL CLIENT)
+- **Cero Reintentos en Mutaciones de Estado**: `sendSecureRequest()` en `sqlClient.ts` debe forzar `maxRetries = 0` ante timeouts o fallos de red en rutas de mutación (`/create`, `/delete`, `/inject`, `/save`, `/purge`, `/update`, `/toggle`, `/reset`, `/clear`) para prevenir duplicación de registros o inconsistencias en base de datos.
+
+## 7. POLÍTICA DE PERMISOS NATIVOS ANDROID
+- **Mínimo Privilegio**: `AndroidManifest.xml` solo debe declarar los permisos esenciales (`INTERNET`, `ACCESS_NETWORK_STATE`, `VIBRATE`, almacenamiento si aplica).
+- ❌ **Prohibido `SYSTEM_ALERT_WINDOW`** u otros permisos intrusivos de depuración en compilaciones de producción.
+
+## 8. INTEGRIDAD ATÓMICA DE DATOS Y PRIVACIDAD EN GIT
+- Toda escritura de configuración o datos debe usar `safeAtomicWriteJson(filePath, data)` recibiendo obligatoriamente los dos parámetros para evitar excepciones `TypeError` o archivos corruptos.
+- Ningún archivo `.json` de datos con información real de usuarios (`users.json`), telemetría (`devices.json`) o solicitudes (`proRequests.json`) debe incluirse en commits de Git ni en repositorios públicos.
