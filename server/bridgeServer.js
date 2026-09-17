@@ -904,17 +904,66 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Token', 'X-Device-HWID', 'X-Req-Timestamp', 'X-Req-Nonce', 'X-Req-Signature', 'X-Admin-Key'],
 }));
 
-app.use(express.json({ limit: '15mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-// Cabeceras de seguridad y Content-Security-Policy (H03)
+// [SEC-WAF] Registro de IPs bloqueadas por escaneos y honeypot anti-bots
+const BANNED_IPS = new Map(); // IP -> timestamp de expiración de baneo
+const HONEYPOT_PATHS = [
+  '/.env', '/.git', '/wp-admin', '/wp-login.php', '/phpmyadmin', '/pma',
+  '/actuator', '/swagger-ui.html', '/config.json', '/shell.php', '/xmlrpc.php',
+  '/.aws', '/backup.sql', '/dump.sql', '/server-status', '/etc/passwd'
+];
+const BLOCKED_USER_AGENTS = [
+  'sqlmap', 'nikto', 'masscan', 'nmap', 'gobuster', 'dirbuster',
+  'wpscan', 'zgrab', 'censys', 'shodan', 'acunetix'
+];
+
+// Middleware WAF: Filtrado de bots, escáneres y honeypot de rutas trampa
+app.use((req, res, next) => {
+  const clientIp = getClientIp(req);
+  const now = Date.now();
+
+  // 1. Verificar si la IP está en la lista de baneadas por WAF
+  const banExpires = BANNED_IPS.get(clientIp);
+  if (banExpires) {
+    if (now < banExpires) {
+      return res.status(403).json({ error: 'Access denied by WAF security shield.' });
+    }
+    BANNED_IPS.delete(clientIp);
+  }
+
+  // 2. Detección de herramientas de escaneo por User-Agent
+  const userAgent = String(req.headers['user-agent'] || '').toLowerCase();
+  for (const bot of BLOCKED_USER_AGENTS) {
+    if (userAgent.includes(bot)) {
+      BANNED_IPS.set(clientIp, now + 60 * 60 * 1000); // Baneo de 1 hora
+      addAuditLog('SECURITY_BOT_BLOCKED', 'N/A', clientIp, `Bloqueada herramienta de penetración: ${bot} (${userAgent})`, 'WARN');
+      return res.status(403).json({ error: 'Automated vulnerability scanners are strictly blocked.' });
+    }
+  }
+
+  // 3. Honeypot anti-scanners: Cualquier petición a rutas de PHP/WordPress/env banea la IP por 24 horas
+  const reqPath = (req.path || '').toLowerCase();
+  for (const trap of HONEYPOT_PATHS) {
+    if (reqPath.startsWith(trap) || reqPath.includes(trap)) {
+      BANNED_IPS.set(clientIp, now + 24 * 60 * 60 * 1000); // Baneo de 24 horas
+      addAuditLog('SECURITY_HONEYPOT_TRIGGERED', 'N/A', clientIp, `Honeypot activado por ruta sospechosa: ${req.path}`, 'ALERT');
+      return res.status(403).json({ error: 'Forbidden. Security intrusion attempt logged.' });
+    }
+  }
+
+  next();
+});
+
+// Cabeceras de seguridad de Grado Bancario y Content-Security-Policy (H03)
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  // [SEC-05] HSTS: fuerza HTTPS durante 1 año en producción
+  // HSTS: fuerza HTTPS estricto durante 1 año en producción con preload
   if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
   // Evita que el navegador filtre la URL de referencia a terceros
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -983,6 +1032,11 @@ if (typeof setInterval === 'function') {
     for (const [key, record] of authRateCounts.entries()) {
       if (now - record.startTime > AUTH_RATE_WINDOW_MS * 2) {
         authRateCounts.delete(key);
+      }
+    }
+    for (const [ip, expiresAt] of BANNED_IPS.entries()) {
+      if (now > expiresAt) {
+        BANNED_IPS.delete(ip);
       }
     }
   }, 5 * 60 * 1000);
