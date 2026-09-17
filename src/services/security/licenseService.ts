@@ -40,6 +40,12 @@ export class LicenseService {
     this.sessionInvalidatedCallback = cb;
   }
 
+  static triggerSessionInvalidated(reason?: string) {
+    if (this.sessionInvalidatedCallback) {
+      this.sessionInvalidatedCallback(reason || 'Tu sesión ha sido finalizada.');
+    }
+  }
+
   /**
    * Initializes the license manager on app boot and pings telemetry
    */

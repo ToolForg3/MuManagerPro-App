@@ -310,6 +310,14 @@ export const AccountsScreen = () => {
   };
 
   const handleCreateAccount = async () => {
+    if (!LicenseService.isPro()) {
+      Alert.alert(
+        'Función Bloqueada en DEMO',
+        'La creación de nuevas cuentas en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     if (!newUsername.trim() || !newPassword.trim()) {
       Alert.alert('Campos requeridos', 'Debes ingresar usuario y contraseña.');
       return;
@@ -343,6 +351,14 @@ export const AccountsScreen = () => {
   };
 
   const handleToggleBlock = async (account: AccountSummary) => {
+    if (!LicenseService.isPro()) {
+      Alert.alert(
+        'Función Bloqueada en DEMO',
+        'El bloqueo o desbloqueo de cuentas en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     const isCurrentlyBlocked = String(account.bloc_code) === '1';
     const actionText = isCurrentlyBlocked ? 'desbloquear' : 'bloquear / banear';
 
@@ -381,7 +397,7 @@ export const AccountsScreen = () => {
   const openAccountDetails = (account: AccountSummary) => {
     setSelectedAccount(account);
     setEditUsername(account.memb___id);
-    setEditPassword(account.memb__pwd || '');
+    setEditPassword(LicenseService.isPro() ? (account.memb__pwd || '') : '••••••••');
     setShowPassword(false);
     setEditName(account.memb_name || account.memb___id);
     setEditEmail(account.mail_addr || `${account.memb___id}@muonline.com`);

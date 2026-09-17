@@ -322,10 +322,14 @@ export class SqlClient {
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
+        const currentLic = LicenseService.getStatus();
+        const licKey = (currentLic && currentLic.licenseKey) ? currentLic.licenseKey.trim() : '';
+
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'X-App-Version': APP_VERSION,
           ...secHeaders,
+          ...(licKey ? { 'X-License-Key': licKey } : {}),
           ...(effectiveAdminKey ? { 'X-Admin-Key': effectiveAdminKey } : {}),
           ...(sessionToken ? {
             'Authorization': `Bearer ${sessionToken}`,
@@ -340,6 +344,16 @@ export class SqlClient {
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
+
+        // Si el servidor responde 401 (Sesión invalidada por purga de usuario o concurrencia)
+        if (response.status === 401) {
+          try {
+            const errData = await this.safeJson(response.clone());
+            if (errData && (errData.sessionInvalidated || errData.error === 'USUARIO_NO_EXISTE')) {
+              LicenseService.triggerSessionInvalidated(errData.message || 'Tu cuenta ha sido reiniciada o ya no existe en el servidor.');
+            }
+          } catch {}
+        }
 
         // Si el servidor responde 403 (Kill-Switch activado remotamente)
         if (response.status === 403) {

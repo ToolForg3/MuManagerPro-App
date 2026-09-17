@@ -463,12 +463,50 @@ async function initCloudStorage() {
   if (cloudStorageInitialized || !CLOUD_STORAGE.enabled) return;
   cloudStorageInitialized = true;
   try {
-    const [cDev, cSet, cUsr, cTom] = await Promise.all([
+    let [cDev, cSet, cUsr, cTom] = await Promise.all([
       CLOUD_STORAGE.get('mumanager:devices'),
       CLOUD_STORAGE.get('mumanager:settings'),
       CLOUD_STORAGE.get('mumanager:users'),
       CLOUD_STORAGE.get('mumanager:tombstones')
     ]);
+
+    // Migración M01: Purga total de cuentas de usuarios antiguas y desvinculación de celulares
+    if (!cSet || !cSet.usersPurgedV168) {
+      console.log('[CloudStorage] Ejecutando purga total de cuentas antiguas y desvinculación de celulares...');
+      const cleanAdminSeed = [
+        {
+          id: "usr_admin_default",
+          email: "admin_test@muonline.com",
+          username: "Admin",
+          role: "ADMIN",
+          status: "ACTIVE",
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          hwid: ""
+        }
+      ];
+      // Desvincular todos los dispositivos
+      if (cDev && typeof cDev === 'object') {
+        for (const k of Object.keys(cDev)) {
+          if (cDev[k]) {
+            cDev[k].currentUser = '';
+            cDev[k].userEmail = '';
+            cDev[k].activeUser = '';
+          }
+        }
+      }
+      cUsr = cleanAdminSeed;
+      if (!cSet || typeof cSet !== 'object') cSet = { ...DEFAULT_SETTINGS };
+      cSet.usersPurgedV168 = true;
+
+      await Promise.all([
+        CLOUD_STORAGE.set('mumanager:users', cleanAdminSeed),
+        CLOUD_STORAGE.set('mumanager:devices', cDev || {}),
+        CLOUD_STORAGE.set('mumanager:settings', cSet)
+      ]).catch(() => {});
+    }
+
     if (cDev && typeof cDev === 'object') {
       inMemoryFallback[DATA_FILE] = cDev;
       safeAtomicWriteJson(DATA_FILE, cDev);
@@ -1303,6 +1341,24 @@ app.use((req, res, next) => {
     if (token) {
       const decoded = verifySessionToken(token);
       if (decoded) {
+        // Validación de usuario activo (si no es cuenta demo interna ni admin):
+        // Si el usuario fue purgado de users.json, denegar sesión para obligar a re-registro
+        if (decoded.sub && decoded.sub !== 'demo@muonline.local' && decoded.role !== 'ADMIN') {
+          const allUsers = loadUsers();
+          const cleanEmail = String(decoded.sub).toLowerCase().trim();
+          const userExists = allUsers.some(u => 
+            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+          );
+          if (!userExists) {
+            return res.status(401).json({
+              success: false,
+              sessionInvalidated: true,
+              error: 'USUARIO_NO_EXISTE',
+              message: 'Tu cuenta ya no existe en el servidor o ha sido reiniciada. Por favor, regístrate nuevamente.'
+            });
+          }
+        }
         isAuthorized = true;
         authUser = decoded;
         req.user = decoded;
@@ -1496,11 +1552,30 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
     const devices = loadDevices();
     let dev = hwid ? devices[hwid] : null;
 
-    // Auto-reconciliación: si el dispositivo tiene clave válida no revocada, asegurar modo PRO
-    if (dev && dev.mode !== 'PRO' && !dev.forceDemo && !dev.blocked) {
-      const devKey = (dev.licenseKey || dev.generatedKey || '').trim().toUpperCase();
-      if (devKey && verifyKey(hwid, devKey)) {
+    // Obtener clave enviada por el cliente por cabecera si existe
+    const clientLicenseKey = (req.headers['x-license-key'] || (req.body && req.body.licenseKey) || '').trim().toUpperCase();
+
+    // Auto-reconciliación: si el cliente presenta clave matemática válida no revocada, asegurar modo PRO
+    const effectiveDevKey = clientLicenseKey || (dev && (dev.licenseKey || dev.generatedKey || '')).trim().toUpperCase();
+    if (hwid && effectiveDevKey && verifyKey(hwid, effectiveDevKey)) {
+      if (!dev) {
+        dev = {
+          hwid,
+          mode: 'PRO',
+          licenseKey: effectiveDevKey,
+          generatedKey: effectiveDevKey,
+          createdAt: new Date().toISOString(),
+          firstSeen: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          blocked: false,
+          forceDemo: false,
+        };
+        devices[hwid] = dev;
+        saveDevices(devices);
+      } else if (dev.mode !== 'PRO' && !dev.forceDemo && !dev.blocked) {
         dev.mode = 'PRO';
+        dev.licenseKey = effectiveDevKey;
+        dev.generatedKey = effectiveDevKey;
         saveDevices(devices);
       }
     }
@@ -1518,24 +1593,53 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
       req.path.startsWith('/api/ip') ||
       req.path.startsWith('/api/prizes');
 
+    // Rutas de mutación SQL que alteran datos del servidor de juego: ESTRICTAMENTE PRO / ADMIN
+    const isSqlMutationRoute =
+      req.path.startsWith('/api/account/create') ||
+      req.path.startsWith('/api/accounts/update') ||
+      req.path.startsWith('/api/accounts/delete') ||
+      req.path.startsWith('/api/accounts/ban') ||
+      req.path.startsWith('/api/accounts/unban') ||
+      req.path.startsWith('/api/accounts/add-gcoins') ||
+      req.path.startsWith('/api/accounts/mute') ||
+      req.path.startsWith('/api/character/update-inventory') ||
+      req.path.startsWith('/api/character/update-stats') ||
+      req.path.startsWith('/api/character/update-skills') ||
+      req.path.startsWith('/api/character/reset') ||
+      req.path.startsWith('/api/character/add-zen') ||
+      req.path.startsWith('/api/character/set-pk') ||
+      req.path.startsWith('/api/character/clear-inventory') ||
+      req.path.startsWith('/api/warehouse/update') ||
+      req.path.startsWith('/api/warehouse/inject-items') ||
+      req.path.startsWith('/api/warehouse/inject-zen') ||
+      req.path.startsWith('/api/warehouse/clear') ||
+      req.path.startsWith('/api/warehouse/expand') ||
+      req.path.startsWith('/api/guilds/delete') ||
+      req.path.startsWith('/api/guilds/create') ||
+      req.path.startsWith('/api/pk/clear');
+
     if (!isPro) {
-      // Si el dispositivo está en período de prueba (DEMO de 72h) activo y la ruta no es exclusiva PRO:
-      if (isDemoActive && !isProExclusiveRoute) {
-        // Permitir acceso durante el período de prueba (cuentas, personajes, items, almacén, etc.)
+      // En modo DEMO: permitir ÚNICAMENTE rutas de lectura / preview, bloqueando tajantemente mutaciones y rutas exclusivas PRO
+      if (isDemoActive && !isProExclusiveRoute && !isSqlMutationRoute) {
+        // Permitir visualización / lectura durante el período de prueba (cuentas, personajes, almacén, etc.)
       } else {
         const isExpiredDemo = dev && dev.mode === 'DEMO' && dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now();
-        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isExpiredDemo ? 'DEMO expirado' : 'licencia requerida'}`, 'BLOCKED');
+        const reasonMsg = isSqlMutationRoute
+          ? 'Esta acción de modificación en SQL Server requiere una Licencia PRO activa. El modo DEMO es únicamente de visualización de prueba.'
+          : isProExclusiveRoute
+            ? 'Esta función avanzada requiere una licencia PRO activa.'
+            : isExpiredDemo
+              ? 'Tu período de prueba ha finalizado. Adquiere una licencia PRO para continuar.'
+              : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.';
+
+        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isSqlMutationRoute ? 'Mutación bloqueada en DEMO' : (isExpiredDemo ? 'DEMO expirado' : 'licencia requerida')}`, 'BLOCKED');
         return res.status(403).json({
           success: false,
           blocked: !!(dev && dev.blocked),
           forceWipeKey: !!(dev && dev.forceDemo),
           authoritativeMode: 'DEMO',
-          error: isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA',
-          message: isExpiredDemo
-            ? 'Tu período de prueba de 72 horas ha finalizado. Adquiere una licencia PRO para continuar.'
-            : isProExclusiveRoute
-              ? 'Esta función avanzada requiere una licencia PRO activa.'
-              : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.',
+          error: isSqlMutationRoute ? 'FUNCION_RESTRINGIDA_PRO' : (isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA'),
+          message: reasonMsg,
         });
       }
     }

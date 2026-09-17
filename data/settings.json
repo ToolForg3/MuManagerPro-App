@@ -78,5 +78,6 @@
     }
   },
   "version": "2.0.5",
-  "build": 107
+  "build": 107,
+  "usersPurgedV168": true
 }

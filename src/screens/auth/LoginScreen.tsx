@@ -28,9 +28,35 @@ import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditio
 export const LoginScreen = () => {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
-  const { login, loginDemo, register, verifyRegistration, resendVerificationCode, savedEmail, savedUsername } = useAuth();
+  const {
+    login,
+    loginDemo,
+    register,
+    verifyRegistration,
+    resendVerificationCode,
+    savedEmail,
+    savedUsername,
+    isDemoExpired,
+    clearDemoExpiredNotice,
+  } = useAuth();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+
+  useEffect(() => {
+    if (isDemoExpired) {
+      setIsRegisterMode(true);
+      Alert.alert(
+        'Tiempo de Demo Finalizado',
+        'Tu tiempo de prueba de 10 minutos ha finalizado. Por favor, crea una cuenta para continuar usando MU Manager PRO.',
+        [
+          {
+            text: 'Crear Cuenta',
+            onPress: () => clearDemoExpiredNotice(),
+          },
+        ]
+      );
+    }
+  }, [isDemoExpired]);
   const [username, setUsername] = useState(savedUsername || (savedEmail && !savedEmail.includes('@') ? savedEmail : ''));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
