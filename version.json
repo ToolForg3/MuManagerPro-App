@@ -1,9 +1,9 @@
 {
   "version": "2.0.1",
   "minRequiredVersion": "1.9.9",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/tag/v2.0.1",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "publishedAt": "2026-09-17T17:45:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v2.0.1/MuManagerPro.apk",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "build": 103,
   "forceUpdate": true,
   "changelog": "MuManager PRO v2.0.1 (Build 103) - Optimización de Banco de Joyas y Compatibilidad Season 6:\n• Banco de Joyas Multitabla Universal: Detección inteligente ponderada y compatibilidad dual con MSPro_JewelBank, CustomJewelBank, JewelBank y XTR_JewelStore.\n• Soporte Completo para 10 Joyas: Integración de códigos numéricos de ítems Season 6 (Bless 7181, Soul 7182, Chaos 6159, Life 7184/7183, Creation 7190, Guardian 7199, Harmony 7210, GemStone 7209, LowStone 7211, HighStone 7212).\n• Sincronización Inmediata: Lectura e inyección atómica de conteos de joyas sin desfases de balance.\n• Conector de PC Actualizado: Binario y puente con scoring multitabla blindado ante tablas vacías."
