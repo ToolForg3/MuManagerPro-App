@@ -516,17 +516,31 @@ async function initCloudStorage() {
         const seedPath = path.join(__dirname, 'data', 'settings.json');
         if (fs.existsSync(seedPath)) {
           const seedSettings = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
-          if (seedSettings && isNewerVersion(seedSettings.latestVersion, cSet.latestVersion)) {
-            cSet.latestVersion = seedSettings.latestVersion;
-            cSet.updateChangelog = seedSettings.updateChangelog;
-            cSet.forceUpdate = seedSettings.forceUpdate !== undefined ? seedSettings.forceUpdate : true;
-            cSet.latestApkUrl = seedSettings.latestApkUrl || cSet.latestApkUrl;
-            cSet.updateTitle = seedSettings.updateTitle || cSet.updateTitle;
-            cSet.versionCode = seedSettings.versionCode || cSet.versionCode;
-            cSet.appVersion = seedSettings.appVersion || cSet.appVersion;
-            cSet.buildNumber = seedSettings.buildNumber || cSet.buildNumber;
-            cSet.releaseNotes = seedSettings.releaseNotes || cSet.releaseNotes;
-            CLOUD_STORAGE.set('mumanager:settings', cSet).catch(() => {});
+          if (seedSettings) {
+            let updatedCloud = false;
+            if (seedSettings.forceUpdate !== undefined && cSet.forceUpdate !== seedSettings.forceUpdate) {
+              cSet.forceUpdate = seedSettings.forceUpdate;
+              updatedCloud = true;
+            }
+            if (seedSettings.minRequiredVersion && cSet.minRequiredVersion !== seedSettings.minRequiredVersion) {
+              cSet.minRequiredVersion = seedSettings.minRequiredVersion;
+              updatedCloud = true;
+            }
+            if (isNewerVersion(seedSettings.latestVersion, cSet.latestVersion) || (seedSettings.latestVersion && seedSettings.latestVersion !== cSet.latestVersion)) {
+              cSet.latestVersion = seedSettings.latestVersion;
+              cSet.updateChangelog = seedSettings.updateChangelog;
+              cSet.forceUpdate = seedSettings.forceUpdate !== undefined ? seedSettings.forceUpdate : true;
+              cSet.latestApkUrl = seedSettings.latestApkUrl || cSet.latestApkUrl;
+              cSet.updateTitle = seedSettings.updateTitle || cSet.updateTitle;
+              cSet.versionCode = seedSettings.versionCode || cSet.versionCode;
+              cSet.appVersion = seedSettings.appVersion || cSet.appVersion;
+              cSet.buildNumber = seedSettings.buildNumber || cSet.buildNumber;
+              cSet.releaseNotes = seedSettings.releaseNotes || cSet.releaseNotes;
+              updatedCloud = true;
+            }
+            if (updatedCloud) {
+              CLOUD_STORAGE.set('mumanager:settings', cSet).catch(() => {});
+            }
           }
         }
       } catch (_) {}

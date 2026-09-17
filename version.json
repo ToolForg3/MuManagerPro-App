@@ -1,10 +1,10 @@
 {
   "version": "2.0.6",
-  "minRequiredVersion": "1.9.9",
+  "minRequiredVersion": "2.0.6",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "publishedAt": "2026-09-17T21:55:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "build": 108,
-  "forceUpdate": false,
-  "changelog": "MuManager PRO v2.0.6 (Build 108) - Parche de Licencias, Sesión Demo y Seguridad:\n• LÍMITE DEMO 10 MIN: Temporizador regresivo de 10 minutos para acceso directo en modo Demo con cierre automático y aviso para crear cuenta.\n• SEGURIDAD SQL DEMO: Rutas de mutación y edición bloqueadas para cuentas en modo Demo (solo lectura y visualización).\n• ACCESO PRO GARANTIZADO: Auto-reconciliación por cabecera de licencia, eliminando bloqueos en lectura de cuentas para dispositivos PRO.\n• PRIVACIDAD & SANEAMIENTO: Contraseñas enmascaradas en modo demo y purga integral de cuentas y celulares legados."
+  "forceUpdate": true,
+  "changelog": "MuManager PRO v2.0.6 (Build 108) - Actualización Obligatoria:\n• ACCESO OBLIGATORIO: Se requiere actualizar para sincronizar con la nueva arquitectura de licencias y seguridad.\n• LÍMITE DEMO 10 MIN: Temporizador regresivo de 10 minutos para acceso directo en modo Demo con cierre automático y aviso para crear cuenta.\n• SEGURIDAD SQL DEMO: Rutas de mutación y edición bloqueadas para cuentas en modo Demo (solo lectura y visualización).\n• ACCESO PRO GARANTIZADO: Auto-reconciliación por cabecera de licencia, eliminando bloqueos en lectura de cuentas para dispositivos PRO.\n• PRIVACIDAD & SANEAMIENTO: Contraseñas enmascaradas en modo demo y purga integral de cuentas y celulares legados."
 }
