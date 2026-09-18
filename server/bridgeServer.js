@@ -1643,6 +1643,7 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
 
     let isDemoStatsAllowed = false;
     let isDemoLimitExceeded = false;
+    let isDemoProFieldBlocked = false;
     if (req.path.startsWith('/api/character/update-stats') && isDemoActive) {
       const p = req.body && req.body.params ? req.body.params : {};
       const str = parseInt(p.STR, 10) || 0;
@@ -1653,7 +1654,16 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
       const pts = parseInt(p.Points, 10) || 0;
       const zen = parseInt(p.Zen, 10) || 0;
 
-      if (str <= 1000 && agi <= 1000 && vit <= 1000 && ene <= 1000 && cmd <= 1000 && pts <= 1000 && zen <= 10000000) {
+      const hasProFields = (p.Level !== undefined && p.Level !== null) ||
+                           (p.Ruud !== undefined && p.Ruud !== null) ||
+                           (p.ruud !== undefined && p.ruud !== null) ||
+                           (p.MasterLevel !== undefined && p.MasterLevel !== null) ||
+                           (p.MasterPoint !== undefined && p.MasterPoint !== null) ||
+                           (p.FruitPoint !== undefined && p.FruitPoint !== null);
+
+      if (hasProFields) {
+        isDemoProFieldBlocked = true;
+      } else if (str <= 1000 && agi <= 1000 && vit <= 1000 && ene <= 1000 && cmd <= 1000 && pts <= 1000 && zen <= 10000000) {
         isDemoStatsAllowed = true;
       } else {
         isDemoLimitExceeded = true;
@@ -1676,23 +1686,25 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
         const isExpiredDemo = dev && dev.mode === 'DEMO' && dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now();
         const reasonMsg = isMultiVaultBlocked
           ? 'En modo DEMO solo se permite el acceso al Baúl Principal (Baúl 0). El acceso a baúles múltiples (Multi-Vault) requiere una Licencia PRO activa.'
-          : (isDemoLimitExceeded
-            ? 'En modo DEMO, los stats están limitados hasta 1,000 pts y el Zen hasta 10,000,000. Desbloquea la versión PRO para valores ilimitados (hasta 65,535 pts y 2,000,000,000 Zen).'
-            : (isSqlMutationRoute
-              ? 'Esta acción de modificación en SQL Server requiere una Licencia PRO activa. El modo DEMO es únicamente de visualización de prueba.'
-              : (isProExclusiveRoute
-                ? 'Esta función avanzada requiere una licencia PRO activa.'
-                : (isExpiredDemo
-                  ? 'Tu período de prueba ha finalizado. Adquiere una licencia PRO para continuar.'
-                  : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.'))));
+          : (isDemoProFieldBlocked
+            ? 'La modificación de Nivel, Ruud, Master Level y Puntos de Fruta requiere una Licencia PRO activa. En modo DEMO solo se permite modificar atributos básicos (hasta 1,000 pts) y Zen (hasta 10,000,000).'
+            : (isDemoLimitExceeded
+              ? 'En modo DEMO, los stats están limitados hasta 1,000 pts y el Zen hasta 10,000,000. Desbloquea la versión PRO para valores ilimitados (hasta 65,535 pts y 2,000,000,000 Zen).'
+              : (isSqlMutationRoute
+                ? 'Esta acción de modificación en SQL Server requiere una Licencia PRO activa. El modo DEMO es únicamente de visualización de prueba.'
+                : (isProExclusiveRoute
+                  ? 'Esta función avanzada requiere una licencia PRO activa.'
+                  : (isExpiredDemo
+                    ? 'Tu período de prueba ha finalizado. Adquiere una licencia PRO para continuar.'
+                    : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.')))));
 
-        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isMultiVaultBlocked ? 'Multi-Vault bloqueado en DEMO' : (isDemoLimitExceeded ? 'Límite DEMO excedido' : (isSqlMutationRoute ? 'Mutación bloqueada en DEMO' : (isExpiredDemo ? 'DEMO expirado' : 'licencia requerida')))}`, 'BLOCKED');
+        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isMultiVaultBlocked ? 'Multi-Vault bloqueado en DEMO' : (isDemoProFieldBlocked ? 'Campo PRO bloqueado en DEMO' : (isDemoLimitExceeded ? 'Límite DEMO excedido' : (isSqlMutationRoute ? 'Mutación bloqueada en DEMO' : (isExpiredDemo ? 'DEMO expirado' : 'licencia requerida'))))}`, 'BLOCKED');
         return res.status(403).json({
           success: false,
           blocked: !!(dev && dev.blocked),
           forceWipeKey: !!(dev && dev.forceDemo),
           authoritativeMode: 'DEMO',
-          error: (isSqlMutationRoute || isMultiVaultBlocked || isDemoLimitExceeded) ? 'FUNCION_RESTRINGIDA_PRO' : (isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA'),
+          error: (isSqlMutationRoute || isMultiVaultBlocked || isDemoLimitExceeded || isDemoProFieldBlocked) ? 'FUNCION_RESTRINGIDA_PRO' : (isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA'),
           message: reasonMsg,
         });
       }

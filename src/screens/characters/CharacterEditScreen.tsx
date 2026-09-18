@@ -450,11 +450,53 @@ export const CharacterEditScreen = () => {
 
     // Security check: Demo restriction
     if (LicenseService.isDemo()) {
-      if (numStr > 1000 || numAgi > 1000 || numVit > 1000 || numEne > 1000 || numCmd > 1000) {
+      const origLevel = character?.cLevel ?? 0;
+      const origRuud = character?.Ruud !== undefined ? character.Ruud : 0;
+      const origMLevel = character?.MasterLevel ?? 0;
+      const origMPoints = character?.MasterPoint ?? 0;
+      const origFruit = character?.FruitPoint ?? 0;
+
+      if (numLevel !== origLevel) {
+        LicenseService.alertProRequired(
+          'Modificación de Nivel',
+          () => setLicenseModalVisible(true),
+          'En versión DEMO la modificación de Nivel está restringida. Para editar o asignar el nivel de personajes se requiere una Licencia PRO activa.'
+        );
+        return;
+      }
+
+      if (numRuud !== origRuud) {
+        LicenseService.alertProRequired(
+          'Modificación de Ruud',
+          () => setLicenseModalVisible(true),
+          'En versión DEMO la modificación de Ruud está restringida. Para editar y asignar Ruud se requiere una Licencia PRO activa.'
+        );
+        return;
+      }
+
+      if (numMLevel !== origMLevel || numMPoints !== origMPoints) {
+        LicenseService.alertProRequired(
+          'Master Level y Puntos',
+          () => setLicenseModalVisible(true),
+          'En versión DEMO la edición de Master Level y Master Points está restringida. Para modificar estos valores se requiere una Licencia PRO activa.'
+        );
+        return;
+      }
+
+      if (numFruit !== origFruit) {
+        LicenseService.alertProRequired(
+          'Puntos de Fruta',
+          () => setLicenseModalVisible(true),
+          'En versión DEMO la edición de Puntos de Fruta está restringida. Para modificar puntos de fruta se requiere una Licencia PRO activa.'
+        );
+        return;
+      }
+
+      if (numStr > 1000 || numAgi > 1000 || numVit > 1000 || numEne > 1000 || numCmd > 1000 || numLvlPoints > 1000) {
         LicenseService.alertProRequired(
           'Límite de Estadísticas',
           () => setLicenseModalVisible(true),
-          'En versión DEMO las estadísticas están limitadas a un máximo de 1000 puntos por atributo. Para asignar más puntos se requiere una Licencia PRO activa.'
+          'En versión DEMO las estadísticas y puntos están limitados a un máximo de 1000 puntos por atributo. Para asignar más puntos se requiere una Licencia PRO activa.'
         );
         return;
       }
@@ -470,21 +512,35 @@ export const CharacterEditScreen = () => {
 
     setSaving(true);
     try {
-      const res = await SqlClient.updateCharacterStats(charName, {
-        STR: numStr,
-        AGI: numAgi,
-        VIT: numVit,
-        ENE: numEne,
-        CMD: numCmd,
-        Zen: numZen,
-        Ruud: numRuud,
-        Points: numLvlPoints,
-        Level: numLevel,
-        MasterLevel: numMLevel,
-        MasterPoint: numMPoints,
-        FruitPoint: numFruit,
-        CtlCode: isGm ? 32 : (isBanned ? 1 : 0), // Preservar CtlCode real: 32 = GM, 1 = Baneado, 0 = Normal
-      });
+      const isDemo = LicenseService.isDemo();
+      const statsPayload = isDemo
+        ? {
+            STR: numStr,
+            AGI: numAgi,
+            VIT: numVit,
+            ENE: numEne,
+            CMD: numCmd,
+            Zen: numZen,
+            Points: numLvlPoints,
+            CtlCode: isGm ? 32 : (isBanned ? 1 : 0),
+          }
+        : {
+            STR: numStr,
+            AGI: numAgi,
+            VIT: numVit,
+            ENE: numEne,
+            CMD: numCmd,
+            Zen: numZen,
+            Ruud: numRuud,
+            Points: numLvlPoints,
+            Level: numLevel,
+            MasterLevel: numMLevel,
+            MasterPoint: numMPoints,
+            FruitPoint: numFruit,
+            CtlCode: isGm ? 32 : (isBanned ? 1 : 0), // Preservar CtlCode real: 32 = GM, 1 = Baneado, 0 = Normal
+          };
+
+      const res = await SqlClient.updateCharacterStats(charName, statsPayload);
       if (res.success) {
         setCharacter({
           ...character,
@@ -494,13 +550,15 @@ export const CharacterEditScreen = () => {
           Energy: numEne,
           Leadership: numCmd,
           Money: numZen,
-          Ruud: numRuud,
-          cLevel: numLevel,
           LevelUpPoint: numLvlPoints,
-          MasterLevel: numMLevel,
-          MasterPoint: numMPoints,
-          FruitPoint: numFruit,
           CtlCode: isGm ? 32 : (isBanned ? 1 : 0),
+          ...(isDemo ? {} : {
+            Ruud: numRuud,
+            cLevel: numLevel,
+            MasterLevel: numMLevel,
+            MasterPoint: numMPoints,
+            FruitPoint: numFruit,
+          }),
         });
         Alert.alert('Éxito', res.message);
       } else {

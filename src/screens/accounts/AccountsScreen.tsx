@@ -2331,60 +2331,66 @@ export const AccountsScreen = () => {
                 )}
               </View>
 
-              {/* Botones Rápidos: Ver Personajes y Warehouse */}
-              <View style={styles.detailActionButtonsRow}>
-                <TouchableOpacity
-                  style={styles.detailBtnPjs}
-                  onPress={() => {
-                    setAccountDetailVisible(false);
-                    if (selectedAccount?.memb___id) {
-                      navigation.navigate('PJs', { filterAccount: selectedAccount.memb___id });
-                    }
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="sword-cross" size={18} color="#29B6F6" />
-                  <Text style={styles.detailBtnPjsText}>Ver Personajes</Text>
-                </TouchableOpacity>
+              {/* Botones Rápidos: Ver Personajes, Baúl, Bóveda Expandida y Banco Joyas (Grid 2x2) */}
+              <View style={styles.detailActionButtonsGrid}>
+                {/* Fila 1: Ver Personajes y Baúl */}
+                <View style={styles.detailActionButtonsRow}>
+                  <TouchableOpacity
+                    style={styles.detailBtnPjs}
+                    onPress={() => {
+                      setAccountDetailVisible(false);
+                      if (selectedAccount?.memb___id) {
+                        navigation.navigate('PJs', { filterAccount: selectedAccount.memb___id });
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="sword-cross" size={18} color="#29B6F6" />
+                    <Text style={styles.detailBtnPjsText}>Ver Personajes</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.detailBtnWarehouse}
-                  onPress={() => {
-                    if (selectedAccount?.memb___id) {
-                      openWarehouseForAccount(selectedAccount.memb___id, 'warehouse');
-                    }
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="package-variant-closed" size={18} color="#FF9800" />
-                  <Text style={styles.detailBtnWarehouseText}>Baúl (/ware)</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.detailBtnWarehouse}
+                    onPress={() => {
+                      if (selectedAccount?.memb___id) {
+                        openWarehouseForAccount(selectedAccount.memb___id, 'warehouse');
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="package-variant-closed" size={18} color="#FF9800" />
+                    <Text style={styles.detailBtnWarehouseText}>Baúl (/ware)</Text>
+                  </TouchableOpacity>
+                </View>
 
-                <TouchableOpacity
-                  style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(91, 141, 239, 0.12)', borderColor: THEME.colors.arcano }]}
-                  onPress={() => {
-                    if (selectedAccount?.memb___id) {
-                      openWarehouseForAccount(selectedAccount.memb___id, 'vault_ext');
-                    }
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="safe" size={18} color={THEME.colors.arcano} />
-                  <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.arcano }]}>Bóveda Expandida</Text>
-                </TouchableOpacity>
+                {/* Fila 2: Bóveda Expandida y Banco Joyas */}
+                <View style={styles.detailActionButtonsRow}>
+                  <TouchableOpacity
+                    style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(91, 141, 239, 0.12)', borderColor: THEME.colors.arcano }]}
+                    onPress={() => {
+                      if (selectedAccount?.memb___id) {
+                        openWarehouseForAccount(selectedAccount.memb___id, 'vault_ext');
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="safe" size={18} color={THEME.colors.arcano} />
+                    <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.arcano }]}>Bóveda Expandida</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(232, 200, 106, 0.12)', borderColor: THEME.colors.oroClaro }]}
-                  onPress={() => {
-                    if (selectedAccount?.memb___id) {
-                      openJewelBankForAccount(selectedAccount.memb___id);
-                    }
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="diamond-stone" size={18} color={THEME.colors.oroClaro} />
-                  <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.oroClaro }]}>Banco Joyas</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(232, 200, 106, 0.12)', borderColor: THEME.colors.oroClaro }]}
+                    onPress={() => {
+                      if (selectedAccount?.memb___id) {
+                        openJewelBankForAccount(selectedAccount.memb___id);
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="diamond-stone" size={18} color={THEME.colors.oroClaro} />
+                    <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.oroClaro }]}>Banco Joyas</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </ScrollView>
           </View>
@@ -4910,18 +4916,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  detailActionButtonsGrid: {
+    gap: 10,
+    marginTop: 18,
+  },
   detailActionButtonsRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 18,
+    gap: 10,
   },
   detailBtnPjs: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 6,
     backgroundColor: 'rgba(91, 141, 239, 0.15)',
     borderWidth: 1,
@@ -4938,8 +4948,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 6,
     backgroundColor: 'rgba(232, 200, 106, 0.15)',
     borderWidth: 1,

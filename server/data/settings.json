@@ -2,10 +2,10 @@
   "globalMaintenance": false,
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
-  "minRequiredVersion": "2.0.7",
-  "latestVersion": "2.0.7",
+  "minRequiredVersion": "2.0.8",
+  "latestVersion": "2.0.8",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.0.7 (Build 109) - Actualización Obligatoria:\n• RESTRICCIONES DEMO ESTANDARIZADAS: Avisos informativos detallados con opción 'Activar PRO' en reemplazo de errores técnicos crudos.\n• VISUALIZACIÓN TOTAL: Interfaz 100% visible e interactiva en modo DEMO; las advertencias solo se disparan al intentar guardar o ejecutar acciones SQL.\n• LÍMITES DEMO APLICADOS: Estadísticas editables hasta 1,000 pts y Zen editable hasta 10,000,000.\n• BAÚL SEGURO: Acceso exclusivo a Baúl 0 (Principal) en DEMO; protección y alerta informativa para Multi-Vault.\n• SEGURIDAD Y BLINDAJE: Sincronización completa con servidores backend y conectores locales.",
+  "updateChangelog": "MuManager PRO v2.0.8 (Build 110) - Actualización Obligatoria:\n• BLINDAJE RUUD Y NIVEL EN DEMO: Se bloquea estrictamente la edición y guardado de Ruud, Nivel (cLevel), Master Level y Puntos de Fruta en versión DEMO, reservándolos exclusivamente para la versión PRO.\n• LÍMITES DEMO EXACTOS: En versión DEMO solo se permite asignar atributos básicos (STR, AGI, VIT, ENE, CMD, Points) hasta 1,000 pts y Zen hasta 10,000,000.\n• CORRECCIÓN VISUAL EN DETALLE DE CUENTA: Reestructuración de los botones rápidos (Ver Personajes, Baúl, Bóveda Expandida, Banco Joyas) a una cuadrícula simétrica 2x2, eliminando solapamientos y cortes de texto en dispositivos móviles.\n• SINCRONIZACIÓN TOTAL: Blindaje activo y defensivo en APK, bridgeServer y conectores locales.",
   "forceUpdate": true,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -56,16 +56,16 @@
     "forceRollback": false,
     "triggeredAt": ""
   },
-  "minVersion": "2.0.7",
-  "updateTitle": "MuManager PRO v2.0.7 (Build 109)",
+  "minVersion": "2.0.8",
+  "updateTitle": "MuManager PRO v2.0.8 (Build 110)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 109,
+  "versionCode": 110,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.0.7 (Build 109) - Actualización Obligatoria:\n• RESTRICCIONES DEMO ESTANDARIZADAS: Avisos informativos detallados con opción 'Activar PRO' en reemplazo de errores técnicos crudos.\n• VISUALIZACIÓN TOTAL: Interfaz 100% visible e interactiva en modo DEMO; las advertencias solo se disparan al intentar guardar o ejecutar acciones SQL.\n• LÍMITES DEMO APLICADOS: Estadísticas editables hasta 1,000 pts y Zen editable hasta 10,000,000.\n• BAÚL SEGURO: Acceso exclusivo a Baúl 0 (Principal) en DEMO; protección y alerta informativa para Multi-Vault.\n• SEGURIDAD Y BLINDAJE: Sincronización completa con servidores backend y conectores locales.",
+  "releaseNotes": "MuManager PRO v2.0.8 (Build 110) - Actualización Obligatoria:\n• BLINDAJE RUUD Y NIVEL EN DEMO: Se bloquea estrictamente la edición y guardado de Ruud, Nivel (cLevel), Master Level y Puntos de Fruta en versión DEMO, reservándolos exclusivamente para la versión PRO.\n• LÍMITES DEMO EXACTOS: En versión DEMO solo se permite asignar atributos básicos (STR, AGI, VIT, ENE, CMD, Points) hasta 1,000 pts y Zen hasta 10,000,000.\n• CORRECCIÓN VISUAL EN DETALLE DE CUENTA: Reestructuración de los botones rápidos (Ver Personajes, Baúl, Bóveda Expandida, Banco Joyas) a una cuadrícula simétrica 2x2, eliminando solapamientos y cortes de texto en dispositivos móviles.\n• SINCRONIZACIÓN TOTAL: Blindaje activo y defensivo en APK, bridgeServer y conectores locales.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.0.7",
-  "buildNumber": 109,
+  "appVersion": "2.0.8",
+  "buildNumber": 110,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,7 +77,7 @@
       "pass": ""
     }
   },
-  "version": "2.0.7",
-  "build": 109,
+  "version": "2.0.8",
+  "build": 110,
   "usersPurgedV168": true
 }
