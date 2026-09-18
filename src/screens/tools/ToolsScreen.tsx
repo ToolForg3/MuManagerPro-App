@@ -25,6 +25,8 @@ import { MuFileParser } from '../../services/parser/fileParser';
 import { ItemDatabase, DEFAULT_ITEM_CATALOG, ItemDefinition } from '../../services/parser/itemDatabase';
 import { MuItemParser } from '../../services/parser/muItemParser';
 import { SqlClient } from '../../services/database/sqlClient';
+import { LicenseService } from '../../services/security/licenseService';
+import { LicenseModal } from '../../components/security/LicenseModal';
 import { ItemImage } from '../../components/common/ItemImage';
 import { useLanguage } from '../../context/LanguageContext';
 import { ITEM_CATEGORIES } from '../accounts/AccountsScreen';
@@ -88,6 +90,7 @@ export const ToolsScreen = () => {
   const route = useRoute<any>();
   const [activeTab, setActiveTab] = useState<ToolTab>('maker');
   const [playerSubTab, setPlayerSubTab] = useState<'online' | 'bans' | 'gm'>('online');
+  const [licenseModalVisible, setLicenseModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     if (route.params?.initialTab) {
@@ -309,6 +312,15 @@ export const ToolsScreen = () => {
       return;
     }
 
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Inyección de Sets (Item Maker)',
+        () => setLicenseModalVisible(true),
+        'La inyección directa de sets completos en el baúl mediante SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     try {
       setInjectingQuickSet(true);
       const acc = makerAccount.trim();
@@ -375,7 +387,11 @@ export const ToolsScreen = () => {
         `Se inyectaron ${injectedCount} de ${pieces.length} piezas del '${selectedQuickSet.name}' en el ${makerWarehouseIndex === 0 ? 'Baúl Principal' : 'Baúl #' + makerWarehouseIndex} de '${acc}' sin solapamientos.`
       );
     } catch (e: any) {
-      Alert.alert('Error al inyectar set', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Inyección de Sets (Item Maker)', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error al inyectar set', e.message);
+      }
     } finally {
       setInjectingQuickSet(false);
     }
@@ -389,6 +405,15 @@ export const ToolsScreen = () => {
   const handleInjectItem = async () => {
     if (!makerAccount || makerAccount.trim().length === 0) {
       Alert.alert('Atención', 'Por favor ingresa la cuenta (AccountID) de destino.');
+      return;
+    }
+
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Inyección de Ítems (Item Maker)',
+        () => setLicenseModalVisible(true),
+        'La inyección de ítems directamente en el baúl mediante SQL Server requiere una Licencia PRO activa. En versión DEMO puedes configurar opciones y copiar el código HEX.'
+      );
       return;
     }
 
@@ -431,7 +456,11 @@ export const ToolsScreen = () => {
           lastSlot = res.slot ?? 0;
         } else {
           if (successCount === 0) {
-            Alert.alert('Error', res.message || 'No se pudo inyectar el ítem.');
+            if (LicenseService.isLicenseError(res.message)) {
+              LicenseService.alertProRequired('Inyección de Ítems (Item Maker)', () => setLicenseModalVisible(true), res.message);
+            } else {
+              Alert.alert('Error', res.message || 'No se pudo inyectar el ítem.');
+            }
           }
           break;
         }
@@ -446,7 +475,11 @@ export const ToolsScreen = () => {
         );
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Inyección de Ítems (Item Maker)', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setInjecting(false);
     }
@@ -560,6 +593,15 @@ export const ToolsScreen = () => {
   }, [activeTab, rankType]);
 
   const handleClearPk = (charName: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Limpieza de PK',
+        () => setLicenseModalVisible(true),
+        'La limpieza de estados de asesino (PK) en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Limpiar Asesino (PK Clear)',
       `¿Deseas restablecer el estado PK del personaje '${charName}' a Común (Nivel 3, Kills: 0)?`,
@@ -576,10 +618,18 @@ export const ToolsScreen = () => {
                 Alert.alert('Éxito', res.message);
                 loadRankings('pk');
               } else {
-                Alert.alert('Error', res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Limpieza de PK', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message);
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Limpieza de PK', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setCleaningPkChar(null);
             }
@@ -603,6 +653,15 @@ export const ToolsScreen = () => {
   const [fixingAction, setFixingAction] = useState<string | null>(null);
 
   const handleCustomTeleport = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Teletransporte de Personaje',
+        () => setLicenseModalVisible(true),
+        'El teletransporte de personajes en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     const name = rescueCharName.trim();
     if (!name) {
       Alert.alert('Atención', 'Ingresa el nombre del personaje arriba primero.');
@@ -622,16 +681,33 @@ export const ToolsScreen = () => {
         await logAdminAction('PJ_TELEPORTADO_CUSTOM', `${name} movido a ${mapName} (${x}, ${y})`);
         Alert.alert('Teletransporte Exitoso', res.message);
       } else {
-        Alert.alert('Error al Mover Personaje', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Teletransporte de Personaje', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error al Mover Personaje', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Teletransporte de Personaje', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setFixingAction(null);
     }
   };
 
   const handleUnstick = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Destrabar Cuenta',
+        () => setLicenseModalVisible(true),
+        'Liberar sesiones y destrabar cuentas en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     if (!unstickUser.trim()) {
       Alert.alert('Atención', 'Ingresa el usuario de la cuenta.');
       return;
@@ -643,16 +719,33 @@ export const ToolsScreen = () => {
         Alert.alert('Cuenta Destrabada', `La cuenta '${unstickUser.trim()}' fue liberada (ConnectStat = 0).`);
         setUnstickUser('');
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Destrabar Cuenta', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Destrabar Cuenta', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setFixingAction(null);
     }
   };
 
   const handleRescue = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Rescatar Personaje',
+        () => setLicenseModalVisible(true),
+        'Rescatar personajes a coordenadas seguras en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     if (!rescueCharName.trim()) {
       Alert.alert('Atención', 'Ingresa el nombre del personaje.');
       return;
@@ -664,16 +757,33 @@ export const ToolsScreen = () => {
         Alert.alert('Personaje Rescatado', res.message);
         setRescueCharName('');
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Rescatar Personaje', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Rescatar Personaje', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setFixingAction(null);
     }
   };
 
   const handleCleanHex = () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Limpiar Hex',
+        () => setLicenseModalVisible(true),
+        'El vaciado de inventarios y baúles en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     if (!cleanHexTarget.trim()) {
       Alert.alert('Atención', `Ingresa el ${cleanHexType === 'warehouse' ? 'usuario de la cuenta' : 'nombre del personaje'}.`);
       return;
@@ -696,10 +806,18 @@ export const ToolsScreen = () => {
                 Alert.alert('Vaciado Completado', res.message);
                 setCleanHexTarget('');
               } else {
-                Alert.alert('Error', res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Limpiar Hex', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message);
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Limpiar Hex', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -710,16 +828,33 @@ export const ToolsScreen = () => {
   };
 
   const handleBackup = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Backup de Base de Datos',
+        () => setLicenseModalVisible(true),
+        'La creación de copias de seguridad de SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     try {
       setFixingAction('backup');
       const res = await SqlClient.backupDatabase(backupDbName.trim());
       if (res.success) {
         Alert.alert('Backup Exitoso', res.message);
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Backup de Base de Datos', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Backup de Base de Datos', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setFixingAction(null);
     }
@@ -729,6 +864,15 @@ export const ToolsScreen = () => {
   const [illegalNamesResults, setIllegalNamesResults] = useState<any[]>([]);
 
   const handleFixOrphans = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Reparación de Huérfanos',
+        () => setLicenseModalVisible(true),
+        'El mantenimiento y reparación de registros huérfanos en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Reparar Registros Huérfanos',
       '¿Deseas escanear y reparar ranuras de AccountCharacter y GuildMember huérfanos sin alterar datos de personajes legítimos?',
@@ -744,10 +888,18 @@ export const ToolsScreen = () => {
                 await logAdminAction('FIX_ORPHANS', res.message || 'Huérfanos reparados');
                 Alert.alert('Éxito', res.message || 'Huérfanos reparados correctamente.');
               } else {
-                Alert.alert('Error', (res as any).error || res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Reparación de Huérfanos', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message || 'Error al reparar huérfanos.');
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Reparación de Huérfanos', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -758,6 +910,15 @@ export const ToolsScreen = () => {
   };
 
   const handleRescueCoords = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Rescate de Coordenadas',
+        () => setLicenseModalVisible(true),
+        'El rescate masivo de coordenadas de personajes en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Rescate Masivo de Coordenadas',
       'Normalizará personajes fuera de rango (<0 o >255) o mapas inexistentes a Lorencia (125, 125). Solo afecta a jugadores desconectados.',
@@ -773,10 +934,18 @@ export const ToolsScreen = () => {
                 await logAdminAction('RESCUE_COORDS', res.message || 'Coordenadas rescatadas');
                 Alert.alert('Éxito', res.message || 'Coordenadas normalizadas.');
               } else {
-                Alert.alert('Error', (res as any).error || res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Rescate de Coordenadas', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message || 'Error al rescatar coordenadas.');
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Rescate de Coordenadas', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -787,6 +956,15 @@ export const ToolsScreen = () => {
   };
 
   const handleFixOverflows = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Corrección de Desbordamientos',
+        () => setLicenseModalVisible(true),
+        'La corrección de desbordamientos de enteros en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Corregir Desbordamientos de Enteros',
       'Limitará el Zen en Character y warehouse al tope de 2,000,000,000 y evitará valores negativos en Zen, LevelUpPoints y Resets.',
@@ -802,10 +980,18 @@ export const ToolsScreen = () => {
                 await logAdminAction('FIX_OVERFLOWS', res.message || 'Desbordamientos corregidos');
                 Alert.alert('Éxito', res.message || 'Desbordamientos corregidos.');
               } else {
-                Alert.alert('Error', (res as any).error || res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Corrección de Desbordamientos', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message || 'Error al corregir desbordamientos.');
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Corrección de Desbordamientos', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -816,6 +1002,15 @@ export const ToolsScreen = () => {
   };
 
   const handleCleanGhosts = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Purgar Conexiones Fantasma',
+        () => setLicenseModalVisible(true),
+        'La purga de conexiones y sesiones zombis en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Purgar Conexiones Fantasma',
       'Restablecerá ConnectStat = 0 en sesiones desconectadas o con más de 24 horas continuas y liberará ranuras GameIDC zombis.',
@@ -831,10 +1026,18 @@ export const ToolsScreen = () => {
                 await logAdminAction('CLEAN_GHOSTS', res.message || 'Fantasmas purgados');
                 Alert.alert('Éxito', res.message || 'Conexiones fantasma purgadas.');
               } else {
-                Alert.alert('Error', (res as any).error || res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Purgar Conexiones Fantasma', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message || 'Error al purgar conexiones.');
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Purgar Conexiones Fantasma', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -852,16 +1055,33 @@ export const ToolsScreen = () => {
         setIllegalNamesResults(res.characters || []);
         Alert.alert('Escaneo Completado', res.message || `Encontrados ${(res.characters || []).length} nombres con irregularidades.`);
       } else {
-        Alert.alert('Error', (res as any).error || res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Escanear Nombres Ilegales', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message || 'Error al escanear nombres.');
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Escanear Nombres Ilegales', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setFixingAction(null);
     }
   };
 
   const handleFixPkStatus = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Corregir Estados PK',
+        () => setLicenseModalVisible(true),
+        'La corrección de estados PK corruptos en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Corregir Estados PK Corruptos',
       'Normalizará personajes con PkLevel inválido (< 1 o > 6), PkTime negativo o PkCount negativo a Ciudadano (PkLevel = 3).',
@@ -877,10 +1097,18 @@ export const ToolsScreen = () => {
                 await logAdminAction('FIX_PK_STATUS', res.message || 'PK corruptos corregidos');
                 Alert.alert('Éxito', res.message || 'Estados PK normalizados.');
               } else {
-                Alert.alert('Error', (res as any).error || res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Corregir Estados PK', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message || 'Error al corregir estados PK.');
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Corregir Estados PK', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -891,6 +1119,15 @@ export const ToolsScreen = () => {
   };
 
   const handleInstallStoredProcedures = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Instalar Procedimientos SQL',
+        () => setLicenseModalVisible(true),
+        'La instalación de procedimientos almacenados y triggers en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Instalar Procedimientos y Triggers',
       'Se compilarán todos los procedimientos almacenados idempotentes (CREATE OR ALTER), el trigger de auditoría de personajes y la tabla MuManager_AuditLog en SQL Server.',
@@ -906,10 +1143,18 @@ export const ToolsScreen = () => {
                 await logAdminAction('INSTALL_SQL_PROCEDURES', 'Procedimientos y triggers instalados');
                 Alert.alert('Éxito', res.message || 'Procedimientos instalados con éxito.');
               } else {
-                Alert.alert('Error', (res as any).error || res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Instalar Procedimientos SQL', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message || 'Error al instalar procedimientos.');
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message);
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Instalar Procedimientos SQL', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message);
+              }
             } finally {
               setFixingAction(null);
             }
@@ -1265,6 +1510,15 @@ export const ToolsScreen = () => {
       return;
     }
 
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Entrega de Starter Kits',
+        () => setLicenseModalVisible(true),
+        'La entrega de kits de inicio y bonificaciones masivas en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     const zenVal = kitIncludeZen ? (parseInt(kitZen, 10) || 0) : 0;
     const gcoinsVal = kitIncludeGCoins ? (parseInt(kitGCoins, 10) || 0) : 0;
     const wcoinPVal = kitIncludeWCoinP ? (parseInt(kitWCoinP, 10) || 0) : 0;
@@ -1304,10 +1558,18 @@ export const ToolsScreen = () => {
           await logAdminAction('KIT_ENTREGADO', `Entregado a '${acc}' en ${targetDesc}: ${parts.join(', ') || 'Kit'}`);
           Alert.alert('¡Kit Entregado!', `Se entregó exitosamente el Starter Kit a '${acc}' en ${targetDesc}.\n\nContenido entregado:\n${parts.map(p => '• ' + p).join('\n')}`);
         } else {
-          Alert.alert('Error al Entregar Kit', res.message);
+          if (LicenseService.isLicenseError(res.message)) {
+            LicenseService.alertProRequired('Entrega de Starter Kits', () => setLicenseModalVisible(true), res.message);
+          } else {
+            Alert.alert('Error al Entregar Kit', res.message);
+          }
         }
       } catch (e: any) {
-        Alert.alert('Error', e.message);
+        if (LicenseService.isLicenseError(e.message)) {
+          LicenseService.alertProRequired('Entrega de Starter Kits', () => setLicenseModalVisible(true), e.message);
+        } else {
+          Alert.alert('Error', e.message);
+        }
       } finally {
         setDeliveringKit(false);
       }
@@ -1602,6 +1864,15 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleDeliverBatchPrizes = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Entrega de Premios',
+        () => setLicenseModalVisible(true),
+        'La entrega masiva o individual de premios a jugadores requiere una licencia PRO activa.'
+      );
+      return;
+    }
+
     let targets: string[] = [];
 
     if (prizeTargetMode === 'all') {
@@ -1748,6 +2019,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleDeleteGuild = (guildName: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Disolver Clan', () => setLicenseModalVisible(true), 'La disolución y gestión de clanes requiere una licencia PRO activa.');
+      return;
+    }
     Alert.alert(
       'Disolver Clan',
       `¿Estás seguro de que deseas eliminar y disolver permanentemente el clan "${guildName}"? Esta acción se ejecutará directamente en la base de datos SQL.`,
@@ -1811,6 +2086,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleClearPkTab = (characterName?: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Limpieza de PK', () => setLicenseModalVisible(true), 'La limpieza de asesinos (PK) en tiempo real requiere una licencia PRO activa.');
+      return;
+    }
     const isAll = !characterName;
     const title = isAll ? 'Limpiar Todos los PK' : `Limpiar PK de ${characterName}`;
     const message = isAll
@@ -1910,6 +2189,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleTeleportPlayerCity = async (charName: string, cityName: string, map: number, x: number, y: number) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Teletransporte Directo', () => setLicenseModalVisible(true), 'El teletransporte en tiempo real requiere una licencia PRO activa.');
+      return;
+    }
     try {
       const res = await SqlClient.teleportCharacter(charName, map, x, y);
       if (res.success) {
@@ -1925,6 +2208,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleClearPkForPlayer = async (charName: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Limpieza de PK', () => setLicenseModalVisible(true), 'La limpieza de asesinos (PK) en tiempo real requiere una licencia PRO activa.');
+      return;
+    }
     try {
       const res = await SqlClient.clearPk(charName, false);
       if (res.success) {
@@ -1940,6 +2227,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleDisconnectPlayer = (acc: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Desconectar Cuenta', () => setLicenseModalVisible(true), 'La desconexión forzosa de jugadores en tiempo real requiere una licencia PRO activa.');
+      return;
+    }
     Alert.alert('Desconectar Cuenta', `¿Deseas desconectar forzosamente la cuenta '${acc}'?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -1960,6 +2251,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleTeleportLorencia = async (charName: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Teletransporte Directo', () => setLicenseModalVisible(true), 'El teletransporte en tiempo real requiere una licencia PRO activa.');
+      return;
+    }
     const res = await SqlClient.teleportCharacter(charName, 0, 125, 125);
     if (res.success) {
       await logAdminAction('PJ_TELEPORTADO', `${charName} teletransportado a Lorencia (125,125)`);
@@ -1984,6 +2279,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleUnbanAccount = (acc: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Desbanear Cuenta', () => setLicenseModalVisible(true), 'El desbloqueo de cuentas requiere una licencia PRO activa.');
+      return;
+    }
     Alert.alert('Desbanear Cuenta', `¿Deseas levantar el bloqueo a la cuenta '${acc}'?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -2003,6 +2302,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleSaveBanSubmit = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Bloquear Cuenta', () => setLicenseModalVisible(true), 'El bloqueo administrativo de cuentas requiere una licencia PRO activa.');
+      return;
+    }
     const acc = banAccountInput.trim();
     if (!acc) {
       Alert.alert('Cuenta requerida', 'Ingresa el nombre de la cuenta a banear.');
@@ -2030,6 +2333,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleUnbanCharacter = (charName: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Desbanear Personaje', () => setLicenseModalVisible(true), 'El desbloqueo de personajes requiere una licencia PRO activa.');
+      return;
+    }
     Alert.alert('Desbanear Personaje', `¿Deseas reactivar el personaje '${charName}' (CtlCode = 0)?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -2049,6 +2356,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleSaveCharBanSubmit = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Bloquear Personaje', () => setLicenseModalVisible(true), 'El bloqueo administrativo de personajes requiere una licencia PRO activa.');
+      return;
+    }
     const name = banCharNameInput.trim();
     if (!name) {
       Alert.alert('Personaje requerido', 'Ingresa el nombre del personaje a banear.');
@@ -2094,6 +2405,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleSaveGmLevelSubmit = async () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Asignar Rango GM', () => setLicenseModalVisible(true), 'La asignación de rangos GM y Game Master requiere una licencia PRO activa.');
+      return;
+    }
     const char = gmCharNameInput.trim();
     if (!char) {
       Alert.alert('Personaje requerido', 'Ingresa el nombre del personaje.');
@@ -2121,6 +2436,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleRemoveGm = (charName: string, accountId?: string) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Revocar Rango GM', () => setLicenseModalVisible(true), 'La revocación de rangos GM requiere una licencia PRO activa.');
+      return;
+    }
     Alert.alert(
       'Revocar Rango GM',
       `¿Deseas quitar todos los privilegios de GM al personaje '${charName}'?`,
@@ -2175,6 +2494,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   };
 
   const handleDisconnectIpAbusers = () => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired('Control de IPs Excedentes', () => setLicenseModalVisible(true), 'La desconexión masiva de abusadores de IP requiere una licencia PRO activa.');
+      return;
+    }
     const limit = parseInt(ipAbuseMaxLimit, 10) || 3;
     Alert.alert(
       'Desconectar Cuentas Excedentes',
@@ -3321,6 +3644,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       gap: 6,
                     }}
                     onPress={async () => {
+                      if (!LicenseService.isPro()) {
+                        LicenseService.alertProRequired('Teletransporte Directo', () => setLicenseModalVisible(true), 'El teletransporte en tiempo real requiere una licencia PRO activa.');
+                        return;
+                      }
                       const name = rescueCharName.trim();
                       if (!name) {
                         Alert.alert('Atención', 'Ingresa el nombre del personaje arriba primero.');
@@ -6117,6 +6444,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <TouchableOpacity
                       style={[styles.actionBtn, { backgroundColor: '#241E1A', borderWidth: 1, borderColor: '#E2703A', marginTop: 0 }]}
                       onPress={() => {
+                        if (!LicenseService.isPro()) {
+                          LicenseService.alertProRequired('Bloquear Personaje', () => setLicenseModalVisible(true), 'El bloqueo administrativo de personajes requiere una licencia PRO activa.');
+                          return;
+                        }
                         Alert.alert(
                           'Banear Solo Este Personaje',
                           `¿Estás seguro de banear ÚNICAMENTE al personaje '${selectedPlayerModal.charName}' ?\n\nLa cuenta seguirá activa para sus otros personajes.`,
@@ -6151,6 +6482,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <TouchableOpacity
                       style={[styles.actionBtn, { backgroundColor: '#E2703A', marginTop: 0 }]}
                       onPress={() => {
+                        if (!LicenseService.isPro()) {
+                          LicenseService.alertProRequired('Bloquear Cuenta', () => setLicenseModalVisible(true), 'El bloqueo administrativo de cuentas requiere una licencia PRO activa.');
+                          return;
+                        }
                         Alert.alert(
                           'Banear Cuenta Completa',
                           `¿Estás seguro de bloquear COMPLETAMENTE la cuenta '${selectedPlayerModal.accountId}'?`,
@@ -6297,7 +6632,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
         </View>
       </Modal>
 
-      
+      {/* Modal de Licencia PRO */}
+      <LicenseModal
+        visible={licenseModalVisible}
+        onClose={() => setLicenseModalVisible(false)}
+      />
       </View>
     </ErrorBoundary>
   );

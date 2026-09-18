@@ -305,6 +305,14 @@ export const CharacterEditScreen = () => {
 
   const performDeleteCurrentCharacter = async (forceOnline: boolean = false) => {
     if (!charName) return;
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Eliminación de Personajes',
+        () => setLicenseModalVisible(true),
+        'La eliminación de personajes en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     setIsDeletingChar(true);
     try {
       const res = await SqlClient.deleteCharacter(charName, character?.AccountID, forceOnline);
@@ -442,14 +450,19 @@ export const CharacterEditScreen = () => {
 
     // Security check: Demo restriction
     if (LicenseService.isDemo()) {
-      if (numStr > 500 || numAgi > 500 || numVit > 500 || numEne > 500) {
-        Alert.alert(
-          'Límite de Modo DEMO',
-          'En versión DEMO las estadísticas están limitadas a un máximo de 500 puntos por atributo. ¿Deseas activar la versión PRO sin límites?',
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Activar PRO', onPress: () => setLicenseModalVisible(true) },
-          ]
+      if (numStr > 1000 || numAgi > 1000 || numVit > 1000 || numEne > 1000 || numCmd > 1000) {
+        LicenseService.alertProRequired(
+          'Límite de Estadísticas',
+          () => setLicenseModalVisible(true),
+          'En versión DEMO las estadísticas están limitadas a un máximo de 1000 puntos por atributo. Para asignar más puntos se requiere una Licencia PRO activa.'
+        );
+        return;
+      }
+      if (numZen > 10000000) {
+        LicenseService.alertProRequired(
+          'Límite de Zen',
+          () => setLicenseModalVisible(true),
+          'En versión DEMO el Zen máximo permitido es 10,000,000. Para asignar más Zen se requiere una Licencia PRO activa.'
         );
         return;
       }
@@ -491,7 +504,11 @@ export const CharacterEditScreen = () => {
         });
         Alert.alert('Éxito', res.message);
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Modificación de Estadísticas', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } finally {
       setSaving(false);
@@ -505,6 +522,14 @@ export const CharacterEditScreen = () => {
   const doSaveLocation = useCallback(async (customMap?: number, customX?: number, customY?: number) => {
     if (!character || loadError) {
       Alert.alert('Error', 'No se puede actualizar la ubicación: el personaje no se cargó correctamente.');
+      return;
+    }
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Guardado de Ubicación',
+        () => setLicenseModalVisible(true),
+        'El traslado y cambio de ubicación de personajes con SQL Server requiere una Licencia PRO activa.'
+      );
       return;
     }
     setMovingLocation(true);
@@ -521,7 +546,11 @@ export const CharacterEditScreen = () => {
         setCharacter({ ...character, MapNumber: targetMap, MapPosX: targetX, MapPosY: targetY });
         Alert.alert('Ubicación Guardada', res.message);
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Guardado de Ubicación', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } finally {
       setMovingLocation(false);
@@ -543,13 +572,10 @@ export const CharacterEditScreen = () => {
 
     // Security check: Demo restriction for saving inventory
     if (!LicenseService.canSaveInventory()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
-        'El guardado y sincronización de inventarios (108 slots) con SQL Server requiere una Licencia PRO activa. ¿Deseas ingresar tu clave de activación?',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Activar PRO', onPress: () => setLicenseModalVisible(true) },
-        ]
+      LicenseService.alertProRequired(
+        'Guardado de Inventario',
+        () => setLicenseModalVisible(true),
+        'El guardado y sincronización de inventarios (108 slots) con SQL Server requiere una Licencia PRO activa.'
       );
       return;
     }
@@ -579,13 +605,25 @@ export const CharacterEditScreen = () => {
 
   const doUnlockExtensions = async () => {
     if (!charName) return;
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Desbloqueo de Mochilas',
+        () => setLicenseModalVisible(true),
+        'El desbloqueo de mochilas extendidas y Tienda Personal con SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     setUnlockingExt(true);
     try {
       const res = await SqlClient.unlockCharacterExtensions(charName);
       if (res.success) {
         Alert.alert('Mochilas y Tienda Personal', res.message);
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Desbloqueo de Mochilas', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } finally {
       setUnlockingExt(false);
@@ -822,6 +860,14 @@ export const CharacterEditScreen = () => {
       Alert.alert('Error', 'No se puede guardar el progreso: el personaje no se cargó correctamente.');
       return;
     }
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Progreso del Personaje',
+        () => setLicenseModalVisible(true),
+        'La modificación de resets, nivel master y estado PK en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     setSavingProgress(true);
     try {
       const numResets = parseInt(resets, 10) || 0;
@@ -857,7 +903,11 @@ export const CharacterEditScreen = () => {
         });
         Alert.alert('Progreso Guardado', res.message);
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Progreso del Personaje', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } finally {
       setSavingProgress(false);
@@ -871,6 +921,14 @@ export const CharacterEditScreen = () => {
   const doSaveQuest = async () => {
     if (!character || loadError) {
       Alert.alert('Error', 'No se pueden guardar misiones: el personaje no se cargó correctamente.');
+      return;
+    }
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Evolución de Clase y Misiones',
+        () => setLicenseModalVisible(true),
+        'La modificación de quests y evolución de clase en SQL Server requiere una Licencia PRO activa.'
+      );
       return;
     }
     setSavingQuest(true);
@@ -889,7 +947,11 @@ export const CharacterEditScreen = () => {
         });
         Alert.alert('Misiones Guardadas', res.message);
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Evolución de Clase y Misiones', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } finally {
       setSavingQuest(false);
@@ -1100,6 +1162,14 @@ export const CharacterEditScreen = () => {
 
   const handleSaveSkills = async (skillsToSave: ParsedSkill[] = skills) => {
     if (!charName) return;
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Guardado de Habilidades',
+        () => setLicenseModalVisible(true),
+        'El guardado y sincronización de habilidades con SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     setSavingSkills(true);
     try {
       const hex = MuSkillParser.encodeMagicListHex(skillsToSave);
@@ -1110,10 +1180,18 @@ export const CharacterEditScreen = () => {
           setCharacter({ ...character, MagicList: hex });
         }
       } else {
-        Alert.alert('Error', res.message || 'No se pudieron guardar las habilidades.');
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Guardado de Habilidades', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message || 'No se pudieron guardar las habilidades.');
+        }
       }
     } catch (err: any) {
-      Alert.alert('Error de conexión', err.message || 'Fallo al comunicarse con SQL Server.');
+      if (LicenseService.isLicenseError(err)) {
+        LicenseService.alertProRequired('Guardado de Habilidades', () => setLicenseModalVisible(true), err.message);
+      } else {
+        Alert.alert('Error de conexión', err.message || 'Fallo al comunicarse con SQL Server.');
+      }
     } finally {
       setSavingSkills(false);
     }

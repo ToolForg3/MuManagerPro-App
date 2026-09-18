@@ -1,10 +1,10 @@
 {
-  "version": "2.0.6",
-  "minRequiredVersion": "2.0.6",
+  "version": "2.0.7",
+  "minRequiredVersion": "2.0.7",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-17T21:55:00.000Z",
+  "publishedAt": "2026-09-17T21:05:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 108,
+  "build": 109,
   "forceUpdate": true,
-  "changelog": "MuManager PRO v2.0.6 (Build 108) - Actualización Obligatoria:\n• ACCESO OBLIGATORIO: Se requiere actualizar para sincronizar con la nueva arquitectura de licencias y seguridad.\n• LÍMITE DEMO 10 MIN: Temporizador regresivo de 10 minutos para acceso directo en modo Demo con cierre automático y aviso para crear cuenta.\n• SEGURIDAD SQL DEMO: Rutas de mutación y edición bloqueadas para cuentas en modo Demo (solo lectura y visualización).\n• ACCESO PRO GARANTIZADO: Auto-reconciliación por cabecera de licencia, eliminando bloqueos en lectura de cuentas para dispositivos PRO.\n• PRIVACIDAD & SANEAMIENTO: Contraseñas enmascaradas en modo demo y purga integral de cuentas y celulares legados."
+  "changelog": "MuManager PRO v2.0.7 (Build 109) - Actualización Obligatoria:\n• RESTRICCIONES DEMO ESTANDARIZADAS: Avisos informativos detallados con opción 'Activar PRO' en reemplazo de errores técnicos crudos.\n• VISUALIZACIÓN TOTAL: Interfaz 100% visible e interactiva en modo DEMO; las advertencias solo se disparan al intentar guardar o ejecutar acciones SQL.\n• LÍMITES DEMO APLICADOS: Estadísticas editables hasta 1,000 pts y Zen editable hasta 10,000,000.\n• BAÚL SEGURO: Acceso exclusivo a Baúl 0 (Principal) en DEMO; protección y alerta informativa para Multi-Vault.\n• SEGURIDAD Y BLINDAJE: Sincronización completa con servidores backend y conectores locales."
 }

@@ -25,6 +25,8 @@ import { SqlClient } from '../../services/database/sqlClient';
 import { getMuClassInfo, MU_BASE_RACES, MU_MAPS } from '../../constants/muConstants';
 import { useLanguage } from '../../context/LanguageContext';
 import { AutocompleteInput } from '../../components/common/AutocompleteInput';
+import { LicenseService } from '../../services/security/licenseService';
+import { LicenseModal } from '../../components/security/LicenseModal';
 
 export const CharacterListScreen = () => {
   const insets = useSafeAreaInsets();
@@ -42,6 +44,7 @@ export const CharacterListScreen = () => {
   const [accountFilter, setAccountFilter] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [licenseModalVisible, setLicenseModalVisible] = useState(false);
 
   // Modal de Crear Personaje
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -163,6 +166,15 @@ export const CharacterListScreen = () => {
       return;
     }
 
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Creación de Personajes',
+        () => setLicenseModalVisible(true),
+        'La creación de nuevos personajes en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
+
     const currentRace = MU_BASE_RACES[selectedRaceIndex] || MU_BASE_RACES[0];
     const targetTierObj = currentRace.tiers.find(t => t.tier === selectedTier) || currentRace.tiers[0];
     const classId = targetTierObj.classId;
@@ -187,10 +199,18 @@ export const CharacterListScreen = () => {
           setAccountFilter(cleanAcc);
         }
       } else {
-        Alert.alert('Error al crear', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Creación de Personajes', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error al crear', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'No se pudo crear el personaje en SQL Server.');
+      if (LicenseService.isLicenseError(e)) {
+        LicenseService.alertProRequired('Creación de Personajes', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message || 'No se pudo crear el personaje en SQL Server.');
+      }
     } finally {
       setIsCreatingChar(false);
     }
@@ -212,6 +232,14 @@ export const CharacterListScreen = () => {
   };
 
   const performDeleteCharacter = async (charName: string, accountId?: string, forceOnline: boolean = false) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Eliminación de Personajes',
+        () => setLicenseModalVisible(true),
+        'La eliminación de personajes en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     setDeletingCharName(charName);
     try {
       const res = await SqlClient.deleteCharacter(charName, accountId, forceOnline);
@@ -230,7 +258,11 @@ export const CharacterListScreen = () => {
             ]
           );
         } else {
-          Alert.alert('Error', res.message || 'No se pudo eliminar el personaje.');
+          if (LicenseService.isLicenseError(res.message)) {
+            LicenseService.alertProRequired('Eliminación de Personajes', () => setLicenseModalVisible(true), res.message);
+          } else {
+            Alert.alert('Error', res.message || 'No se pudo eliminar el personaje.');
+          }
         }
         return;
       }
@@ -238,7 +270,11 @@ export const CharacterListScreen = () => {
       Alert.alert('Éxito', `El personaje "${charName}" ha sido eliminado correctamente.`);
       fetchCharacters(accountFilter, false);
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Error inesperado al eliminar el personaje.');
+      if (LicenseService.isLicenseError(e)) {
+        LicenseService.alertProRequired('Eliminación de Personajes', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message || 'Error inesperado al eliminar el personaje.');
+      }
     } finally {
       setDeletingCharName(null);
     }
@@ -698,6 +734,11 @@ export const CharacterListScreen = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <LicenseModal
+        visible={licenseModalVisible}
+        onClose={() => setLicenseModalVisible(false)}
+      />
     </View>
   );
 };

@@ -2699,24 +2699,13 @@
         }
         const users = await res.json();
         if (Array.isArray(users)) {
-          const userMap = new Map();
-          // 1. Cargar usuarios conocidos en caché que no hayan sido eliminados localmente
-          allUsersCache.forEach(u => {
-            const k = (u.email || u.id || '').toLowerCase().trim();
-            if (k && !locallyDeletedUserIds.has(k)) userMap.set(k, u);
+          // El servidor es la fuente única de verdad para cuentas registradas.
+          // Solo conservamos usuarios retornados por el servidor que no hayan sido eliminados localmente.
+          allUsersCache = users.filter(u => {
+            const emailKey = (u.email || '').toLowerCase().trim();
+            const idKey = (u.id || '').toLowerCase().trim();
+            return (!emailKey || !locallyDeletedUserIds.has(emailKey)) && (!idKey || !locallyDeletedUserIds.has(idKey));
           });
-          // 2. Fusionar con los usuarios devueltos por el servidor
-          users.forEach(incoming => {
-            const k = (incoming.email || incoming.id || '').toLowerCase().trim();
-            if (k && !locallyDeletedUserIds.has(k)) {
-              if (userMap.has(k)) {
-                userMap.set(k, { ...userMap.get(k), ...incoming });
-              } else {
-                userMap.set(k, incoming);
-              }
-            }
-          });
-          allUsersCache = Array.from(userMap.values());
           try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           updateTextIfDifferent('metric-users', allUsersCache.length);
           
@@ -2955,18 +2944,19 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
           body: JSON.stringify({ id, email })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          showToast('Cuenta de "' + (email || id) + '" eliminada permanentemente.');
+        const data = await res.json().catch(() => ({}));
+        if ((res.ok && data.success) || res.status === 404) {
+          showToast(res.status === 404 ? 'La cuenta no existía en el servidor. Registro local limpiado.' : 'Cuenta de "' + (email || id) + '" eliminada permanentemente.');
           // Eliminación reactiva/optimista inmediata en memoria local
           const cleanEmail = (email || '').toLowerCase().trim();
+          const cleanId = id ? String(id).toLowerCase().trim() : '';
           if (cleanEmail) locallyDeletedUserIds.add(cleanEmail);
-          if (id) locallyDeletedUserIds.add(String(id).toLowerCase().trim());
+          if (cleanId) locallyDeletedUserIds.add(cleanId);
           try {
             localStorage.setItem('mumanager_deleted_users', JSON.stringify(Array.from(locallyDeletedUserIds)));
           } catch (_) {}
           allUsersCache = allUsersCache.filter(u => 
-            (id ? u.id !== id : true) && 
+            (cleanId ? String(u.id || '').toLowerCase().trim() !== cleanId : true) && 
             (cleanEmail ? (u.email || '').toLowerCase().trim() !== cleanEmail : true)
           );
           try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
@@ -3203,25 +3193,11 @@
 
         const list = await res.json();
         if (Array.isArray(list)) {
-          // Smart bidirectional merge anti-desincronización (Multi-Instance & Serverless Partition Shield)
-          const devMap = new Map();
-          // 1. Cargar dispositivos conocidos en caché que no hayan sido eliminados localmente
-          allDevicesCache.forEach(d => {
-            if (d && d.hwid && !locallyDeletedHwids.has(String(d.hwid).toUpperCase())) {
-              devMap.set(d.hwid, d);
-            }
+          // El servidor es la fuente de verdad para celulares registrados.
+          // Solo conservamos dispositivos retornados por el servidor que no hayan sido eliminados localmente.
+          allDevicesCache = list.filter(d => {
+            return d && d.hwid && !locallyDeletedHwids.has(String(d.hwid).toUpperCase());
           });
-          // 2. Fusionar con los dispositivos devueltos en esta respuesta
-          list.forEach(incoming => {
-            if (incoming && incoming.hwid && !locallyDeletedHwids.has(String(incoming.hwid).toUpperCase())) {
-              if (devMap.has(incoming.hwid)) {
-                devMap.set(incoming.hwid, { ...devMap.get(incoming.hwid), ...incoming });
-              } else {
-                devMap.set(incoming.hwid, incoming);
-              }
-            }
-          });
-          allDevicesCache = Array.from(devMap.values());
           try { localStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
 
           const searchInput = document.getElementById('search-filter');
@@ -4234,9 +4210,9 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
           body: JSON.stringify({ hwid })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          showToast('Registro de celular limpiado exitosamente (sin bloqueo).');
+        const data = await res.json().catch(() => ({}));
+        if ((res.ok && data.success) || res.status === 404) {
+          showToast(res.status === 404 ? 'El dispositivo no existía en el servidor. Registro local limpiado.' : 'Registro de celular limpiado exitosamente (sin bloqueo).');
           const cleanHwid = String(hwid).trim().toUpperCase();
           locallyDeletedHwids.add(cleanHwid);
           try {

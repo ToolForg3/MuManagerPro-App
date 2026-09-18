@@ -56,6 +56,7 @@ import { ItemImage } from '../../components/common/ItemImage';
 import { MuItemParser } from '../../services/parser/muItemParser';
 import { ParsedItem } from '../../types/item';
 import { LicenseService } from '../../services/security/licenseService';
+import { LicenseModal } from '../../components/security/LicenseModal';
 import { DEFAULT_ITEM_CATALOG, ItemDefinition } from '../../services/parser/itemDatabase';
 import { AutocompleteInput } from '../../components/common/AutocompleteInput';
 import { MAKER_CATEGORIES } from '../../constants/makerCategories';
@@ -192,6 +193,7 @@ export const AccountsScreen = () => {
   const [warehouseViewTab, setWarehouseViewTab] = useState<'items' | 'warehouse' | 'vault_ext'>('warehouse');
   const [vaultSubTab, setVaultSubTab] = useState<'main' | 'ext'>('main');
   const [premiumModalVisible, setPremiumModalVisible] = useState<boolean>(false);
+  const [licenseModalVisible, setLicenseModalVisible] = useState<boolean>(false);
   const [catalogCategory, setCatalogCategory] = useState<string>('swords');
   const [catalogSearch, setCatalogSearch] = useState<string>('');
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState<boolean>(false);
@@ -311,8 +313,9 @@ export const AccountsScreen = () => {
 
   const handleCreateAccount = async () => {
     if (!LicenseService.isPro()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
+      LicenseService.alertProRequired(
+        'Creación de Cuentas',
+        () => setLicenseModalVisible(true),
         'La creación de nuevas cuentas en SQL Server requiere una Licencia PRO activa.'
       );
       return;
@@ -341,10 +344,18 @@ export const AccountsScreen = () => {
         setNewLevel(0);
         await fetchAccounts();
       } else {
-        Alert.alert('Error SQL', result.message);
+        if (LicenseService.isLicenseError(result.message)) {
+          LicenseService.alertProRequired('Creación de Cuentas', () => setLicenseModalVisible(true), result.message);
+        } else {
+          Alert.alert('Error SQL', result.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Creación de Cuentas', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setIsCreating(false);
     }
@@ -352,8 +363,9 @@ export const AccountsScreen = () => {
 
   const handleToggleBlock = async (account: AccountSummary) => {
     if (!LicenseService.isPro()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
+      LicenseService.alertProRequired(
+        'Bloqueo de Cuentas',
+        () => setLicenseModalVisible(true),
         'El bloqueo o desbloqueo de cuentas en SQL Server requiere una Licencia PRO activa.'
       );
       return;
@@ -376,17 +388,29 @@ export const AccountsScreen = () => {
                 account.memb___id,
                 !isCurrentlyBlocked
               );
-              Alert.alert('Resultado', res.message);
-              // Actualizar cuenta seleccionada localmente
-              if (selectedAccount && selectedAccount.memb___id === account.memb___id) {
-                setSelectedAccount({
-                  ...selectedAccount,
-                  bloc_code: isCurrentlyBlocked ? '0' : '1',
-                });
+              if (res.success) {
+                Alert.alert('Resultado', res.message);
+                // Actualizar cuenta seleccionada localmente
+                if (selectedAccount && selectedAccount.memb___id === account.memb___id) {
+                  setSelectedAccount({
+                    ...selectedAccount,
+                    bloc_code: isCurrentlyBlocked ? '0' : '1',
+                  });
+                }
+                await fetchAccounts();
+              } else {
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Bloqueo de Cuentas', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message);
+                }
               }
-              await fetchAccounts();
             } catch (err: any) {
-              Alert.alert('Error', err.message);
+              if (LicenseService.isLicenseError(err.message)) {
+                LicenseService.alertProRequired('Bloqueo de Cuentas', () => setLicenseModalVisible(true), err.message);
+              } else {
+                Alert.alert('Error', err.message);
+              }
             }
           },
         },
@@ -424,8 +448,9 @@ export const AccountsScreen = () => {
   const handleSaveAccount = async () => {
     if (!selectedAccount) return;
     if (!LicenseService.isPro()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
+      LicenseService.alertProRequired(
+        'Edición de Cuentas',
+        () => setLicenseModalVisible(true),
         'La edición avanzada de cuentas y sincronización de datos con SQL Server requiere una Licencia PRO activa.'
       );
       return;
@@ -468,10 +493,18 @@ export const AccountsScreen = () => {
         setAddVipDaysInput('');
         await fetchAccounts();
       } else {
-        Alert.alert('Error', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Edición de Cuentas', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'No se pudo actualizar la cuenta.');
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Edición de Cuentas', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message || 'No se pudo actualizar la cuenta.');
+      }
     } finally {
       setSavingAccount(false);
     }
@@ -479,6 +512,14 @@ export const AccountsScreen = () => {
 
   const handleDisconnectAccount = async () => {
     if (!selectedAccount) return;
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Liberar Sesión SQL',
+        () => setLicenseModalVisible(true),
+        'Liberar sesiones y modificar el estado de conexión en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     Alert.alert(
       'Liberar Cuenta Trabada en SQL',
       `¿Deseas restablecer la sesión en SQL Server para "${selectedAccount.memb___id}"? Se limpiará su registro (ConnectStat = 0) en la base de datos (indicado si el servidor se cayó o la cuenta quedó trabada tras cerrar el juego).`,
@@ -496,10 +537,18 @@ export const AccountsScreen = () => {
                 setSelectedAccount(prev => prev ? { ...prev, ConnectStat: 0 } : null);
                 await fetchAccounts();
               } else {
-                Alert.alert('Error', res.message);
+                if (LicenseService.isLicenseError(res.message)) {
+                  LicenseService.alertProRequired('Liberar Sesión SQL', () => setLicenseModalVisible(true), res.message);
+                } else {
+                  Alert.alert('Error', res.message);
+                }
               }
             } catch (e: any) {
-              Alert.alert('Error', e.message || 'Error al desconectar');
+              if (LicenseService.isLicenseError(e.message)) {
+                LicenseService.alertProRequired('Liberar Sesión SQL', () => setLicenseModalVisible(true), e.message);
+              } else {
+                Alert.alert('Error', e.message || 'Error al desconectar');
+              }
             } finally {
               setDisconnectingAccount(false);
             }
@@ -510,6 +559,14 @@ export const AccountsScreen = () => {
   };
 
   const promptDeleteAccountDirect = (account: AccountSummary) => {
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Eliminación de Cuentas',
+        () => setLicenseModalVisible(true),
+        'La eliminación de cuentas y todos sus datos en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     Alert.alert(
       'Eliminar Cuenta',
       `¿Deseas eliminar permanentemente la cuenta "${account.memb___id}"?\n\n` +
@@ -532,6 +589,14 @@ export const AccountsScreen = () => {
 
   const promptDeleteSelectedAccount = () => {
     if (!selectedAccount) return;
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Eliminación de Cuentas',
+        () => setLicenseModalVisible(true),
+        'La eliminación de cuentas y todos sus datos en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     const charCountText = accountChars.length > 0 ? `${accountChars.length} personajes asociados` : 'personajes asociados';
     Alert.alert(
       '⚠️ Eliminar Cuenta Completa',
@@ -572,6 +637,8 @@ export const AccountsScreen = () => {
               },
             ]
           );
+        } else if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Eliminación de Cuentas', () => setLicenseModalVisible(true), res.message);
         } else {
           Alert.alert('Error', res.message || 'No se pudo eliminar la cuenta.');
         }
@@ -583,7 +650,11 @@ export const AccountsScreen = () => {
       setSelectedAccount(null);
       await fetchAccounts();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Error inesperado al eliminar la cuenta.');
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Eliminación de Cuentas', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message || 'Error inesperado al eliminar la cuenta.');
+      }
     } finally {
       setDeletingAccount(false);
     }
@@ -670,16 +741,32 @@ export const AccountsScreen = () => {
 
   const handleSaveJewelBank = async () => {
     if (!jewelBankAcc) return;
+    if (!LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Banco de Joyas',
+        () => setLicenseModalVisible(true),
+        'La modificación y sincronización del Banco de Joyas en SQL Server requiere una Licencia PRO activa.'
+      );
+      return;
+    }
     setJewelBankSaving(true);
     try {
       const res = await SqlClient.updateJewelBank(jewelBankAcc, jewelBankData);
       if (res.success) {
         Alert.alert('¡Banco de Joyas Guardado!', `Las joyas de la cuenta '${jewelBankAcc}' se guardaron exitosamente en SQL Server.`);
       } else {
-        Alert.alert('Error al guardar', res.message);
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Banco de Joyas', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error al guardar', res.message);
+        }
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Banco de Joyas', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setJewelBankSaving(false);
     }
@@ -742,13 +829,22 @@ export const AccountsScreen = () => {
 
   const handleSwitchVault = async (targetIdx: number) => {
     if (targetIdx === activeVaultIndex || loadingWarehouse) return;
+    if (targetIdx > 0 && !LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        `Multi-Vault (Baúl #${targetIdx})`,
+        () => setLicenseModalVisible(true),
+        'El acceso a múltiples baúles (Multi-Vault) requiere una Licencia PRO activa. En versión DEMO solo se permite acceder al Baúl 0 (Principal).'
+      );
+      return;
+    }
     await loadVaultData(warehouseAccount, targetIdx);
   };
 
   const handleUnlockWarehouses = async () => {
     if (!LicenseService.isPro()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
+      LicenseService.alertProRequired(
+        'Desbloqueo de Baúles',
+        () => setLicenseModalVisible(true),
         'El desbloqueo y expansión de múltiples baúles extendidos con SQL Server requiere una Licencia PRO activa.'
       );
       return;
@@ -769,7 +865,17 @@ export const AccountsScreen = () => {
           `Se han habilitado exitosamente ${res.warehouseCount} baúles para la cuenta ${warehouseAccount}. Ya puedes cambiar entre ellos.`
         );
       } else {
-        Alert.alert('Error al desbloquear', res.message || 'No se pudo actualizar en SQL Server');
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Desbloqueo de Baúles', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error al desbloquear', res.message || 'No se pudo actualizar en SQL Server');
+        }
+      }
+    } catch (e: any) {
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Desbloqueo de Baúles', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
       }
     } finally {
       setUnlockingVaults(false);
@@ -778,8 +884,9 @@ export const AccountsScreen = () => {
 
   const handleActivateVaultExpansion = async () => {
     if (!LicenseService.isPro()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
+      LicenseService.alertProRequired(
+        'Bóveda Expandida',
+        () => setLicenseModalVisible(true),
         'La activación de la Bóveda Expandida en juego requiere una Licencia PRO activa.'
       );
       return;
@@ -796,7 +903,17 @@ export const AccountsScreen = () => {
         setShowUnlockModal(false);
         await loadVaultData(warehouseAccount, activeVaultIndex);
       } else {
-        Alert.alert('Error al activar', res.message || 'No se pudo actualizar en SQL Server');
+        if (LicenseService.isLicenseError(res.message)) {
+          LicenseService.alertProRequired('Bóveda Expandida', () => setLicenseModalVisible(true), res.message);
+        } else {
+          Alert.alert('Error al activar', res.message || 'No se pudo actualizar en SQL Server');
+        }
+      }
+    } catch (e: any) {
+      if (LicenseService.isLicenseError(e.message)) {
+        LicenseService.alertProRequired('Bóveda Expandida', () => setLicenseModalVisible(true), e.message);
+      } else {
+        Alert.alert('Error', e.message);
       }
     } finally {
       setUnlockingVaults(false);
@@ -1466,9 +1583,10 @@ export const AccountsScreen = () => {
 
   const handleSetMaxZen = () => {
     if (!LicenseService.isPro()) {
-      Alert.alert(
-        'Límite DEMO',
-        'En versión DEMO el Zen máximo permitido es 10,000,000. Activa la versión PRO para hasta 2,000,000,000.'
+      LicenseService.alertProRequired(
+        'Límite de Zen',
+        () => setLicenseModalVisible(true),
+        'En versión DEMO el Zen máximo permitido es 10,000,000. Activa la versión PRO para almacenar hasta 2,000,000,000 de Zen.'
       );
       setVaultMoney(10000000);
     } else {
@@ -1546,9 +1664,18 @@ export const AccountsScreen = () => {
       return;
     }
     if (!LicenseService.canSaveInventory()) {
-      Alert.alert(
-        'Función Bloqueada en DEMO',
-        'El guardado y sincronización de ítems del baúl con SQL Server requiere una Licencia PRO activa.'
+      LicenseService.alertProRequired(
+        'Guardado de Baúl',
+        () => setLicenseModalVisible(true),
+        'El guardado y sincronización de ítems del baúl con SQL Server requiere una Licencia PRO activa. En versión DEMO puedes editar y probar los ítems en memoria, pero no sincronizarlos con la base de datos.'
+      );
+      return;
+    }
+    if (vaultMoney > 10000000 && !LicenseService.isPro()) {
+      LicenseService.alertProRequired(
+        'Límite de Zen en Baúl',
+        () => setLicenseModalVisible(true),
+        'En versión DEMO el Zen máximo permitido en el baúl es 10,000,000. Activa la versión PRO para guardar hasta 2,000,000,000 de Zen.'
       );
       return;
     }
@@ -1561,7 +1688,11 @@ export const AccountsScreen = () => {
           setWarehouseData((prev: any) => ({ ...prev, ItemsHex: hexToSave, Money: vaultMoney }));
           Alert.alert('Baúl Guardado', `Los 240 slots (Baúl Normal + Bóveda Expandida) y el Zen del Baúl #${activeVaultIndex} se sincronizaron con éxito en SQL Server.`);
         } else {
-          Alert.alert('Error al guardar', res.message);
+          if (LicenseService.isLicenseError(res.message)) {
+            LicenseService.alertProRequired('Guardado de Baúl', () => setLicenseModalVisible(true), res.message);
+          } else {
+            Alert.alert('Error al guardar', res.message);
+          }
         }
       } finally {
         setSavingWarehouse(false);
@@ -3390,13 +3521,7 @@ export const AccountsScreen = () => {
 
                   <TouchableOpacity
                     style={styles.muVaultArrowBtn}
-                    onPress={() => {
-                      if (!LicenseService.isPro()) {
-                        setPremiumModalVisible(true);
-                      } else {
-                        handleSwitchVault(activeVaultIndex + 1);
-                      }
-                    }}
+                    onPress={() => handleSwitchVault(activeVaultIndex + 1)}
                     activeOpacity={0.7}
                     disabled={loadingWarehouse}
                   >
@@ -3860,36 +3985,6 @@ export const AccountsScreen = () => {
         </View>
       </Modal>
 
-      {/* ======================================================== */}
-      {/* MODAL 2A: PREMIUM REQUERIDO (CAPTURAS 4) */}
-      {/* ======================================================== */}
-      <Modal
-        visible={premiumModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setPremiumModalVisible(false)}
-      >
-        <View style={styles.premiumModalOverlay}>
-          <View style={styles.premiumModalCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <Text style={{ fontSize: 22 }}>⭐</Text>
-              <Text style={styles.premiumModalTitle}>Premium Requerido</Text>
-            </View>
-            <Text style={styles.premiumModalBody}>
-              Multi-Vault es una función Premium.{'\n\n'}Con la cuenta gratuita solo puedes usar el Vault 0 (principal).
-            </Text>
-            <View style={{ alignItems: 'flex-end', marginTop: 24 }}>
-              <TouchableOpacity
-                onPress={() => setPremiumModalVisible(false)}
-                activeOpacity={0.7}
-                style={{ paddingVertical: 6, paddingHorizontal: 12 }}
-              >
-                <Text style={styles.premiumModalBtnText}>ENTENDIDO</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* ======================================================== */}
       {/* MODAL 2B: DESBLOQUEAR BAÚLES ADICIONALES (WarehouseCount) */}
@@ -4562,6 +4657,10 @@ export const AccountsScreen = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      <LicenseModal
+        visible={licenseModalVisible}
+        onClose={() => setLicenseModalVisible(false)}
+      />
     </View>
   );
 };

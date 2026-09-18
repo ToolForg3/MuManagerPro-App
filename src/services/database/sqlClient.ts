@@ -282,7 +282,21 @@ export class SqlClient {
           status: response.status,
         };
       }
-      return JSON.parse(trimmed);
+      const parsed = JSON.parse(trimmed);
+      if (
+        parsed &&
+        (parsed.error === 'LICENCIA_REQUERIDA' ||
+          parsed.error === 'LICENCIA_PRO_REQUERIDA' ||
+          parsed.error === 'FUNCION_RESTRINGIDA_PRO' ||
+          parsed.error === 'DEMO_EXPIRADO' ||
+          parsed.error === 'DISPOSITIVO_REQUERIDO')
+      ) {
+        parsed.licenseRequired = true;
+        const detailedMsg = parsed.message || 'Esta función requiere una Licencia PRO activa para sincronizar y guardar cambios en SQL Server.';
+        parsed.error = detailedMsg;
+        parsed.message = detailedMsg;
+      }
+      return parsed;
     } catch (e: any) {
       return {
         success: false,
@@ -379,6 +393,24 @@ export class SqlClient {
   }
 
   /**
+   * Extrae el mensaje descriptivo de una respuesta fallida de API,
+   * evitando que códigos técnicos crudos como LICENCIA_REQUERIDA o FUNCION_RESTRINGIDA_PRO se muestren al usuario.
+   */
+  static extractErrorMessage(data: any, defaultMsg: string): string {
+    if (!data) return defaultMsg;
+    if (
+      data.error === 'LICENCIA_REQUERIDA' ||
+      data.error === 'LICENCIA_PRO_REQUERIDA' ||
+      data.error === 'FUNCION_RESTRINGIDA_PRO' ||
+      data.error === 'DEMO_EXPIRADO' ||
+      data.error === 'DISPOSITIVO_REQUERIDO'
+    ) {
+      return data.message || 'Esta función requiere una Licencia PRO activa para sincronizar y guardar cambios en SQL Server.';
+    }
+    return data.message || data.error || defaultMsg;
+  }
+
+  /**
    * 1. Test real de conexión contra SQL Server a través del Gateway o conector
    */
   static async testConnection(): Promise<{ success: boolean; message: string; latency: number }> {
@@ -391,7 +423,7 @@ export class SqlClient {
 
       if (!response.ok || !data.success) {
         this.isConnected = false;
-        const err = data.error || data.message || `Error HTTP ${response.status}`;
+        const err = this.extractErrorMessage(data, `Error HTTP ${response.status}`);
         this.logQuery('TEST_CONNECTION', duration, false, 0, err);
         return {
           success: false,
@@ -575,7 +607,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al actualizar stats');
+        throw new Error(this.extractErrorMessage(data, 'Error al actualizar stats'));
       }
 
       this.logQuery(`UPDATE_STATS_${charName}`, duration, true, 1);
@@ -607,7 +639,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al actualizar inventario');
+        throw new Error(this.extractErrorMessage(data, 'Error al actualizar inventario'));
       }
 
       this.logQuery(`UPDATE_INVENTORY_${charName}`, duration, true, 1);
@@ -638,7 +670,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al actualizar habilidades');
+        throw new Error(this.extractErrorMessage(data, 'Error al actualizar habilidades'));
       }
 
       this.logQuery(`UPDATE_SKILLS_${charName}`, duration, true, 1);
@@ -671,7 +703,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al actualizar ubicación');
+        throw new Error(this.extractErrorMessage(data, 'Error al actualizar ubicación'));
       }
 
       this.logQuery(`UPDATE_LOCATION_${charName}`, duration, true, 1);
@@ -698,7 +730,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al desbloquear mochilas');
+        throw new Error(this.extractErrorMessage(data, 'Error al desbloquear mochilas'));
       }
 
       this.logQuery(`UNLOCK_EXT_${charName}`, duration, true, 1);
@@ -737,7 +769,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al actualizar progreso del personaje');
+        throw new Error(this.extractErrorMessage(data, 'Error al actualizar progreso del personaje'));
       }
 
       this.logQuery(`UPDATE_PROGRESS_${charName}`, duration, true, 1);
@@ -773,7 +805,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al actualizar misiones del personaje');
+        throw new Error(this.extractErrorMessage(data, 'Error al actualizar misiones del personaje'));
       }
 
       this.logQuery(`UPDATE_QUEST_${charName}`, duration, true, 1);
@@ -831,7 +863,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al crear cuenta');
+        throw new Error(this.extractErrorMessage(data, 'Error al crear cuenta'));
       }
 
       this.logQuery(`CREATE_ACCOUNT_${username}`, duration, true, 1);
@@ -872,7 +904,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al crear el personaje');
+        throw new Error(this.extractErrorMessage(data, 'Error al crear el personaje'));
       }
 
       this.logQuery(`CREATE_CHARACTER_${name}`, duration, true, 1);
@@ -905,7 +937,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al eliminar el personaje');
+        throw new Error(this.extractErrorMessage(data, 'Error al eliminar el personaje'));
       }
 
       this.logQuery(`DELETE_CHARACTER_${charName}`, duration, true, 1);
@@ -932,7 +964,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al modificar estado de cuenta');
+        throw new Error(this.extractErrorMessage(data, 'Error al modificar estado de cuenta'));
       }
 
       this.logQuery(`TOGGLE_BLOCK_${username}`, duration, true, 1);
@@ -963,7 +995,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al eliminar la cuenta');
+        throw new Error(this.extractErrorMessage(data, 'Error al eliminar la cuenta'));
       }
 
       this.logQuery(`DELETE_ACCOUNT_${username}`, duration, true, 1);
@@ -989,7 +1021,7 @@ export class SqlClient {
       const duration = Date.now() - startTime;
 
       if (!res.ok || !result.success) {
-        throw new Error(result.error || 'Error al actualizar cuenta');
+        throw new Error(this.extractErrorMessage(result, 'Error al actualizar cuenta'));
       }
 
       this.logQuery(`UPDATE_ACCOUNT_${data.username}`, duration, true, 1);

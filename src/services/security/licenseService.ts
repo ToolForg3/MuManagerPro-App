@@ -355,11 +355,42 @@ export class LicenseService {
   }
 
   static maxAllowedStat(): number {
-    return this.isPro() ? 65535 : 500;
+    return this.isPro() ? 65535 : 1000;
   }
 
   static maxAllowedZen(): number {
     return this.isPro() ? 2000000000 : 10000000;
+  }
+
+  /**
+   * Verifica si un error recibido corresponde a una restricción de licencia o modo DEMO
+   */
+  static isLicenseError(errOrMsg: any): boolean {
+    if (!errOrMsg) return false;
+    const str = typeof errOrMsg === 'string' ? errOrMsg : (errOrMsg.message || errOrMsg.error || '');
+    return (
+      str.includes('LICENCIA') ||
+      str.includes('Licencia PRO') ||
+      str.includes('FUNCION_RESTRINGIDA_PRO') ||
+      str.includes('DISPOSITIVO_REQUERIDO')
+    );
+  }
+
+  /**
+   * Muestra el diálogo estándar de función bloqueada en modo DEMO
+   * con título "Función Bloqueada en DEMO", mensaje detallado y botón "Activar PRO"
+   */
+  static alertProRequired(featureName: string, onActivatePro?: () => void, customMsg?: string): void {
+    Alert.alert(
+      'Función Bloqueada en DEMO',
+      customMsg || `${featureName} requiere una Licencia PRO activa para sincronizar con SQL Server.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        ...(onActivatePro
+          ? [{ text: 'Activar PRO', onPress: onActivatePro }]
+          : [{ text: 'OK' }]),
+      ]
+    );
   }
 
   static subscribe(fn: (status: LicenseStatus) => void): () => void {

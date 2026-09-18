@@ -1616,43 +1616,83 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
       req.path.startsWith('/api/accounts/unban') ||
       req.path.startsWith('/api/accounts/add-gcoins') ||
       req.path.startsWith('/api/accounts/mute') ||
+      req.path.startsWith('/api/character/create') ||
+      req.path.startsWith('/api/character/delete') ||
       req.path.startsWith('/api/character/update-inventory') ||
       req.path.startsWith('/api/character/update-stats') ||
       req.path.startsWith('/api/character/update-skills') ||
+      req.path.startsWith('/api/character/update-location') ||
+      req.path.startsWith('/api/character/update-progress') ||
+      req.path.startsWith('/api/character/unlock-extensions') ||
       req.path.startsWith('/api/character/reset') ||
       req.path.startsWith('/api/character/add-zen') ||
       req.path.startsWith('/api/character/set-pk') ||
       req.path.startsWith('/api/character/clear-inventory') ||
+      req.path.startsWith('/api/warehouse/save') ||
       req.path.startsWith('/api/warehouse/update') ||
       req.path.startsWith('/api/warehouse/inject-items') ||
       req.path.startsWith('/api/warehouse/inject-zen') ||
       req.path.startsWith('/api/warehouse/clear') ||
       req.path.startsWith('/api/warehouse/expand') ||
+      req.path.startsWith('/api/warehouse/unlock') ||
+      req.path.startsWith('/api/warehouse/jewels') ||
+      req.path.startsWith('/api/warehouse/set-exp') ||
       req.path.startsWith('/api/guilds/delete') ||
       req.path.startsWith('/api/guilds/create') ||
       req.path.startsWith('/api/pk/clear');
 
+    let isDemoStatsAllowed = false;
+    let isDemoLimitExceeded = false;
+    if (req.path.startsWith('/api/character/update-stats') && isDemoActive) {
+      const p = req.body && req.body.params ? req.body.params : {};
+      const str = parseInt(p.STR, 10) || 0;
+      const agi = parseInt(p.AGI, 10) || 0;
+      const vit = parseInt(p.VIT, 10) || 0;
+      const ene = parseInt(p.ENE, 10) || 0;
+      const cmd = parseInt(p.CMD, 10) || 0;
+      const pts = parseInt(p.Points, 10) || 0;
+      const zen = parseInt(p.Zen, 10) || 0;
+
+      if (str <= 1000 && agi <= 1000 && vit <= 1000 && ene <= 1000 && cmd <= 1000 && pts <= 1000 && zen <= 10000000) {
+        isDemoStatsAllowed = true;
+      } else {
+        isDemoLimitExceeded = true;
+      }
+    }
+
+    let isMultiVaultBlocked = false;
+    if (req.path.startsWith('/api/warehouse') && isDemoActive) {
+      const wareIdx = parseInt(req.body && req.body.warehouseIndex, 10) || 0;
+      if (wareIdx > 0) {
+        isMultiVaultBlocked = true;
+      }
+    }
+
     if (!isPro) {
-      // En modo DEMO: permitir ÚNICAMENTE rutas de lectura / preview, bloqueando tajantemente mutaciones y rutas exclusivas PRO
-      if (isDemoActive && !isProExclusiveRoute && !isSqlMutationRoute) {
-        // Permitir visualización / lectura durante el período de prueba (cuentas, personajes, almacén, etc.)
+      // En modo DEMO: permitir visualización / lectura (Baúl 0) y edición básica de stats (hasta 1,000 pts y 10M zen)
+      if (isDemoActive && !isProExclusiveRoute && !isMultiVaultBlocked && (!isSqlMutationRoute || isDemoStatsAllowed)) {
+        // Permitir operación de prueba autorizada
       } else {
         const isExpiredDemo = dev && dev.mode === 'DEMO' && dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now();
-        const reasonMsg = isSqlMutationRoute
-          ? 'Esta acción de modificación en SQL Server requiere una Licencia PRO activa. El modo DEMO es únicamente de visualización de prueba.'
-          : isProExclusiveRoute
-            ? 'Esta función avanzada requiere una licencia PRO activa.'
-            : isExpiredDemo
-              ? 'Tu período de prueba ha finalizado. Adquiere una licencia PRO para continuar.'
-              : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.';
+        const reasonMsg = isMultiVaultBlocked
+          ? 'En modo DEMO solo se permite el acceso al Baúl Principal (Baúl 0). El acceso a baúles múltiples (Multi-Vault) requiere una Licencia PRO activa.'
+          : (isDemoLimitExceeded
+            ? 'En modo DEMO, los stats están limitados hasta 1,000 pts y el Zen hasta 10,000,000. Desbloquea la versión PRO para valores ilimitados (hasta 65,535 pts y 2,000,000,000 Zen).'
+            : (isSqlMutationRoute
+              ? 'Esta acción de modificación en SQL Server requiere una Licencia PRO activa. El modo DEMO es únicamente de visualización de prueba.'
+              : (isProExclusiveRoute
+                ? 'Esta función avanzada requiere una licencia PRO activa.'
+                : (isExpiredDemo
+                  ? 'Tu período de prueba ha finalizado. Adquiere una licencia PRO para continuar.'
+                  : 'Esta operación requiere un dispositivo con licencia PRO activa o período de prueba válido.'))));
 
-        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isSqlMutationRoute ? 'Mutación bloqueada en DEMO' : (isExpiredDemo ? 'DEMO expirado' : 'licencia requerida')}`, 'BLOCKED');
+        addAuditLog('SQL_BLOCKED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a ruta de datos (${req.path}): ${isMultiVaultBlocked ? 'Multi-Vault bloqueado en DEMO' : (isDemoLimitExceeded ? 'Límite DEMO excedido' : (isSqlMutationRoute ? 'Mutación bloqueada en DEMO' : (isExpiredDemo ? 'DEMO expirado' : 'licencia requerida')))}`, 'BLOCKED');
         return res.status(403).json({
           success: false,
           blocked: !!(dev && dev.blocked),
           forceWipeKey: !!(dev && dev.forceDemo),
           authoritativeMode: 'DEMO',
-          error: isSqlMutationRoute ? 'FUNCION_RESTRINGIDA_PRO' : (isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA'),
+          error: (isSqlMutationRoute || isMultiVaultBlocked || isDemoLimitExceeded) ? 'FUNCION_RESTRINGIDA_PRO' : (isExpiredDemo ? 'DEMO_EXPIRADO' : 'LICENCIA_REQUERIDA'),
           message: reasonMsg,
         });
       }
@@ -9848,17 +9888,8 @@ app.post('/api/admin/user/delete', (req, res) => {
     (cleanEmail && (u.email || '').toLowerCase() === cleanEmail)
   );
 
-  if (!targetUser) {
-    // Si ya no está en la lista activa, comprobar si ya figuraba como tombstoned
-    const tombstones = loadTombstones();
-    if (tombstones.deletedUsers && ((cleanEmail && tombstones.deletedUsers[cleanEmail]) || (cleanId && tombstones.deletedUsers[cleanId.toLowerCase()]))) {
-      return res.json({ success: true, message: 'El usuario ya se encontraba eliminado.', email: cleanEmail || cleanId });
-    }
-    return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-  }
-
-  const targetEmail = (targetUser.email || cleanEmail).toLowerCase();
-  const targetId = targetUser.id || cleanId;
+  const targetEmail = (targetUser && targetUser.email ? targetUser.email : cleanEmail).toLowerCase();
+  const targetId = targetUser && targetUser.id ? targetUser.id : cleanId;
 
   // Registrar en Tombstones para evitar resurrección permanente
   const tombstones = loadTombstones();
@@ -9866,8 +9897,8 @@ app.post('/api/admin/user/delete', (req, res) => {
   const tombstoneRecord = {
     deletedAt: new Date().toISOString(),
     id: targetId,
-    hwid: targetUser.hwid || '',
-    username: targetUser.username || '',
+    hwid: (targetUser && targetUser.hwid) || '',
+    username: (targetUser && targetUser.username) || '',
     deletedBy: 'ADMIN_PANEL'
   };
   if (targetEmail) tombstones.deletedUsers[targetEmail] = tombstoneRecord;
@@ -9876,13 +9907,31 @@ app.post('/api/admin/user/delete', (req, res) => {
 
   // Filtrar estrictamente por ID y por Email para evitar cualquier residuo
   users = users.filter(u => 
-    u.id !== targetId && 
+    (!targetId || u.id !== targetId) && 
     (!targetEmail || (u.email || '').toLowerCase() !== targetEmail)
   );
   saveUsers(users);
 
-  addAuditLog('USER_DELETED', targetUser.hwid || 'PANEL', getClientIp(req), `Cuenta de usuario eliminada permanentemente: ${targetEmail || targetId}`);
-  res.json({ success: true, message: 'Usuario eliminado con éxito.', email: targetEmail, id: targetId });
+  // Desvincular celulares asociados a este usuario
+  const devices = loadDevices();
+  let devicesChanged = false;
+  for (const [devHwid, dev] of Object.entries(devices)) {
+    if (dev && (
+      (targetEmail && ((dev.currentUser || '').toLowerCase() === targetEmail || (dev.userEmail || '').toLowerCase() === targetEmail)) ||
+      (targetId && dev.activeUser === targetId)
+    )) {
+      dev.currentUser = '';
+      dev.userEmail = '';
+      dev.activeUser = '';
+      devicesChanged = true;
+    }
+  }
+  if (devicesChanged) {
+    saveDevices(devices);
+  }
+
+  addAuditLog('USER_DELETED', (targetUser && targetUser.hwid) || 'PANEL', getClientIp(req), `Cuenta de usuario eliminada permanentemente: ${targetEmail || targetId}`);
+  res.json({ success: true, message: 'Usuario eliminado permanentemente con éxito.', email: targetEmail, id: targetId });
 });
 
 // Actualizar información completa de usuario desde el panel (modal y menú contextual)
@@ -10425,13 +10474,13 @@ app.post('/api/admin/device/delete', (req, res) => {
   if (!devices[targetKey]) {
     // Si ya no está en devices, limpiar cualquier tombstone residual
     const tombstones = loadTombstones();
-    if (tombstones[cleanHwid] || tombstones[hwid]) {
+    if (tombstones[cleanHwid] || tombstones[hwid] || tombstones[targetKey]) {
       delete tombstones[cleanHwid];
       delete tombstones[hwid];
+      delete tombstones[targetKey];
       saveTombstones(tombstones);
-      return res.json({ success: true, hwid: cleanHwid, message: 'El registro residual fue limpiado con éxito (sin bloqueo).' });
     }
-    return res.status(404).json({ success: false, error: 'Dispositivo no encontrado' });
+    return res.json({ success: true, hwid: cleanHwid, message: 'El dispositivo no se encontraba activo o ya fue limpiado del sistema.' });
   }
 
   // Limpiar de la lista de dispositivos activos
