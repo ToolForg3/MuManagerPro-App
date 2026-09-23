@@ -8305,18 +8305,85 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
 const failedLogins = new Map();
 
-// Acceso Directo Modo Demo (sin credenciales personales)
+// Acceso Directo Modo Demo (sin credenciales personales - 10 min por celular)
 app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   const { hwid } = req.body || {};
+  const cleanHwid = String(hwid || '').trim();
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-  const token = generateSessionToken('demo@muonline.local', 'USER', hwid || 'DEMO');
-  addAuditLog('DEMO_LOGIN', hwid || 'DEMO', clientIp, 'Acceso Directo Demo concedido');
+
+  if (cleanHwid) {
+    const devices = loadDevices();
+    let dev = devices[cleanHwid];
+    if (!dev) {
+      dev = {
+        hwid: cleanHwid,
+        firstSeen: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        mode: 'DEMO',
+        quickDemoStartedAt: new Date().toISOString(),
+        quickDemoExpiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        quickDemoUsed: false,
+      };
+      devices[cleanHwid] = dev;
+      saveDevices(devices);
+    } else {
+      if (dev.quickDemoUsed) {
+        return res.status(403).json({
+          success: false,
+          error: 'QUICK_DEMO_EXPIRED',
+          message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+        });
+      }
+      if (dev.quickDemoExpiresAt && new Date(dev.quickDemoExpiresAt).getTime() <= Date.now()) {
+        dev.quickDemoUsed = true;
+        saveDevices(devices);
+        return res.status(403).json({
+          success: false,
+          error: 'QUICK_DEMO_EXPIRED',
+          message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+        });
+      }
+      if (!dev.quickDemoStartedAt) {
+        dev.quickDemoStartedAt = new Date().toISOString();
+        dev.quickDemoExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        saveDevices(devices);
+      }
+    }
+  }
+
+  const token = generateSessionToken('demo@muonline.local', 'USER', cleanHwid || 'DEMO');
+  addAuditLog('DEMO_LOGIN', cleanHwid || 'DEMO', clientIp, 'Acceso Directo Demo concedido (10 min)');
   return res.json({
     success: true,
     role: 'USER',
     token,
     user: { email: 'demo@muonline.local', username: 'Demo' }
   });
+});
+
+// Registrar consumo de prueba rápida de 10 minutos por celular
+app.post('/api/auth/demo-quick-consumed', (req, res) => {
+  const { hwid } = req.body || {};
+  const cleanHwid = String(hwid || '').trim();
+  if (cleanHwid) {
+    const devices = loadDevices();
+    if (!devices[cleanHwid]) {
+      devices[cleanHwid] = {
+        hwid: cleanHwid,
+        firstSeen: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        mode: 'DEMO',
+        quickDemoUsed: true,
+        quickDemoExpiresAt: new Date().toISOString(),
+      };
+    } else {
+      devices[cleanHwid].quickDemoUsed = true;
+      devices[cleanHwid].quickDemoExpiresAt = new Date().toISOString();
+    }
+    saveDevices(devices);
+    addAuditLog('DEMO_QUICK_EXPIRED', cleanHwid, req.socket.remoteAddress || '127.0.0.1', 'Prueba rápida de 10 minutos consumida por dispositivo');
+  }
+  res.json({ success: true });
 });
 
 app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {

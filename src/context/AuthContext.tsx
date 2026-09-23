@@ -23,6 +23,7 @@ interface AuthContextType {
   verifyRegistration: (email: string, code: string) => Promise<{ success: boolean; token?: string; error?: string; message?: string }>;
   resendVerificationCode: (email: string) => Promise<{ success: boolean; message?: string; error?: string; pendingSmtp?: boolean; devCode?: string }>;
   logout: () => Promise<void>;
+  logoutDemo: () => Promise<void>;
   savedEmail: string;
   savedUsername: string;
 }
@@ -32,6 +33,7 @@ const SAVED_EMAIL_KEY = '@mumanager_saved_email';
 const SAVED_USERNAME_KEY = '@mumanager_saved_username';
 const DEMO_SESSION_KEY = '@mumanager_demo_session';
 const DEMO_START_TIME_KEY = '@mumanager_demo_start_time';
+export const QUICK_DEMO_CONSUMED_KEY_PREFIX = '@mumanager_quick_demo_consumed_';
 export const DEMO_DURATION_SECONDS = 600; // 10 minutos exactos
 
 const AuthContext = createContext<AuthContextType>({
@@ -51,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   verifyRegistration: async () => ({ success: false }),
   resendVerificationCode: async () => ({ success: false }),
   logout: async () => {},
+  logoutDemo: async () => {},
   savedEmail: '',
   savedUsername: '',
 });
@@ -95,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSavedEmail(storedEmail);
         }
         const isDemo = await AsyncStorage.getItem(DEMO_SESSION_KEY);
-        if (session === 'active' && storedEmail) {
+        if (session === 'active') {
           if (isDemo === 'true') {
             const startStr = await AsyncStorage.getItem(DEMO_START_TIME_KEY);
             const startTime = startStr ? parseInt(startStr, 10) : 0;
@@ -106,6 +109,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
               await AsyncStorage.removeItem(DEMO_SESSION_KEY);
               await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
+              const hwid = await SecurityService.getDeviceHwid().catch(() => '');
+              if (hwid) {
+                await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
+                const bridgeUrl = SqlClient.getBridgeUrl();
+                fetch(`${bridgeUrl}/api/auth/demo-quick-consumed`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ hwid }),
+                }).catch(() => {});
+              }
               setIsDemoExpired(true);
               setIsDemoSession(false);
               setIsAuthenticated(false);
@@ -113,24 +126,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
             setIsDemoSession(true);
             setDemoRemainingSeconds(Math.max(0, Math.ceil((maxDurationMs - elapsed) / 1000)));
-          } else {
-            setIsDemoSession(false);
+            setUserEmail('demo@muonline.local');
+            setUserName('Demo');
+            SqlClient.setActiveUser('Demo');
+            setIsAuthenticated(true);
+            return;
           }
 
-          setUserEmail(storedEmail);
-          setUserName(storedUser);
-          SqlClient.setActiveUser(storedUser || storedEmail);
-          setIsAuthenticated(true);
-          SecurityService.getDeviceHwid().then(hwid => {
-            const currentLicense = LicenseService.getStatus();
-            SqlClient.sendTelemetryPing(
-              hwid,
-              currentLicense.plan || 'DEMO',
-              currentLicense.licenseKey,
-              storedEmail,
-              storedUser || storedEmail.split('@')[0]
-            ).catch(() => {});
-          }).catch(() => {});
+          if (storedEmail || storedUser) {
+            setIsDemoSession(false);
+            setUserEmail(storedEmail);
+            setUserName(storedUser);
+            SqlClient.setActiveUser(storedUser || storedEmail);
+            setIsAuthenticated(true);
+            SecurityService.getDeviceHwid().then(hwid => {
+              const currentLicense = LicenseService.getStatus();
+              SqlClient.sendTelemetryPing(
+                hwid,
+                currentLicense.plan || 'DEMO',
+                currentLicense.licenseKey,
+                storedEmail,
+                storedUser || storedEmail.split('@')[0]
+              ).catch(() => {});
+            }).catch(() => {});
+          } else {
+            setIsAuthenticated(false);
+            setIsDemoSession(false);
+          }
         } else {
           setIsAuthenticated(false);
           setIsDemoSession(false);
@@ -180,13 +202,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (elapsed >= maxDurationMs) {
           if (interval) clearInterval(interval);
+          const hwid = await SecurityService.getDeviceHwid().catch(() => '');
+          if (hwid) {
+            await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
+            const bridgeUrl = SqlClient.getBridgeUrl();
+            fetch(`${bridgeUrl}/api/auth/demo-quick-consumed`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ hwid }),
+            }).catch(() => {});
+          }
+          await logoutDemo();
           setIsDemoExpired(true);
-          await logout();
-          Alert.alert(
-            'Tiempo de Demo Finalizado',
-            'Tu tiempo de prueba de 10 minutos ha finalizado. Para continuar disfrutando de MU Manager PRO, por favor regístrate y crea tu cuenta.',
-            [{ text: 'Crear Cuenta' }]
-          );
         }
       }, 1000);
     }
@@ -306,8 +333,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginDemo = async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
       const hwid = await SecurityService.getDeviceHwid();
+      const localConsumed = await AsyncStorage.getItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`);
+      if (localConsumed === 'true') {
+        return {
+          success: false,
+          error: 'El tiempo de acceso rápido de 10 minutos para este dispositivo ya ha sido utilizado. Crea tu cuenta para disfrutar de 72 horas de prueba.',
+        };
+      }
+
+      const bridgeUrl = SqlClient.getBridgeUrl();
       let token = '';
       try {
         const res = await fetch(`${bridgeUrl}/api/auth/demo-login`, {
@@ -319,9 +354,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (res.ok && data.success && data.token) {
           token = data.token;
           SqlClient.setSessionToken(data.token);
+        } else if (!res.ok || !data.success) {
+          if (res.status === 403 || data.error === 'QUICK_DEMO_EXPIRED') {
+            await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
+            return {
+              success: false,
+              error: data.message || 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.',
+            };
+          }
+          return {
+            success: false,
+            error: data.message || data.error || 'No se pudo iniciar la sesión demo.',
+          };
         }
       } catch (e) {
-        console.warn('Remote demo login error, using local fallback token', e);
+        console.warn('Remote demo login error, checking local fallback', e);
       }
 
       if (!token) {
@@ -340,9 +387,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsDemoExpired(false);
 
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
-      await AsyncStorage.removeItem('@mumanager_auth_password');
-      await AsyncStorage.setItem('@mumanager_auth_username', 'Demo');
-      await AsyncStorage.setItem('@mumanager_auth_email', 'demo@muonline.local');
       await AsyncStorage.setItem(DEMO_SESSION_KEY, 'true');
       await AsyncStorage.setItem(DEMO_START_TIME_KEY, Date.now().toString());
 
@@ -499,6 +543,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const logoutDemo = async () => {
+    setIsAuthenticated(false);
+    setIsDemoSession(false);
+    setDemoRemainingSeconds(DEMO_DURATION_SECONDS);
+    SqlClient.setActiveUser('');
+    SqlClient.setSessionToken('');
+    try {
+      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+      await AsyncStorage.removeItem(DEMO_SESSION_KEY);
+      await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
+      await SecureStorage.removeItem('@mumanager_session_token');
+      // Preservar credenciales locales del usuario registrado si existían
+      const savedEmailVal = await AsyncStorage.getItem(SAVED_EMAIL_KEY);
+      const savedUserVal = await AsyncStorage.getItem(SAVED_USERNAME_KEY);
+      const authEmail = await AsyncStorage.getItem('@mumanager_auth_email');
+      const authUser = await AsyncStorage.getItem('@mumanager_auth_username');
+      const restoredUser = savedUserVal || authUser || '';
+      const restoredEmail = savedEmailVal || authEmail || '';
+      setUserEmail(restoredEmail);
+      setUserName(restoredUser);
+    } catch (e) {
+      console.warn('Error on logoutDemo', e);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -518,6 +587,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         verifyRegistration,
         resendVerificationCode,
         logout,
+        logoutDemo,
         savedEmail,
         savedUsername,
       }}

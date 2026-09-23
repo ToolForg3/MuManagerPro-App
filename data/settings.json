@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.0.9",
+  "latestVersion": "2.1.0",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.0.9 (Build 111) - Actualización Oficial de Seguridad y Rendimiento:\n• REMEDIACIÓN Y BLINDAJE V5: Refuerzo integral de seguridad, integridad y rendimiento.\n• BLINDAJE DE IDENTIDAD & TOKENS: Revocación inmediata y autoritativa de tokens JWT mediante sessionVersion sincronizado.\n• RESILIENCIA TRANSACCIONAL: Retención estricta de idempotencia TTL para operaciones completadas bajo alta concurrencia.\n• SNAPSHOT DE REVERSIÓN ATÓMICA: Validación de esquema y respaldo atómico previo en restauración de copias de seguridad.\n• SEGURIDAD EN PANEL Y CIERRE DE SESIÓN: Purga instantánea en memoria, DOM y almacenamiento local al cerrar sesión de administración.\n• RENDIMIENTO OPTIMIZADO: Carga paralela no bloqueante en el panel de control y conciliación inteligente de dispositivos.",
+  "updateChangelog": "MuManager PRO v2.1.0 (Build 112) - Acceso Rápido Demo & Solicitud de Licencia PRO:\n• PROTECCIÓN TOTAL DE CUENTAS: Preservación garantizada de cuentas registradas con 72 horas de prueba completa (CERO purgas de datos).\n• DEMO RÁPIDO 10 MINUTOS POR CELULAR: Bloqueo estricto a 1 único uso por dispositivo (HWID) para prevenir abusos anónimos.\n• SOLICITUD DE PRUEBA PRO: Nuevo módulo y modal interactivo para solicitar período de prueba comercial PRO con vinculación directa de HWID.\n• BLINDAJE DE CREDENCIALES: Función logoutDemo segura que mantiene guardadas las contraseñas locales y sesiones legítimas.\n• AUDITORÍA & ESTILO SEASON 6: Sistema de diseño gótico Piedra & Oro 100% verificado bajo norma WCAG AAA (> 7:1).",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.0.9 (Build 111)",
+  "updateTitle": "MuManager PRO v2.1.0 (Build 112)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 111,
+  "versionCode": 112,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.0.9 (Build 111) - Actualización Oficial de Seguridad y Rendimiento:\n• REMEDIACIÓN Y BLINDAJE V5: Refuerzo integral de seguridad, integridad y rendimiento.\n• BLINDAJE DE IDENTIDAD & TOKENS: Revocación inmediata y autoritativa de tokens JWT mediante sessionVersion sincronizado.\n• RESILIENCIA TRANSACCIONAL: Retención estricta de idempotencia TTL para operaciones completadas bajo alta concurrencia.\n• SNAPSHOT DE REVERSIÓN ATÓMICA: Validación de esquema y respaldo atómico previo en restauración de copias de seguridad.\n• SEGURIDAD EN PANEL Y CIERRE DE SESIÓN: Purga instantánea en memoria, DOM y almacenamiento local al cerrar sesión de administración.\n• RENDIMIENTO OPTIMIZADO: Carga paralela no bloqueante en el panel de control y conciliación inteligente de dispositivos.",
+  "releaseNotes": "MuManager PRO v2.1.0 (Build 112) - Acceso Rápido Demo & Solicitud de Licencia PRO:\n• PROTECCIÓN TOTAL DE CUENTAS: Preservación garantizada de cuentas registradas con 72 horas de prueba completa (CERO purgas de datos).\n• DEMO RÁPIDO 10 MINUTOS POR CELULAR: Bloqueo estricto a 1 único uso por dispositivo (HWID) para prevenir abusos anónimos.\n• SOLICITUD DE PRUEBA PRO: Nuevo módulo y modal interactivo para solicitar período de prueba comercial PRO con vinculación directa de HWID.\n• BLINDAJE DE CREDENCIALES: Función logoutDemo segura que mantiene guardadas las contraseñas locales y sesiones legítimas.\n• AUDITORÍA & ESTILO SEASON 6: Sistema de diseño gótico Piedra & Oro 100% verificado bajo norma WCAG AAA (> 7:1).",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.0.9",
-  "buildNumber": 111,
+  "appVersion": "2.1.0",
+  "buildNumber": 112,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,7 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.0.9",
-  "build": 111,
-  "usersPurgedV168": true
+  "version": "2.1.0",
+  "build": 112
 }
