@@ -921,9 +921,25 @@ async function syncCloudStorage(force = false) {
       safeAtomicWriteJson(TOMBSTONES_FILE, mergedTom);
     }
 
-    // 4. SETTINGS
+    // 4. SETTINGS (Preservación estricta de nuevas versiones)
     const cloudSet = data['mumanager:settings'];
     if (cloudSet && typeof cloudSet === 'object' && Object.keys(cloudSet).length > 0) {
+      const diskSettings = loadSettings();
+      if (diskSettings && diskSettings.latestVersion && cloudSet.latestVersion && isNewerVersion(diskSettings.latestVersion, cloudSet.latestVersion)) {
+        // La versión en disco es más reciente que la de la nube: preservar versión de disco y actualizar la nube
+        cloudSet.latestVersion = diskSettings.latestVersion;
+        cloudSet.versionCode = diskSettings.versionCode || diskSettings.buildNumber || cloudSet.versionCode;
+        cloudSet.buildNumber = diskSettings.buildNumber || diskSettings.versionCode || cloudSet.buildNumber;
+        cloudSet.version = diskSettings.version || diskSettings.latestVersion;
+        cloudSet.build = diskSettings.build || diskSettings.versionCode || cloudSet.build;
+        cloudSet.updateChangelog = diskSettings.updateChangelog || cloudSet.updateChangelog;
+        cloudSet.releaseNotes = diskSettings.releaseNotes || cloudSet.releaseNotes;
+        cloudSet.latestApkUrl = diskSettings.latestApkUrl || cloudSet.latestApkUrl;
+        cloudSet.forceUpdate = diskSettings.forceUpdate ?? cloudSet.forceUpdate;
+        if (CLOUD_STORAGE.enabled) {
+          queueCloudWrite(CLOUD_STORAGE.set('mumanager:settings', cloudSet));
+        }
+      }
       inMemoryFallback[SETTINGS_FILE] = cloudSet;
       safeAtomicWriteJson(SETTINGS_FILE, cloudSet);
       cachedSettings = { ...DEFAULT_SETTINGS, ...cloudSet };
