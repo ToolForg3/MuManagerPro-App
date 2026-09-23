@@ -106,9 +106,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const maxDurationMs = DEMO_DURATION_SECONDS * 1000;
             if (elapsed >= maxDurationMs) {
               // Sesión demo de 10 minutos expirada
-              await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-              await AsyncStorage.removeItem(DEMO_SESSION_KEY);
-              await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
               const hwid = await SecurityService.getDeviceHwid().catch(() => '');
               if (hwid) {
                 await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
@@ -119,9 +116,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   body: JSON.stringify({ hwid }),
                 }).catch(() => {});
               }
+              await logoutDemo();
               setIsDemoExpired(true);
-              setIsDemoSession(false);
-              setIsAuthenticated(false);
               return;
             }
             setIsDemoSession(true);
