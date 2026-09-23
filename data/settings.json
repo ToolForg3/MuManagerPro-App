@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.2",
+  "latestVersion": "2.1.3",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.2 (Build 114) - Corrección Módulo PK & Blindaje de Sesiones:\n• CONTROL DE ASESINOS (PK): Corrección de mapeo de propiedades (camelCase/PascalCase) en PkTab.tsx y backend SQL (resuelve el cartel de Módulo Protegido ante asesinos activos).\n• PERSISTENCIA EN LA NUBE: Confirmación de persistencia permanente de cuentas en Upstash Redis Cloud sin reinicio de sesiones.\n• BÚSQUEDA Y FILTROS: useMemo reactivo y desvinculación de polling en personajes y cuentas.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB WCAG AA/AAA en botones y tokens góticos.",
+  "updateChangelog": "MuManager PRO v2.1.3 (Build 115) - Licencias PRO en 1-Clic, Auto-Sanación de Sesiones e Historial Permanente:\n• AUTO-SANACIÓN DE SESIONES: Eliminación total de caídas de sesión ante reinicios de contenedores serverless (preservación automática de tokens JWT válidos).\n• LICENCIAS PRO EN 1-CLIC: Activación autoritativa e instantánea desde el Panel de Control Web hacia el APK con persistencia atómica en Upstash Redis.\n• PANEL DE CONTROL SIN PÉRDIDA: Fusión acumulativa inteligente (Smart Cumulative Merge) para que dispositivos, cuentas e historial nunca desaparezcan tras refrescos periódicos.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.2 (Build 114)",
+  "updateTitle": "MuManager PRO v2.1.3 (Build 115)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 114,
+  "versionCode": 115,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.2 (Build 114) - Corrección Módulo PK & Blindaje de Sesiones:\n• CONTROL DE ASESINOS (PK): Corrección de mapeo de propiedades (camelCase/PascalCase) en PkTab.tsx y backend SQL (resuelve el cartel de Módulo Protegido ante asesinos activos).\n• PERSISTENCIA EN LA NUBE: Confirmación de persistencia permanente de cuentas en Upstash Redis Cloud sin reinicio de sesiones.\n• BÚSQUEDA Y FILTROS: useMemo reactivo y desvinculación de polling en personajes y cuentas.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB WCAG AA/AAA en botones y tokens góticos.",
+  "releaseNotes": "MuManager PRO v2.1.3 (Build 115) - Licencias PRO en 1-Clic, Auto-Sanación de Sesiones e Historial Permanente:\n• AUTO-SANACIÓN DE SESIONES: Eliminación total de caídas de sesión ante reinicios de contenedores serverless (preservación automática de tokens JWT válidos).\n• LICENCIAS PRO EN 1-CLIC: Activación autoritativa e instantánea desde el Panel de Control Web hacia el APK con persistencia atómica en Upstash Redis.\n• PANEL DE CONTROL SIN PÉRDIDA: Fusión acumulativa inteligente (Smart Cumulative Merge) para que dispositivos, cuentas e historial nunca desaparezcan tras refrescos periódicos.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.2",
-  "buildNumber": 114,
+  "appVersion": "2.1.3",
+  "buildNumber": 115,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.2",
-  "build": 114
+  "version": "2.1.3",
+  "build": 115
 }

@@ -1,10 +1,10 @@
 {
-  "version": "2.1.2",
+  "version": "2.1.3",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-23T22:40:00.000Z",
+  "publishedAt": "2026-09-23T23:45:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 114,
+  "build": 115,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.1.2 (Build 114) - Corrección Módulo PK & Blindaje de Sesiones:\n• CONTROL DE ASESINOS (PK): Corrección de mapeo de propiedades (camelCase/PascalCase) en PkTab.tsx y backend SQL (resuelve el cartel de Módulo Protegido ante asesinos activos).\n• PERSISTENCIA EN LA NUBE: Confirmación de persistencia permanente de cuentas en Upstash Redis Cloud sin reinicio de sesiones.\n• BÚSQUEDA Y FILTROS: useMemo reactivo y desvinculación de polling en personajes y cuentas.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB WCAG AA/AAA en botones y tokens góticos."
+  "changelog": "MuManager PRO v2.1.3 (Build 115) - Licencias PRO en 1-Clic, Auto-Sanación de Sesiones e Historial Permanente:\n• AUTO-SANACIÓN DE SESIONES: Eliminación total de caídas de sesión ante reinicios de contenedores serverless (preservación automática de tokens JWT válidos).\n• LICENCIAS PRO EN 1-CLIC: Activación autoritativa e instantánea desde el Panel de Control Web hacia el APK con persistencia atómica en Upstash Redis.\n• PANEL DE CONTROL SIN PÉRDIDA: Fusión acumulativa inteligente (Smart Cumulative Merge) para que dispositivos, cuentas e historial nunca desaparezcan tras refrescos periódicos."
 }
