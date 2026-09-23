@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   },
   badgeTexto: {
     color: THEME.colors.texto,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
 });

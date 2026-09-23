@@ -30,6 +30,9 @@ export const BotonBrasa: React.FC<BotonBrasaProps> = ({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!isDisabled, busy: !!cargando }}
+      accessibilityLabel={cargando ? `Cargando, ${titulo}` : titulo}
       style={[
         styles.boton,
         { minHeight: altura },
@@ -42,7 +45,7 @@ export const BotonBrasa: React.FC<BotonBrasaProps> = ({
     >
       <View style={styles.content}>
         {cargando ? (
-          <ActivityIndicator color="#FFFFFF" size="small" />
+          <ActivityIndicator color={THEME.colors.textoOscuro} size="small" />
         ) : (
           <>
             {icono && (
@@ -50,7 +53,7 @@ export const BotonBrasa: React.FC<BotonBrasaProps> = ({
                 <Feather
                   name={icono as any}
                   size={18}
-                  color="#FFFFFF"
+                  color={THEME.colors.textoOscuro}
                   style={styles.icon}
                 />
               ) : (
@@ -92,7 +95,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   texto: {
-    color: '#FFFFFF',
+    color: THEME.colors.textoOscuro,
     fontFamily: THEME.typography.fontTitle,
     fontWeight: THEME.typography.weightBold,
     fontSize: 14,

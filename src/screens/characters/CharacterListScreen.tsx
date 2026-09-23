@@ -39,7 +39,6 @@ export const CharacterListScreen = () => {
   const route = useRoute<any>();
 
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
-  const [filteredChars, setFilteredChars] = useState<CharacterSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [accountFilter, setAccountFilter] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -84,8 +83,13 @@ export const CharacterListScreen = () => {
       );
     }
 
-    setFilteredChars(result);
+    return result;
   };
+
+  // Derivación coherente y reactiva de los personajes visibles
+  const filteredChars = useMemo(() => {
+    return applyFilter(searchQuery, accountFilter, characters);
+  }, [characters, accountFilter, searchQuery]);
 
   const isFetchingRef = useRef(false);
 
@@ -96,15 +100,12 @@ export const CharacterListScreen = () => {
       setLoading(true);
     }
     setErrorMessage(null);
-    const activeAcc = accOverride !== undefined ? accOverride : accountFilter;
     try {
       const list = await SqlClient.getCharacterList();
       setCharacters(list);
-      applyFilter(searchQuery, activeAcc, list);
     } catch (e: any) {
       setErrorMessage(e.message || 'Error al conectar con SQL Server');
       setCharacters([]);
-      setFilteredChars([]);
     } finally {
       isFetchingRef.current = false;
       if (!silent) {
@@ -117,14 +118,13 @@ export const CharacterListScreen = () => {
   useFocusEffect(
     useCallback(() => {
       const paramAcc = route.params?.filterAccount;
-      const target = paramAcc !== undefined ? paramAcc : accountFilter;
-      if (paramAcc !== undefined && paramAcc !== accountFilter) {
+      if (paramAcc !== undefined) {
         setAccountFilter(paramAcc);
       }
-      fetchCharacters(target);
+      fetchCharacters(undefined, false);
 
       const interval = setInterval(() => {
-        fetchCharacters(target, true);
+        fetchCharacters(undefined, true);
       }, 15000);
 
       return () => clearInterval(interval);
@@ -133,12 +133,11 @@ export const CharacterListScreen = () => {
 
   const handleSearchChange = (text: string) => {
     setSearchQuery(text);
-    applyFilter(text, accountFilter);
   };
 
   const clearAccountFilter = () => {
     setAccountFilter(null);
-    applyFilter(searchQuery, null);
+    navigation.setParams({ filterAccount: undefined });
   };
 
   const openCreateModal = (presetAccount?: string) => {

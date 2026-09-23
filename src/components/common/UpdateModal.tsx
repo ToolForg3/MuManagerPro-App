@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { AppUpdateInfo } from '../../services/database/sqlClient';
@@ -19,15 +20,38 @@ interface UpdateModalProps {
 }
 
 export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo }) => {
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
+
   if (!visible || !updateInfo) return null;
 
   const handleDownload = async () => {
-    if (updateInfo.apkUrl) {
-      try {
-        await Linking.openURL(updateInfo.apkUrl);
-      } catch (e) {
-        console.warn('Could not open APK URL', e);
+    if (typeof setDownloadError === 'function') {
+      setDownloadError(null);
+    }
+    const url = updateInfo?.apkUrl;
+    if (!url || !url.trim()) {
+      if (typeof setDownloadError === 'function') {
+        setDownloadError('No se encontró una dirección de descarga válida.');
       }
+      return;
+    }
+    try {
+      await Linking.openURL(url.trim());
+    } catch (e: any) {
+      console.warn('Could not open APK URL', e);
+      if (typeof setDownloadError === 'function') {
+        setDownloadError('No se pudo abrir el enlace automáticamente. Puedes reintentar o copiar el enlace directo.');
+      }
+    }
+  };
+
+  const handleCopyLink = async () => {
+    const url = updateInfo?.apkUrl;
+    if (url && url.trim()) {
+      await Clipboard.setStringAsync(url.trim());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     }
   };
 
@@ -48,63 +72,120 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
             <View style={styles.rivetDot} />
           </View>
 
-          <View style={[styles.iconContainer, isRollback && { backgroundColor: 'rgba(226, 112, 58, 0.15)', borderColor: THEME.colors.brasa }, isBeta && { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
-            <MaterialCommunityIcons
-              name={isRollback ? 'alert-octagon' : isBeta ? 'flask-outline' : 'shield-crown'}
-              size={36}
-              color={isRollback ? THEME.colors.brasa : isBeta ? THEME.colors.arcano : THEME.colors.oro}
-            />
-          </View>
-
-          <Text style={[styles.title, isRollback && { color: THEME.colors.brasa }]}>
-            {isRollback ? 'Directiva de Rollback' : isBeta ? 'Nueva Versión Beta Disponible' : 'Actualización Disponible'}
-          </Text>
-          <Text style={[styles.versionBadge, isRollback && { backgroundColor: 'rgba(226,112,58,0.2)', color: THEME.colors.brasa, borderColor: THEME.colors.brasa }, isBeta && { backgroundColor: 'rgba(91,141,239,0.2)', color: THEME.colors.arcano, borderColor: THEME.colors.arcano }]}>
-            {isRollback ? `Restaurar a v${updateInfo.latestVersion}` : isBeta ? `Canal Beta • v${updateInfo.latestVersion}` : `Versión v${updateInfo.latestVersion}`}
-          </Text>
-
-          {isRollback ? (
-            <View style={[styles.forcedBanner, { borderColor: THEME.colors.brasa, backgroundColor: 'rgba(226, 112, 58, 0.12)' }]}>
-              <Text style={[styles.forcedText, { color: THEME.colors.brasa }]}>ROLLBACK PREVENTIVO OBLIGATORIO</Text>
-              <Text style={styles.forcedSub}>
-                Se ha detectado una incidencia en la versión actual (v{updateInfo.currentVersion}). Se ordena reinstalar la versión certificada anterior para proteger la base de datos y tus cuentas.
-              </Text>
-            </View>
-          ) : updateInfo.forceUpdate ? (
-            <View style={styles.forcedBanner}>
-              <Text style={styles.forcedText}>Actualización Obligatoria</Text>
-              <Text style={styles.forcedSub}>Debes instalar esta versión para seguir utilizando Mu Manager PRO.</Text>
-            </View>
-          ) : (
-            <Text style={styles.subtitle}>
-              {isBeta ? 'Hay una nueva compilación de pruebas disponible en el Canal Beta.' : 'Hay una versión más reciente con nuevas mejoras y correcciones.'}
-            </Text>
-          )}
-
-          {!!updateInfo.changelog && (
-            <View style={styles.changelogBox}>
-              <Text style={styles.changelogTitle}>{isRollback ? 'Motivo del Rollback:' : 'Novedades de esta versión:'}</Text>
-              <ScrollView style={styles.changelogScroll} nestedScrollEnabled>
-                <Text style={styles.changelogText}>{updateInfo.changelog}</Text>
-              </ScrollView>
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={[styles.downloadButton, isRollback && { backgroundColor: THEME.colors.brasa }]}
-            activeOpacity={0.8}
-            onPress={handleDownload}
+          <ScrollView
+            style={styles.cardScroll}
+            contentContainerStyle={styles.cardScrollContent}
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={[styles.downloadButtonText, isRollback && { color: THEME.colors.texto }]}>
-              {isRollback ? 'Reinstalar Versión Anterior (Rollback)' : isBeta ? 'Instalar Versión Beta' : 'Descargar e Instalar Ahora'}
-            </Text>
-          </TouchableOpacity>
+            <View style={[styles.iconContainer, isRollback && { backgroundColor: 'rgba(226, 112, 58, 0.15)', borderColor: THEME.colors.brasa }, isBeta && { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
+              <MaterialCommunityIcons
+                name={isRollback ? 'alert-octagon' : isBeta ? 'flask-outline' : 'shield-crown'}
+                size={36}
+                color={isRollback ? THEME.colors.brasa : isBeta ? THEME.colors.arcano : THEME.colors.oro}
+              />
+            </View>
 
-          {!updateInfo.forceUpdate && !isRollback && (
-            <TouchableOpacity style={styles.laterButton} activeOpacity={0.7} onPress={handleDismiss}>
-              <Text style={styles.laterButtonText}>Recordarme más tarde</Text>
+            <Text style={[styles.title, isRollback && { color: THEME.colors.brasa }]}>
+              {isRollback ? 'Directiva de Rollback' : isBeta ? 'Nueva Versión Beta Disponible' : 'Actualización Disponible'}
+            </Text>
+            <Text style={[styles.versionBadge, isRollback && { backgroundColor: 'rgba(226,112,58,0.2)', color: THEME.colors.brasa, borderColor: THEME.colors.brasa }, isBeta && { backgroundColor: 'rgba(91,141,239,0.2)', color: THEME.colors.arcano, borderColor: THEME.colors.arcano }]}>
+              {isRollback ? `Restaurar a v${updateInfo.latestVersion}` : isBeta ? `Canal Beta • v${updateInfo.latestVersion}` : `Versión v${updateInfo.latestVersion}`}
+            </Text>
+
+            {isRollback ? (
+              <View style={[styles.forcedBanner, { borderColor: THEME.colors.brasa, backgroundColor: 'rgba(226, 112, 58, 0.12)' }]}>
+                <Text style={[styles.forcedText, { color: THEME.colors.brasa }]}>ROLLBACK PREVENTIVO OBLIGATORIO</Text>
+                <Text style={styles.forcedSub}>
+                  Se ha detectado una incidencia en la versión actual (v{updateInfo.currentVersion}). Se ordena reinstalar la versión certificada anterior para proteger la base de datos y tus cuentas.
+                </Text>
+              </View>
+            ) : updateInfo.forceUpdate ? (
+              <View style={styles.forcedBanner}>
+                <Text style={styles.forcedText}>Actualización Obligatoria</Text>
+                <Text style={styles.forcedSub}>Debes instalar esta versión para seguir utilizando Mu Manager PRO.</Text>
+              </View>
+            ) : (
+              <Text style={styles.subtitle}>
+                {isBeta ? 'Hay una nueva compilación de pruebas disponible en el Canal Beta.' : 'Hay una versión más reciente con nuevas mejoras y correcciones.'}
+              </Text>
+            )}
+
+            {!!updateInfo.changelog && (
+              <View style={styles.changelogBox}>
+                <Text style={styles.changelogTitle}>{isRollback ? 'Motivo del Rollback:' : 'Novedades de esta versión:'}</Text>
+                <ScrollView style={styles.changelogScroll} nestedScrollEnabled>
+                  <Text style={styles.changelogText}>{updateInfo.changelog}</Text>
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Banner de error visible si la descarga o apertura de URL falla */}
+            {!!downloadError && (
+              <View style={styles.errorBox}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                  <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#FF5252" style={{ marginRight: 6 }} />
+                  <Text style={styles.errorBoxTitle}>Error al iniciar descarga</Text>
+                </View>
+                <Text style={styles.errorBoxMsg}>{downloadError}</Text>
+                <View style={styles.errorActionsRow}>
+                  <TouchableOpacity
+                    style={styles.retryActionBtn}
+                    onPress={handleDownload}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Reintentar descarga"
+                  >
+                    <MaterialCommunityIcons name="reload" size={16} color={THEME.colors.texto} style={{ marginRight: 4 }} />
+                    <Text style={styles.retryActionText}>Reintentar</Text>
+                  </TouchableOpacity>
+                  {!!updateInfo.apkUrl && (
+                    <TouchableOpacity
+                      style={styles.copyActionBtn}
+                      onPress={handleCopyLink}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Copiar enlace de descarga"
+                    >
+                      <MaterialCommunityIcons
+                        name={copied ? 'check' : 'content-copy'}
+                        size={16}
+                        color={copied ? THEME.colors.jade : THEME.colors.oroClaro}
+                        style={{ marginRight: 4 }}
+                      />
+                      <Text style={[styles.copyActionText, copied && { color: THEME.colors.jade }]}>
+                        {copied ? '¡Copiado!' : 'Copiar Enlace'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={[styles.downloadButton, isRollback && { backgroundColor: THEME.colors.brasa }]}
+              activeOpacity={0.8}
+              onPress={handleDownload}
+              accessibilityRole="button"
+              accessibilityLabel={isRollback ? 'Reinstalar Versión Anterior' : 'Descargar e Instalar Ahora'}
+            >
+              <Text style={[styles.downloadButtonText, isRollback && { color: THEME.colors.texto }]}>
+                {isRollback ? 'Reinstalar Versión Anterior (Rollback)' : isBeta ? 'Instalar Versión Beta' : 'Descargar e Instalar Ahora'}
+              </Text>
             </TouchableOpacity>
-          )}
+
+            {!updateInfo.forceUpdate && !isRollback && (
+              <TouchableOpacity
+                style={styles.laterButton}
+                activeOpacity={0.7}
+                onPress={handleDismiss}
+                accessibilityRole="button"
+                accessibilityLabel="Recordarme más tarde"
+              >
+                <Text style={styles.laterButtonText}>Recordarme más tarde</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -268,6 +349,71 @@ const styles = StyleSheet.create({
   laterButtonText: {
     fontSize: 12,
     color: THEME.colors.textoSecundario,
+    fontWeight: '700',
+  },
+  cardScroll: {
+    width: '100%',
+  },
+  cardScrollContent: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  errorBox: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderWidth: 1,
+    borderColor: '#FF5252',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBoxTitle: {
+    color: '#FF5252',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  errorBoxMsg: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 10,
+  },
+  errorActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  retryActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3A2E22',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    minHeight: 44,
+  },
+  retryActionText: {
+    color: THEME.colors.texto,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  copyActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3A2E22',
+    borderWidth: 1,
+    borderColor: THEME.colors.oro,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    minHeight: 44,
+  },
+  copyActionText: {
+    color: THEME.colors.oroClaro,
+    fontSize: 12,
     fontWeight: '700',
   },
 });

@@ -741,7 +741,13 @@ export const LoginScreen = () => {
                 <MaterialCommunityIcons name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
                 <Text style={styles.modalTitle}>Recuperar Contraseña</Text>
               </View>
-              <TouchableOpacity onPress={() => setForgotModalVisible(false)} style={{ padding: 4 }}>
+              <TouchableOpacity
+                onPress={() => setForgotModalVisible(false)}
+                style={styles.modalCloseBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar modal de recuperación"
+              >
                 <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -887,7 +893,13 @@ export const LoginScreen = () => {
                 <MaterialCommunityIcons name="email-check-outline" size={24} color={THEME.colors.primaryOrange} />
                 <Text style={styles.modalTitle}>Verificar Cuenta</Text>
               </View>
-              <TouchableOpacity onPress={() => setVerifyModalVisible(false)} style={{ padding: 4 }}>
+              <TouchableOpacity
+                onPress={() => setVerifyModalVisible(false)}
+                style={styles.modalCloseBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar modal de verificación"
+              >
                 <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -980,7 +992,13 @@ export const LoginScreen = () => {
                 <FontAwesome5 name="crown" size={18} color={THEME.colors.oroClaro} />
                 <Text style={styles.modalTitle}>Solicitar Prueba PRO</Text>
               </View>
-              <TouchableOpacity onPress={() => setProModalVisible(false)} style={{ padding: 4 }}>
+              <TouchableOpacity
+                onPress={() => setProModalVisible(false)}
+                style={styles.modalCloseBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar modal de solicitud PRO"
+              >
                 <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
@@ -1205,7 +1223,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   eyeBtn: {
-    padding: 6,
+    padding: 10,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseBtn: {
+    padding: 8,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkboxRow: {
     flexDirection: 'row',

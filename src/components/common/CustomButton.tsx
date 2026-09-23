@@ -81,10 +81,18 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   const getTextColor = () => {
     if (disabled) return THEME.colors.textoSecundario;
     if (variant === 'gold') return '#191512';
-    if (variant === 'neonBlue') return '#5B8DEF';
+    if (variant === 'orange') return THEME.colors.textoOscuro;
+    if (variant === 'neonBlue') return THEME.colors.texto;
     if (variant === 'green') return '#3FCF8E';
     if (variant === 'outline') return THEME.colors.oro;
     return THEME.colors.texto;
+  };
+
+  const getSpinnerColor = () => {
+    if (variant === 'gold' || variant === 'orange') {
+      return THEME.colors.textoOscuro;
+    }
+    return '#FFFFFF';
   };
 
   const getPadding = () => {
@@ -111,6 +119,9 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
+      accessibilityLabel={loading ? `Cargando, ${title}` : title}
       style={[
         styles.button,
         getPadding(),
@@ -126,7 +137,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color="#FFFFFF" size="small" />
+        <ActivityIndicator color={getSpinnerColor()} size="small" />
       ) : (
         <View style={styles.inner}>
           {icon && (

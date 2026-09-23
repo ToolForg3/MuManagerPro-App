@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -266,30 +266,42 @@ export const AccountsScreen = () => {
 
 
 
-  const fetchAccounts = async () => {
-    setLoading(true);
+  const fetchRequestIdRef = useRef(0);
+
+  const fetchAccounts = async (silent: boolean | any = false) => {
+    const isSilent = silent === true;
+    const reqId = ++fetchRequestIdRef.current;
+    if (!isSilent) {
+      setLoading(true);
+    }
     setErrorMessage(null);
     try {
       const data = await SqlClient.getRecentAccounts();
-      setAccounts(data);
-      applyFilter(search, data);
+      if (reqId === fetchRequestIdRef.current) {
+        setAccounts(data);
+        applyFilter(search, data);
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error al conectar con SQL Server');
-      setAccounts([]);
-      setFiltered([]);
+      if (reqId === fetchRequestIdRef.current) {
+        setErrorMessage(err.message || 'Error al conectar con SQL Server');
+        setAccounts([]);
+        setFiltered([]);
+      }
     } finally {
-      setLoading(false);
+      if (reqId === fetchRequestIdRef.current && !isSilent) {
+        setLoading(false);
+      }
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchAccounts();
+      fetchAccounts(false);
       const interval = setInterval(() => {
-        fetchAccounts();
+        fetchAccounts(true);
       }, 15000);
       return () => clearInterval(interval);
-    }, [search])
+    }, [])
   );
 
   const applyFilter = (q: string, list = accounts) => {
@@ -1821,6 +1833,8 @@ export const AccountsScreen = () => {
               <Text style={styles.emptyText}>
                 {errorMessage
                   ? 'No se cargaron cuentas debido a un error de conexión.'
+                  : search.trim()
+                  ? `No se encontraron coincidencias para "${search.trim()}".`
                   : 'No se encontraron cuentas registradas en tu servidor.'}
               </Text>
             </View>

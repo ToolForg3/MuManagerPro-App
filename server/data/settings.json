@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.0",
+  "latestVersion": "2.1.1",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.0 (Build 112) - Acceso Rápido Demo & Solicitud de Licencia PRO:\n• PROTECCIÓN TOTAL DE CUENTAS: Preservación garantizada de cuentas registradas con 72 horas de prueba completa (CERO purgas de datos).\n• DEMO RÁPIDO 10 MINUTOS POR CELULAR: Bloqueo estricto a 1 único uso por dispositivo (HWID) para prevenir abusos anónimos.\n• SOLICITUD DE PRUEBA PRO: Nuevo módulo y modal interactivo para solicitar período de prueba comercial PRO con vinculación directa de HWID.\n• BLINDAJE DE CREDENCIALES: Función logoutDemo segura que mantiene guardadas las contraseñas locales y sesiones legítimas.\n• AUDITORÍA & ESTILO SEASON 6: Sistema de diseño gótico Piedra & Oro 100% verificado bajo norma WCAG AAA (> 7:1).",
+  "updateChangelog": "MuManager PRO v2.1.1 (Build 113) - Corrección Integral de UI, Búsquedas y Accesibilidad:\n• BÚSQUEDA Y FILTROS FLUIDOS: useMemo reactivo y desvinculación de polling en personajes y cuentas (cero sobreescritura de búsquedas activas).\n• PROTECCIÓN DE RED OUT-OF-ORDER: Descarte de respuestas desordenadas en cuentas y estado vacío diferenciado.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB de ratios WCAG AA/AAA en botones y tokens góticos.\n• ERGONOMÍA & ACCESIBILIDAD: Targets táctiles ampliados a 44x44 dp, scroll en modales y roles nativos de accesibilidad.\n• DESCARGA RESILIENTE: Botón de reintento y copiado directo de URL al portapapeles en modal de actualización.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.0 (Build 112)",
+  "updateTitle": "MuManager PRO v2.1.1 (Build 113)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 112,
+  "versionCode": 113,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.0 (Build 112) - Acceso Rápido Demo & Solicitud de Licencia PRO:\n• PROTECCIÓN TOTAL DE CUENTAS: Preservación garantizada de cuentas registradas con 72 horas de prueba completa (CERO purgas de datos).\n• DEMO RÁPIDO 10 MINUTOS POR CELULAR: Bloqueo estricto a 1 único uso por dispositivo (HWID) para prevenir abusos anónimos.\n• SOLICITUD DE PRUEBA PRO: Nuevo módulo y modal interactivo para solicitar período de prueba comercial PRO con vinculación directa de HWID.\n• BLINDAJE DE CREDENCIALES: Función logoutDemo segura que mantiene guardadas las contraseñas locales y sesiones legítimas.\n• AUDITORÍA & ESTILO SEASON 6: Sistema de diseño gótico Piedra & Oro 100% verificado bajo norma WCAG AAA (> 7:1).",
+  "releaseNotes": "MuManager PRO v2.1.1 (Build 113) - Corrección Integral de UI, Búsquedas y Accesibilidad:\n• BÚSQUEDA Y FILTROS FLUIDOS: useMemo reactivo y desvinculación de polling en personajes y cuentas (cero sobreescritura de búsquedas activas).\n• PROTECCIÓN DE RED OUT-OF-ORDER: Descarte de respuestas desordenadas en cuentas y estado vacío diferenciado.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB de ratios WCAG AA/AAA en botones y tokens góticos.\n• ERGONOMÍA & ACCESIBILIDAD: Targets táctiles ampliados a 44x44 dp, scroll en modales y roles nativos de accesibilidad.\n• DESCARGA RESILIENTE: Botón de reintento y copiado directo de URL al portapapeles en modal de actualización.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.0",
-  "buildNumber": 112,
+  "appVersion": "2.1.1",
+  "buildNumber": 113,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.0",
-  "build": 112
+  "version": "2.1.1",
+  "build": 113
 }

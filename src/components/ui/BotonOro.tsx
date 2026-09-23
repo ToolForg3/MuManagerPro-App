@@ -26,9 +26,12 @@ export const BotonOro: React.FC<BotonOroProps> = ({
 }) => {
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!(disabled || cargando), busy: !!cargando }}
+      accessibilityLabel={cargando ? `Cargando, ${titulo}` : titulo}
       style={[
         styles.boton,
-        { height: altura },
+        { minHeight: altura },
         disabled && styles.disabled,
         style,
       ]}

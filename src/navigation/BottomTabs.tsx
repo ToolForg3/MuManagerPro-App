@@ -40,7 +40,7 @@ export const BottomTabs = () => {
         tabBarActiveTintColor: THEME.colors.oro,
         tabBarInactiveTintColor: THEME.colors.textoSecundario,
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '900',
           fontFamily: THEME.typography.fontTitle,
           letterSpacing: 0.6,

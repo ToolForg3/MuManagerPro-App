@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
@@ -46,32 +47,42 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
           <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Seleccionar Idioma</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.closeBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar selección de idioma"
+              >
                 <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            {LANGUAGES.map((lang) => {
-              const isSelected = lang.code === language;
-              return (
-                <TouchableOpacity
-                  key={lang.code}
-                  style={[styles.langOption, isSelected && styles.langOptionSelected]}
-                  onPress={() => handleSelect(lang.code)}
-                >
-                  <Text style={styles.optionFlag}>{lang.flag}</Text>
-                  <View style={styles.optionInfo}>
-                    <Text style={[styles.optionName, isSelected && styles.optionNameSelected]}>
-                      {lang.name}
-                    </Text>
-                    <Text style={styles.optionCountry}>{lang.country}</Text>
-                  </View>
-                  {isSelected && (
-                    <MaterialCommunityIcons name="check-circle" size={20} color={THEME.colors.oro} />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
+            <ScrollView style={styles.scrollList} nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+              {LANGUAGES.map((lang) => {
+                const isSelected = lang.code === language;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[styles.langOption, isSelected && styles.langOptionSelected]}
+                    onPress={() => handleSelect(lang.code)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${lang.name}, ${lang.country}`}
+                  >
+                    <Text style={styles.optionFlag}>{lang.flag}</Text>
+                    <View style={styles.optionInfo}>
+                      <Text style={[styles.optionName, isSelected && styles.optionNameSelected]}>
+                        {lang.name}
+                      </Text>
+                      <Text style={styles.optionCountry}>{lang.country}</Text>
+                    </View>
+                    {isSelected && (
+                      <MaterialCommunityIcons name="check-circle" size={20} color={THEME.colors.oro} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -180,5 +191,14 @@ const styles = StyleSheet.create({
   optionCountry: {
     fontSize: 12,
     color: THEME.colors.textoSecundario,
+  },
+  scrollList: {
+    maxHeight: 380,
+  },
+  closeBtn: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

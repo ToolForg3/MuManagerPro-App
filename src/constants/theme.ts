@@ -58,7 +58,7 @@ export const THEME = {
     dangerRed: '#E2703A',
     textPrimary: '#FAF6EE',
     textSecondary: '#C8BEAF',
-    textMuted: '#B8AEA0',
+    textMuted: '#BCB2A4',
     textGold: '#F0D27A',
     textNeon: '#7CA8FF',
     textInverse: '#100D0B',
