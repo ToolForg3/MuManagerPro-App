@@ -343,12 +343,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       const bridgeUrl = SqlClient.getBridgeUrl();
+      const meta = SecurityService.getDeviceMetadata();
       let token = '';
       try {
         const res = await fetch(`${bridgeUrl}/api/auth/demo-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hwid }),
+          body: JSON.stringify({
+            hwid,
+            deviceModel: meta.model,
+            deviceBrand: meta.brand,
+            isEmulator: meta.isEmulator,
+          }),
         });
         const data = await res.json();
         if (res.ok && data.success && data.token) {

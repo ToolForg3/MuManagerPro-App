@@ -8307,7 +8307,7 @@ const failedLogins = new Map();
 
 // Acceso Directo Modo Demo (sin credenciales personales - 10 min por celular)
 app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
-  const { hwid } = req.body || {};
+  const { hwid, deviceModel, deviceBrand, isEmulator } = req.body || {};
   const cleanHwid = String(hwid || '').trim();
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
@@ -8319,6 +8319,10 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
         hwid: cleanHwid,
         firstSeen: new Date().toISOString(),
         lastSeen: new Date().toISOString(),
+        ip: clientIp,
+        deviceBrand: String(deviceBrand || '').trim(),
+        deviceModel: String(deviceModel || '').trim(),
+        isEmulator: !!isEmulator,
         mode: 'DEMO',
         quickDemoStartedAt: new Date().toISOString(),
         quickDemoExpiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -8327,6 +8331,11 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
       devices[cleanHwid] = dev;
       saveDevices(devices);
     } else {
+      dev.lastSeen = new Date().toISOString();
+      dev.ip = clientIp;
+      if (deviceBrand && !dev.deviceBrand) dev.deviceBrand = String(deviceBrand).trim();
+      if (deviceModel && !dev.deviceModel) dev.deviceModel = String(deviceModel).trim();
+      if (isEmulator !== undefined && dev.isEmulator === undefined) dev.isEmulator = !!isEmulator;
       if (dev.quickDemoUsed) {
         return res.status(403).json({
           success: false,
@@ -8352,7 +8361,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   }
 
   const token = generateSessionToken('demo@muonline.local', 'USER', cleanHwid || 'DEMO');
-  addAuditLog('DEMO_LOGIN', cleanHwid || 'DEMO', clientIp, 'Acceso Directo Demo concedido (10 min)');
+  addAuditLog('DEMO_LOGIN', cleanHwid || 'DEMO', clientIp, `Acceso Directo Demo 10 min (${deviceBrand || ''} ${deviceModel || ''})`);
   return res.json({
     success: true,
     role: 'USER',
