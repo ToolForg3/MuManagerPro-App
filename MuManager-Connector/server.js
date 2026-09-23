@@ -898,19 +898,39 @@ app.use((req, res, next) => {
       if (decoded) {
         // Validación de usuario activo (para CUALQUIER usuario, sea USER o ADMIN):
         if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
-          const allUsers = loadUsers();
+          const tombstones = loadTombstones();
           const cleanEmail = String(decoded.sub).toLowerCase().trim();
-          const userRecord = allUsers.find(u => 
-            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
-            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
-          );
-          if (!userRecord) {
+          const isDeletedByAdmin = !!(tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]);
+          if (isDeletedByAdmin) {
             return res.status(401).json({
               success: false,
               sessionInvalidated: true,
               error: 'USUARIO_NO_EXISTE',
               message: 'Tu cuenta ya no existe en el servidor o ha sido reiniciada. Por favor, regístrate nuevamente.'
             });
+          }
+
+          const allUsers = loadUsers();
+          let userRecord = allUsers.find(u => 
+            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+          );
+          if (!userRecord) {
+            userRecord = {
+              id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              email: cleanEmail,
+              username: decoded.username || cleanEmail.split('@')[0],
+              role: decoded.role || 'USER',
+              status: 'ACTIVE',
+              createdAt: new Date().toISOString(),
+              lastLogin: new Date().toISOString(),
+              lastSeen: new Date().toISOString(),
+              hwid: decoded.hwid || '',
+              activeHwid: decoded.hwid || '',
+              sessionVersion: decoded.sessionVersion || 1
+            };
+            allUsers.push(userRecord);
+            saveUsers(allUsers);
           }
           if (userRecord.status === 'BLOCKED' || userRecord.blocked) {
             return res.status(401).json({
@@ -9004,22 +9024,45 @@ app.post('/api/admin/device/generate-key', (req, res) => {
   const key = generateKey(hwid, targetPlan);
 
   const devices = loadDevices();
-  if (devices[hwid]) {
+  const now = new Date().toISOString();
+  if (!devices[hwid]) {
+    devices[hwid] = {
+      hwid,
+      mode: targetPlan,
+      licenseKey: key,
+      generatedKey: key,
+      firstSeen: now,
+      lastSeen: now,
+      totalPings: 0,
+      ip: req.socket.remoteAddress || '127.0.0.1',
+      platform: 'Android',
+      appVersion: '2.0.8',
+      blocked: false,
+      blockReason: '',
+      note: '',
+      currentUser: '',
+      expiresAt: null,
+      isLifetime: durationType === 'LIFETIME' || durationDays === 0,
+      forceDemo: false,
+      isEmulator: false
+    };
+  } else {
     devices[hwid].generatedKey = key;
     devices[hwid].licenseKey = key;
     devices[hwid].mode = targetPlan;
-    if (targetPlan === 'PRO') {
-      if (durationType === 'LIFETIME' || durationDays === 0) {
-        devices[hwid].isLifetime = true;
-        devices[hwid].expiresAt = null;
-      } else {
-        const days = Number(durationDays) || 30;
-        devices[hwid].isLifetime = false;
-        devices[hwid].expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
-      }
-    }
-    saveDevices(devices);
   }
+
+  if (targetPlan === 'PRO') {
+    if (durationType === 'LIFETIME' || durationDays === 0) {
+      devices[hwid].isLifetime = true;
+      devices[hwid].expiresAt = null;
+    } else {
+      const days = Number(durationDays) || 30;
+      devices[hwid].isLifetime = false;
+      devices[hwid].expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+    }
+  }
+  saveDevices(devices);
 
   addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${targetPlan} generada`);
   res.json({ success: true, hwid, key, plan: targetPlan });
@@ -9032,7 +9075,29 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
   const targetPlan = (plan === 'PRO') ? 'PRO' : 'DEMO';
 
   const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
+  const now = new Date().toISOString();
+  if (!devices[hwid]) {
+    devices[hwid] = {
+      hwid,
+      mode: targetPlan,
+      licenseKey: '',
+      generatedKey: '',
+      firstSeen: now,
+      lastSeen: now,
+      totalPings: 0,
+      ip: req.socket.remoteAddress || '127.0.0.1',
+      platform: 'Android',
+      appVersion: '2.0.8',
+      blocked: false,
+      blockReason: '',
+      note: '',
+      currentUser: '',
+      expiresAt: null,
+      isLifetime: durationType === 'LIFETIME' || durationDays === 0,
+      forceDemo: false,
+      isEmulator: false
+    };
+  }
 
   devices[hwid].mode = targetPlan;
   if (targetPlan === 'PRO') {

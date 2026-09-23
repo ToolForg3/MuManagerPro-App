@@ -2329,16 +2329,10 @@
         const parsed = JSON.parse(savedUsers);
         if (Array.isArray(parsed) && parsed.length > 0) allUsersCache = parsed;
       }
-      const savedHwids = localStorage.getItem('mumanager_deleted_hwids');
-      if (savedHwids) {
-        const parsedH = JSON.parse(savedHwids);
-        if (Array.isArray(parsedH)) parsedH.forEach(h => locallyDeletedHwids.add(String(h).toUpperCase()));
-      }
-      const savedUids = localStorage.getItem('mumanager_deleted_users');
-      if (savedUids) {
-        const parsedU = JSON.parse(savedUids);
-        if (Array.isArray(parsedU)) parsedU.forEach(u => locallyDeletedUserIds.add(String(u).toLowerCase()));
-      }
+      try {
+        localStorage.removeItem('mumanager_deleted_hwids');
+        localStorage.removeItem('mumanager_deleted_users');
+      } catch (_) {}
     } catch (_) {}
 
     function escapeHtml(str) {
@@ -2722,13 +2716,24 @@
         }
         const users = await res.json();
         if (Array.isArray(users)) {
-          // El servidor es la fuente única de verdad para cuentas registradas.
-          // Solo conservamos usuarios retornados por el servidor que no hayan sido eliminados localmente.
-          allUsersCache = users.filter(u => {
+          // Fusionar acumulativamente para que ningún usuario registrado desaparezca jamás
+          const userMap = new Map();
+          for (const u of allUsersCache) {
+            const k = (u.email || u.id || '').toLowerCase().trim();
+            if (k) userMap.set(k, u);
+          }
+          for (const u of users) {
             const emailKey = (u.email || '').toLowerCase().trim();
             const idKey = (u.id || '').toLowerCase().trim();
-            return (!emailKey || !locallyDeletedUserIds.has(emailKey)) && (!idKey || !locallyDeletedUserIds.has(idKey));
-          });
+            if ((!emailKey || !locallyDeletedUserIds.has(emailKey)) && (!idKey || !locallyDeletedUserIds.has(idKey))) {
+              const k = emailKey || idKey;
+              if (k) {
+                const existing = userMap.get(k);
+                userMap.set(k, existing ? { ...existing, ...u } : u);
+              }
+            }
+          }
+          allUsersCache = Array.from(userMap.values());
           try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           updateTextIfDifferent('metric-users', allUsersCache.length);
           
@@ -3216,11 +3221,19 @@
 
         const list = await res.json();
         if (Array.isArray(list)) {
-          // El servidor es la fuente de verdad para celulares registrados.
-          // Solo conservamos dispositivos retornados por el servidor que no hayan sido eliminados localmente.
-          allDevicesCache = list.filter(d => {
-            return d && d.hwid && !locallyDeletedHwids.has(String(d.hwid).toUpperCase());
-          });
+          // Fusionar acumulativamente para que ningún celular conectado desaparezca por refresco o desfase
+          const devMap = new Map();
+          for (const d of allDevicesCache) {
+            if (d && d.hwid) devMap.set(String(d.hwid).toUpperCase(), d);
+          }
+          for (const d of list) {
+            if (d && d.hwid && !locallyDeletedHwids.has(String(d.hwid).toUpperCase())) {
+              const k = String(d.hwid).toUpperCase();
+              const existing = devMap.get(k);
+              devMap.set(k, existing ? { ...existing, ...d } : d);
+            }
+          }
+          allDevicesCache = Array.from(devMap.values());
           try { localStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
 
           const searchInput = document.getElementById('search-filter');

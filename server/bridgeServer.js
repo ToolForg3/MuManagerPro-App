@@ -59,6 +59,42 @@ app.use(cors({
 app.use(express.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
+// Middleware de vaciado automático de persistencia Cloud (Upstash Redis)
+// Garantiza que ninguna respuesta HTTP se entregue hasta que las escrituras en Redis hayan completado
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  const originalSend = res.send.bind(res);
+
+  let flushed = false;
+  const runFlush = async () => {
+    if (flushed) return;
+    flushed = true;
+    try {
+      if (typeof flushCloudWrites === 'function') {
+        await flushCloudWrites();
+      }
+    } catch (_) {}
+  };
+
+  res.json = function(data) {
+    runFlush().then(() => {
+      originalJson(data);
+    }).catch(() => {
+      originalJson(data);
+    });
+  };
+
+  res.send = function(body) {
+    runFlush().then(() => {
+      originalSend(body);
+    }).catch(() => {
+      originalSend(body);
+    });
+  };
+
+  next();
+});
+
 const PORT = process.env.PORT || 3001;
 const isVercel = !!process.env.VERCEL;
 const os = require('os');
@@ -425,6 +461,9 @@ function safeAtomicWriteJson(filePath, data) {
 // =========================================================================
 // MOTOR UNIVERSAL DE PERSISTENCIA CLOUD (UPSTASH REDIS / VERCEL KV)
 // =========================================================================
+const MAX_AUDIT_LOGS = 250;
+const auditLogs = [];
+
 const CLOUD_STORAGE = {
   enabled: !!(process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL),
   url: (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').replace(/\/+$/, ''),
@@ -457,74 +496,54 @@ const CLOUD_STORAGE = {
   async set(key, val) {
     const str = typeof val === 'string' ? val : JSON.stringify(val);
     return await this.exec('SET', key, str);
+  },
+  async mget(keys) {
+    if (!this.enabled || !this.url || !this.token || !Array.isArray(keys) || keys.length === 0) return {};
+    try {
+      const rawList = await this.exec('MGET', ...keys);
+      const res = {};
+      if (Array.isArray(rawList)) {
+        keys.forEach((k, idx) => {
+          const raw = rawList[idx];
+          if (raw === null || raw === undefined) {
+            res[k] = null;
+          } else {
+            try {
+              res[k] = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            } catch (_) {
+              res[k] = raw;
+            }
+          }
+        });
+      }
+      return res;
+    } catch (e) {
+      console.error('[CloudStorage MGET Error]', e.message);
+      return {};
+    }
   }
 };
 
-let cloudStorageInitialized = false;
-async function initCloudStorage() {
-  if (cloudStorageInitialized || !CLOUD_STORAGE.enabled) return;
-  cloudStorageInitialized = true;
+let pendingCloudWrites = [];
+
+function queueCloudWrite(promise) {
+  if (promise && typeof promise.then === 'function') {
+    pendingCloudWrites.push(
+      promise.catch((err) => {
+        console.error('[CloudStorage Async Write Error]', err ? err.message : err);
+      })
+    );
+  }
+}
+
+async function flushCloudWrites() {
+  if (pendingCloudWrites.length === 0) return;
+  const batch = pendingCloudWrites.slice();
+  pendingCloudWrites = [];
   try {
-    let [cDev, cSet, cUsr, cTom] = await Promise.all([
-      CLOUD_STORAGE.get('mumanager:devices'),
-      CLOUD_STORAGE.get('mumanager:settings'),
-      CLOUD_STORAGE.get('mumanager:users'),
-      CLOUD_STORAGE.get('mumanager:tombstones')
-    ]);
-
-
-
-    if (cDev && typeof cDev === 'object') {
-      inMemoryFallback[DATA_FILE] = cDev;
-      safeAtomicWriteJson(DATA_FILE, cDev);
-    }
-    if (cSet && typeof cSet === 'object' && Object.keys(cSet).length > 0) {
-      try {
-        const seedPath = path.join(__dirname, 'data', 'settings.json');
-        if (fs.existsSync(seedPath)) {
-          const seedSettings = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
-          if (seedSettings) {
-            let updatedCloud = false;
-            if (seedSettings.forceUpdate !== undefined && cSet.forceUpdate !== seedSettings.forceUpdate) {
-              cSet.forceUpdate = seedSettings.forceUpdate;
-              updatedCloud = true;
-            }
-            if (seedSettings.minRequiredVersion && cSet.minRequiredVersion !== seedSettings.minRequiredVersion) {
-              cSet.minRequiredVersion = seedSettings.minRequiredVersion;
-              updatedCloud = true;
-            }
-            if (isNewerVersion(seedSettings.latestVersion, cSet.latestVersion) || (seedSettings.latestVersion && seedSettings.latestVersion !== cSet.latestVersion)) {
-              cSet.latestVersion = seedSettings.latestVersion;
-              cSet.updateChangelog = seedSettings.updateChangelog;
-              cSet.forceUpdate = seedSettings.forceUpdate !== undefined ? seedSettings.forceUpdate : true;
-              cSet.latestApkUrl = seedSettings.latestApkUrl || cSet.latestApkUrl;
-              cSet.updateTitle = seedSettings.updateTitle || cSet.updateTitle;
-              cSet.versionCode = seedSettings.versionCode || cSet.versionCode;
-              cSet.appVersion = seedSettings.appVersion || cSet.appVersion;
-              cSet.buildNumber = seedSettings.buildNumber || cSet.buildNumber;
-              cSet.releaseNotes = seedSettings.releaseNotes || cSet.releaseNotes;
-              updatedCloud = true;
-            }
-            if (updatedCloud) {
-              CLOUD_STORAGE.set('mumanager:settings', cSet).catch(() => {});
-            }
-          }
-        }
-      } catch (_) {}
-      inMemoryFallback[SETTINGS_FILE] = cSet;
-      safeAtomicWriteJson(SETTINGS_FILE, cSet);
-    }
-    if (cUsr && Array.isArray(cUsr)) {
-      inMemoryFallback[USERS_FILE] = cUsr;
-      safeAtomicWriteJson(USERS_FILE, cUsr);
-    }
-    if (cTom && typeof cTom === 'object') {
-      inMemoryFallback[TOMBSTONES_FILE] = cTom;
-      safeAtomicWriteJson(TOMBSTONES_FILE, cTom);
-    }
-    console.log(`[CloudStorage] Sincronizado exitosamente con ${CLOUD_STORAGE.provider}`);
+    await Promise.all(batch);
   } catch (e) {
-    console.error('[CloudStorage Init Error]', e.message);
+    console.error('[CloudStorage Flush Error]', e ? e.message : e);
   }
 }
 
@@ -568,7 +587,10 @@ function saveTombstones(data) {
     throw new Error("Disk error saving tombstones");
   }
   if (CLOUD_STORAGE.enabled) {
-    CLOUD_STORAGE.set('mumanager:tombstones', data).catch(() => {});
+    const p = CLOUD_STORAGE.set('mumanager:tombstones', data).catch(() => {});
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
   }
   return true;
 }
@@ -586,7 +608,10 @@ function saveSettings(data) {
   };
   lastSettingsCheck = Date.now();
   if (CLOUD_STORAGE.enabled) {
-    CLOUD_STORAGE.set('mumanager:settings', data).catch(() => {});
+    const p = CLOUD_STORAGE.set('mumanager:settings', data).catch(() => {});
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
   }
   return true;
 }
@@ -632,7 +657,7 @@ function saveDevices(data) {
     }
   } catch (_) {}
   if (CLOUD_STORAGE.enabled) {
-    CLOUD_STORAGE.set('mumanager:devices', data).catch((err) => {
+    const p = CLOUD_STORAGE.set('mumanager:devices', data).catch((err) => {
       CLOUD_STORAGE.lastError = {
         timestamp: Date.now(),
         target: 'mumanager:devices',
@@ -642,6 +667,9 @@ function saveDevices(data) {
         addSecurityLog('WARN', 'CLOUD_SYNC_FAILED', 'Fallo al sincronizar dispositivos en nube: ' + (err ? err.message : 'Error'));
       }
     });
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
   }
   return true;
 }
@@ -652,6 +680,12 @@ function loadUsers() {
     if (fs.existsSync(USERS_FILE)) {
       const parsed = safeJsonParse(fs.readFileSync(USERS_FILE, 'utf8'), []);
       if (Array.isArray(parsed)) diskUsers = parsed;
+    } else {
+      const seed = path.join(__dirname, 'data', 'users.json');
+      if (fs.existsSync(seed)) {
+        const parsed = safeJsonParse(fs.readFileSync(seed, 'utf8'), []);
+        if (Array.isArray(parsed)) diskUsers = parsed;
+      }
     }
   } catch (e) {
     console.error('Error reading users data', e);
@@ -675,6 +709,23 @@ function loadUsers() {
     if (!isDeleted) {
       const mapKey = emailKey || idKey;
       if (mapKey) userMap.set(mapKey, { ...u });
+    }
+  }
+  if (inMemoryFallback[USERS_FILE] && Array.isArray(inMemoryFallback[USERS_FILE])) {
+    for (const u of inMemoryFallback[USERS_FILE]) {
+      const emailKey = (u.email || '').toLowerCase().trim();
+      const idKey = (u.id || '').toLowerCase().trim();
+      const isDeleted = (emailKey && deletedUsers[emailKey]) || (idKey && deletedUsers[idKey]);
+      if (!isDeleted) {
+        const mapKey = emailKey || idKey;
+        if (mapKey) {
+          if (userMap.has(mapKey)) {
+            userMap.set(mapKey, { ...userMap.get(mapKey), ...u });
+          } else {
+            userMap.set(mapKey, u);
+          }
+        }
+      }
     }
   }
   for (const u of diskUsers) {
@@ -702,21 +753,19 @@ function saveUsers(data) {
   if (!safeAtomicWriteJson(USERS_FILE, data)) {
     throw new Error("Disk error saving users");
   }
+  try {
+    const seed = path.join(__dirname, 'data', 'users.json');
+    if (fs.existsSync(path.dirname(seed))) {
+      safeAtomicWriteJson(seed, data);
+    }
+  } catch (_) {}
   if (CLOUD_STORAGE.enabled) {
-    CLOUD_STORAGE.set('mumanager:users', data).catch(() => {});
+    const p = CLOUD_STORAGE.set('mumanager:users', data).catch(() => {});
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
   }
   return true;
-}
-
-app.use(async (req, res, next) => {
-  if (CLOUD_STORAGE.enabled && !cloudStorageInitialized) {
-    await initCloudStorage();
-  }
-  next();
-});
-
-if (CLOUD_STORAGE.enabled) {
-  initCloudStorage().catch(e => console.error('[CloudStorage Boot Init Error]', e.message));
 }
 
 function loadProRequests() {
@@ -735,6 +784,12 @@ function saveProRequests(data) {
   if (!safeAtomicWriteJson(PRO_REQUESTS_FILE, data)) {
     throw new Error("Disk error saving pro requests");
   }
+  if (CLOUD_STORAGE.enabled) {
+    const p = CLOUD_STORAGE.set('mumanager:proRequests', data).catch(() => {});
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
+  }
   return true;
 }
 
@@ -751,14 +806,227 @@ function loadSecurityLogs() {
 }
 
 function saveSecurityLogs(data) {
-  const ok = safeAtomicWriteJson(SECURITY_LOGS_FILE, data.slice(0, 500));
+  const trimmed = Array.isArray(data) ? data.slice(0, 500) : [];
+  const ok = safeAtomicWriteJson(SECURITY_LOGS_FILE, trimmed);
   try {
     const seed = path.join(__dirname, 'data', 'securityLogs.json');
     if (fs.existsSync(path.dirname(seed))) {
-      safeAtomicWriteJson(seed, data.slice(0, 500));
+      safeAtomicWriteJson(seed, trimmed);
     }
   } catch (_) {}
+  if (CLOUD_STORAGE.enabled) {
+    const p = CLOUD_STORAGE.set('mumanager:securityLogs', trimmed).catch(() => {});
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
+  }
   return ok;
+}
+
+let cloudStorageInitialized = false;
+let lastCloudSyncTime = 0;
+let isSyncingCloud = false;
+
+async function syncCloudStorage(force = false) {
+  if (!CLOUD_STORAGE.enabled) return;
+  const now = Date.now();
+  if (!force && (now - lastCloudSyncTime < 2000)) {
+    return;
+  }
+  if (isSyncingCloud) return;
+  isSyncingCloud = true;
+
+  try {
+    const keys = [
+      'mumanager:devices',
+      'mumanager:settings',
+      'mumanager:users',
+      'mumanager:tombstones',
+      'mumanager:proRequests',
+      'mumanager:securityLogs',
+      'mumanager:auditLogs'
+    ];
+    const data = await CLOUD_STORAGE.mget(keys);
+    lastCloudSyncTime = Date.now();
+
+    // 1. DISPOSITIVOS: Smart Merge acumulativo con preservación permanente de PRO
+    const cloudDevs = data['mumanager:devices'];
+    if (cloudDevs && typeof cloudDevs === 'object') {
+      const currentDevs = inMemoryFallback[DATA_FILE] || {};
+      const mergedDevs = { ...currentDevs };
+
+      for (const [hwid, cDev] of Object.entries(cloudDevs)) {
+        if (!mergedDevs[hwid]) {
+          mergedDevs[hwid] = cDev;
+        } else {
+          const lDev = mergedDevs[hwid];
+          const isPro = (cDev.mode === 'PRO' || lDev.mode === 'PRO') && !cDev.forceDemo && !lDev.forceDemo;
+          const chosenKey = cDev.licenseKey || lDev.licenseKey || cDev.generatedKey || lDev.generatedKey || '';
+          const chosenExpires = (cDev.mode === 'PRO' ? cDev.expiresAt : lDev.expiresAt) || cDev.expiresAt || lDev.expiresAt || null;
+          const chosenLifetime = !!(cDev.isLifetime || lDev.isLifetime);
+
+          mergedDevs[hwid] = {
+            ...lDev,
+            ...cDev,
+            mode: isPro ? 'PRO' : (cDev.mode || lDev.mode || 'DEMO'),
+            licenseKey: chosenKey,
+            generatedKey: chosenKey || cDev.generatedKey || lDev.generatedKey || '',
+            expiresAt: chosenExpires,
+            isLifetime: chosenLifetime,
+            forceDemo: isPro ? false : (cDev.forceDemo || lDev.forceDemo),
+            totalPings: Math.max(cDev.totalPings || 0, lDev.totalPings || 0),
+            lastSeen: (new Date(cDev.lastSeen || 0) > new Date(lDev.lastSeen || 0)) ? cDev.lastSeen : lDev.lastSeen
+          };
+        }
+      }
+      inMemoryFallback[DATA_FILE] = mergedDevs;
+      safeAtomicWriteJson(DATA_FILE, mergedDevs);
+    }
+
+    // 2. USUARIOS: Smart Merge sin purgas (cero eliminación salvo tombstones)
+    const cloudUsers = data['mumanager:users'];
+    if (cloudUsers && Array.isArray(cloudUsers)) {
+      const currentUsers = inMemoryFallback[USERS_FILE] || [];
+      const userMap = new Map();
+      currentUsers.forEach(u => {
+        const k = (u.email || u.id || '').toLowerCase().trim();
+        if (k) userMap.set(k, u);
+      });
+      cloudUsers.forEach(u => {
+        const k = (u.email || u.id || '').toLowerCase().trim();
+        if (k) {
+          if (userMap.has(k)) {
+            userMap.set(k, { ...userMap.get(k), ...u });
+          } else {
+            userMap.set(k, u);
+          }
+        }
+      });
+      const mergedUsers = Array.from(userMap.values());
+      inMemoryFallback[USERS_FILE] = mergedUsers;
+      safeAtomicWriteJson(USERS_FILE, mergedUsers);
+    }
+
+    // 3. TOMBSTONES
+    const cloudTom = data['mumanager:tombstones'];
+    if (cloudTom && typeof cloudTom === 'object') {
+      const currentTom = inMemoryFallback[TOMBSTONES_FILE] || {};
+      const mergedTom = {
+        ...currentTom,
+        ...cloudTom,
+        revokedKeys: { ...(currentTom.revokedKeys || {}), ...(cloudTom.revokedKeys || {}) },
+        deletedUsers: { ...(currentTom.deletedUsers || {}), ...(cloudTom.deletedUsers || {}) }
+      };
+      inMemoryFallback[TOMBSTONES_FILE] = mergedTom;
+      safeAtomicWriteJson(TOMBSTONES_FILE, mergedTom);
+    }
+
+    // 4. SETTINGS
+    const cloudSet = data['mumanager:settings'];
+    if (cloudSet && typeof cloudSet === 'object' && Object.keys(cloudSet).length > 0) {
+      inMemoryFallback[SETTINGS_FILE] = cloudSet;
+      safeAtomicWriteJson(SETTINGS_FILE, cloudSet);
+      cachedSettings = { ...DEFAULT_SETTINGS, ...cloudSet };
+    }
+
+    // 5. PRO REQUESTS
+    const cloudProReqs = data['mumanager:proRequests'];
+    if (cloudProReqs && Array.isArray(cloudProReqs)) {
+      const currentReqs = loadProRequests();
+      const reqMap = new Map();
+      currentReqs.forEach(r => { if (r && r.id) reqMap.set(r.id, r); });
+      cloudProReqs.forEach(r => { if (r && r.id) reqMap.set(r.id, { ...(reqMap.get(r.id) || {}), ...r }); });
+      const mergedReqs = Array.from(reqMap.values());
+      safeAtomicWriteJson(PRO_REQUESTS_FILE, mergedReqs);
+    }
+
+    // 6. SECURITY LOGS
+    const cloudSecLogs = data['mumanager:securityLogs'];
+    if (cloudSecLogs && Array.isArray(cloudSecLogs)) {
+      const currentSec = loadSecurityLogs();
+      const idSet = new Set();
+      const mergedSec = [];
+      [...cloudSecLogs, ...currentSec].forEach(l => {
+        const id = l.id || (l.timestamp + '-' + l.type);
+        if (!idSet.has(id)) {
+          idSet.add(id);
+          mergedSec.push(l);
+        }
+      });
+      mergedSec.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+      const finalSec = mergedSec.slice(0, 500);
+      safeAtomicWriteJson(SECURITY_LOGS_FILE, finalSec);
+    }
+
+    // 7. AUDIT LOGS
+    const cloudAuditLogs = data['mumanager:auditLogs'];
+    if (cloudAuditLogs && Array.isArray(cloudAuditLogs)) {
+      const idSet = new Set();
+      const mergedAudit = [];
+      [...auditLogs, ...cloudAuditLogs].forEach(l => {
+        const id = l.id || (l.timestamp + '-' + l.type);
+        if (!idSet.has(id)) {
+          idSet.add(id);
+          mergedAudit.push(l);
+        }
+      });
+      mergedAudit.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+      auditLogs.length = 0;
+      mergedAudit.slice(0, MAX_AUDIT_LOGS).forEach(l => auditLogs.push(l));
+    }
+
+    cloudStorageInitialized = true;
+  } catch (err) {
+    console.error('[CloudStorage Sync Error]', err.message);
+  } finally {
+    isSyncingCloud = false;
+  }
+}
+
+async function initCloudStorage() {
+  await syncCloudStorage(true);
+}
+
+app.use(async (req, res, next) => {
+  if (CLOUD_STORAGE.enabled) {
+    try {
+      const isUrgentRoute = req.path.startsWith('/api/admin') || req.path === '/api/telemetry/ping';
+      await syncCloudStorage(isUrgentRoute);
+    } catch (_) {}
+  }
+  next();
+});
+
+// Interceptor de respuesta para garantizar persistencia asíncrona en Vercel antes de congelar proceso
+app.use((req, res, next) => {
+  const origJson = res.json.bind(res);
+  const origSend = res.send.bind(res);
+
+  res.json = function(data) {
+    if (typeof flushCloudWrites === 'function') {
+      flushCloudWrites().catch(() => {}).finally(() => {
+        origJson(data);
+      });
+    } else {
+      origJson(data);
+    }
+  };
+
+  res.send = function(data) {
+    if (typeof flushCloudWrites === 'function') {
+      flushCloudWrites().catch(() => {}).finally(() => {
+        origSend(data);
+      });
+    } else {
+      origSend(data);
+    }
+  };
+
+  next();
+});
+
+if (CLOUD_STORAGE.enabled) {
+  initCloudStorage().catch(e => console.error('[CloudStorage Boot Init Error]', e.message));
 }
 
 function addSecurityLog(type, hwid, ip, message, details = null, req = null) {
@@ -955,9 +1223,6 @@ if (typeof setInterval === 'function') {
   }, 5 * 60 * 1000);
 }
 
-const MAX_AUDIT_LOGS = 250;
-const auditLogs = [];
-
 function getLogCategory(type) {
   const t = String(type || '').toUpperCase();
   if (t.includes('SQL') || t.includes('TAMPER') || t.includes('REPLAY') || t.includes('SIG_') || t.includes('AUTH_') || t.includes('EMERGENCY') || t.includes('THREAT') || t.includes('FIREWALL')) {
@@ -988,6 +1253,9 @@ function addAuditLog(type, hwid, ip, message, status = 'OK') {
   });
   if (auditLogs.length > MAX_AUDIT_LOGS) {
     auditLogs.pop();
+  }
+  if (CLOUD_STORAGE.enabled && typeof queueCloudWrite === 'function') {
+    queueCloudWrite(CLOUD_STORAGE.set('mumanager:auditLogs', auditLogs.slice(0, MAX_AUDIT_LOGS)));
   }
 }
 
@@ -1379,19 +1647,39 @@ app.use((req, res, next) => {
         // Validación de usuario activo en users.json (para CUALQUIER usuario, sea USER o ADMIN):
         // Si el usuario fue purgado o está bloqueado en users.json, denegar sesión inmediatamente
         if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
-          const allUsers = loadUsers();
+          const tombstones = loadTombstones();
           const cleanEmail = String(decoded.sub).toLowerCase().trim();
-          const userRecord = allUsers.find(u => 
-            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
-            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
-          );
-          if (!userRecord) {
+          const isDeletedByAdmin = !!(tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]);
+          if (isDeletedByAdmin) {
             return res.status(401).json({
               success: false,
               sessionInvalidated: true,
               error: 'USUARIO_NO_EXISTE',
               message: 'Tu cuenta ya no existe en el servidor o ha sido reiniciada. Por favor, regístrate nuevamente.'
             });
+          }
+
+          const allUsers = loadUsers();
+          let userRecord = allUsers.find(u => 
+            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+          );
+          if (!userRecord) {
+            userRecord = {
+              id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              email: cleanEmail,
+              username: decoded.username || cleanEmail.split('@')[0],
+              role: decoded.role || 'USER',
+              status: 'ACTIVE',
+              createdAt: new Date().toISOString(),
+              lastLogin: new Date().toISOString(),
+              lastSeen: new Date().toISOString(),
+              hwid: decoded.hwid || '',
+              activeHwid: decoded.hwid || '',
+              sessionVersion: decoded.sessionVersion || 1
+            };
+            allUsers.push(userRecord);
+            saveUsers(allUsers);
           }
           if (userRecord.status === 'BLOCKED' || userRecord.blocked) {
             return res.status(401).json({
@@ -8533,7 +8821,10 @@ function isTestDevice(dev) {
 }
 
 // Ping silencioso del APK
-app.post('/api/telemetry/ping', (req, res) => {
+app.post('/api/telemetry/ping', async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
+  }
   const { hwid, mode, appVersion, platform, licenseKey, userEmail, username, isEmulator, deviceModel, deviceBrand } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID missing' });
 
@@ -8937,9 +9228,19 @@ app.post('/api/telemetry/ping', (req, res) => {
     }
   }
 
-  const effectiveKey = (devMode === 'PRO' && !isForcedDemo && (callerProvidedMatchingKey || isCallerSigned))
-    ? (devices[hwid].licenseKey || devices[hwid].generatedKey || '')
+  const effectiveKey = (devMode === 'PRO' && !isForcedDemo && (callerProvidedMatchingKey || isCallerSigned || !incomingKey))
+    ? (devices[hwid].licenseKey || devices[hwid].generatedKey || (typeof generateKey === 'function' ? generateKey(hwid, 'PRO') : ''))
     : '';
+
+  if (devMode === 'PRO' && !isForcedDemo && !devices[hwid].licenseKey && effectiveKey) {
+    devices[hwid].licenseKey = effectiveKey;
+    devices[hwid].generatedKey = effectiveKey;
+    saveDevices(devices);
+  }
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
 
   res.json({
     success: true,
@@ -9887,7 +10188,10 @@ app.post('/api/auth/change-password', async (req, res) => {
 });
 
 // Listar usuarios registrados para el panel web
-app.get('/api/admin/users', (req, res) => {
+app.get('/api/admin/users', async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
   const users = loadUsers();
   const nowMs = Date.now();
   const safeList = users.map(u => {
@@ -10685,7 +10989,10 @@ app.post('/api/admin/logs/clear', (req, res) => {
 });
 
 // Listar dispositivos para el panel web (con actualización de expirados y presencia online)
-app.get('/api/admin/devices', (req, res) => {
+app.get('/api/admin/devices', async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
   const devices = loadDevices();
   let modified = false;
   const now = new Date();
@@ -10746,7 +11053,12 @@ app.get('/api/admin/devices', (req, res) => {
     return String(a.hwid || '').localeCompare(String(b.hwid || ''));
   });
 
-  if (modified) saveDevices(devices);
+  if (modified) {
+    saveDevices(devices);
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
+  }
   res.json(list);
 });
 
@@ -11003,7 +11315,10 @@ app.post('/api/admin/device/unexclude', (req, res) => {
 });
 
 // Módulo de Licencias Emitidas & Dispositivos Excluidos
-app.get('/api/admin/licenses', (req, res) => {
+app.get('/api/admin/licenses', async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
   const devices = loadDevices();
   const tombstones = loadTombstones();
   const now = Date.now();
@@ -11157,9 +11472,14 @@ app.post('/api/admin/license/delete', (req, res) => {
 });
 
 // Generar clave PRO para un HWID desde el dashboard web
-app.post('/api/admin/device/generate-key', (req, res) => {
+app.post('/api/admin/device/generate-key', async (req, res) => {
   const { hwid, plan, durationType, days } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
   const key = generateKey(hwid, plan || 'PRO');
 
   // Limpiar de tombstones y claves revocadas si el administrador genera clave explícitamente
@@ -11178,25 +11498,53 @@ app.post('/api/admin/device/generate-key', (req, res) => {
   }
 
   const devices = loadDevices();
-  if (devices[hwid]) {
+  const now = new Date().toISOString();
+  if (!devices[hwid]) {
+    devices[hwid] = {
+      hwid,
+      mode: plan || 'PRO',
+      licenseKey: key,
+      generatedKey: key,
+      firstSeen: now,
+      lastSeen: now,
+      totalPings: 0,
+      ip: req.socket.remoteAddress || '127.0.0.1',
+      platform: 'Android',
+      appVersion: '2.0.8',
+      blocked: false,
+      blockReason: '',
+      note: '',
+      currentUser: '',
+      expiresAt: null,
+      isLifetime: durationType === 'LIFETIME',
+      forceDemo: false,
+      isEmulator: false
+    };
+  } else {
     devices[hwid].generatedKey = key;
+    devices[hwid].licenseKey = key;
     devices[hwid].mode = plan || 'PRO';
     devices[hwid].forceDemo = false;
-    const numDays = parseInt(days, 10);
-    if (durationType === 'DAYS' && numDays > 0) {
-      devices[hwid].expiresAt = new Date(Date.now() + numDays * 86400 * 1000).toISOString();
-      devices[hwid].isLifetime = false;
-    } else if (durationType === 'LIFETIME') {
-      devices[hwid].expiresAt = null;
-      devices[hwid].isLifetime = true;
-    } else {
-      // Por defecto vigencia de 30 días si no se especifica, NUNCA vitalicio automático
-      devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
-      devices[hwid].isLifetime = false;
-    }
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
-    saveDevices(devices);
+  }
+
+  const numDays = parseInt(days, 10);
+  if (durationType === 'DAYS' && numDays > 0) {
+    devices[hwid].expiresAt = new Date(Date.now() + numDays * 86400 * 1000).toISOString();
+    devices[hwid].isLifetime = false;
+  } else if (durationType === 'LIFETIME') {
+    devices[hwid].expiresAt = null;
+    devices[hwid].isLifetime = true;
+  } else {
+    // Por defecto vigencia de 30 días si no se especifica, NUNCA vitalicio automático
+    devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
+    devices[hwid].isLifetime = false;
+  }
+
+  saveDevices(devices);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
   }
 
   const vigenciaStr = (devices[hwid] && devices[hwid].expiresAt)
@@ -11215,13 +11563,39 @@ app.post('/api/admin/device/generate-key', (req, res) => {
 });
 
 // Activar o degradar plan PRO/DEMO con opciones de vigencia y exclusión
-app.post('/api/admin/device/toggle-plan', (req, res) => {
+app.post('/api/admin/device/toggle-plan', async (req, res) => {
   const { hwid, plan, durationType, days, hours, minutes, excludeDevice, excludeReason } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
   const targetPlan = (plan === 'PRO') ? 'PRO' : 'DEMO';
 
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
   const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
+  const now = new Date().toISOString();
+  if (!devices[hwid]) {
+    devices[hwid] = {
+      hwid,
+      mode: targetPlan,
+      licenseKey: '',
+      generatedKey: '',
+      firstSeen: now,
+      lastSeen: now,
+      totalPings: 0,
+      ip: req.socket.remoteAddress || '127.0.0.1',
+      platform: 'Android',
+      appVersion: '2.0.8',
+      blocked: false,
+      blockReason: '',
+      note: '',
+      currentUser: '',
+      expiresAt: null,
+      isLifetime: durationType === 'LIFETIME',
+      forceDemo: false,
+      isEmulator: false
+    };
+  }
 
   // Exclusión / Bloqueo explícito solicitado por el administrador
   if (excludeDevice) {
@@ -11251,6 +11625,9 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
     devices[hwid].licenseKey = '';
     devices[hwid].generatedKey = '';
     saveDevices(devices);
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
 
     addAuditLog('DEVICE_EXCLUDED', hwid, req.socket.remoteAddress || '127.0.0.1', 'Dispositivo excluido y bloqueado en tombstones');
     return res.json({
@@ -11360,6 +11737,9 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
   }
 
   saveDevices(devices);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
   const vigenciaLog = devices[hwid].expiresAt
     ? `(Vence: ${new Date(devices[hwid].expiresAt).toLocaleString()})`
     : 'VITALICIO / INDEFINIDO';
@@ -11562,10 +11942,13 @@ app.post('/api/license/request-pro', async (req, res) => {
 });
 
 // 4. Listar Solicitudes PRO para el Panel Web
-app.get('/api/admin/pro-requests', (req, res) => {
+app.get('/api/admin/pro-requests', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
   }
   const requests = loadProRequests();
   res.json(requests);
@@ -11648,10 +12031,13 @@ app.post('/api/telemetry/crash', (req, res) => {
 });
 
 // 7. Listar Logs de Seguridad y Bugs para el Panel Web
-app.get('/api/admin/security-logs', (req, res) => {
+app.get('/api/admin/security-logs', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
   }
   const logs = loadSecurityLogs();
   res.json(logs);
@@ -11881,7 +12267,10 @@ app.post('/api/admin/test-sql', async (req, res) => {
 });
 
 // Logs de auditoría
-app.get('/api/admin/logs', (req, res) => {
+app.get('/api/admin/logs', async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
+  }
   res.json(auditLogs);
 });
 
