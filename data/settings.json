@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.1",
+  "latestVersion": "2.1.2",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.1 (Build 113) - Corrección Integral de UI, Búsquedas y Accesibilidad:\n• BÚSQUEDA Y FILTROS FLUIDOS: useMemo reactivo y desvinculación de polling en personajes y cuentas (cero sobreescritura de búsquedas activas).\n• PROTECCIÓN DE RED OUT-OF-ORDER: Descarte de respuestas desordenadas en cuentas y estado vacío diferenciado.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB de ratios WCAG AA/AAA en botones y tokens góticos.\n• ERGONOMÍA & ACCESIBILIDAD: Targets táctiles ampliados a 44x44 dp, scroll en modales y roles nativos de accesibilidad.\n• DESCARGA RESILIENTE: Botón de reintento y copiado directo de URL al portapapeles en modal de actualización.",
+  "updateChangelog": "MuManager PRO v2.1.2 (Build 114) - Corrección Módulo PK & Blindaje de Sesiones:\n• CONTROL DE ASESINOS (PK): Corrección de mapeo de propiedades (camelCase/PascalCase) en PkTab.tsx y backend SQL (resuelve el cartel de Módulo Protegido ante asesinos activos).\n• PERSISTENCIA EN LA NUBE: Confirmación de persistencia permanente de cuentas en Upstash Redis Cloud sin reinicio de sesiones.\n• BÚSQUEDA Y FILTROS: useMemo reactivo y desvinculación de polling en personajes y cuentas.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB WCAG AA/AAA en botones y tokens góticos.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.1 (Build 113)",
+  "updateTitle": "MuManager PRO v2.1.2 (Build 114)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 113,
+  "versionCode": 114,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.1 (Build 113) - Corrección Integral de UI, Búsquedas y Accesibilidad:\n• BÚSQUEDA Y FILTROS FLUIDOS: useMemo reactivo y desvinculación de polling en personajes y cuentas (cero sobreescritura de búsquedas activas).\n• PROTECCIÓN DE RED OUT-OF-ORDER: Descarte de respuestas desordenadas en cuentas y estado vacío diferenciado.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB de ratios WCAG AA/AAA en botones y tokens góticos.\n• ERGONOMÍA & ACCESIBILIDAD: Targets táctiles ampliados a 44x44 dp, scroll en modales y roles nativos de accesibilidad.\n• DESCARGA RESILIENTE: Botón de reintento y copiado directo de URL al portapapeles en modal de actualización.",
+  "releaseNotes": "MuManager PRO v2.1.2 (Build 114) - Corrección Módulo PK & Blindaje de Sesiones:\n• CONTROL DE ASESINOS (PK): Corrección de mapeo de propiedades (camelCase/PascalCase) en PkTab.tsx y backend SQL (resuelve el cartel de Módulo Protegido ante asesinos activos).\n• PERSISTENCIA EN LA NUBE: Confirmación de persistencia permanente de cuentas en Upstash Redis Cloud sin reinicio de sesiones.\n• BÚSQUEDA Y FILTROS: useMemo reactivo y desvinculación de polling en personajes y cuentas.\n• SISTEMA DE DISEÑO PIEDRA & ORO: Calibración matemática sRGB WCAG AA/AAA en botones y tokens góticos.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.1",
-  "buildNumber": 113,
+  "appVersion": "2.1.2",
+  "buildNumber": 114,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.1",
-  "build": 113
+  "version": "2.1.2",
+  "build": 114
 }

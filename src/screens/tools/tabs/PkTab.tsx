@@ -92,40 +92,51 @@ export const PkTab: React.FC<PkTabProps> = ({
         ) : (
           <View style={{ gap: 10 }}>
             {pkList
-              .filter(
-                (p) =>
-                  p.Name.toLowerCase().includes(pkSearch.toLowerCase()) ||
-                  p.AccountID.toLowerCase().includes(pkSearch.toLowerCase())
-              )
-              .map((p) => {
-                const badge = getPkBadge(p.PkLevel);
-                const classInfo = getMuClassInfo(p.Class);
+              .filter((p) => {
+                const name = String(p.Name || p.charName || '').toLowerCase();
+                const acc = String(p.AccountID || p.accountId || '').toLowerCase();
+                const q = (pkSearch || '').toLowerCase();
+                return name.includes(q) || acc.includes(q);
+              })
+              .map((p, idx) => {
+                const charName = p.Name || p.charName || `PJ_${idx}`;
+                const accountId = p.AccountID || p.accountId || '-';
+                const pkLevel = p.PkLevel ?? p.pkLevel ?? 3;
+                const classCode = p.Class ?? p.class ?? 0;
+                const cLevel = p.cLevel ?? p.level ?? 1;
+                const pkCount = p.PkCount ?? p.pkCount ?? 0;
+                const pkTime = p.PkTime ?? p.pkTime ?? 0;
+
+                const badge = getPkBadge(pkLevel) || { label: 'PK', color: THEME.colors.textoSecundario, bg: 'rgba(200, 190, 175, 0.2)' };
+                const classInfo = getMuClassInfo ? getMuClassInfo(classCode) : { name: 'Desconocido' };
+                const className = classInfo?.name || 'Desconocido';
+
                 return (
-                  <View key={`pk_${p.Name}`} style={styles.card}>
+                  <View key={`pk_${charName}_${idx}`} style={styles.card}>
                     <View style={styles.cardRow}>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Text style={styles.charName}>{p.Name}</Text>
+                          <Text style={styles.charName}>{charName}</Text>
                           <View style={[styles.badgeWrap, { backgroundColor: badge.bg }]}>
                             <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
                           </View>
                         </View>
                         <Text style={styles.charSub}>
-                          Cuenta: {p.AccountID} • {classInfo.name} • Lv {p.cLevel}
+                          Cuenta: {accountId} • {className} • Lv {cLevel}
                         </Text>
                         <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
                           <Text style={styles.statRed}>
-                            Asesinatos: <Text style={{ fontWeight: 'bold' }}>{p.PkCount}</Text>
+                            Asesinatos: <Text style={{ fontWeight: 'bold' }}>{pkCount}</Text>
                           </Text>
                           <Text style={styles.statMuted}>
-                            Tiempo PK: {p.PkTime}s
+                            Tiempo PK: {pkTime}s
                           </Text>
                         </View>
                       </View>
 
                       <TouchableOpacity
                         style={styles.cleanSingleBtn}
-                        onPress={() => handleClearPkTab(p.Name || p.charName)}
+                        onPress={() => handleClearPkTab(charName)}
                       >
                         <MaterialCommunityIcons name="check-circle-outline" size={16} color={THEME.colors.jade} />
                         <Text style={styles.cleanSingleBtnText}>Limpiar PK</Text>

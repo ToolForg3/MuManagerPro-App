@@ -6859,12 +6859,19 @@ app.post('/api/pk/list', async (req, res) => {
       const r = await pool.request().query(`
         SELECT TOP 50
           LTRIM(RTRIM(Name)) AS charName,
+          LTRIM(RTRIM(Name)) AS Name,
           LTRIM(RTRIM(AccountID)) AS accountId,
+          LTRIM(RTRIM(AccountID)) AS AccountID,
           ISNULL(Class, 0) AS class,
+          ISNULL(Class, 0) AS Class,
           ISNULL(cLevel, 1) AS level,
+          ISNULL(cLevel, 1) AS cLevel,
           ISNULL(PkLevel, 3) AS pkLevel,
+          ISNULL(PkLevel, 3) AS PkLevel,
           ISNULL(PkCount, 0) AS pkCount,
-          ISNULL(PkTime, 0) AS pkTime
+          ISNULL(PkCount, 0) AS PkCount,
+          ISNULL(PkTime, 0) AS pkTime,
+          ISNULL(PkTime, 0) AS PkTime
         FROM Character
         WHERE PkLevel > 3 OR PkCount > 0
         ORDER BY PkCount DESC, PkLevel DESC;
