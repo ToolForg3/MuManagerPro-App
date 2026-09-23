@@ -117,11 +117,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setIsDemoSession(false);
           }
 
-          if (!token) {
-            const hwid = await SecurityService.getDeviceHwid();
-            token = `LOCAL_DEV_${hwid}_${Date.now()}`;
-            SqlClient.setSessionToken(token);
-          }
           setUserEmail(storedEmail);
           setUserName(storedUser);
           SqlClient.setActiveUser(storedUser || storedEmail);
@@ -268,13 +263,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       : false;
 
     if (remoteSuccess || isConfiguredKey) {
-      if (!remoteToken) {
-        const existingToken = await SqlClient.getSessionToken();
-        if (!existingToken) {
-          const hwid = await SecurityService.getDeviceHwid();
-          SqlClient.setSessionToken(`LOCAL_DEV_${hwid}_${Date.now()}`);
-        }
-      }
       setIsAuthenticated(true);
       setUserName(resolvedUser);
       setUserEmail(resolvedEmail || resolvedUser);

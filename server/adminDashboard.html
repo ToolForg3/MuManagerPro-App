@@ -2399,8 +2399,28 @@
 
     function logoutAdmin() {
       sessionStorage.removeItem('mumanager_admin_key');
-      document.getElementById('admin-pass-input').value = '';
-      document.getElementById('login-modal').style.display = 'flex';
+      try {
+        localStorage.removeItem('mumanager_devices_cache');
+        localStorage.removeItem('mumanager_users_cache');
+        localStorage.removeItem('mumanager_deleted_hwids');
+        localStorage.removeItem('mumanager_deleted_users');
+      } catch (_) {}
+      if (typeof allDevicesCache !== 'undefined') allDevicesCache = [];
+      if (typeof allUsersCache !== 'undefined') allUsersCache = [];
+      if (typeof locallyDeletedHwids !== 'undefined' && locallyDeletedHwids.clear) locallyDeletedHwids.clear();
+      if (typeof locallyDeletedUserIds !== 'undefined' && locallyDeletedUserIds.clear) locallyDeletedUserIds.clear();
+      const devTbody = document.getElementById('devices-tbody');
+      if (devTbody) devTbody.innerHTML = '';
+      const usrTbody = document.getElementById('users-tbody');
+      if (usrTbody) usrTbody.innerHTML = '';
+      const auditLogs = document.getElementById('audit-logs-container');
+      if (auditLogs) auditLogs.innerHTML = '';
+      const secLogs = document.getElementById('security-logs-container');
+      if (secLogs) secLogs.innerHTML = '';
+      const passInput = document.getElementById('admin-pass-input');
+      if (passInput) passInput.value = '';
+      const loginModal = document.getElementById('login-modal');
+      if (loginModal) loginModal.style.display = 'flex';
     }
 
     function openChangeAdminKeyModal() {
@@ -2551,6 +2571,7 @@
       if (tabId === 'tab-security') loadSecurityLogs();
       if (tabId === 'tab-whatsapp') loadWhatsAppSettings();
       if (tabId === 'tab-email') loadEmailSettings();
+      if (tabId === 'tab-beta') loadBetaRequests();
       if (tabId === 'tab-updates' || tabId === 'tab-beta' || tabId === 'tab-broadcast' || tabId === 'tab-masters') loadGlobalSettings();
       if (tabId === 'tab-logs') { loadAuditLogs(); checkCloudStorageStatus(); }
     }
@@ -2560,14 +2581,16 @@
     }
 
     async function refreshAllData() {
-      await refreshDevices();
-      await refreshUsers();
-      await loadProRequests();
-      await loadAllLicensesModule();
-      await loadGlobalSettings();
-      await loadWhatsAppSettings();
-      await loadEmailSettings();
-      await loadAuditLogs();
+      await Promise.allSettled([
+        refreshDevices(),
+        refreshUsers(),
+        loadProRequests(),
+        loadAllLicensesModule(),
+        loadGlobalSettings(),
+        loadWhatsAppSettings(),
+        loadEmailSettings(),
+        loadAuditLogs()
+      ]);
       checkSecurityAlerts();
       checkCloudStorageStatus();
     }
@@ -4020,13 +4043,24 @@
         const res = await fetch('/api/admin/device/toggle-block', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ hwid })
+          body: JSON.stringify({ hwid, blocked: !isBlocked })
         });
+        if (!res.ok) {
+          let errMsg = `HTTP ${res.status}`;
+          try {
+            const errData = await res.json();
+            if (errData && errData.error) errMsg = errData.error;
+          } catch (_) {}
+          showToast('Error: ' + errMsg, true);
+          return;
+        }
         const data = await res.json();
         if (data.success) {
           showToast(`Celular ${data.blocked ? 'BLOQUEADO' : 'DESBLOQUEADO'} con éxito.`);
           refreshDevices();
           loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo actualizar el dispositivo'), true);
         }
       } catch (err) {
         showToast('Error: ' + err.message, true);
@@ -4909,14 +4943,28 @@
       if (!confirm('¿Deseas limpiar todos los reportes de bugs y eventos de seguridad?')) return;
       const key = getAdminKey();
       try {
-        await fetch('/api/admin/security-logs/clear', {
+        const res = await fetch('/api/admin/security-logs/clear', {
           method: 'POST',
           headers: { 'X-Admin-Key': key }
         });
-        showToast('Historial de seguridad limpiado.');
-        loadSecurityLogs();
+        if (!res.ok) {
+          let errMsg = `Error HTTP ${res.status}`;
+          try {
+            const errData = await res.json();
+            if (errData && errData.error) errMsg = errData.error;
+          } catch (_) {}
+          showToast('Error: ' + errMsg, true);
+          return;
+        }
+        const data = await res.json().catch(() => ({ success: true }));
+        if (data && data.success !== false) {
+          showToast('Historial de seguridad limpiado.');
+          loadSecurityLogs();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo limpiar el historial'), true);
+        }
       } catch (e) {
-        showToast('Error: ' + e.message, true);
+        showToast('Error de red: ' + e.message, true);
       }
     }
 
@@ -6072,6 +6120,12 @@
         const data = await res.json();
         if (data.success) {
           showToast(`♻️ Dispositivo ${hwid} restaurado exitosamente.`);
+          if (typeof locallyDeletedHwids !== 'undefined' && locallyDeletedHwids.delete) {
+            locallyDeletedHwids.delete(String(hwid).toUpperCase());
+            try {
+              localStorage.setItem('mumanager_deleted_hwids', JSON.stringify([...locallyDeletedHwids]));
+            } catch (_) {}
+          }
           loadAllLicensesModule();
           refreshDevices();
           loadAuditLogs();
@@ -6580,7 +6634,7 @@
         if (document.getElementById('tab-logs') && document.getElementById('tab-logs').classList.contains('active')) {
           await loadAuditLogs();
         }
-        if (document.getElementById('tab-updates') && document.getElementById('tab-updates').classList.contains('active')) {
+        if (document.getElementById('tab-beta') && document.getElementById('tab-beta').classList.contains('active')) {
           await loadBetaRequests();
         }
       } finally {

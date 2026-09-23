@@ -1,10 +1,10 @@
 {
-  "version": "2.0.8",
+  "version": "2.0.9",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-17T21:30:00.000Z",
+  "publishedAt": "2026-09-23T21:50:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 110,
-  "forceUpdate": true,
-  "changelog": "MuManager PRO v2.0.8 (Build 110) - Actualización Obligatoria:\n• BLINDAJE RUUD Y NIVEL EN DEMO: Se bloquea estrictamente la edición y guardado de Ruud, Nivel (cLevel), Master Level y Puntos de Fruta en versión DEMO, reservándolos exclusivamente para la versión PRO.\n• LÍMITES DEMO EXACTOS: En versión DEMO solo se permite asignar atributos básicos (STR, AGI, VIT, ENE, CMD, Points) hasta 1,000 pts y Zen hasta 10,000,000.\n• CORRECCIÓN VISUAL EN DETALLE DE CUENTA: Reestructuración de los botones rápidos (Ver Personajes, Baúl, Bóveda Expandida, Banco Joyas) a una cuadrícula simétrica 2x2, eliminando solapamientos y cortes de texto en dispositivos móviles.\n• SINCRONIZACIÓN TOTAL: Blindaje activo y defensivo en APK, bridgeServer y conectores locales."
+  "build": 111,
+  "forceUpdate": false,
+  "changelog": "MuManager PRO v2.0.9 (Build 111) - Actualización Oficial de Seguridad y Rendimiento:\n• REMEDIACIÓN Y BLINDAJE V5: Refuerzo integral de seguridad, integridad y rendimiento.\n• BLINDAJE DE IDENTIDAD & TOKENS: Revocación inmediata y autoritativa de tokens JWT mediante sessionVersion sincronizado.\n• RESILIENCIA TRANSACCIONAL: Retención estricta de idempotencia TTL para operaciones completadas bajo alta concurrencia.\n• SNAPSHOT DE REVERSIÓN ATÓMICA: Validación de esquema y respaldo atómico previo en restauración de copias de seguridad.\n• SEGURIDAD EN PANEL Y CIERRE DE SESIÓN: Purga instantánea en memoria, DOM y almacenamiento local al cerrar sesión de administración.\n• RENDIMIENTO OPTIMIZADO: Carga paralela no bloqueante en el panel de control y conciliación inteligente de dispositivos."
 }

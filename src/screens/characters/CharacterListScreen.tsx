@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -87,7 +87,11 @@ export const CharacterListScreen = () => {
     setFilteredChars(result);
   };
 
+  const isFetchingRef = useRef(false);
+
   const fetchCharacters = async (accOverride?: string | null, silent: boolean = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     if (!silent) {
       setLoading(true);
     }
@@ -102,6 +106,7 @@ export const CharacterListScreen = () => {
       setCharacters([]);
       setFilteredChars([]);
     } finally {
+      isFetchingRef.current = false;
       if (!silent) {
         setLoading(false);
       }

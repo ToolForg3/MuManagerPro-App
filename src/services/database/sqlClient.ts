@@ -320,7 +320,25 @@ export class SqlClient {
       endpoint.includes('/update') ||
       endpoint.includes('/toggle') ||
       endpoint.includes('/reset') ||
-      endpoint.includes('/clear');
+      endpoint.includes('/clear') ||
+      endpoint.includes('/add-') ||
+      endpoint.includes('/deliver') ||
+      endpoint.includes('/set-') ||
+      endpoint.includes('/ban') ||
+      endpoint.includes('/unban') ||
+      endpoint.includes('/mute') ||
+      endpoint.includes('/unlock') ||
+      endpoint.includes('/expand') ||
+      endpoint.includes('/teleport') ||
+      endpoint.includes('/kick') ||
+      endpoint.includes('/disconnect') ||
+      endpoint.includes('/jewel-bank') ||
+      endpoint.includes('/cash-shop') ||
+      endpoint.includes('/rescue-') ||
+      endpoint.includes('/clean-') ||
+      endpoint.includes('/fix-') ||
+      endpoint.includes('/install-') ||
+      endpoint.includes('/enforce-');
     const effectiveMaxRetries = isMutation ? 0 : maxRetries;
     let attempt = 0;
     while (true) {
@@ -349,6 +367,7 @@ export class SqlClient {
             'Authorization': `Bearer ${sessionToken}`,
             'X-Session-Token': sessionToken,
           } : {}),
+          ...(isMutation ? { 'X-Idempotency-Key': `${hwid}_${endpoint.replace(/[^a-zA-Z0-9_-]/g, '_')}_${secHeaders['X-Req-Nonce'] || Date.now()}` } : {}),
         };
 
         const response = await fetch(`${bridgeUrl}${endpoint}`, {

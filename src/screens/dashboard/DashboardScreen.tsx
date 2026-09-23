@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -62,23 +62,31 @@ export const DashboardScreen = () => {
     );
   };
 
+  const isFetchingRef = useRef(false);
+
   const loadData = async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
-      await refreshMetrics().catch((err) => console.warn('Dashboard metrics refresh notice:', err));
-    } catch (_) {}
+      try {
+        await refreshMetrics().catch((err) => console.warn('Dashboard metrics refresh notice:', err));
+      } catch (_) {}
 
-    try {
-      const accounts = await SqlClient.getRecentAccounts();
-      setRecentAccounts(accounts || []);
-    } catch (e) {
-      console.warn('Dashboard accounts fetch notice:', e);
-      setRecentAccounts([]);
+      try {
+        const accounts = await SqlClient.getRecentAccounts();
+        setRecentAccounts(accounts || []);
+      } catch (e) {
+        console.warn('Dashboard accounts fetch notice:', e);
+        setRecentAccounts([]);
+      }
+
+      try {
+        const logs = await getAdminLog();
+        setAdminLogs((logs || []).slice(0, 5));
+      } catch (_) {}
+    } finally {
+      isFetchingRef.current = false;
     }
-
-    try {
-      const logs = await getAdminLog();
-      setAdminLogs((logs || []).slice(0, 5));
-    } catch (_) {}
   };
 
   useFocusEffect(

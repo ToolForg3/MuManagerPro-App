@@ -9,6 +9,8 @@
  */
 
 const crypto = require('crypto');
+const util = require('util');
+const pbkdf2Async = util.promisify(crypto.pbkdf2);
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -34,11 +36,11 @@ const app = express();
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-HWID', 'X-Req-Timestamp', 'X-Req-Nonce', 'X-Req-Signature', 'X-Admin-Key'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Token', 'X-Device-HWID', 'X-Req-Timestamp', 'X-Req-Nonce', 'X-Req-Signature', 'X-Admin-Key', 'X-License-Key', 'X-Idempotency-Key', 'X-App-Version'],
 }));
 
-app.use(express.json({ limit: '15mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 
 const PORT = process.env.PORT || 3001;
@@ -473,14 +475,21 @@ function addSecurityLog(type, hwid, ip, message, details = null) {
   saveSecurityLogs(logs);
 }
 
-function hashPassword(password, salt = null) {
+function hashPasswordSync(password, salt = null) {
   const actualSalt = salt || crypto.randomBytes(16).toString('hex');
   const iterations = 100000;
   const derived = crypto.pbkdf2Sync(password, actualSalt, iterations, 32, 'sha256').toString('hex');
   return `$pbkdf2$${iterations}$${actualSalt}$${derived}`;
 }
 
-function verifyPassword(password, storedHash) {
+async function hashPassword(password, salt = null) {
+  const actualSalt = salt || crypto.randomBytes(16).toString('hex');
+  const iterations = 100000;
+  const derived = await pbkdf2Async(password, actualSalt, iterations, 32, 'sha256');
+  return `$pbkdf2$${iterations}$${actualSalt}$${derived.toString('hex')}`;
+}
+
+function verifyPasswordSync(password, storedHash) {
   if (!password || !storedHash) return { valid: false, needsUpgrade: false };
   const cleanPass = String(password).trim();
   const cleanHash = String(storedHash).trim();
@@ -509,15 +518,64 @@ function verifyPassword(password, storedHash) {
   return { valid: false, needsUpgrade: false };
 }
 
+async function verifyPassword(password, storedHash) {
+  if (!password || !storedHash) return { valid: false, needsUpgrade: false };
+  const cleanPass = String(password).trim();
+  const cleanHash = String(storedHash).trim();
+
+  if (cleanHash.startsWith('$pbkdf2$')) {
+    const parts = cleanHash.split('$');
+    if (parts.length === 5) {
+      const iterations = parseInt(parts[2], 10);
+      const salt = parts[3];
+      const expectedHash = parts[4];
+      try {
+        const derived = await pbkdf2Async(cleanPass, salt, iterations, 32, 'sha256');
+        const match = crypto.timingSafeEqual(derived, Buffer.from(expectedHash, 'hex'));
+        return { valid: match, needsUpgrade: false };
+      } catch (_) {
+        return { valid: false, needsUpgrade: false };
+      }
+    }
+  }
+
+  const legacyHash = sha256(`${cleanPass}:${MASTER_SECURITY_SALT}`).toLowerCase();
+  if (cleanHash.toLowerCase() === legacyHash) {
+    return { valid: true, needsUpgrade: true };
+  }
+
+  return { valid: false, needsUpgrade: false };
+}
+
 const JWT_SESSION_SECRET = (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 16)
   ? process.env.JWT_SECRET.trim()
   : connectorSecrets.jwtSecret;
 
-function generateSessionToken(email, role = 'USER', hwid = '') {
+function generateSessionToken(email, role = 'USER', hwid = '', sessionVersion) {
+  let sv = sessionVersion;
+  if (sv === undefined || sv === null) {
+    try {
+      if (typeof loadUsers === 'function') {
+        const uList = loadUsers();
+        const clean = String(email || '').trim().toLowerCase();
+        const u = Array.isArray(uList) && uList.find(x => 
+          (x.email && String(x.email).toLowerCase().trim() === clean) ||
+          (x.username && String(x.username).toLowerCase().trim() === clean)
+        );
+        if (u && typeof u.sessionVersion === 'number') {
+          sv = u.sessionVersion;
+        }
+      }
+    } catch (_) {}
+  }
+  if (typeof sv !== 'number') {
+    sv = 1;
+  }
   const payload = {
     sub: String(email || '').trim().toLowerCase(),
     role: role || 'USER',
     hwid: String(hwid || '').trim(),
+    sessionVersion: sv,
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (7 * 24 * 3600),
   };
@@ -577,16 +635,6 @@ function addAuditLog(type, hwid, ip, message, status = 'OK') {
     auditLogs.pop();
   }
 }
-
-// BUG-16: CORS configurado con cabeceras permitidas explícitas
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Token', 'X-Device-HWID', 'X-Req-Timestamp', 'X-Req-Nonce', 'X-Req-Signature', 'X-Admin-Key'],
-}));
-
-app.use(express.json({ limit: '15mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
-app.use(express.urlencoded({ extended: true }));
 
 // Cabeceras de seguridad y Content-Security-Policy (H03)
 app.use((req, res, next) => {
@@ -800,10 +848,9 @@ app.use((req, res, next) => {
     req.path.startsWith('/admin/') ||
     req.path.startsWith('/api/admin') ||
     req.path === '/api/ping' ||
-
+    req.path.startsWith('/api/telemetry') ||
     req.path === '/api/auth/login' ||
     req.path === '/api/auth/register' ||
-    req.path === '/api/test-connection' ||
     req.path.startsWith('/public') ||
     req.path.startsWith('/download') ||
     req.path.startsWith('/downloads') ||
@@ -842,12 +889,66 @@ app.use((req, res, next) => {
   if (isValidAdminKey(adminKey)) {
     isAuthorized = true;
     authUser = { role: 'ADMIN', email: 'admin' };
+    req.user = authUser;
   } else {
     const authHeader = req.headers['authorization'] || req.headers['x-session-token'];
     const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
     if (token) {
       const decoded = verifySessionToken(token);
       if (decoded) {
+        // Validación de usuario activo (para CUALQUIER usuario, sea USER o ADMIN):
+        if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
+          const allUsers = loadUsers();
+          const cleanEmail = String(decoded.sub).toLowerCase().trim();
+          const userRecord = allUsers.find(u => 
+            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+          );
+          if (!userRecord) {
+            return res.status(401).json({
+              success: false,
+              sessionInvalidated: true,
+              error: 'USUARIO_NO_EXISTE',
+              message: 'Tu cuenta ya no existe en el servidor o ha sido reiniciada. Por favor, regístrate nuevamente.'
+            });
+          }
+          if (userRecord.status === 'BLOCKED' || userRecord.blocked) {
+            return res.status(401).json({
+              success: false,
+              sessionInvalidated: true,
+              error: 'USUARIO_BLOQUEADO',
+              message: 'Tu cuenta ha sido bloqueada por el administrador.'
+            });
+          }
+          // REVOCACIÓN AUTORITATIVA DE SESIÓN (F2):
+          const userSv = typeof userRecord.sessionVersion === 'number' ? userRecord.sessionVersion : 1;
+          const tokenSv = typeof decoded.sessionVersion === 'number' ? decoded.sessionVersion : 1;
+          if (tokenSv < userSv) {
+            return res.status(401).json({
+              success: false,
+              sessionInvalidated: true,
+              error: 'SESION_EXPIRADA_O_REVOCADA',
+              message: 'La sesión ha sido revocada o cerrada desde otro dispositivo. Por favor, inicia sesión de nuevo.'
+            });
+          }
+          decoded.role = userRecord.role || 'USER';
+        }
+
+        // [SEC-HWID] Vinculación estricta Token ↔ Dispositivo (Prevención de elusión y suplantación)
+        const incomingHwid = req.headers['x-device-hwid'] || (req.body && req.body.hwid);
+        const tokenHwid = decoded.hwid ? String(decoded.hwid).trim().toUpperCase() : '';
+        const clientHwid = incomingHwid ? String(incomingHwid).trim().toUpperCase() : '';
+
+        // Si el token no tiene HWID vinculado o no coincide con el dispositivo emisor, rechazar
+        if (!tokenHwid || !clientHwid || tokenHwid !== clientHwid) {
+          addAuditLog('HWID_MISMATCH', clientHwid || 'DESCONOCIDO', getClientIp(req), `Intento de uso de token con HWID [${tokenHwid || 'VACÍO'}] desde dispositivo [${clientHwid || 'VACÍO'}]`, 'BLOCKED');
+          return res.status(403).json({
+            success: false,
+            error: 'HWID_MISMATCH',
+            message: 'El token de sesión no corresponde al dispositivo emisor o carece de vinculación de hardware obligatoria.'
+          });
+        }
+
         isAuthorized = true;
         authUser = decoded;
         req.user = decoded;
@@ -957,7 +1058,7 @@ app.use((req, res, next) => {
   // [SEC-AUTH] Verificación Autoritativa de Licencia PRO para Rutas SQL Críticas (Default-Deny)
   const _isAdminRole = authUser && authUser.role === 'ADMIN';
   const _sqlPaths = [
-    '/api/character/', '/api/character',
+    '/api/character/', '/api/character', '/api/characters',
     '/api/account/', '/api/account',
     '/api/accounts/', '/api/accounts',
     '/api/warehouse/', '/api/warehouse',
@@ -969,9 +1070,14 @@ app.use((req, res, next) => {
     '/api/pk/', '/api/pk',
     '/api/gm/', '/api/gm',
     '/api/ip/', '/api/ip',
+    '/api/kit/', '/api/kit',
+    '/api/prizes/', '/api/prizes',
+    '/api/players/', '/api/players',
     '/api/dashboard'
   ];
-  const _isSqlRoute = _sqlPaths.some(p => req.path.startsWith(p));
+  // Normalización semántica de ruta en minúsculas para autorización unificada (anti-bypasses por casing)
+  const normalizedPath = (req.path || '').toLowerCase();
+  const _isSqlRoute = _sqlPaths.some(p => normalizedPath.startsWith(p));
 
   if (_isSqlRoute && !_isAdminRole) {
     if (!hwid || typeof hwid !== 'string' || hwid.trim().length < 6) {
@@ -1008,50 +1114,62 @@ app.use((req, res, next) => {
       (!_dev.expiresAt || new Date(_dev.expiresAt).getTime() > Date.now());
 
     const isProExclusiveRoute =
-      req.path.startsWith('/api/tools') ||
-      req.path.startsWith('/api/gm') ||
-      req.path.startsWith('/api/ip') ||
-      req.path.startsWith('/api/prizes');
+      normalizedPath.startsWith('/api/tools') ||
+      normalizedPath.startsWith('/api/gm') ||
+      normalizedPath.startsWith('/api/ip') ||
+      normalizedPath.startsWith('/api/kit') ||
+      normalizedPath.startsWith('/api/prizes');
 
     const isSqlMutationRoute =
-      req.path.startsWith('/api/account/create') ||
-      req.path.startsWith('/api/accounts/update') ||
-      req.path.startsWith('/api/accounts/delete') ||
-      req.path.startsWith('/api/accounts/ban') ||
-      req.path.startsWith('/api/accounts/unban') ||
-      req.path.startsWith('/api/accounts/add-gcoins') ||
-      req.path.startsWith('/api/accounts/mute') ||
-      req.path.startsWith('/api/character/create') ||
-      req.path.startsWith('/api/character/delete') ||
-      req.path.startsWith('/api/character/update-inventory') ||
-      req.path.startsWith('/api/character/update-stats') ||
-      req.path.startsWith('/api/character/update-skills') ||
-      req.path.startsWith('/api/character/update-location') ||
-      req.path.startsWith('/api/character/update-progress') ||
-      req.path.startsWith('/api/character/unlock-extensions') ||
-      req.path.startsWith('/api/character/reset') ||
-      req.path.startsWith('/api/character/add-zen') ||
-      req.path.startsWith('/api/character/set-pk') ||
-      req.path.startsWith('/api/character/clear-inventory') ||
-      req.path.startsWith('/api/character/ban') ||
-      req.path.startsWith('/api/character/unban') ||
-      req.path.startsWith('/api/warehouse/save') ||
-      req.path.startsWith('/api/warehouse/update') ||
-      req.path.startsWith('/api/warehouse/inject-items') ||
-      req.path.startsWith('/api/warehouse/inject-zen') ||
-      req.path.startsWith('/api/warehouse/clear') ||
-      req.path.startsWith('/api/warehouse/expand') ||
-      req.path.startsWith('/api/warehouse/unlock') ||
-      req.path.startsWith('/api/warehouse/jewels') ||
-      req.path.startsWith('/api/warehouse/set-exp') ||
-      req.path.startsWith('/api/guilds/delete') ||
-      req.path.startsWith('/api/guilds/create') ||
-      req.path.startsWith('/api/pk/clear');
+      normalizedPath.startsWith('/api/account/create') ||
+      normalizedPath.startsWith('/api/account/update') ||
+      normalizedPath.startsWith('/api/accounts/update') ||
+      normalizedPath.startsWith('/api/account/delete') ||
+      normalizedPath.startsWith('/api/accounts/delete') ||
+      normalizedPath.startsWith('/api/account/toggle-block') ||
+      normalizedPath.startsWith('/api/account/disconnect') ||
+      normalizedPath.startsWith('/api/accounts/ban') ||
+      normalizedPath.startsWith('/api/accounts/unban') ||
+      normalizedPath.startsWith('/api/accounts/add-gcoins') ||
+      normalizedPath.startsWith('/api/accounts/mute') ||
+      normalizedPath.startsWith('/api/character/create') ||
+      normalizedPath.startsWith('/api/character/delete') ||
+      normalizedPath.startsWith('/api/character/update-inventory') ||
+      normalizedPath.startsWith('/api/character/update-stats') ||
+      normalizedPath.startsWith('/api/character/update-skills') ||
+      normalizedPath.startsWith('/api/character/update-location') ||
+      normalizedPath.startsWith('/api/character/update-progress') ||
+      normalizedPath.startsWith('/api/character/update-quest') ||
+      normalizedPath.startsWith('/api/character/unlock-extensions') ||
+      normalizedPath.startsWith('/api/character/teleport') ||
+      normalizedPath.startsWith('/api/character/reset') ||
+      normalizedPath.startsWith('/api/character/add-zen') ||
+      normalizedPath.startsWith('/api/character/set-pk') ||
+      normalizedPath.startsWith('/api/character/clear-inventory') ||
+      normalizedPath.startsWith('/api/character/ban') ||
+      normalizedPath.startsWith('/api/character/unban') ||
+      normalizedPath.startsWith('/api/character/jewel-bank') ||
+      normalizedPath.startsWith('/api/character/cash-shop') ||
+      normalizedPath.startsWith('/api/players/kick') ||
+      normalizedPath.startsWith('/api/warehouse/save') ||
+      normalizedPath.startsWith('/api/warehouse/update') ||
+      normalizedPath.startsWith('/api/warehouse/inject-items') ||
+      normalizedPath.startsWith('/api/warehouse/inject-zen') ||
+      normalizedPath.startsWith('/api/warehouse/clear') ||
+      normalizedPath.startsWith('/api/warehouse/expand') ||
+      normalizedPath.startsWith('/api/warehouse/unlock') ||
+      normalizedPath.startsWith('/api/warehouse/jewels') ||
+      normalizedPath.startsWith('/api/warehouse/set-exp') ||
+      normalizedPath.startsWith('/api/guilds/delete') ||
+      normalizedPath.startsWith('/api/guilds/create') ||
+      normalizedPath.startsWith('/api/pk/clear') ||
+      normalizedPath.startsWith('/api/kit/deliver') ||
+      normalizedPath.startsWith('/api/prizes/deliver');
 
     let isDemoStatsAllowed = false;
     let isDemoLimitExceeded = false;
     let isDemoProFieldBlocked = false;
-    if (req.path.startsWith('/api/character/update-stats') && isDemoActive) {
+    if (normalizedPath.startsWith('/api/character/update-stats') && isDemoActive) {
       const p = req.body && req.body.params ? req.body.params : {};
       const str = parseInt(p.STR, 10) || 0;
       const agi = parseInt(p.AGI, 10) || 0;
@@ -1078,16 +1196,58 @@ app.use((req, res, next) => {
     }
 
     let isMultiVaultBlocked = false;
-    if (req.path.startsWith('/api/warehouse') && isDemoActive) {
+    if (normalizedPath.startsWith('/api/warehouse') && isDemoActive) {
       const wareIdx = parseInt(req.body && req.body.warehouseIndex, 10) || 0;
       if (wareIdx > 0) {
         isMultiVaultBlocked = true;
       }
     }
 
+    // Acciones de modificación en /api/character/* que NUNCA son lecturas
+    const characterMutationSubroutes = new Set([
+      'create', 'delete', 'update-stats', 'update-inventory', 'update-skills',
+      'update-location', 'update-progress', 'update-quest', 'unlock-extensions',
+      'teleport', 'reset', 'add-zen', 'set-pk', 'clear-inventory', 'ban',
+      'unban', 'jewel-bank', 'cash-shop'
+    ]);
+    const charDetailMatch = normalizedPath.match(/^\/api\/character\/([^/]+)$/);
+    const charSubroute = charDetailMatch ? charDetailMatch[1] : '';
+    const isCharacterDetailRead = !!(
+      charDetailMatch &&
+      !isSqlMutationRoute &&
+      !characterMutationSubroutes.has(charSubroute)
+    );
+
+    // Catálogo explícito de operaciones permitidas en modo DEMO (Default-Deny)
+    const isDemoAllowedReadRoute =
+      normalizedPath === '/api/test-connection' ||
+      normalizedPath === '/api/mu/status' ||
+      normalizedPath === '/api/mu/metrics' ||
+      normalizedPath === '/api/dashboard' ||
+      normalizedPath === '/api/accounts' ||
+      normalizedPath === '/api/accounts/summary' ||
+      normalizedPath === '/api/characters' ||
+      normalizedPath === '/api/character/list' ||
+      normalizedPath === '/api/character/detail' ||
+      isCharacterDetailRead ||
+      normalizedPath === '/api/character/inventory' ||
+      normalizedPath === '/api/warehouse/item-catalog' ||
+      normalizedPath === '/api/guilds' ||
+      normalizedPath === '/api/guilds/members' ||
+      normalizedPath === '/api/guilds/detail' ||
+      normalizedPath === '/api/pk/list' ||
+      normalizedPath === '/api/players/online' ||
+      normalizedPath === '/api/players/list' ||
+      (normalizedPath === '/api/warehouse' && (!req.body || !req.body.warehouseIndex || Number(req.body.warehouseIndex) === 0) && !req.body.items && !req.body.save && !req.body.update);
+
+    const isDemoPermitted = isDemoActive && !isMultiVaultBlocked && !isProExclusiveRoute && (
+      (isDemoAllowedReadRoute && !isSqlMutationRoute) ||
+      (normalizedPath === '/api/character/update-stats' && isDemoStatsAllowed)
+    );
+
     if (!isPro) {
-      // En modo DEMO: permitir visualización / lectura (Baúl 0) y edición básica de stats (hasta 1,000 pts y 10M zen)
-      if (isDemoActive && !isProExclusiveRoute && !isMultiVaultBlocked && (!isSqlMutationRoute || isDemoStatsAllowed)) {
+      // En modo DEMO: permitir exclusivamente visualización / lectura (Baúl 0) y edición básica de stats
+      if (isDemoPermitted) {
         // Permitir operación de prueba autorizada
       } else {
         const isExpiredDemo = _dev && _dev.mode === 'DEMO' && _dev.expiresAt && new Date(_dev.expiresAt).getTime() <= Date.now();
@@ -1116,7 +1276,143 @@ app.use((req, res, next) => {
     }
   }
 
+  // Rutas estrictamente administrativas que requieren rol ADMIN explícito
+  const isStrictAdminRoute =
+    normalizedPath.startsWith('/api/tools/db-backup') ||
+    normalizedPath.startsWith('/api/tools/install-procedures') ||
+    normalizedPath.startsWith('/api/admin/migrate-schema') ||
+    normalizedPath.startsWith('/api/gm/set-level') ||
+    normalizedPath.startsWith('/api/ip/ban-by-ip') ||
+    normalizedPath.startsWith('/api/ip/disconnect-by-ip') ||
+    normalizedPath.startsWith('/api/ip/enforce-limit') ||
+    normalizedPath.startsWith('/api/guilds/delete');
+
+  if (isStrictAdminRoute && !_isAdminRole) {
+    addAuditLog('AUTH_DENIED', hwid || 'ANONYMOUS', clientIp, `Acceso denegado a función administrativa crítica: ${req.path}`, 'DENIED');
+    return res.status(403).json({
+      success: false,
+      error: 'ACCESO_DENEGADO',
+      message: 'Esta operación requiere privilegios de Administrador (ADMIN).'
+    });
+  }
+
   addAuditLog('SQL_REQUEST', hwid || (authUser ? authUser.email : 'ADMIN'), clientIp, `Consulta autorizada: ${req.path}`);
+  req.isAdmin = !!_isAdminRole;
+  req.authUser = authUser;
+  next();
+});
+
+// Almacén de Idempotencia en Memoria (Prevención de duplicación en reintentos de red - OWASP API4)
+const idempotencyStore = new Map();
+
+app.use((req, res, next) => {
+  const idempotencyKey = req.headers['x-idempotency-key'] || req.headers['x-req-nonce'];
+  if (!idempotencyKey || req.method !== 'POST') return next();
+
+  const now = Date.now();
+
+  // Identidad compuesta de la operación: ligada a usuario, método, ruta normalizada y clave de idempotencia
+  const owner = (req.user && (req.user.sub || req.user.email)) ||
+                (req.authUser && (req.authUser.email || req.authUser.sub)) ||
+                req.headers['x-device-hwid'] || req.headers['x-hwid'] || 'anonymous';
+  const operationScope = `${owner}:${req.method}:${(req.path || '').toLowerCase()}:${idempotencyKey}`;
+
+  // Determinación de hash del payload para verificar consistencia
+  let bodyHash = '';
+  try {
+    const bodyStr = JSON.stringify(req.body || {});
+    if (typeof crypto !== 'undefined' && crypto.createHash) {
+      bodyHash = crypto.createHash('sha256').update(bodyStr).digest('hex');
+    } else {
+      let h = 0;
+      for (let i = 0; i < bodyStr.length; i++) {
+        h = ((h << 5) - h) + bodyStr.charCodeAt(i);
+        h |= 0;
+      }
+      bodyHash = 'h_' + h + '_' + bodyStr.length;
+    }
+  } catch (e) {
+    bodyHash = 'err';
+  }
+
+  // 1. RESOLVER PRIMERO SI LA CLAVE YA EXISTE (Garantía F3 de retención TTL y no-duplicación)
+  const cached = idempotencyStore.get(operationScope);
+  if (cached) {
+    // Si la operación está actualmente en curso o expiró en estado pendiente sin confirmación:
+    // NUNCA permitir una segunda ejecución ciega contra la base de datos
+    if (cached.status === 'PENDING' || cached.status === 'TIMEOUT') {
+      const isStillPending = (cached.status === 'PENDING' && (now - cached.timestamp < 300000));
+      if (!isStillPending && cached.status === 'PENDING') {
+        // Transicionar a marca persistente TIMEOUT de resultado incierto
+        cached.status = 'TIMEOUT';
+      }
+      return res.status(409).json({
+        success: false,
+        error: isStillPending ? 'IDEMPOTENCY_CONCURRENT' : 'IDEMPOTENCY_PENDING_TIMEOUT',
+        message: isStillPending
+          ? 'Una operación idéntica se encuentra actualmente en proceso de ejecución.'
+          : 'La operación previa permanece en estado pendiente o expiró sin confirmación. Re-ejecución rechazada para evitar duplicación.'
+      });
+    }
+
+    // Si los datos del cuerpo discrepan con la solicitud original para la misma clave
+    if (cached.bodyHash && cached.bodyHash !== bodyHash) {
+      return res.status(422).json({
+        success: false,
+        error: 'IDEMPOTENCY_PAYLOAD_MISMATCH',
+        message: 'La clave de idempotencia no puede ser reutilizada con un cuerpo de solicitud diferente.'
+      });
+    }
+
+    if (cached.status === 'COMPLETED') {
+      if (now - cached.timestamp <= 300000) {
+        return res.status(cached.statusCode || 200).json(cached.responseData);
+      }
+      idempotencyStore.delete(operationScope);
+    }
+  }
+
+  // 2. ADMISIÓN DE NUEVA OPERACIÓN: Limpieza pasiva de COMPLETED expirados (> 5 minutos)
+  // REGLA CRÍTICA (F3): Jamás expulsar operaciones de resultado incierto (PENDING / TIMEOUT) ni COMPLETED dentro de su TTL.
+  if (idempotencyStore.size >= 2000) {
+    for (const [k, v] of idempotencyStore.entries()) {
+      if (v.status === 'COMPLETED' && (now - v.timestamp > 300000)) {
+        idempotencyStore.delete(k);
+      }
+    }
+    // Si aún supera la capacidad máxima tras purgar completados expirados, rechazar la admisión con HTTP 503
+    if (idempotencyStore.size >= 2000) {
+      return res.status(503).json({
+        success: false,
+        error: 'IDEMPOTENCY_CAPACITY_EXCEEDED',
+        message: 'Capacidad de idempotencia temporalmente saturada. Reintente en unos momentos.'
+      });
+    }
+  }
+
+  // Reserva atómica de la operación en estado PENDING antes de ceder el flujo a la base de datos
+  idempotencyStore.set(operationScope, {
+    status: 'PENDING',
+    bodyHash,
+    timestamp: now
+  });
+
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 200 && res.statusCode < 300 && body && body.success !== false) {
+      idempotencyStore.set(operationScope, {
+        status: 'COMPLETED',
+        bodyHash,
+        timestamp: Date.now(),
+        responseData: body,
+        statusCode: res.statusCode
+      });
+    } else {
+      idempotencyStore.delete(operationScope);
+    }
+    return originalJson(body);
+  };
+
   next();
 });
 // =========================================================================
@@ -1393,7 +1689,7 @@ async function getOrCreatePool(config) {
 
   let pool = sqlPoolsCache.get(poolKey);
   const maxIdleMs = 25000;
-  if (pool && pool.connected && !pool.closed && (Date.now() - (pool._lastActiveTime || 0) < maxIdleMs)) {
+  if (pool && pool.connected && !pool.closed && (Date.now() - (pool._lastActiveTime || 0) < maxIdleMs || (pool._activeQueries || 0) > 0)) {
     pool._lastActiveTime = Date.now();
     return pool;
   }
@@ -1404,6 +1700,9 @@ async function getOrCreatePool(config) {
   }
 
   if (pool) {
+    if ((pool._activeQueries || 0) > 0) {
+      return pool;
+    }
     try { if (typeof pool.close === 'function') await pool.close(); } catch (_) {}
     sqlPoolsCache.delete(poolKey);
   }
@@ -1430,11 +1729,14 @@ async function getOrCreatePool(config) {
 
       if (p) {
         p._lastActiveTime = Date.now();
+        p._activeQueries = 0;
         if (typeof p.on === 'function') {
           p.on('error', (err) => {
             console.warn('[SQL Pool Warning]', err.message);
-            try { if (typeof p.close === 'function') p.close(); } catch (_) {}
-            sqlPoolsCache.delete(poolKey);
+            if ((p._activeQueries || 0) <= 0) {
+              try { if (typeof p.close === 'function') p.close(); } catch (_) {}
+              sqlPoolsCache.delete(poolKey);
+            }
           });
         }
       }
@@ -1464,14 +1766,32 @@ async function executeSql(configInput, callback) {
   let pool;
   try {
     pool = await getOrCreatePool(config);
-    const res = await callback(pool, config);
-    if (pool) pool._lastActiveTime = Date.now();
+    if (pool) pool._activeQueries = (pool._activeQueries || 0) + 1;
+    let res;
+    try {
+      res = await callback(pool, config);
+    } finally {
+      if (pool) {
+        pool._activeQueries = Math.max(0, (pool._activeQueries || 1) - 1);
+        pool._lastActiveTime = Date.now();
+      }
+    }
     return res;
   } catch (err) {
-    if (sqlPoolsCache.has(poolKey)) {
+    const isNetworkOrConnectionError = err && (
+      err.code === 'ETIMEDOUT' ||
+      err.code === 'ECONNRESET' ||
+      err.code === 'ESOCKET' ||
+      err.code === 'ECONNREFUSED' ||
+      err.name === 'ConnectionError' ||
+      (err.message && /failed to connect|socket closed|connection lost|ETIMEDOUT|ECONNRESET|ECONNREFUSED/i.test(err.message))
+    );
+    if (isNetworkOrConnectionError && sqlPoolsCache.has(poolKey)) {
       try {
         const p = sqlPoolsCache.get(poolKey);
-        if (p && typeof p.close === 'function') await p.close();
+        if (p && (!p._activeQueries || p._activeQueries <= 0) && typeof p.close === 'function') {
+          await p.close();
+        }
       } catch (_) {}
       sqlPoolsCache.delete(poolKey);
     }
@@ -3633,9 +3953,25 @@ app.post('/api/accounts', async (req, res) => {
         ORDER BY m.memb___id ASC;
       `;
       const result = await pool.request().query(query);
+      const isReqAdmin = (req.user && req.user.role === 'ADMIN') || isValidAdminKey(req.headers['x-admin-key']) || !!req.isAdmin;
       return (result.recordset || []).map(acc => ({
-        ...acc,
+        memb___id: acc.memb___id,
+        memb_name: acc.memb_name,
+        bloc_code: acc.bloc_code,
+        AccountLevel: acc.AccountLevel,
+        AccountExpireDate: acc.AccountExpireDate,
+        WarehouseCount: acc.WarehouseCount,
+        WCoinC: acc.WCoinC,
+        WCoinP: acc.WCoinP,
+        GoblinPoint: acc.GoblinPoint,
+        Ruud: acc.Ruud,
+        ConnectStat: acc.ConnectStat,
+        CharCount: acc.CharCount,
         online: !!(Number(acc.ConnectStat) === 1),
+        mail_addr: acc.mail_addr,
+        memb__pwd: isReqAdmin ? acc.memb__pwd : '********',
+        sno__numb: isReqAdmin ? acc.sno__numb : '******',
+        IP: isReqAdmin ? acc.IP : (acc.IP ? '***.***.***.***' : ''),
       }));
     });
     res.json(data);
@@ -5061,49 +5397,62 @@ app.post('/api/tools/search-items', async (req, res) => {
   }
 });
 
-// 3. Escáner de Dupeos (Anti-Dupe Tracker Optimizado con NOLOCK, Mutex y Caché)
-let isDupeScanning = false;
-let dupeScanCache = null;
-let dupeScanCacheTime = 0;
+// 3. Escáner de Dupeos (Anti-Dupe Tracker Optimizado con NOLOCK, Mutex por Base de Datos y Caché Aislada)
+const dupeScanCaches = new Map(); // dbKey -> { count, dupes, cacheTime }
+const activeDupeScans = new Map(); // dbKey -> boolean
+
+function getDupeDbKey(configInput) {
+  const c = getDbConfig(configInput || {});
+  const host = c.server || c.host || 'localhost';
+  const port = c.port || 1433;
+  const db = c.database || 'MuOnline';
+  return crypto.createHash('sha256').update(`${host}:${port}/${db}`).digest('hex');
+}
 
 app.post('/api/tools/scan-dupes', async (req, res) => {
-  try {
-    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+  if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
 
-    const forceFresh = req.body?.forceFresh === true;
-    const now = Date.now();
+  const dbKey = getDupeDbKey(req.body?.config);
+  const forceFresh = req.body?.forceFresh === true;
+  const now = Date.now();
+  const cached = dupeScanCaches.get(dbKey);
+  const isDupeScanning = !!activeDupeScans.get(dbKey);
 
-    if (!forceFresh && dupeScanCache && (now - dupeScanCacheTime < 60000)) {
+  // Caché de 60 segundos si no se solicita refresco forzado
+  if (!forceFresh && cached && (now - cached.cacheTime < 60000)) {
+    return res.json({
+      success: true,
+      fromCache: true,
+      cachedSecondsAgo: Math.round((now - cached.cacheTime) / 1000),
+      count: cached.count,
+      dupes: cached.dupes,
+    });
+  }
+
+  // Semáforo (Mutex por base de datos): evitar escaneos pesados concurrentes en SQL Server
+  if (isDupeScanning) {
+    if (cached) {
       return res.json({
         success: true,
         fromCache: true,
-        cachedSecondsAgo: Math.round((now - dupeScanCacheTime) / 1000),
-        count: dupeScanCache.count,
-        dupes: dupeScanCache.dupes,
+        isBusyRefresing: true,
+        count: cached.count,
+        dupes: cached.dupes,
+        message: 'Hay un escaneo en curso por otro administrador. Se muestran los últimos datos registrados.',
       });
     }
+    return res.status(429).json({
+      success: false,
+      busy: true,
+      message: 'Ya hay un escaneo de dupeos en curso ejecutado por otro administrador. Por favor aguarda unos momentos.',
+    });
+  }
 
-    if (isDupeScanning) {
-      if (dupeScanCache) {
-        return res.json({
-          success: true,
-          fromCache: true,
-          isBusyRefresing: true,
-          count: dupeScanCache.count,
-          dupes: dupeScanCache.dupes,
-          message: 'Hay un escaneo en curso por otro administrador. Se muestran los últimos datos registrados.',
-        });
-      }
-      return res.status(429).json({
-        success: false,
-        busy: true,
-        message: 'Ya hay un escaneo de dupeos en curso ejecutado por otro administrador. Por favor aguarda unos momentos.',
-      });
-    }
+  const scanLockId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '_' + Math.random());
+  activeDupeScans.set(dbKey, scanLockId);
 
-    isDupeScanning = true;
-
-    const dupes = await executeSql(req.body.config, async (pool) => {
+  try {
+    const dupes = await executeSql(req.body?.config, async (pool) => {
       const serialMap = new Map();
 
       const indexItem = (chunk, locInfo) => {
@@ -5138,13 +5487,15 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
         });
       };
 
-      // 1. Warehouse (Baúl 0) con WITH (NOLOCK) para no bloquear ni generar lag al juego
+      // 1. Warehouse (Baúl 0) con WITH (NOLOCK) - hasta 240 slots en Louis S6 Update 40
       const whQuery = await pool.request().query('SELECT AccountID, Items FROM warehouse WITH (NOLOCK) WHERE Items IS NOT NULL;');
+      let whCounter = 0;
       for (const row of whQuery.recordset) {
+        if (++whCounter % 100 === 0) await new Promise(r => setImmediate(r));
         const buf = row.Items;
         if (!buf || !Buffer.isBuffer(buf)) continue;
         const hex = buf.toString('hex').toUpperCase();
-        const totalSlots = Math.min(Math.floor(hex.length / 32), 120);
+        const totalSlots = Math.min(Math.floor(hex.length / 32), 240);
         for (let s = 0; s < totalSlots; s++) {
           indexItem(hex.substring(s * 32, (s + 1) * 32), {
             location: 'Baúl #0',
@@ -5154,16 +5505,18 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
         }
       }
 
-      // 2. ExtWarehouse (Baúles 1, 2, 3... con WITH (NOLOCK))
+      // 2. ExtWarehouse (Baúles 1, 2, 3... con WITH (NOLOCK)) - hasta 240 slots
       try {
         const extCheck = await pool.request().query("SELECT 1 FROM sys.tables WITH (NOLOCK) WHERE name = 'ExtWarehouse';");
         if (extCheck.recordset && extCheck.recordset.length > 0) {
           const extWhQuery = await pool.request().query('SELECT AccountID, Number, Items FROM ExtWarehouse WITH (NOLOCK) WHERE Items IS NOT NULL AND Number > 0;');
+          let extCounter = 0;
           for (const row of extWhQuery.recordset) {
+            if (++extCounter % 100 === 0) await new Promise(r => setImmediate(r));
             const buf = row.Items;
             if (!buf || !Buffer.isBuffer(buf)) continue;
             const hex = buf.toString('hex').toUpperCase();
-            const totalSlots = Math.min(Math.floor(hex.length / 32), 120);
+            const totalSlots = Math.min(Math.floor(hex.length / 32), 240);
             for (let s = 0; s < totalSlots; s++) {
               indexItem(hex.substring(s * 32, (s + 1) * 32), {
                 location: `Baúl #${row.Number || 1}`,
@@ -5179,7 +5532,9 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
 
       // 3. Character.Inventory (con WITH (NOLOCK) y clampeado a 172 slots Season 6)
       const charQuery = await pool.request().query('SELECT AccountID, Name, Inventory FROM Character WITH (NOLOCK) WHERE Inventory IS NOT NULL;');
+      let charCounter = 0;
       for (const row of charQuery.recordset) {
+        if (++charCounter % 100 === 0) await new Promise(r => setImmediate(r));
         const buf = row.Inventory;
         if (!buf || !Buffer.isBuffer(buf)) continue;
         const hex = buf.toString('hex').toUpperCase();
@@ -5222,13 +5577,14 @@ app.post('/api/tools/scan-dupes', async (req, res) => {
       return duplicateGroups;
     });
 
-    dupeScanCache = { count: dupes.length, dupes };
-    dupeScanCacheTime = Date.now();
+    dupeScanCaches.set(dbKey, { count: dupes.length, dupes, cacheTime: Date.now() });
     res.json({ success: true, count: dupes.length, dupes });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally {
-    isDupeScanning = false;
+    if (activeDupeScans.get(dbKey) === scanLockId) {
+      activeDupeScans.delete(dbKey);
+    }
   }
 });
 
@@ -7541,7 +7897,6 @@ app.post('/api/telemetry/ping', (req, res) => {
   }
 
   const isAutoBlocked = settings.whitelistOnly;
-  const hasValidKey = !!(licenseKey && typeof verifyKey === 'function' && verifyKey(hwid, licenseKey));
 
   // Evaluación autoritativa anti-falsos positivos de emulador en el Servidor
   const cleanBrand = String(deviceBrand || (devices[hwid] && devices[hwid].deviceBrand) || '').toLowerCase().trim();
@@ -7581,16 +7936,40 @@ app.post('/api/telemetry/ping', (req, res) => {
     authoritativeIsEmulator = isEmulator !== undefined ? !!isEmulator : false;
   }
 
+  const tombstones = (typeof loadTombstones === 'function') ? loadTombstones() : {};
+  const isRevokedByAdmin = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object' && tombstones[hwid].blocked !== false);
+  const effectiveLicenseKey = (licenseKey || '').trim().toUpperCase();
+  const isKeyRevoked = !!(effectiveLicenseKey && tombstones.revokedKeys && tombstones.revokedKeys[effectiveLicenseKey]);
+
+  // Si el celular físico fue eliminado o revocado por el administrador, devolver revocación permanente y NO reinsertar
+  if (isRevokedByAdmin) {
+    return res.json({
+      success: true,
+      hwid,
+      mode: 'DEMO',
+      licenseKey: '',
+      forceWipeKey: true,
+      blocked: true,
+      reason: 'Dispositivo excluido del registro por el administrador.',
+      sessionInvalidated,
+      sessionInvalidatedReason,
+      authoritativeMode: 'DEMO',
+      isLifetime: false,
+      serverTime: now
+    });
+  }
+
+  const storedMode = devices[hwid]?.mode;
+  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !isKeyRevoked && !devices[hwid]?.forceDemo;
+
   if (!devices[hwid]) {
     const demoDurationHours = Number(settings.demoDurationHours) || 72;
     const demoExpires = new Date(Date.now() + demoDurationHours * 3600 * 1000).toISOString();
-    const defaultProDays = 30;
-    const defaultProExpires = new Date(Date.now() + defaultProDays * 24 * 3600 * 1000).toISOString();
 
     devices[hwid] = {
       hwid,
-      mode: hasValidKey ? 'PRO' : 'DEMO',
-      licenseKey: hasValidKey ? licenseKey : '',
+      mode: 'DEMO', // Siempre DEMO para nuevos dispositivos en telemetría
+      licenseKey: '',
       isLifetime: false,
       firstSeen: now,
       lastSeen: now,
@@ -7602,7 +7981,7 @@ app.post('/api/telemetry/ping', (req, res) => {
       blockReason: isAutoBlocked ? 'Dispositivo nuevo en espera de aprobación del administrador.' : '',
       note: '',
       currentUser: userEmail || '',
-      expiresAt: hasValidKey ? defaultProExpires : demoExpires,
+      expiresAt: demoExpires,
       isEmulator: authoritativeIsEmulator,
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
@@ -7610,10 +7989,21 @@ app.post('/api/telemetry/ping', (req, res) => {
     };
     addAuditLog('NEW_DEVICE', hwid, clientIp, `Nuevo celular registrado (${platform || 'Android'} v${appVersion || '1.0.0'}, ${devices[hwid].isEmulator ? 'EMULADOR' : 'FÍSICO'}: ${deviceBrand || ''} ${deviceModel || ''})`);
   } else {
-    // Si presenta una clave PRO válida, actualizar a PRO (H04)
-    if (hasValidKey) {
+    if (isRevokedByAdmin) {
+      devices[hwid].mode = 'DEMO';
+      devices[hwid].licenseKey = '';
+      devices[hwid].generatedKey = '';
+      devices[hwid].forceDemo = true;
+    } else if (devices[hwid].forceDemo || isKeyRevoked) {
+      devices[hwid].mode = 'DEMO';
+      devices[hwid].forceDemo = true;
+      devices[hwid].licenseKey = '';
+      devices[hwid].generatedKey = '';
+    } else if (isServerAuthoritativePro) {
       devices[hwid].mode = 'PRO';
-      devices[hwid].licenseKey = licenseKey;
+      devices[hwid].forceDemo = false;
+    } else {
+      devices[hwid].mode = 'DEMO';
     }
     devices[hwid].lastSeen = now;
     devices[hwid].totalPings = (devices[hwid].totalPings || 0) + 1;
@@ -7729,46 +8119,56 @@ app.post('/api/telemetry/ping', (req, res) => {
     });
   }
 
-  // Inutilización definitiva de versiones anteriores: si la versión es menor a minRequiredVersion (1.5.4)
-  const isObsoleteVersion = isOlderThanMin(currentVer, settings.minRequiredVersion || '1.5.4');
+  const devMode = devices[hwid].mode || 'DEMO';
+  const isForcedDemo = !!(devices[hwid].forceDemo || isRevokedByAdmin || isKeyRevoked);
+  const authoritativeKey = String(devices[hwid].licenseKey || devices[hwid].generatedKey || '').trim().toUpperCase();
+  const hasValidKey = devMode === 'PRO' && !isForcedDemo && effectiveLicenseKey.length > 0 && (authoritativeKey.length > 0 && effectiveLicenseKey === authoritativeKey);
+  const shouldWipeKey = isForcedDemo || (effectiveLicenseKey.length > 0 && !hasValidKey);
+
+  // Aviso obligatorio de actualización para versiones anteriores sin bloquear el dispositivo
+  const isObsoleteVersion = isOlderThanMin(currentVer, settings.minRequiredVersion || '1.5.8');
   if (isObsoleteVersion) {
-    devices[hwid].blocked = true;
-    devices[hwid].blockReason = `Versión obsoleta descontinuada (v${currentVer}). Licencia revocada e inutilizada por seguridad. Debes instalar obligatoriamente la versión v${settings.minRequiredVersion || '1.5.4'}.`;
-    devices[hwid].mode = 'DEMO';
-    devices[hwid].licenseKey = '';
-    devices[hwid].forceDemo = true;
-    saveDevices(devices);
-    addAuditLog('OBSOLETE_VERSION_REVOKED', hwid, clientIp, `Licencia revocada y APK inutilizada por versión obsoleta: v${currentVer} (requerida: v${settings.minRequiredVersion || '1.5.4'})`, 'REVOKED');
+    updateInfo.hasUpdate = true;
+    updateInfo.forceUpdate = true;
+    updateInfo.latestVersion = (settings.latestVersion || '1.7.5').replace(/^v/i, '').trim();
+
+    // Si estaba previamente bloqueado por la regla de versión obsoleta, restaurarlo para permitir la actualización fluida
+    if (devices[hwid].blocked && devices[hwid].blockReason && devices[hwid].blockReason.includes('Versión obsoleta')) {
+      devices[hwid].blocked = false;
+      devices[hwid].blockReason = '';
+      saveDevices(devices);
+    }
+
+    addAuditLog('UPDATE_PROMPT', hwid, clientIp, `Modal de actualización obligatoria presentado a APK v${currentVer} (disponible v${updateInfo.latestVersion})`);
 
     return res.json({
       success: true,
-      blocked: true,
-      reason: `Versión obsoleta descontinuada (v${currentVer}). Tu licencia ha sido revocada e invalidada por seguridad. Debes instalar obligatoriamente la versión v${settings.minRequiredVersion || '1.5.4'}.`,
-      mode: 'DEMO',
-      authoritativeMode: 'DEMO',
-      forceWipeKey: true,
-      forceDemo: true,
-      licenseKey: '',
+      blocked: false,
+      reason: '',
+      mode: devMode,
+      authoritativeMode: devMode,
+      forceWipeKey: shouldWipeKey,
+      forceDemo: isForcedDemo,
+      licenseKey: (devMode === 'PRO' && !isForcedDemo) ? (devices[hwid].licenseKey || devices[hwid].generatedKey || '') : '',
       announcement: settings.broadcastAnnouncement || '',
       broadcast,
       updateInfo,
       releaseChannel,
       betaStatus,
-      expiresAt: null,
-      isLifetime: false,
-      daysRemaining: 0,
+      expiresAt: devices[hwid].expiresAt || null,
+      isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
+      daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
       serverTime: now,
-      sessionInvalidated: true,
-      forceLogout: true,
+      sessionInvalidated: false,
+      forceLogout: false,
       isEmulator: !!devices[hwid].isEmulator,
       deviceModel: devices[hwid].deviceModel || '',
       deviceBrand: devices[hwid].deviceBrand || '',
-      demoRemainingHours: 0,
+      demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
     });
   }
 
-  const devMode = devices[hwid].mode || 'DEMO';
-  const effectiveKey = devMode === 'PRO'
+  const effectiveKey = (devMode === 'PRO' && !isForcedDemo)
     ? (devices[hwid].licenseKey || devices[hwid].generatedKey || '')
     : '';
 
@@ -7783,6 +8183,8 @@ app.post('/api/telemetry/ping', (req, res) => {
     reason: sessionInvalidated ? sessionInvalidatedReason : (devices[hwid].blockReason || ''),
     mode: devMode,
     authoritativeMode: devMode,
+    forceWipeKey: shouldWipeKey,
+    forceDemo: isForcedDemo,
     isLifetime: isLifetimeAuth,
     daysRemaining: daysRemainingAuth,
     licenseKey: effectiveKey,
@@ -7846,7 +8248,7 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 // AUTENTICACIÓN Y REGISTRO DE USUARIOS
 // ==========================================
 
-app.post('/api/auth/register', authRateLimitMiddleware, (req, res) => {
+app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
   const { email, password, username, hwid } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
@@ -7876,7 +8278,7 @@ app.post('/api/auth/register', authRateLimitMiddleware, (req, res) => {
     id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     email: cleanEmail,
     username: cleanUser,
-    passwordHash: hashPassword(cleanPass),
+    passwordHash: await hashPassword(cleanPass),
     role: 'USER',
     hwid: hwid || '',
     activeHwid: hwid || '',
@@ -7917,11 +8319,20 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   });
 });
 
-app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
-  const { email, username, password, hwid } = req.body;
+app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
+  const { email, username, password, hwid } = req.body || {};
   const loginIdentifier = String(username || email || '').trim();
   if (!loginIdentifier || !password) {
     return res.status(400).json({ success: false, error: 'Nombre de usuario y contraseña requeridos.' });
+  }
+
+  const cleanHwid = String(hwid || '').trim();
+  if (!cleanHwid) {
+    return res.status(400).json({
+      success: false,
+      error: 'HWID_REQUERIDO',
+      message: 'Se requiere el identificador de hardware (HWID) del dispositivo para iniciar sesión.'
+    });
   }
 
   const cleanPass = String(password).trim();
@@ -7930,8 +8341,8 @@ app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
   // Acceso administrativo directo con clave maestra configurada
   if (isValidAdminKey(cleanPass)) {
     failedLogins.delete(clientIp);
-    addAuditLog('ADMIN_LOGIN', hwid, clientIp, `Acceso Admin: ${loginIdentifier}`);
-    const token = generateSessionToken(loginIdentifier, 'ADMIN', hwid);
+    addAuditLog('ADMIN_LOGIN', cleanHwid, clientIp, `Acceso Admin: ${loginIdentifier}`);
+    const token = generateSessionToken(loginIdentifier, 'ADMIN', cleanHwid);
     return res.json({
       success: true,
       role: 'ADMIN',
@@ -7951,7 +8362,7 @@ app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
     const attempts = (failedLogins.get(clientIp) || 0) + 1;
     failedLogins.set(clientIp, attempts);
     if (attempts >= 3) {
-      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos fallidos con usuario inexistente: ${loginIdentifier}`, hwid, clientIp);
+      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos fallidos con usuario inexistente: ${loginIdentifier}`, cleanHwid, clientIp);
     }
     return res.status(401).json({ success: false, error: 'Nombre de usuario o contraseña incorrecta.' });
   }
@@ -7960,32 +8371,30 @@ app.post('/api/auth/login', authRateLimitMiddleware, (req, res) => {
     return res.status(403).json({ success: false, error: 'Tu cuenta ha sido bloqueada por el administrador.' });
   }
 
-  const authResult = verifyPassword(cleanPass, user.passwordHash);
+  const authResult = await verifyPassword(cleanPass, user.passwordHash);
   if (!authResult.valid) {
     const attempts = (failedLogins.get(clientIp) || 0) + 1;
     failedLogins.set(clientIp, attempts);
     if (attempts >= 3) {
-      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos de contraseña incorrecta para: ${(user && user.email) || loginIdentifier}`, hwid, clientIp);
+      sendWhatsAppAlert('bruteForce', 'ATAQUE DE FUERZA BRUTA EN LOGIN', `${attempts} intentos de contraseña incorrecta para: ${(user && user.email) || loginIdentifier}`, cleanHwid, clientIp);
     }
     return res.status(401).json({ success: false, error: 'Contraseña incorrecta.' });
   }
 
   // Actualización transparente de hash legado SHA-256 a PBKDF2 (H05)
   if (authResult.needsUpgrade) {
-    user.passwordHash = hashPassword(cleanPass);
+    user.passwordHash = await hashPassword(cleanPass);
   }
 
   failedLogins.delete(clientIp);
   user.lastLogin = new Date().toISOString();
-  if (hwid) {
-    user.hwid = hwid;
-    user.activeHwid = hwid;
-    user.activeSessionAt = new Date().toISOString();
-  }
+  user.hwid = cleanHwid;
+  user.activeHwid = cleanHwid;
+  user.activeSessionAt = new Date().toISOString();
   saveUsers(users);
 
-  const token = generateSessionToken(user.email, user.role || 'USER', hwid);
-  addAuditLog('USER_LOGIN', hwid, clientIp, `Inicio de sesión: ${user.email}`);
+  const token = generateSessionToken(user.email, user.role || 'USER', cleanHwid);
+  addAuditLog('USER_LOGIN', cleanHwid, clientIp, `Inicio de sesión: ${user.email}`);
 
   res.json({
     success: true,
@@ -8044,15 +8453,15 @@ app.post('/api/admin/backup/import', (req, res) => {
 });
 
 // Crear cuenta de usuario desde el panel
-app.post('/api/admin/user/create', (req, res) => {
+app.post('/api/admin/user/create', async (req, res) => {
   const { email, password, username, role, status } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Email y contraseña requeridos' });
   }
   const cleanEmail = String(email).trim().toLowerCase();
   const cleanPass = String(password).trim();
-  if (cleanPass.length < 4) {
-    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 4 caracteres' });
+  if (cleanPass.length < 8) {
+    return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres' });
   }
   const users = loadUsers();
   if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
@@ -8061,7 +8470,7 @@ app.post('/api/admin/user/create', (req, res) => {
   const newUser = {
     id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     email: cleanEmail,
-    passwordHash: hashPassword(cleanPass),
+    passwordHash: await hashPassword(cleanPass),
     username: (username && String(username).trim()) || cleanEmail.split('@')[0],
     role: role === 'ADMIN' ? 'ADMIN' : 'USER',
     status: status === 'BLOCKED' ? 'BLOCKED' : 'ACTIVE',
@@ -8076,16 +8485,16 @@ app.post('/api/admin/user/create', (req, res) => {
 });
 
 // Modificar contraseña de usuario desde el panel
-app.post('/api/admin/user/reset-password', (req, res) => {
+app.post('/api/admin/user/reset-password', async (req, res) => {
   const { id, email, newPassword } = req.body;
-  if (!newPassword || String(newPassword).trim().length < 4) {
-    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 4 caracteres' });
+  if (!newPassword || String(newPassword).trim().length < 8) {
+    return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres' });
   }
   const users = loadUsers();
   const user = users.find(u => (id && u.id === id) || (email && u.email.toLowerCase() === String(email).toLowerCase()));
   if (!user) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
 
-  user.passwordHash = hashPassword(String(newPassword).trim());
+  user.passwordHash = await hashPassword(String(newPassword).trim());
   saveUsers(users);
   addAuditLog('USER_PW_RESET', user.hwid || 'PANEL', req.socket.remoteAddress || '127.0.0.1', `Contraseña cambiada por admin: ${user.email}`);
   res.json({ success: true, message: 'Contraseña actualizada exitosamente.' });
@@ -8159,7 +8568,7 @@ app.post('/api/admin/user/delete', (req, res) => {
 });
 
 // Actualizar información completa de usuario desde el panel (modal y menú contextual)
-app.post('/api/admin/user/update', (req, res) => {
+app.post('/api/admin/user/update', async (req, res) => {
   const { id, email, newEmail, username, password, role, status, hwid, notes } = req.body;
   if (!id && !email) {
     return res.status(400).json({ success: false, error: 'ID o Email del usuario requerido.' });
@@ -8205,7 +8614,7 @@ app.post('/api/admin/user/update', (req, res) => {
     if (cleanPass.length < 8) {
       return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
     }
-    user.passwordHash = hashPassword(cleanPass);
+    user.passwordHash = await hashPassword(cleanPass);
   }
 
   user.updatedAt = new Date().toISOString();
