@@ -6,8 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { GothicAlert as Alert } from '../common/GothicAlert';
 import { ParsedItem } from '../../types/item';
 import { THEME } from '../../constants/theme';
 import { ItemImage } from '../common/ItemImage';

@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.2.2",
+  "latestVersion": "2.2.3",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.2.2 (Build 124) - Inicio de Sesión Social y Acceso Unificado:\n• GOOGLE OAUTH 2.0 (ACCESO RÁPIDO Y SEGURO): Vinculación e inicio de sesión con 1 solo toque mediante cuenta Google oficial; autoactivación instantánea y período demo de 72 horas para nuevos usuarios.\n• ACCESO UNIFICADO POR USUARIO O CORREO: Inicio de sesión transparente tanto con el identificador de cuenta como con el correo electrónico registrado (online y offline protegido).\n• CÓDIGO DE ACTIVACIÓN CON COPIADO RÁPIDO: Plantilla de correo electrónico mejorada con selector instantáneo al toque para agilizar la verificación de cuenta.\n• INTERFAZ GÓTICA SEASON 6: Botón oficial Google integrado con diseño gótico Season 6 de alto contraste (WCAG AAA).",
+  "updateChangelog": "MuManager PRO v2.2.3 (Build 125) - Sistema Oficial de Avisos y Diálogos Góticos Season 6:\n• DIÁLOGOS OFICIALES SEASON 6 PIEDRA & ORO: Erradicación definitiva de avisos claros nativos de Android; todos los avisos y confirmaciones utilizan el diseño gótico canónico (superficies de piedra #2B2521, bordes dorados y remaches).\n• ACCESO RÁPIDO DEMO CON 4 ACCIONES: Desbloqueada la limitación de 3 botones de Android; visualización y operatividad al 100% de 'Iniciar Demo (10 min)', 'Crear Cuenta (72h Demo)', 'Solicitar PRO' y 'Cancelar'.\n• COLA DE AVISOS Y STACKING DE MODALES: Procesamiento secuencial FIFO de alertas consecutivas sin pérdida de eventos y superposición limpia sobre modales existentes.\n• ACCESIBILIDAD Y ALTO CONTRASTE (WCAG AAA): Botones táctiles adaptativos de 44 dp con texto oscuro canónico #100D0B, ScrollView anidado para mensajes extensos e identificación dual por texto e iconos.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.2.2 (Build 124)",
+  "updateTitle": "MuManager PRO v2.2.3 (Build 125)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 124,
+  "versionCode": 125,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.2.2 (Build 124) - Inicio de Sesión Social y Acceso Unificado:\n• GOOGLE OAUTH 2.0 (ACCESO RÁPIDO Y SEGURO): Vinculación e inicio de sesión con 1 solo toque mediante cuenta Google oficial; autoactivación instantánea y período demo de 72 horas para nuevos usuarios.\n• ACCESO UNIFICADO POR USUARIO O CORREO: Inicio de sesión transparente tanto con el identificador de cuenta como con el correo electrónico registrado (online y offline protegido).\n• CÓDIGO DE ACTIVACIÓN CON COPIADO RÁPIDO: Plantilla de correo electrónico mejorada con selector instantáneo al toque para agilizar la verificación de cuenta.\n• INTERFAZ GÓTICA SEASON 6: Botón oficial Google integrado con diseño gótico Season 6 de alto contraste (WCAG AAA).",
+  "releaseNotes": "MuManager PRO v2.2.3 (Build 125) - Sistema Oficial de Avisos y Diálogos Góticos Season 6:\n• DIÁLOGOS OFICIALES SEASON 6 PIEDRA & ORO: Erradicación definitiva de avisos claros nativos de Android; todos los avisos y confirmaciones utilizan el diseño gótico canónico (superficies de piedra #2B2521, bordes dorados y remaches).\n• ACCESO RÁPIDO DEMO CON 4 ACCIONES: Desbloqueada la limitación de 3 botones de Android; visualización y operatividad al 100% de 'Iniciar Demo (10 min)', 'Crear Cuenta (72h Demo)', 'Solicitar PRO' y 'Cancelar'.\n• COLA DE AVISOS Y STACKING DE MODALES: Procesamiento secuencial FIFO de alertas consecutivas sin pérdida de eventos y superposición limpia sobre modales existentes.\n• ACCESIBILIDAD Y ALTO CONTRASTE (WCAG AAA): Botones táctiles adaptativos de 44 dp con texto oscuro canónico #100D0B, ScrollView anidado para mensajes extensos e identificación dual por texto e iconos.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.2.2",
-  "buildNumber": 124,
+  "appVersion": "2.2.3",
+  "buildNumber": 125,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.2.2",
-  "build": 124
+  "version": "2.2.3",
+  "build": 125
 }

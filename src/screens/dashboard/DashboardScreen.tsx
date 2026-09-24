@@ -6,11 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Modal,
   TextInput,
   Platform,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';

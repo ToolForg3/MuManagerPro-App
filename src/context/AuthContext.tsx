@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Alert } from 'react-native';
+import { GothicAlert as Alert } from '../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SecurityService, sha256 } from '../services/security/securityService';
 import { SqlClient } from '../services/database/sqlClient';

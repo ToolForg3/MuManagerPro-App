@@ -8,13 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   Linking,
   Modal,
   ActivityIndicator,
   AppState,
   AppStateStatus,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME } from '../../constants/theme';

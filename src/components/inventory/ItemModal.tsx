@@ -8,8 +8,8 @@ import {
   ScrollView,
   Switch,
   TextInput,
-  Alert,
 } from 'react-native';
+import { GothicAlert as Alert } from '../common/GothicAlert';
 import * as Clipboard from 'expo-clipboard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';

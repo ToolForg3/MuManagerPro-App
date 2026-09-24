@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
-  Alert,
   Image,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../../components/common/GothicAlert';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../../constants/theme';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';

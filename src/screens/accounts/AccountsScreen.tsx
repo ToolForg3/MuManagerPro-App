@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Modal,
   ActivityIndicator,
   ScrollView,
@@ -17,6 +16,7 @@ import {
   Switch,
   Image,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';

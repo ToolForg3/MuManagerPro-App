@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Platform,
   StatusBar,
@@ -15,6 +14,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';

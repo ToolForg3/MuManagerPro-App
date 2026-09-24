@@ -6,10 +6,10 @@ import {
   Modal,
   TouchableOpacity,
   BackHandler,
-  Alert,
   Linking,
   ScrollView,
 } from 'react-native';
+import { GothicAlert as Alert } from '../common/GothicAlert';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { THEME } from '../../constants/theme';

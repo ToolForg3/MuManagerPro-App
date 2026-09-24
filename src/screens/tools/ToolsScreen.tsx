@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   TextInput,
   Switch,
-  Alert,
   Platform,
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

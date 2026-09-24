@@ -12,9 +12,9 @@ import {
   StatusBar,
   Modal,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';

@@ -7,10 +7,10 @@ import {
   TextInput,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';

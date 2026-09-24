@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Share,
-  Alert,
 } from 'react-native';
+import { GothicAlert as Alert } from '../common/GothicAlert';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { useDatabase } from '../../context/DatabaseContext';

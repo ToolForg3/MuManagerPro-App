@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SecurityService } from './securityService';
 import { SqlClient, TelemetryPingResult } from '../database/sqlClient';
