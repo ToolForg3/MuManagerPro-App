@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.8",
+  "latestVersion": "2.1.9",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.8 (Build 120) - Reorganización Integral de Interfaz Season 6 y Usabilidad Optimizada:\n• NAVEGACIÓN Y ARQUITECTURA LIMPIA: 5 áreas canónicas principales (Inicio, Jugadores, Objetos, Herramientas, Ajustes) con preservación absoluta del 100% de funciones, submódulos y filtros.\n• HUB DE JUGADORES COMPLETO: Nueva vista centralizada para Cuentas, Personajes, Conectados en Vivo, Clanes, Asesinos PK y Game Masters con filtros directos.\n• HUBS ESPECIALIZADOS DE OBJETOS Y HERRAMIENTAS: Acceso inmediato e intuitivo a inventarios, baúles, inyectores, reparadores y utilidades del servidor.\n• DISEÑO MEDIEVAL SEASON 6 PIEDRA & ORO CERTIFICADO: 100% cumplimiento WCAG AAA (>7:1), contraste optimizado en botones y paneles, cero pérdida funcional.\n• WEB PÚBLICA Y PANEL WEB ARMONIZADOS: Navegación sincronizada en el portal y métricas administrativas de alta legibilidad.",
+  "updateChangelog": "MuManager PRO v2.1.9 (Build 121) - Activación Híbrida 1-Clic, Recuperación Serverless y Blindaje de Cuentas:\n• ACTIVACIÓN HÍBRIDA 1-CLIC: Activación instantánea mediante enlace web directo en correos, deep linking nativo ('mumanager://') y código numérico tradicional de 6 dígitos.\n• VERIFICACIÓN Y RECUPERACIÓN DUAL: Soporte integral para autenticación, verificación y reseteo de claves mediante nombre de usuario o correo electrónico indistintamente.\n• PERSISTENCIA EN LA NUBE (SERVERLESS RESILIENT): Resguardo atómico de tokens de seguridad OTP para tolerar cold-starts e instancias múltiples en Vercel.\n• PORTAPAPELES INTELIGENTE: Botón táctil 'Pegar' integrado en modales de verificación y recuperación de contraseña (1-tap OTP).\n• BLINDAJE DE CONTRASEÑAS SQL: Protección contra sobreescritura accidental de claves en cuentas de juego y validación uniforme de 8+ caracteres.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.8 (Build 120)",
+  "updateTitle": "MuManager PRO v2.1.9 (Build 121)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 120,
+  "versionCode": 121,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.8 (Build 120) - Reorganización Integral de Interfaz Season 6 y Usabilidad Optimizada:\n• NAVEGACIÓN Y ARQUITECTURA LIMPIA: 5 áreas canónicas principales (Inicio, Jugadores, Objetos, Herramientas, Ajustes) con preservación absoluta del 100% de funciones, submódulos y filtros.\n• HUB DE JUGADORES COMPLETO: Nueva vista centralizada para Cuentas, Personajes, Conectados en Vivo, Clanes, Asesinos PK y Game Masters con filtros directos.\n• HUBS ESPECIALIZADOS DE OBJETOS Y HERRAMIENTAS: Acceso inmediato e intuitivo a inventarios, baúles, inyectores, reparadores y utilidades del servidor.\n• DISEÑO MEDIEVAL SEASON 6 PIEDRA & ORO CERTIFICADO: 100% cumplimiento WCAG AAA (>7:1), contraste optimizado en botones y paneles, cero pérdida funcional.\n• WEB PÚBLICA Y PANEL WEB ARMONIZADOS: Navegación sincronizada en el portal y métricas administrativas de alta legibilidad.",
+  "releaseNotes": "MuManager PRO v2.1.9 (Build 121) - Activación Híbrida 1-Clic, Recuperación Serverless y Blindaje de Cuentas:\n• ACTIVACIÓN HÍBRIDA 1-CLIC: Activación instantánea mediante enlace web directo en correos, deep linking nativo ('mumanager://') y código numérico tradicional de 6 dígitos.\n• VERIFICACIÓN Y RECUPERACIÓN DUAL: Soporte integral para autenticación, verificación y reseteo de claves mediante nombre de usuario o correo electrónico indistintamente.\n• PERSISTENCIA EN LA NUBE (SERVERLESS RESILIENT): Resguardo atómico de tokens de seguridad OTP para tolerar cold-starts e instancias múltiples en Vercel.\n• PORTAPAPELES INTELIGENTE: Botón táctil 'Pegar' integrado en modales de verificación y recuperación de contraseña (1-tap OTP).\n• BLINDAJE DE CONTRASEÑAS SQL: Protección contra sobreescritura accidental de claves en cuentas de juego y validación uniforme de 8+ caracteres.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.8",
-  "buildNumber": 120,
+  "appVersion": "2.1.9",
+  "buildNumber": 121,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.8",
-  "build": 120
+  "version": "2.1.9",
+  "build": 121
 }

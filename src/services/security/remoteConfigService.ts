@@ -11,6 +11,7 @@ export interface RemoteConfigState {
 }
 
 const DISMISSED_BROADCAST_KEY = '@mumanager_dismissed_broadcast_v1';
+const DISMISSED_UPDATE_KEY = '@mumanager_dismissed_update_v1';
 
 export class RemoteConfigService {
   private static updateInfo: AppUpdateInfo | null = null;
@@ -26,8 +27,13 @@ export class RemoteConfigService {
   static async initialize(): Promise<void> {
     try {
       this.dismissedBroadcastId = await AsyncStorage.getItem(DISMISSED_BROADCAST_KEY);
+      this.dismissedUpdateVersion = await AsyncStorage.getItem(DISMISSED_UPDATE_KEY);
+      if (this.dismissedUpdateVersion) {
+        this.isUpdateDismissed = true;
+      }
     } catch {
       this.dismissedBroadcastId = null;
+      this.dismissedUpdateVersion = null;
     }
   }
 
@@ -87,6 +93,9 @@ export class RemoteConfigService {
     if (this.updateInfo && !this.updateInfo.forceUpdate) {
       this.isUpdateDismissed = true;
       this.dismissedUpdateVersion = this.updateInfo.latestVersion;
+      if (this.updateInfo.latestVersion) {
+        AsyncStorage.setItem(DISMISSED_UPDATE_KEY, this.updateInfo.latestVersion).catch(() => {});
+      }
       this.notify();
     }
   }

@@ -9486,6 +9486,173 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 
 const emailVerificationStore = new Map(); // cleanEmail -> { code, expiresAt, attempts, createdAt }
 
+// Plantilla HTML Season 6 (Piedra y Oro) para activación híbrida: Código + Enlace 1-Clic + Deep Link App
+function buildActivationEmailHtml(username, email, code) {
+  const cleanUser = String(username || email.split('@')[0] || 'Aventurero').trim();
+  const cleanEmail = String(email).trim().toLowerCase();
+  const directLink = `https://mumanagerpro.vercel.app/api/auth/activate?email=${encodeURIComponent(cleanEmail)}&code=${encodeURIComponent(code)}`;
+  const deepLink = `mumanager://activate?email=${encodeURIComponent(cleanEmail)}&code=${encodeURIComponent(code)}`;
+
+  return `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #100D0B; color: #FAF6EE; padding: 28px; border-radius: 8px; max-width: 520px; margin: 0 auto; border: 1px solid #6B5533; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #E8C86A; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">🐉 MU MANAGER PRO</h1>
+        <p style="color: #C8BEAF; font-size: 13px; margin-top: 6px;">Sistema Oficial de Administración & Seguridad</p>
+      </div>
+
+      <div style="background-color: #1F1A16; border: 1px solid #3A2E22; border-radius: 6px; padding: 20px; margin-bottom: 22px;">
+        <p style="font-size: 15px; line-height: 1.6; color: #FAF6EE; margin-top: 0;">
+          Hola <strong style="color: #E8C86A;">${cleanUser}</strong>, gracias por registrarte. Para completar la creación de tu cuenta y habilitar tu período de prueba, confirma tu correo:
+        </p>
+
+        <!-- OPCIÓN 1: BOTÓN DIRECTO 1-CLIC -->
+        <div style="text-align: center; margin: 24px 0 16px 0;">
+          <a href="${directLink}" style="background-color: #E8C86A; color: #100D0B; font-weight: 800; font-size: 15px; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; letter-spacing: 0.5px;">
+            ⚡ Activar mi Cuenta en 1-Clic
+          </a>
+          <p style="font-size: 11px; color: #C8BEAF; margin-top: 8px;">(Haz clic para activar al instante sin escribir ningún código)</p>
+        </div>
+
+        <div style="border-top: 1px solid #3A2E22; margin: 20px 0; text-align: center;">
+          <span style="background-color: #1F1A16; color: #C8BEAF; font-size: 11px; padding: 0 10px; position: relative; top: -10px; text-transform: uppercase;">O ingresa el código manual</span>
+        </div>
+
+        <!-- OPCIÓN 2: CÓDIGO DE 6 DÍGITOS -->
+        <div style="background-color: #100D0B; border: 2px dashed #B58F3C; padding: 16px; text-align: center; border-radius: 6px; margin: 16px 0;">
+          <div style="font-size: 11px; color: #C8BEAF; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Código de Activación</div>
+          <span style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #E8C86A; font-family: monospace;">${code}</span>
+        </div>
+
+        <!-- OPCIÓN 3: ENLACE NATIVO APP MÓVIL -->
+        <div style="text-align: center; margin-top: 18px;">
+          <a href="${deepLink}" style="color: #E8C86A; font-size: 13px; text-decoration: underline;">
+            📱 O pulsa aquí para abrir directamente en la app
+          </a>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; line-height: 1.5; color: #BCB2A4; text-align: center;">
+        <p style="margin: 0;">⏱️ Este código y enlace tienen una validez de <strong>15 minutos</strong>.</p>
+        <p style="margin: 6px 0 0 0;">Si tú no solicitaste este registro, puedes ignorar este mensaje de forma segura.</p>
+      </div>
+
+      <div style="margin-top: 20px; border-top: 1px solid #3A2E22; padding-top: 14px; text-align: center; font-size: 11px; color: #7A5E22;">
+        Mu Online Season 6 Management Engine • ToolForg3
+      </div>
+    </div>
+  `;
+}
+
+// Renderizador de página web de confirmación de activación (Season 6 Piedra y Oro)
+function renderActivationHtmlPage({ success, title, message, email, username, alreadyActive }) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const deepLink = `mumanager://activate?status=success${cleanEmail ? `&email=${encodeURIComponent(cleanEmail)}` : ''}`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - Mu Manager PRO</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #100D0B;
+      color: #FAF6EE;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background-color: #1F1A16;
+      border: 1px solid #6B5533;
+      border-radius: 8px;
+      max-width: 480px;
+      width: 100%;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    }
+    .logo {
+      color: #E8C86A;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .icon-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: 36px; /* círculo funcional (width/2): avatar de estado */
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      background: ${success ? 'rgba(63, 207, 142, 0.15)' : 'rgba(226, 112, 58, 0.15)'};
+      border: 2px solid ${success ? '#3FCF8E' : '#E2703A'};
+      color: ${success ? '#3FCF8E' : '#E2703A'};
+    }
+    h2 {
+      color: #FAF6EE;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    p {
+      color: #C8BEAF;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .btn-open {
+      display: inline-block;
+      background-color: #E8C86A;
+      color: #100D0B;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 14px 28px;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(232, 200, 106, 0.3);
+    }
+    .btn-open:hover {
+      background-color: #F0D27A;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #BCB2A4;
+      border-top: 1px solid #3A2E22;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🐉 MU MANAGER PRO</div>
+    <div class="icon-badge">${success ? '✓' : '✕'}</div>
+    <h2>${title}</h2>
+    <p>${message}</p>
+    ${success ? `
+      <a href="${deepLink}" class="btn-open">🚀 Abrir Mu Manager PRO</a>
+      <div class="footer-note">
+        Si la app no se abre automáticamente, ábrela desde tu teléfono e inicia sesión directamente.
+      </div>
+    ` : `
+      <div class="footer-note">
+        Puedes solicitar un nuevo código de activación desde la pantalla de inicio de sesión de la app.
+      </div>
+    `}
+  </div>
+</body>
+</html>`;
+}
+
 // Wrapper seguro para despacho de correo con timeout estricto anti-bloqueo serverless
 async function sendEmailDirect(to, subject, html) {
   try {
@@ -9521,8 +9688,8 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, error: 'El nombre de usuario debe tener al menos 3 caracteres.' });
     }
 
-    if (cleanPass.length < 4) {
-      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 4 caracteres.' });
+    if (cleanPass.length < 8) {
+      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres.' });
     }
 
     const users = loadUsers();
@@ -9582,21 +9749,8 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
-    // Plantilla HTML corporativa para correo de activación
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
-        <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
-        <p style="font-size: 15px; line-height: 1.5; color: #CCC;">
-          Hola <strong>${cleanUser}</strong>, gracias por registrarte. Usa el siguiente código de activación de un solo uso para verificar tu cuenta:
-        </p>
-        <div style="background: #1A1A1A; border: 2px dashed #FF5722; padding: 18px; text-align: center; border-radius: 6px; margin: 20px 0;">
-          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF5722;">${code}</span>
-        </div>
-        <p style="font-size: 13px; color: #888;">
-          Este código expira en 15 minutos. Si tú no solicitaste este registro, puedes ignorar este correo.
-        </p>
-      </div>
-    `;
+    // Plantilla HTML Season 6 híbrida (Código + 1-Clic Web + App Deep-Link)
+    const emailHtml = buildActivationEmailHtml(cleanUser, cleanEmail, code);
 
     // Intentar envío de correo SMTP / API con timeout protegido
     const emailSent = await sendEmailDirect(cleanEmail, 'Código de Activación - Mu Manager PRO', emailHtml);
@@ -9618,7 +9772,7 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Hemos enviado un código de activación de 6 dígitos a tu correo electrónico.'
+      message: 'Hemos enviado un código de activación de 6 dígitos y enlace de 1-clic a tu correo electrónico.'
     });
   } catch (err) {
     console.error('[Register Error]', err);
@@ -9626,30 +9780,139 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
   }
 });
 
-// Verificar código de activación de registro
-app.post('/api/auth/verify-registration', (req, res) => {
+// Endpoint público GET para activación en 1-Clic desde el correo electrónico
+app.get('/api/auth/activate', (req, res) => {
   try {
-    const { email, code, hwid } = req.body;
-    if (!email || !code) {
-      return res.status(400).json({ success: false, error: 'Correo y código requeridos.' });
+    const { email, code } = req.query || {};
+    if (!email) {
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Enlace Incompleto',
+        message: 'El enlace de activación no contiene el parámetro de correo o usuario requerido.'
+      }));
     }
 
-    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanId = String(email).trim().toLowerCase();
+    const cleanCode = code ? String(code).trim() : '';
+
+    const users = loadUsers();
+    const user = users.find(u =>
+      (u.email && u.email.toLowerCase() === cleanId) ||
+      (u.username && u.username.toLowerCase() === cleanId)
+    );
+
+    if (!user) {
+      return res.status(404).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Usuario No Encontrado',
+        message: 'No existe ninguna cuenta registrada con los datos provistos.'
+      }));
+    }
+
+    const targetEmail = (user.email || cleanId).toLowerCase();
+
+    // Si ya está activo
+    if (user.status === 'ACTIVE') {
+      return res.send(renderActivationHtmlPage({
+        success: true,
+        title: '¡Cuenta Ya Verificada!',
+        message: `La cuenta de <strong>${user.username}</strong> (${targetEmail}) ya se encuentra activa. Puedes abrir la aplicación e iniciar sesión normalmente.`,
+        email: targetEmail,
+        username: user.username,
+        alreadyActive: true
+      }));
+    }
+
+    let entry = emailVerificationStore.get(targetEmail);
+    let validCode = entry ? entry.code : user.verificationCode;
+    let expiresAt = entry ? entry.expiresAt : user.verificationExpiresAt;
+
+    if (!validCode) {
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Sin Código Pendiente',
+        message: 'No hay ninguna solicitud de activación pendiente para esta cuenta. Por favor solicita un nuevo código desde la app.'
+      }));
+    }
+
+    if (expiresAt && Date.now() > expiresAt) {
+      emailVerificationStore.delete(targetEmail);
+      user.verificationCode = undefined;
+      user.verificationExpiresAt = undefined;
+      saveUsers(users);
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Enlace Expirado',
+        message: 'El código de activación ha expirado (validez: 15 minutos). Por favor solicita uno nuevo desde la app.'
+      }));
+    }
+
+    if (cleanCode && String(validCode).trim() !== cleanCode) {
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Código Inválido',
+        message: 'El código proporcionado no coincide con el código de seguridad generado.'
+      }));
+    }
+
+    // Activar cuenta
+    emailVerificationStore.delete(targetEmail);
+    user.status = 'ACTIVE';
+    user.verificationCode = undefined;
+    user.verificationExpiresAt = undefined;
+    user.emailVerifiedAt = new Date().toISOString();
+    saveUsers(users);
+
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    addAuditLog('REGISTER_CONFIRMED_WEB', user.hwid || 'WEB', clientIp, `Cuenta activada vía enlace 1-clic: ${user.username} (${targetEmail})`);
+
+    return res.send(renderActivationHtmlPage({
+      success: true,
+      title: '¡Cuenta Activada con Éxito!',
+      message: `¡Felicitaciones, <strong>${user.username}</strong>! Tu cuenta vinculada a <strong>${targetEmail}</strong> ha sido verificada y activada satisfactoriamente. Ya puedes acceder al sistema.`,
+      email: targetEmail,
+      username: user.username,
+      alreadyActive: false
+    }));
+  } catch (err) {
+    console.error('[Web Activate Fatal Error]', err);
+    return res.status(500).send(renderActivationHtmlPage({
+      success: false,
+      title: 'Error de Activación',
+      message: 'Ocurrió un error al procesar la activación: ' + (err.message || 'Desconocido')
+    }));
+  }
+});
+
+// Verificar código de activación de registro (soporta email o username)
+app.post('/api/auth/verify-registration', (req, res) => {
+  try {
+    const { email, username, code, hwid } = req.body;
+    const rawId = email || username;
+    if (!rawId || !code) {
+      return res.status(400).json({ success: false, error: 'Correo/usuario y código requeridos.' });
+    }
+
+    const cleanId = String(rawId).trim().toLowerCase();
     const cleanCode = String(code).trim();
 
     const users = loadUsers();
-    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+    const user = users.find(u =>
+      (u.email && u.email.toLowerCase() === cleanId) ||
+      (u.username && u.username.toLowerCase() === cleanId)
+    );
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
     }
 
-    let entry = emailVerificationStore.get(cleanEmail);
+    const targetEmail = (user.email || cleanId).toLowerCase();
+    let entry = emailVerificationStore.get(targetEmail);
     let validCode = entry ? entry.code : user.verificationCode;
     let expiresAt = entry ? entry.expiresAt : user.verificationExpiresAt;
 
     if (!validCode) {
       if (user.status === 'ACTIVE') {
-        const token = generateSessionToken(cleanEmail, user.role || 'USER', hwid);
+        const token = generateSessionToken(targetEmail, user.role || 'USER', hwid);
         return res.json({
           success: true,
           token,
@@ -9657,11 +9920,11 @@ app.post('/api/auth/verify-registration', (req, res) => {
           message: 'Tu cuenta ya se encuentra verificada y activa.'
         });
       }
-      return res.status(400).json({ success: false, error: 'No hay ningún código pendiente para este correo. Solicita uno nuevo.' });
+      return res.status(400).json({ success: false, error: 'No hay ningún código pendiente para este usuario o correo. Solicita uno nuevo.' });
     }
 
     if (expiresAt && Date.now() > expiresAt) {
-      emailVerificationStore.delete(cleanEmail);
+      emailVerificationStore.delete(targetEmail);
       user.verificationCode = undefined;
       user.verificationExpiresAt = undefined;
       saveUsers(users);
@@ -9674,7 +9937,7 @@ app.post('/api/auth/verify-registration', (req, res) => {
     }
 
     // Código correcto: activar usuario
-    emailVerificationStore.delete(cleanEmail);
+    emailVerificationStore.delete(targetEmail);
     user.status = 'ACTIVE';
     user.verificationCode = undefined;
     user.verificationExpiresAt = undefined;
@@ -9686,9 +9949,9 @@ app.post('/api/auth/verify-registration', (req, res) => {
     saveUsers(users);
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-    addAuditLog('REGISTER_CONFIRMED', hwid, clientIp, `Cuenta activada: ${user.username} (${cleanEmail})`);
+    addAuditLog('REGISTER_CONFIRMED', hwid, clientIp, `Cuenta activada: ${user.username} (${targetEmail})`);
 
-    const token = generateSessionToken(cleanEmail, user.role || 'USER', hwid);
+    const token = generateSessionToken(targetEmail, user.role || 'USER', hwid);
     res.json({
       success: true,
       token,
@@ -9701,15 +9964,19 @@ app.post('/api/auth/verify-registration', (req, res) => {
   }
 });
 
-// Reenviar código de activación
+// Reenviar código de activación (soporta email o username)
 app.post('/api/auth/resend-verification', authRateLimitMiddleware, async (req, res) => {
   try {
-    const { email, hwid } = req.body;
-    if (!email) return res.status(400).json({ success: false, error: 'Correo requerido.' });
+    const { email, username, hwid } = req.body;
+    const rawId = email || username;
+    if (!rawId) return res.status(400).json({ success: false, error: 'Correo o nombre de usuario requerido.' });
 
-    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanId = String(rawId).trim().toLowerCase();
     const users = loadUsers();
-    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+    const user = users.find(u =>
+      (u.email && u.email.toLowerCase() === cleanId) ||
+      (u.username && u.username.toLowerCase() === cleanId)
+    );
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no registrado.' });
@@ -9721,37 +9988,24 @@ app.post('/api/auth/resend-verification', authRateLimitMiddleware, async (req, r
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 15 * 60 * 1000;
+    const targetEmail = (user.email || cleanId).toLowerCase();
 
     user.verificationCode = code;
     user.verificationExpiresAt = expiresAt;
     saveUsers(users);
 
-    emailVerificationStore.set(cleanEmail, {
+    emailVerificationStore.set(targetEmail, {
       code,
       expiresAt,
       attempts: 0,
       createdAt: new Date().toISOString()
     });
 
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
-        <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
-        <p style="font-size: 15px; line-height: 1.5; color: #CCC;">
-          Tu nuevo código de activación es:
-        </p>
-        <div style="background: #1A1A1A; border: 2px dashed #FF5722; padding: 18px; text-align: center; border-radius: 6px; margin: 20px 0;">
-          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF5722;">${code}</span>
-        </div>
-        <p style="font-size: 13px; color: #888;">
-          Válido por 15 minutos.
-        </p>
-      </div>
-    `;
-
-    const emailSent = await sendEmailDirect(cleanEmail, 'Nuevo Código de Activación - Mu Manager PRO', emailHtml);
+    const emailHtml = buildActivationEmailHtml(user.username, targetEmail, code);
+    const emailSent = await sendEmailDirect(targetEmail, 'Nuevo Código de Activación - Mu Manager PRO', emailHtml);
     if (!emailSent) {
       const isDev = process.env.NODE_ENV !== 'production';
-      console.log(`[SMTP NOTICE] Código de reenvío para ${cleanEmail}: [ ${code} ]`);
+      console.log(`[SMTP NOTICE] Código de reenvío para ${targetEmail}: [ ${code} ]`);
       return res.json({
         success: true,
         pendingSmtp: true,
@@ -9762,7 +10016,7 @@ app.post('/api/auth/resend-verification', authRateLimitMiddleware, async (req, r
       });
     }
 
-    res.json({ success: true, message: 'Nuevo código de activación enviado a tu correo.' });
+    res.json({ success: true, message: 'Nuevo código de activación y enlace de 1-clic enviados a tu correo.' });
   } catch (err) {
     console.error('[Resend Error]', err);
     res.status(500).json({ success: false, error: 'Error al reenviar código: ' + err.message });
@@ -10122,29 +10376,85 @@ async function sendEmailNotification({ to, subject, html, text }) {
   return { success: !!sentVia, sentVia };
 }
 
-// Solicitar código OTP para recuperación de contraseña
+// Plantilla HTML Season 6 (Piedra y Oro) para recuperación de contraseña
+function buildPasswordResetEmailHtml(username, email, code) {
+  const cleanUser = String(username || email.split('@')[0] || 'Aventurero').trim();
+  const cleanEmail = String(email).trim().toLowerCase();
+  const deepLink = `mumanager://reset-password?email=${encodeURIComponent(cleanEmail)}&code=${encodeURIComponent(code)}`;
+
+  return `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #100D0B; color: #FAF6EE; padding: 28px; border-radius: 8px; max-width: 520px; margin: 0 auto; border: 1px solid #6B5533; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #E8C86A; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">🐉 MU MANAGER PRO</h1>
+        <p style="color: #C8BEAF; font-size: 13px; margin-top: 6px;">Recuperación de Contraseña</p>
+      </div>
+
+      <div style="background-color: #1F1A16; border: 1px solid #3A2E22; border-radius: 6px; padding: 20px; margin-bottom: 22px;">
+        <p style="font-size: 15px; line-height: 1.6; color: #FAF6EE; margin-top: 0;">
+          Hola <strong style="color: #E8C86A;">${cleanUser}</strong>, has solicitado restablecer la contraseña de tu cuenta. Utiliza el siguiente código de seguridad:
+        </p>
+
+        <!-- CÓDIGO DE 6 DÍGITOS -->
+        <div style="background-color: #100D0B; border: 2px dashed #B58F3C; padding: 16px; text-align: center; border-radius: 6px; margin: 18px 0;">
+          <div style="font-size: 11px; color: #C8BEAF; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Código de Verificación</div>
+          <span style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #E8C86A; font-family: monospace;">${code}</span>
+        </div>
+
+        <!-- ENLACE NATIVO APP MÓVIL -->
+        <div style="text-align: center; margin-top: 18px;">
+          <a href="${deepLink}" style="background-color: #E8C86A; color: #100D0B; font-weight: 800; font-size: 14px; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+            📱 Restablecer Directamente en la App
+          </a>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; line-height: 1.5; color: #BCB2A4; text-align: center;">
+        <p style="margin: 0;">⏱️ Este código expira en <strong>15 minutos</strong>.</p>
+        <p style="margin: 6px 0 0 0;">Si tú no solicitaste este cambio, puedes ignorar este mensaje de forma segura.</p>
+      </div>
+
+      <div style="margin-top: 20px; border-top: 1px solid #3A2E22; padding-top: 14px; text-align: center; font-size: 11px; color: #7A5E22;">
+        Mu Online Season 6 Management Engine • ToolForg3
+      </div>
+    </div>
+  `;
+}
+
+// Solicitar código OTP para recuperación de contraseña (soporta email o username)
 app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ success: false, error: 'Correo electrónico requerido.' });
+  const { email, username } = req.body;
+  const rawId = email || username;
+  if (!rawId) {
+    return res.status(400).json({ success: false, error: 'Correo electrónico o nombre de usuario requerido.' });
   }
 
-  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanId = String(rawId).trim().toLowerCase();
   const users = loadUsers();
-  const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+  const user = users.find(u =>
+    (u.email && u.email.toLowerCase() === cleanId) ||
+    (u.username && u.username.toLowerCase() === cleanId)
+  );
 
   if (!user) {
     return res.status(404).json({
       success: false,
-      error: 'No se encontró ninguna cuenta registrada con este correo electrónico.'
+      error: 'No se encontró ninguna cuenta registrada con este correo electrónico o usuario.'
     });
   }
+
+  const targetEmail = user.email.toLowerCase();
 
   // Generar código numérico seguro de 6 dígitos
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutos
 
-  passwordResetStore.set(cleanEmail, {
+  // Persistir en el objeto user (inviolable a través de cold starts en serverless)
+  user.resetPasswordCode = code;
+  user.resetPasswordExpiresAt = expiresAt;
+  user.resetPasswordAttempts = 0;
+  saveUsers(users);
+
+  passwordResetStore.set(targetEmail, {
     code,
     expiresAt,
     attempts: 0,
@@ -10153,24 +10463,12 @@ app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (re
 
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
-  // Plantilla HTML elegante para el correo
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; background: #0D0D0D; color: #FFF; padding: 24px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #FF5722;">
-      <h2 style="color: #FF5722; margin-top: 0;">🐉 Mu Manager PRO</h2>
-      <p style="font-size: 15px; color: #DDD;">Hola <strong>${user.username || cleanEmail}</strong>,</p>
-      <p style="font-size: 14px; color: #AAA;">Has solicitado restablecer la contraseña de tu cuenta en Mu Manager PRO. Utiliza el siguiente código de verificación de 6 dígitos:</p>
-      <div style="background: rgba(255, 87, 34, 0.15); border: 2px dashed #FF5722; border-radius: 8px; padding: 16px; text-align: center; margin: 20px 0;">
-        <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #00E676; font-family: monospace;">${code}</span>
-      </div>
-      <p style="font-size: 12px; color: #888;">⏱️ Este código expira en <strong>15 minutos</strong>. Si tú no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
-      <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;" />
-      <p style="font-size: 11px; color: #666; text-align: center;">Mu Manager PRO • Sistema de Control y Seguridad</p>
-    </div>
-  `;
+  // Plantilla HTML Season 6 (Piedra y Oro)
+  const emailHtml = buildPasswordResetEmailHtml(user.username, targetEmail, code);
 
   // Intento de envío por Email (SMTP / API)
   const emailResult = await sendEmailNotification({
-    to: cleanEmail,
+    to: targetEmail,
     subject: '🔑 Código de Recuperación de Contraseña — Mu Manager PRO',
     html: emailHtml,
     text: `Tu código de recuperación para Mu Manager PRO es: ${code} (Expira en 15 minutos).`
@@ -10181,13 +10479,13 @@ app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (re
     'PASSWORD_RESET_OTP',
     user.hwid || 'N/A',
     clientIp,
-    `Código de recuperación generado para ${cleanEmail}: [ ****** ] (Envío: ${emailResult.sentVia || 'Pendiente SMTP - Ver en Panel/WhatsApp'})`
+    `Código de recuperación generado para ${targetEmail}: [ ****** ] (Envío: ${emailResult.sentVia || 'Pendiente SMTP - Ver en Panel/WhatsApp'})`
   );
 
   sendWhatsAppAlert(
     'security',
     'CÓDIGO DE RECUPERACIÓN DE CONTRASEÑA',
-    `Usuario: ${cleanEmail}\nCódigo OTP: ${code}\nExpira en 15 minutos.`,
+    `Usuario: ${targetEmail}\nCódigo OTP: ${code}\nExpira en 15 minutos.`,
     user.hwid || 'N/A',
     clientIp
   );
@@ -10195,7 +10493,7 @@ app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (re
   res.json({
     success: true,
     message: emailResult.success
-      ? `Código enviado exitosamente a tu correo (${cleanEmail}).`
+      ? `Código enviado exitosamente a tu correo (${targetEmail}).`
       : `Código generado. Si aún no configuraste SMTP, puedes ver el código en el Log de Auditoría del Panel Administrativo o en WhatsApp.`,
     emailSent: emailResult.success,
     pendingSmtp: !emailResult.success,
@@ -10204,45 +10502,70 @@ app.post('/api/auth/forgot-password/request', authRateLimitMiddleware, async (re
   });
 });
 
-// Verificar código OTP antes de cambiar contraseña
+// Verificar código OTP antes de cambiar contraseña (soporta email o username y respaldo persistente)
 app.post('/api/auth/forgot-password/verify-code', authRateLimitMiddleware, (req, res) => {
-  const { email, code } = req.body;
-  if (!email || !code) {
-    return res.status(400).json({ success: false, error: 'Correo y código requeridos.' });
+  const { email, username, code } = req.body;
+  const rawId = email || username;
+  if (!rawId || !code) {
+    return res.status(400).json({ success: false, error: 'Correo/usuario y código requeridos.' });
   }
 
-  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanId = String(rawId).trim().toLowerCase();
   const cleanCode = String(code).trim();
-  const record = passwordResetStore.get(cleanEmail);
+  const users = loadUsers();
+  const user = users.find(u =>
+    (u.email && u.email.toLowerCase() === cleanId) ||
+    (u.username && u.username.toLowerCase() === cleanId)
+  );
 
-  if (!record) {
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
+  }
+
+  const targetEmail = user.email.toLowerCase();
+  const memRecord = passwordResetStore.get(targetEmail);
+  const validCode = memRecord ? memRecord.code : user.resetPasswordCode;
+  const expiresAt = memRecord ? memRecord.expiresAt : user.resetPasswordExpiresAt;
+  let attempts = (memRecord ? memRecord.attempts : user.resetPasswordAttempts) || 0;
+
+  if (!validCode) {
     return res.status(400).json({
       success: false,
-      error: 'No hay ninguna solicitud de recuperación pendiente para este correo. Solicita un nuevo código.'
+      error: 'No hay ninguna solicitud de recuperación pendiente para este correo o usuario. Solicita un nuevo código.'
     });
   }
 
-  if (Date.now() > record.expiresAt) {
-    passwordResetStore.delete(cleanEmail);
+  if (Date.now() > expiresAt) {
+    passwordResetStore.delete(targetEmail);
+    user.resetPasswordCode = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    saveUsers(users);
     return res.status(400).json({
       success: false,
       error: 'El código ha expirado (validez: 15 minutos). Solicita uno nuevo.'
     });
   }
 
-  record.attempts = (record.attempts || 0) + 1;
-  if (record.attempts > 5) {
-    passwordResetStore.delete(cleanEmail);
+  attempts += 1;
+  if (memRecord) memRecord.attempts = attempts;
+  user.resetPasswordAttempts = attempts;
+  saveUsers(users);
+
+  if (attempts > 5) {
+    passwordResetStore.delete(targetEmail);
+    user.resetPasswordCode = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    saveUsers(users);
     return res.status(400).json({
       success: false,
       error: 'Demasiados intentos fallidos. Por seguridad, debes solicitar un nuevo código.'
     });
   }
 
-  if (record.code !== cleanCode) {
+  if (String(validCode).trim() !== cleanCode) {
     return res.status(400).json({
       success: false,
-      error: `Código incorrecto. Te quedan ${5 - record.attempts} intentos.`
+      error: `Código incorrecto. Te quedan ${Math.max(0, 5 - attempts)} intentos.`
     });
   }
 
@@ -10254,12 +10577,13 @@ app.post('/api/auth/forgot-password/verify-code', authRateLimitMiddleware, (req,
 
 // Restablecer contraseña con código verificado (soporte dual para /reset y /confirm)
 const handleForgotPasswordReset = async (req, res) => {
-  const { email, code, newPassword } = req.body;
-  if (!email || !code || !newPassword) {
+  const { email, username, code, newPassword } = req.body;
+  const rawId = email || username;
+  if (!rawId || !code || !newPassword) {
     return res.status(400).json({ success: false, error: 'Todos los campos son requeridos.' });
   }
 
-  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanId = String(rawId).trim().toLowerCase();
   const cleanCode = String(code).trim();
   const cleanPass = String(newPassword).trim();
 
@@ -10267,31 +10591,41 @@ const handleForgotPasswordReset = async (req, res) => {
     return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' });
   }
 
-  const record = passwordResetStore.get(cleanEmail);
-  if (!record || record.code !== cleanCode || Date.now() > record.expiresAt) {
+  const users = loadUsers();
+  const user = users.find(u =>
+    (u.email && u.email.toLowerCase() === cleanId) ||
+    (u.username && u.username.toLowerCase() === cleanId)
+  );
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
+  }
+
+  const targetEmail = user.email.toLowerCase();
+  const memRecord = passwordResetStore.get(targetEmail);
+  const validCode = memRecord ? memRecord.code : user.resetPasswordCode;
+  const expiresAt = memRecord ? memRecord.expiresAt : user.resetPasswordExpiresAt;
+
+  if (!validCode || String(validCode).trim() !== cleanCode || (expiresAt && Date.now() > expiresAt)) {
     return res.status(400).json({
       success: false,
       error: 'Código de recuperación inválido o expirado. Solicita un nuevo código.'
     });
   }
 
-  const users = loadUsers();
-  const user = users.find(u => u.email.toLowerCase() === cleanEmail);
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
-  }
-
   user.passwordHash = await hashPassword(cleanPass);
   user.sessionVersion = (typeof user.sessionVersion === 'number' ? user.sessionVersion : 1) + 1;
   user.activeHwid = null;
   user.activeSessionAt = null;
+  user.resetPasswordCode = undefined;
+  user.resetPasswordExpiresAt = undefined;
+  user.resetPasswordAttempts = 0;
   user.updatedAt = new Date().toISOString();
   saveUsers(users);
 
-  passwordResetStore.delete(cleanEmail);
+  passwordResetStore.delete(targetEmail);
 
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-  addAuditLog('USER_PW_RECOVERED', user.hwid || 'RECOVERY', clientIp, `Contraseña recuperada exitosamente por el usuario: ${cleanEmail}`);
+  addAuditLog('USER_PW_RECOVERED', user.hwid || 'RECOVERY', clientIp, `Contraseña recuperada exitosamente por el usuario: ${targetEmail}`);
 
   res.json({
     success: true,

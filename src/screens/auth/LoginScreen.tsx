@@ -25,6 +25,7 @@ import { APP_VERSION } from '../../constants/appVersion';
 import { SqlClient } from '../../services/database/sqlClient';
 import { SecurityService } from '../../services/security/securityService';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
+import * as Clipboard from 'expo-clipboard';
 
 export const LoginScreen = () => {
   const insets = useSafeAreaInsets();
@@ -114,9 +115,89 @@ export const LoginScreen = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSecure, setForgotSecure] = useState(true);
   const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [isEditingVerifyEmail, setIsEditingVerifyEmail] = useState(false);
+
+  // Paste 6-digit OTP code from clipboard with 1 tap
+  const handlePasteVerifyCode = async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text) {
+        const clean = text.trim().replace(/\D/g, '').slice(0, 6);
+        if (clean) setVerifyCode(clean);
+      }
+    } catch (_) {}
+  };
+
+  const handlePasteForgotCode = async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text) {
+        const clean = text.trim().replace(/\D/g, '').slice(0, 6);
+        if (clean) setForgotCode(clean);
+      }
+    } catch (_) {}
+  };
+
+  // Deep linking listener for mumanager://activate and mumanager://reset-password
+  useEffect(() => {
+    const handleIncomingDeepLink = (rawUrl: string | null) => {
+      if (!rawUrl) return;
+      try {
+        const qIdx = rawUrl.indexOf('?');
+        const params: Record<string, string> = {};
+        if (qIdx !== -1) {
+          const queryString = rawUrl.substring(qIdx + 1);
+          queryString.split('&').forEach(part => {
+            const [k, v] = part.split('=');
+            if (k) params[decodeURIComponent(k.trim())] = decodeURIComponent((v || '').trim());
+          });
+        }
+
+        if (rawUrl.includes('activate')) {
+          if (params.status === 'success') {
+            Alert.alert(
+              '¡Cuenta Activada!',
+              'Tu cuenta ha sido verificada y activada exitosamente vía web. Ya puedes iniciar sesión con tu usuario o correo y contraseña.'
+            );
+            if (params.email) {
+              setEmail(params.email);
+              setUsername(params.email.includes('@') ? params.email.split('@')[0] : params.email);
+            }
+          } else {
+            const targetMail = params.email || '';
+            const targetCode = params.code || '';
+            if (targetMail) {
+              setVerifyEmail(targetMail);
+              setIsEditingVerifyEmail(false);
+            }
+            if (targetCode) setVerifyCode(targetCode);
+            setVerifyModalVisible(true);
+          }
+        } else if (rawUrl.includes('reset-password')) {
+          const targetMail = params.email || '';
+          const targetCode = params.code || '';
+          if (targetMail) setForgotEmail(targetMail);
+          if (targetCode) setForgotCode(targetCode);
+          setForgotStep(2);
+          setForgotModalVisible(true);
+        }
+      } catch (err) {
+        console.warn('[DeepLink Handler Error]', err);
+      }
+    };
+
+    Linking.getInitialURL().then(handleIncomingDeepLink).catch(() => {});
+    const sub = Linking.addEventListener('url', (e) => handleIncomingDeepLink(e.url));
+    return () => sub.remove();
+  }, []);
 
   const handleVerifyRegistration = async () => {
+    const cleanMail = verifyEmail.trim();
     const cleanCode = verifyCode.trim();
+    if (!cleanMail) {
+      Alert.alert('Correo o Usuario Requerido', 'Por favor ingresa tu correo registrado o nombre de usuario para activar la cuenta.');
+      return;
+    }
     if (!cleanCode || cleanCode.length < 6) {
       Alert.alert('Código Requerido', 'Ingresa el código numérico de 6 dígitos recibido por correo.');
       return;
@@ -124,10 +205,11 @@ export const LoginScreen = () => {
 
     setVerifyLoading(true);
     try {
-      const res = await verifyRegistration(verifyEmail, cleanCode);
+      const res = await verifyRegistration(cleanMail, cleanCode);
       if (res.success) {
         setVerifyModalVisible(false);
         setVerifyCode('');
+        setIsEditingVerifyEmail(false);
         Alert.alert(
           '¡Cuenta Activada!',
           res.message || 'Tu cuenta ha sido verificada y activada con éxito. Ya puedes acceder al sistema.'
@@ -143,9 +225,14 @@ export const LoginScreen = () => {
   };
 
   const handleResendVerification = async () => {
+    const cleanMail = verifyEmail.trim();
+    if (!cleanMail) {
+      Alert.alert('Correo o Usuario Requerido', 'Por favor ingresa tu correo registrado para reenviar el código.');
+      return;
+    }
     setResendLoading(true);
     try {
-      const res = await resendVerificationCode(verifyEmail);
+      const res = await resendVerificationCode(cleanMail);
       if (res.success) {
         if (res.devCode) {
           setVerifyCode(res.devCode);
@@ -219,8 +306,8 @@ export const LoginScreen = () => {
       Alert.alert('Contraseña Requerida', 'Por favor ingresa tu nueva contraseña.');
       return;
     }
-    if (cleanPass.length < 6) {
-      Alert.alert('Contraseña Débil', 'La nueva contraseña debe tener al menos 6 caracteres.');
+    if (cleanPass.length < 8) {
+      Alert.alert('Contraseña Débil', 'La nueva contraseña debe tener al menos 8 caracteres.');
       return;
     }
     if (cleanPass !== cleanConfirm) {
@@ -320,8 +407,8 @@ export const LoginScreen = () => {
         Alert.alert('Contraseña requerida', 'Por favor ingresa una contraseña.');
         return;
       }
-      if (cleanPass.length < 4) {
-        Alert.alert('Contraseña débil', 'La contraseña debe tener al menos 4 caracteres.');
+      if (cleanPass.length < 8) {
+        Alert.alert('Contraseña débil', 'La contraseña debe tener al menos 8 caracteres.');
         return;
       }
       if (cleanPass !== cleanConfirm) {
@@ -334,6 +421,7 @@ export const LoginScreen = () => {
         const regRes = await register(cleanEmail, cleanPass, cleanUser);
         if (regRes.success) {
           setVerifyEmail(cleanEmail);
+          setIsEditingVerifyEmail(false);
           setVerifyCode(regRes.devCode || '');
           setVerifyModalVisible(true);
           if (regRes.devCode) {
@@ -374,7 +462,9 @@ export const LoginScreen = () => {
                 {
                   text: 'Verificar Ahora',
                   onPress: () => {
-                    setVerifyEmail(cleanUser.includes('@') ? cleanUser : '');
+                    const targetEmail = loginRes.email || (cleanUser.includes('@') ? cleanUser : '');
+                    setVerifyEmail(targetEmail);
+                    setIsEditingVerifyEmail(!targetEmail);
                     setVerifyCode('');
                     setVerifyModalVisible(true);
                   },
@@ -806,21 +896,20 @@ export const LoginScreen = () => {
               {forgotStep === 1 ? (
                 <View>
                   <Text style={{ color: THEME.colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 16 }}>
-                    Ingresa tu correo electrónico registrado. Te enviaremos un código de seguridad de 6 dígitos para restablecer tu contraseña.
+                    Ingresa tu correo electrónico registrado o nombre de usuario. Te enviaremos un código de seguridad de 6 dígitos para restablecer tu contraseña.
                   </Text>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Correo Electrónico</Text>
+                    <Text style={styles.label}>Correo Electrónico o Usuario</Text>
                     <View style={styles.inputWrapper}>
                       <MaterialCommunityIcons name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
-                        placeholder="tu@correo.com"
+                        placeholder="tu@correo.com o tu_usuario"
                         placeholderTextColor={THEME.colors.textMuted}
                         value={forgotEmail}
                         onChangeText={setForgotEmail}
                         autoCapitalize="none"
-                        keyboardType="email-address"
                       />
                     </View>
                   </View>
@@ -858,7 +947,19 @@ export const LoginScreen = () => {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Código de Seguridad (6 dígitos)</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.label}>Código de Seguridad (6 dígitos)</Text>
+                      <TouchableOpacity
+                        onPress={handlePasteForgotCode}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2, paddingHorizontal: 6 }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Pegar código de seguridad desde portapapeles"
+                      >
+                        <MaterialCommunityIcons name="content-paste" size={14} color={THEME.colors.primaryOrange} />
+                        <Text style={{ color: THEME.colors.primaryOrange, fontSize: 11, fontWeight: '700' }}>Pegar</Text>
+                      </TouchableOpacity>
+                    </View>
                     <View style={styles.inputWrapper}>
                       <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
                       <TextInput
@@ -959,20 +1060,64 @@ export const LoginScreen = () => {
                 Hemos enviado un código numérico de 6 dígitos a tu correo. Ingrésalo a continuación para activar tu cuenta e iniciar sesión.
               </Text>
 
-              <View style={styles.lockedEmailBadge}>
-                <MaterialCommunityIcons name="lock" size={18} color={THEME.colors.primaryOrange} />
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
-                    Correo a verificar
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '700' }} numberOfLines={1}>
-                    {verifyEmail}
-                  </Text>
+              {!isEditingVerifyEmail && verifyEmail ? (
+                <View style={styles.lockedEmailBadge}>
+                  <MaterialCommunityIcons name="email-check" size={18} color={THEME.colors.primaryOrange} />
+                  <View style={{ flex: 1, marginLeft: 8 }}>
+                    <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
+                      Cuenta / Correo a verificar
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#FFF', fontWeight: '700' }} numberOfLines={1}>
+                      {verifyEmail}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setIsEditingVerifyEmail(true)}
+                    style={styles.changeEmailBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={{ fontSize: 11, color: THEME.colors.textSecondary }}>Cambiar</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
+              ) : (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Correo o Nombre de Usuario</Text>
+                  <View style={styles.inputWrapper}>
+                    <MaterialCommunityIcons name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="tu@correo.com o tu_usuario"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={verifyEmail}
+                      onChangeText={setVerifyEmail}
+                      autoCapitalize="none"
+                    />
+                    {verifyEmail.trim().length > 0 ? (
+                      <TouchableOpacity
+                        onPress={() => setIsEditingVerifyEmail(false)}
+                        style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+                      >
+                        <Text style={{ color: THEME.colors.primaryOrange, fontSize: 12, fontWeight: '700' }}>OK</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+              )}
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Código de Activación (6 dígitos)</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.label}>Código de Activación (6 dígitos)</Text>
+                  <TouchableOpacity
+                    onPress={handlePasteVerifyCode}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2, paddingHorizontal: 6 }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Pegar código de activación desde portapapeles"
+                  >
+                    <MaterialCommunityIcons name="content-paste" size={14} color={THEME.colors.primaryOrange} />
+                    <Text style={{ color: THEME.colors.primaryOrange, fontSize: 11, fontWeight: '700' }}>Pegar</Text>
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.inputWrapper}>
                   <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
                   <TextInput

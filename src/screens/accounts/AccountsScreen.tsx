@@ -483,7 +483,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       const payload: AccountUpdateData = {
         username: selectedAccount.memb___id,
         newUsername: editUsername.trim() !== selectedAccount.memb___id ? editUsername.trim() : undefined,
-        password: editPassword.trim(),
+        password: (editPassword.trim() && editPassword.trim() !== '••••••••' && editPassword.trim() !== selectedAccount.memb__pwd) ? editPassword.trim() : undefined,
         name: editName.trim(),
         email: editEmail.trim(),
         accountLevel: editVipLevel,
@@ -502,7 +502,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         setSelectedAccount(prev => prev ? {
           ...prev,
           memb___id: activeUser,
-          memb__pwd: payload.password,
+          memb__pwd: payload.password || selectedAccount.memb__pwd,
           memb_name: payload.name,
           mail_addr: payload.email,
           AccountLevel: payload.accountLevel || 0,

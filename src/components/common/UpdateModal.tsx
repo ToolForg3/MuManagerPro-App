@@ -21,6 +21,7 @@ interface UpdateModalProps {
 
 export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo }) => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadStarted, setDownloadStarted] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
 
   if (!visible || !updateInfo) return null;
@@ -37,6 +38,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
       return;
     }
     try {
+      if (typeof setDownloadStarted === 'function') {
+        setDownloadStarted(true);
+      }
       await Linking.openURL(url.trim());
     } catch (e: any) {
       console.warn('Could not open APK URL', e);
@@ -159,6 +163,22 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
                     </TouchableOpacity>
                   )}
                 </View>
+              </View>
+            )}
+
+            {/* Banner instructivo cuando se inicia la descarga del APK */}
+            {downloadStarted && (
+              <View style={styles.instructionBox}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <MaterialCommunityIcons name="information" size={18} color={THEME.colors.oroClaro} style={{ marginRight: 6 }} />
+                  <Text style={styles.instructionTitle}>Pasos para Completar la Instalación</Text>
+                </View>
+                <Text style={styles.instructionMsg}>
+                  La descarga se ha iniciado en tu navegador. Para que la actualización tome efecto:
+                </Text>
+                <Text style={styles.instructionStep}>1. Desliza la barra superior de Android o entra a tu app "Descargas".</Text>
+                <Text style={styles.instructionStep}>2. Toca "MuManagerPro.apk" y selecciona "Actualizar" o "Instalar".</Text>
+                <Text style={styles.instructionStep}>3. Abre la app al terminar para ingresar a la nueva versión v{updateInfo.latestVersion}.</Text>
               </View>
             )}
 
@@ -415,5 +435,33 @@ const styles = StyleSheet.create({
     color: THEME.colors.oroClaro,
     fontSize: 12,
     fontWeight: '700',
+  },
+  instructionBox: {
+    width: '100%',
+    backgroundColor: 'rgba(232, 200, 106, 0.1)',
+    borderWidth: 1,
+    borderColor: THEME.colors.oroClaro,
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 14,
+  },
+  instructionTitle: {
+    color: THEME.colors.oroClaro,
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  instructionMsg: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+  instructionStep: {
+    color: THEME.colors.texto,
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: 3,
   },
 });

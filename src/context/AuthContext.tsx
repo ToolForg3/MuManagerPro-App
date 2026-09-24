@@ -17,7 +17,7 @@ interface AuthContextType {
   demoRemainingSeconds: number;
   isDemoExpired: boolean;
   clearDemoExpiredNotice: () => void;
-  login: (usernameOrEmail: string, pass: string, remember: boolean) => Promise<{ success: boolean; requiresVerification?: boolean; error?: string }>;
+  login: (usernameOrEmail: string, pass: string, remember: boolean) => Promise<{ success: boolean; requiresVerification?: boolean; email?: string; error?: string }>;
   loginDemo: () => Promise<{ success: boolean; error?: string }>;
   register: (email: string, pass: string, username?: string) => Promise<{ success: boolean; requiresVerification?: boolean; email?: string; error?: string; message?: string; pendingSmtp?: boolean; devCode?: string }>;
   verifyRegistration: (email: string, code: string) => Promise<{ success: boolean; token?: string; error?: string; message?: string }>;
@@ -262,7 +262,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     usernameOrEmail: string,
     pass: string,
     remember: boolean
-  ): Promise<{ success: boolean; requiresVerification?: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; requiresVerification?: boolean; email?: string; error?: string }> => {
     if (!usernameOrEmail || !pass) return { success: false, error: 'Usuario y contraseña requeridos.' };
 
     const cleanPass = pass.trim();
@@ -302,6 +302,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return {
           success: false,
           requiresVerification: true,
+          email: data.email,
           error: data.message || 'Tu cuenta está pendiente de verificación.',
         };
       } else if (!res.ok) {
@@ -526,20 +527,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (data.token) {
           SqlClient.setSessionToken(data.token);
         }
+        const resolvedVerifiedEmail = (data.user && data.user.email) ? data.user.email : cleanEmail;
+        const resolvedVerifiedUsername = (data.user && data.user.username) ? data.user.username : (cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail);
         setIsAuthenticated(true);
-        setUserEmail(cleanEmail);
-        SqlClient.setActiveUser(cleanEmail);
+        setUserEmail(resolvedVerifiedEmail);
+        setUserName(resolvedVerifiedUsername);
+        SqlClient.setActiveUser(resolvedVerifiedUsername);
         try {
           await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
-          await AsyncStorage.setItem('@mumanager_auth_email', cleanEmail);
-          await AsyncStorage.setItem(SAVED_EMAIL_KEY, cleanEmail);
+          await AsyncStorage.setItem('@mumanager_auth_email', resolvedVerifiedEmail);
+          await AsyncStorage.setItem('@mumanager_auth_username', resolvedVerifiedUsername);
+          await AsyncStorage.setItem(SAVED_EMAIL_KEY, resolvedVerifiedEmail);
+          await AsyncStorage.setItem(SAVED_USERNAME_KEY, resolvedVerifiedUsername);
           const currentLicense = LicenseService.getStatus();
           SqlClient.sendTelemetryPing(
             hwid,
             currentLicense.plan || 'DEMO',
             currentLicense.licenseKey,
-            cleanEmail,
-            cleanEmail.split('@')[0]
+            resolvedVerifiedEmail,
+            resolvedVerifiedUsername
           ).catch(() => {});
         } catch (e) {
           console.warn('Error saving verified session', e);
