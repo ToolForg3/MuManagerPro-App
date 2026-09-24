@@ -547,6 +547,119 @@
       box-shadow: 0 4px 18px rgba(0,0,0,0.5);
     }
 
+    /* Centro de Notificaciones & Eventos en Vivo */
+    .notifications-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 440px;
+      max-width: 90vw;
+      background: #141418;
+      border: 1px solid #33333A;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 87, 34, 0.1);
+      border-radius: 6px;
+      z-index: 10000;
+      overflow: hidden;
+      animation: notifFadeIn 0.2s ease-out;
+    }
+    @keyframes notifFadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .notif-header {
+      padding: 12px 16px;
+      background: #18181D;
+      border-bottom: 1px solid #282830;
+      display: flex;
+      align-items: center;
+    }
+    .notif-filters {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px;
+      background: #101014;
+      border-bottom: 1px solid #222228;
+      overflow-x: auto;
+    }
+    .notif-filter-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #C8BEAF;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .notif-filter-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #FAF6EE;
+    }
+    .notif-filter-btn.active {
+      background: rgba(255, 87, 34, 0.15);
+      border-color: rgba(255, 87, 34, 0.4);
+      color: #FF7043;
+    }
+    .notif-list {
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+    .notif-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #1E1E24;
+      cursor: pointer;
+      transition: background 0.2s;
+      align-items: flex-start;
+    }
+    .notif-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .notif-item.unread {
+      background: rgba(255, 87, 34, 0.04);
+      border-left: 3px solid var(--orange);
+    }
+    .notif-item-icon {
+      font-size: 18px;
+      line-height: 1;
+      padding-top: 2px;
+    }
+    .notif-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .notif-item-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FAF6EE;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .notif-item-desc {
+      font-size: 11px;
+      color: #C8BEAF;
+      margin-top: 3px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .notif-item-time {
+      font-size: 10px;
+      color: #B8AEA0;
+      white-space: nowrap;
+    }
+    .notif-empty {
+      padding: 30px 20px;
+      text-align: center;
+      color: #B8AEA0;
+      font-size: 12px;
+    }
+
     /* Menú Contextual Flotante (Clic Derecho) */
     .context-menu {
       position: absolute;
@@ -1216,7 +1329,7 @@
       <div class="brand-logo">🐉</div>
       <div>
         <h1 style="display:flex; align-items:center; gap:10px;">
-          Mu Manager PRO <span class="badge" style="background:rgba(255,87,34,0.18); color:var(--orange); border:1px solid rgba(255,87,34,0.35); font-size:12px; font-weight:800;">v1.4.3 OFICIAL</span>
+          Mu Manager PRO <span class="badge" style="background:rgba(255,87,34,0.18); color:var(--orange); border:1px solid rgba(255,87,34,0.35); font-size:12px; font-weight:800;">v2.1.6 OFICIAL</span>
         </h1>
         <p>Centro de Operaciones Maestro — Sincronización en Tiempo Real & Control Louis S6</p>
       </div>
@@ -1225,6 +1338,40 @@
       <div class="status-badge" style="display:flex; align-items:center; gap:8px;">
         <div class="status-dot" id="header-status-dot"></div>
         <span id="bridge-status">Pasarela Sincronizada</span>
+      </div>
+      <!-- Centro de Notificaciones & Eventos en Vivo -->
+      <div class="notifications-wrapper" style="position: relative;">
+        <button type="button" class="btn btn-dark btn-sm" id="btn-notifications" onclick="toggleNotificationsDrawer()" title="Centro de Notificaciones y Eventos en Vivo" style="position: relative;">
+          🔔 <span style="font-weight: 700;">Alertas</span>
+          <span id="notif-count-badge" class="badge badge-pulse" style="background: #FF5252; color: #FAF6EE; font-size: 10px; padding: 2px 6px; border-radius: 6px; display: none; margin-left: 4px;">0</span>
+        </button>
+        <div id="notifications-dropdown" class="notifications-dropdown" style="display: none;">
+          <div class="notif-header">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <div style="font-weight: 800; font-size: 13px; color: #FAF6EE; display: flex; align-items: center; gap: 6px;">
+                <span>🔔 Eventos & Alertas en Vivo</span>
+                <span id="notif-total-indicator" class="badge" style="background: rgba(255,82,82,0.2); color: #FF5252; font-size: 10px; border: 1px solid rgba(255,82,82,0.4);">0</span>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" class="btn btn-dark btn-sm" style="font-size: 10px; padding: 3px 8px;" onclick="clearAllNotificationsUI()" title="Marcar todas como vistas">✓ Limpiar</button>
+                <button type="button" class="btn btn-dark btn-sm" style="font-size: 10px; padding: 3px 8px;" onclick="toggleNotificationsDrawer(false)">✕</button>
+              </div>
+            </div>
+          </div>
+          <div class="notif-filters">
+            <button type="button" class="notif-filter-btn active" data-filter="all" onclick="filterNotifications('all')">Todos (<span id="notif-count-all">0</span>)</button>
+            <button type="button" class="notif-filter-btn" data-filter="requests" onclick="filterNotifications('requests')">⭐ Solicitudes (<span id="notif-count-requests">0</span>)</button>
+            <button type="button" class="notif-filter-btn" data-filter="blocks" onclick="filterNotifications('blocks')">⛔ Bloqueos (<span id="notif-count-blocks">0</span>)</button>
+            <button type="button" class="notif-filter-btn" data-filter="revoked" onclick="filterNotifications('revoked')">⚠️ Revocadas (<span id="notif-count-revoked">0</span>)</button>
+            <button type="button" class="notif-filter-btn" data-filter="security" onclick="filterNotifications('security')">🚨 Seguridad (<span id="notif-count-security">0</span>)</button>
+          </div>
+          <div class="notif-list" id="notifications-list">
+            <div class="notif-empty" id="notif-empty-state">
+              <span style="font-size: 24px; display: block; margin-bottom: 8px;">🟢</span>
+              <p style="color: #B8AEA0; margin: 0;">No hay alertas ni eventos pendientes en el sistema.</p>
+            </div>
+          </div>
+        </div>
       </div>
       <button class="btn btn-green btn-sm" onclick="forceSyncNow()" title="Sincronizar y verificar estado inmediatamente">🔄 Sincronizar Ahora</button>
       <button class="btn btn-dark btn-sm" id="btn-toggle-autorefresh" onclick="toggleAutoRefresh()" title="Pausar o reanudar el auto-refresco en segundo plano">⏸️ Auto (15s)</button>
@@ -2183,7 +2330,7 @@
       </p>
 
       <div style="max-width: 600px; margin-bottom: 14px;">
-        <label style="font-size:12px; color:#AAA; margin-bottom:6px; display:block;">Código de Celular (HWID):</label>
+        <label style="font-size:12px; color:#C8BEAF; margin-bottom:6px; display:block;">Código de Celular (HWID):</label>
         <div style="display: flex; gap: 10px;">
           <input type="text" id="free-hwid-input" class="form-control" placeholder="CEL-XXXX-XXXX-XXXX" style="font-family: var(--font-mono); font-size: 15px;" />
           <button class="btn btn-green" onclick="generateFreeKey()">Generar Clave</button>
@@ -2191,15 +2338,29 @@
       </div>
 
       <div style="max-width: 600px; margin-bottom: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
-        <label style="font-size:12px; font-weight:700; color:#CCC; margin-bottom:8px; display:block;">Vigencia para esta Licencia:</label>
+        <label style="font-size:12px; font-weight:700; color:#FAF6EE; margin-bottom:8px; display:block;">Vigencia para esta Licencia:</label>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <select id="keygen-duration-select" class="form-control" style="width: auto; font-size: 13px;" onchange="onKeygenDurationChange(this.value)">
             <option value="LIFETIME">♾️ Vitalicia (Permanente - Sin Vencimiento)</option>
-            <option value="30">📅 30 Días (1 Mes)</option>
-            <option value="90">📅 90 Días (3 Meses)</option>
-            <option value="180">📅 180 Días (6 Meses)</option>
-            <option value="365">📅 365 Días (1 Año)</option>
-            <option value="custom">⏱️ Personalizado en días...</option>
+            <optgroup label="⚡ Minutos & Horas">
+              <option value="15m">⚡ 15 Minutos (Prueba Rápida)</option>
+              <option value="30m">⚡ 30 Minutos</option>
+              <option value="1h">⚡ 1 Hora</option>
+              <option value="6h">⚡ 6 Horas</option>
+              <option value="12h">⚡ 12 Horas</option>
+              <option value="24h">⚡ 24 Horas (1 Día)</option>
+            </optgroup>
+            <optgroup label="📅 Días & Meses">
+              <option value="7">📅 7 Días (1 Semana)</option>
+              <option value="15">📅 15 Días (Quincena)</option>
+              <option value="30" selected>📅 30 Días (1 Mes)</option>
+              <option value="90">📅 90 Días (3 Meses)</option>
+              <option value="180">📅 180 Días (6 Meses)</option>
+              <option value="365">📅 365 Días (1 Año)</option>
+            </optgroup>
+            <optgroup label="⚙️ Personalizado">
+              <option value="custom">⏱️ Personalizado en días...</option>
+            </optgroup>
           </select>
           <div id="keygen-custom-days-box" style="display:none; align-items:center; gap:6px;">
             <input type="number" id="keygen-custom-days-input" class="form-control" style="width: 100px; font-size: 13px;" placeholder="Días" min="1" max="3650" />
@@ -2315,6 +2476,13 @@
     let currentTargetUser = null;
     let allDevicesCache = [];
     let allUsersCache = [];
+    let allProRequestsCache = [];
+    let allLicensesCache = [];
+    let excludedDevicesCache = [];
+    let revokedKeysCache = [];
+    let allSecurityAlertsCache = [];
+    let currentNotifFilter = 'all';
+    const dismissedNotificationIds = new Set();
     const locallyDeletedHwids = new Set();
     const locallyDeletedUserIds = new Set();
 
@@ -2329,6 +2497,11 @@
       if (savedUsers) {
         const parsed = JSON.parse(savedUsers);
         if (Array.isArray(parsed) && parsed.length > 0) allUsersCache = parsed;
+      }
+      const savedDismissed = sessionStorage.getItem('mumanager_dismissed_notifs');
+      if (savedDismissed) {
+        const parsed = JSON.parse(savedDismissed);
+        if (Array.isArray(parsed)) parsed.forEach(id => dismissedNotificationIds.add(id));
       }
       // Purgar residuos persistentes en localStorage
       try {
@@ -2356,6 +2529,326 @@
       toast.style.display = 'block';
       setTimeout(() => { toast.style.display = 'none'; }, 3500);
     }
+
+    /* ========================================================
+       CENTRO DE NOTIFICACIONES & EVENTOS EN VIVO
+       ======================================================== */
+    function collectSystemEvents() {
+      const events = [];
+
+      // 1. Solicitudes PRO de clientes (Pendientes)
+      if (Array.isArray(allProRequestsCache)) {
+        allProRequestsCache.forEach(req => {
+          if (req && req.status === 'PENDING') {
+            const id = `req_${req.id || req.hwid}`;
+            const reqTime = req.createdAt ? new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            const reqName = req.name || req.email || req.hwid || 'Cliente';
+            events.push({
+              id,
+              category: 'requests',
+              typeBadge: 'SOLICITUD PRO',
+              typeBadgeBg: 'rgba(232, 200, 106, 0.18)',
+              typeBadgeColor: '#E8C86A',
+              icon: '⭐',
+              title: `Solicitud PRO: ${reqName}`,
+              desc: `${req.hwid ? 'HWID: ' + req.hwid : ''}${req.phone ? ' • Tel: ' + req.phone : ''}${req.message || req.reason ? ' • ' + (req.message || req.reason) : ''}`,
+              time: reqTime,
+              rawTime: req.createdAt ? new Date(req.createdAt).getTime() : 0,
+              targetTab: 'tab-pro-requests',
+              targetId: req.id,
+              hwid: req.hwid,
+              unread: !dismissedNotificationIds.has(id)
+            });
+          }
+        });
+      }
+
+      // 2. Dispositivos Bloqueados (Kill-Switch o Suspendidos)
+      if (Array.isArray(allDevicesCache)) {
+        allDevicesCache.forEach(dev => {
+          if (dev && dev.blocked && !locallyDeletedHwids.has(String(dev.hwid).toUpperCase())) {
+            const id = `block_${dev.hwid}`;
+            const devTime = dev.lastSeen ? new Date(dev.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            events.push({
+              id,
+              category: 'blocks',
+              typeBadge: 'BLOQUEADO',
+              typeBadgeBg: 'rgba(255, 82, 82, 0.2)',
+              typeBadgeColor: '#FF5252',
+              icon: '⛔',
+              title: `Celular Bloqueado: ${dev.hwid}`,
+              desc: `Motivo: ${dev.blockReason || 'Suspendido por administrador'}${dev.currentUser ? ' • Usuario: ' + dev.currentUser : ''}${dev.deviceModel ? ' • ' + dev.deviceModel : ''}`,
+              time: devTime,
+              rawTime: dev.lastSeen ? new Date(dev.lastSeen).getTime() : 0,
+              targetTab: 'tab-devices',
+              targetId: dev.hwid,
+              hwid: dev.hwid,
+              unread: !dismissedNotificationIds.has(id)
+            });
+          }
+        });
+      }
+
+      // 3. Licencias Revocadas & Dispositivos Excluidos (Tombstones)
+      if (Array.isArray(excludedDevicesCache)) {
+        excludedDevicesCache.forEach(ex => {
+          if (ex && ex.hwid) {
+            const id = `excl_${ex.hwid}`;
+            const exclTime = ex.deletedAt && ex.deletedAt !== 'N/A' ? new Date(ex.deletedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            events.push({
+              id,
+              category: 'revoked',
+              typeBadge: 'EXCLUIDO',
+              typeBadgeBg: 'rgba(255, 112, 67, 0.2)',
+              typeBadgeColor: '#FF7043',
+              icon: '⚠️',
+              title: `Dispositivo Excluido: ${ex.hwid}`,
+              desc: `Motivo: ${ex.reason || 'Eliminado / En lista negra'}${ex.revokedKey && ex.revokedKey !== 'N/A' ? ' • Clave: ' + ex.revokedKey : ''}`,
+              time: exclTime,
+              rawTime: ex.deletedAt && ex.deletedAt !== 'N/A' ? new Date(ex.deletedAt).getTime() : 0,
+              targetTab: 'tab-all-licenses',
+              targetId: ex.hwid,
+              hwid: ex.hwid,
+              unread: !dismissedNotificationIds.has(id)
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(revokedKeysCache)) {
+        revokedKeysCache.forEach(rk => {
+          if (rk && rk.licenseKey) {
+            const id = `revkey_${rk.licenseKey}`;
+            const revTime = rk.revokedAt && rk.revokedAt !== 'N/A' ? new Date(rk.revokedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            events.push({
+              id,
+              category: 'revoked',
+              typeBadge: 'CLAVE REVOCADA',
+              typeBadgeBg: 'rgba(255, 112, 67, 0.2)',
+              typeBadgeColor: '#FF7043',
+              icon: '🗝️',
+              title: `Clave Revocada: ${rk.licenseKey}`,
+              desc: `HWID: ${rk.hwid || 'N/A'} • Motivo: ${rk.reason || 'Revocación de licencia'}`,
+              time: revTime,
+              rawTime: rk.revokedAt && rk.revokedAt !== 'N/A' ? new Date(rk.revokedAt).getTime() : 0,
+              targetTab: 'tab-all-licenses',
+              targetId: rk.licenseKey,
+              hwid: rk.hwid,
+              unread: !dismissedNotificationIds.has(id)
+            });
+          }
+        });
+      }
+
+      // 4. Incidentes de Seguridad
+      if (Array.isArray(allSecurityAlertsCache)) {
+        allSecurityAlertsCache.forEach(sec => {
+          if (sec && (sec.severity === 'CRITICAL' || sec.severity === 'HIGH' || !sec.read)) {
+            const id = `sec_${sec.id || (sec.timestamp + '_' + sec.ip)}`;
+            const isCritical = sec.severity === 'CRITICAL';
+            const secTime = sec.timestamp ? new Date(sec.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            events.push({
+              id,
+              category: 'security',
+              typeBadge: isCritical ? 'CRÍTICO' : (sec.severity || 'ALERTA'),
+              typeBadgeBg: isCritical ? 'rgba(255, 82, 82, 0.25)' : 'rgba(255, 183, 77, 0.2)',
+              typeBadgeColor: isCritical ? '#FF5252' : '#FFB74D',
+              icon: '🚨',
+              title: `Seguridad: ${sec.type || 'Incidente Detectado'}`,
+              desc: `${sec.message || ''} • IP: ${sec.ip || '127.0.0.1'}${sec.hwid ? ' • ' + sec.hwid : ''}`,
+              time: secTime,
+              rawTime: sec.timestamp ? new Date(sec.timestamp).getTime() : 0,
+              targetTab: 'tab-security',
+              targetId: sec.id,
+              hwid: sec.hwid,
+              unread: !dismissedNotificationIds.has(id)
+            });
+          }
+        });
+      }
+
+      // Ordenar cronológicamente (más recientes primero)
+      events.sort((a, b) => (b.rawTime || 0) - (a.rawTime || 0));
+      return events;
+    }
+
+    function updateNotificationBadges() {
+      const allEvents = collectSystemEvents();
+      const unreadEvents = allEvents.filter(e => !dismissedNotificationIds.has(e.id));
+      const unreadCount = unreadEvents.length;
+
+      const countBadge = document.getElementById('notif-count-badge');
+      if (countBadge) {
+        countBadge.innerText = unreadCount;
+        countBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+      }
+
+      const totalIndicator = document.getElementById('notif-total-indicator');
+      if (totalIndicator) {
+        totalIndicator.innerText = unreadCount;
+      }
+
+      const reqCount = unreadEvents.filter(e => e.category === 'requests').length;
+      const blockCount = unreadEvents.filter(e => e.category === 'blocks').length;
+      const revokedCount = unreadEvents.filter(e => e.category === 'revoked').length;
+      const secCount = unreadEvents.filter(e => e.category === 'security').length;
+
+      const elAll = document.getElementById('notif-count-all');
+      if (elAll) elAll.innerText = unreadCount;
+      const elReq = document.getElementById('notif-count-requests');
+      if (elReq) elReq.innerText = reqCount;
+      const elBlk = document.getElementById('notif-count-blocks');
+      if (elBlk) elBlk.innerText = blockCount;
+      const elRev = document.getElementById('notif-count-revoked');
+      if (elRev) elRev.innerText = revokedCount;
+      const elSec = document.getElementById('notif-count-security');
+      if (elSec) elSec.innerText = secCount;
+
+      const dropdown = document.getElementById('notifications-dropdown');
+      if (dropdown && dropdown.style.display === 'block') {
+        renderNotificationsList(allEvents);
+      }
+    }
+
+    function renderNotificationsList(events) {
+      const allEvents = events || collectSystemEvents();
+      const listEl = document.getElementById('notifications-list');
+      const emptyState = document.getElementById('notif-empty-state');
+      if (!listEl) return;
+
+      const filtered = (currentNotifFilter === 'all')
+        ? allEvents
+        : allEvents.filter(e => e.category === currentNotifFilter);
+
+      const visibleItems = filtered.filter(e => !dismissedNotificationIds.has(e.id));
+
+      Array.from(listEl.querySelectorAll('.notif-item')).forEach(el => el.remove());
+
+      if (visibleItems.length === 0) {
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+      }
+
+      if (emptyState) emptyState.style.display = 'none';
+
+      visibleItems.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'notif-item unread';
+        itemEl.setAttribute('data-id', item.id);
+        itemEl.innerHTML = `
+          <div class="notif-item-icon">${item.icon}</div>
+          <div class="notif-item-content">
+            <div class="notif-item-title">
+              <span style="color:#FAF6EE;">${escapeHtml(item.title)}</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="background:${item.typeBadgeBg}; color:${item.typeBadgeColor}; font-size:9px; padding:2px 6px; border-radius:4px; font-weight:700;">${item.typeBadge}</span>
+                <span class="notif-item-time" style="color:#B8AEA0;">${escapeHtml(item.time)}</span>
+              </div>
+            </div>
+            <div class="notif-item-desc" style="color:#C8BEAF;">${escapeHtml(item.desc)}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <button type="button" class="btn btn-dark btn-sm" style="font-size:10px; padding:2px 8px; color:#E8C86A; border:1px solid rgba(232,200,106,0.3);" onclick="handleNotificationClick('${item.targetTab}', '${item.targetId || item.hwid}'); event.stopPropagation();">
+                Ver Detalles &rarr;
+              </button>
+              <button type="button" class="btn btn-dark btn-sm" style="font-size:10px; padding:2px 6px; color:#B8AEA0;" onclick="dismissSingleNotification('${item.id}', event)" title="Descartar esta notificación">
+                ✕ Descartar
+              </button>
+            </div>
+          </div>
+        `;
+        itemEl.addEventListener('click', () => {
+          handleNotificationClick(item.targetTab, item.targetId || item.hwid);
+        });
+        listEl.appendChild(itemEl);
+      });
+    }
+
+    function toggleNotificationsDrawer(forceState) {
+      const dropdown = document.getElementById('notifications-dropdown');
+      if (!dropdown) return;
+      const isCurrentlyOpen = dropdown.style.display === 'block';
+      const shouldOpen = (typeof forceState === 'boolean') ? forceState : !isCurrentlyOpen;
+
+      dropdown.style.display = shouldOpen ? 'block' : 'none';
+      if (shouldOpen) {
+        renderNotificationsList();
+      }
+    }
+
+    function filterNotifications(filter) {
+      currentNotifFilter = filter;
+      document.querySelectorAll('.notif-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+      });
+      renderNotificationsList();
+    }
+
+    function clearAllNotificationsUI() {
+      const allEvents = collectSystemEvents();
+      allEvents.forEach(e => dismissedNotificationIds.add(e.id));
+      try {
+        sessionStorage.setItem('mumanager_dismissed_notifs', JSON.stringify(Array.from(dismissedNotificationIds)));
+      } catch (_) {}
+      updateNotificationBadges();
+      renderNotificationsList();
+      showToast('Notificaciones marcadas como vistas');
+    }
+
+    function dismissSingleNotification(id, event) {
+      if (event) event.stopPropagation();
+      dismissedNotificationIds.add(id);
+      try {
+        sessionStorage.setItem('mumanager_dismissed_notifs', JSON.stringify(Array.from(dismissedNotificationIds)));
+      } catch (_) {}
+      updateNotificationBadges();
+      renderNotificationsList();
+    }
+
+    function handleNotificationClick(tabId, targetId) {
+      toggleNotificationsDrawer(false);
+      if (!tabId) return;
+
+      switchTab(tabId);
+
+      if (tabId === 'tab-devices' && targetId) {
+        const searchInput = document.getElementById('search-hwid');
+        if (searchInput) {
+          searchInput.value = targetId;
+          filterDevices();
+        }
+        setTimeout(() => {
+          if (typeof openDeviceModal === 'function') openDeviceModal(targetId);
+        }, 200);
+      } else if (tabId === 'tab-pro-requests' && targetId) {
+        setTimeout(() => {
+          const row = document.querySelector(`tr[data-req-id="${targetId}"]`);
+          if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.style.outline = '2px solid #E8C86A';
+            setTimeout(() => { row.style.outline = 'none'; }, 2500);
+          }
+        }, 200);
+      } else if (tabId === 'tab-all-licenses' && targetId) {
+        const searchInput = document.getElementById('search-license');
+        if (searchInput) {
+          searchInput.value = targetId;
+          if (typeof filterLicenses === 'function') filterLicenses();
+        }
+      }
+    }
+
+    // Cerrar el cajón de notificaciones al hacer clic fuera o pulsar Esc
+    document.addEventListener('click', (e) => {
+      const wrapper = document.querySelector('.notifications-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        toggleNotificationsDrawer(false);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        toggleNotificationsDrawer(false);
+      }
+    });
 
     function toggleAdminPassVisibility() {
       const input = document.getElementById('admin-pass-input');
@@ -3241,6 +3734,7 @@
           }
           allDevicesCache = Array.from(devMap.values());
           try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
+          updateNotificationBadges();
 
           const searchInput = document.getElementById('search-filter');
           if (searchInput && searchInput.value.trim().length > 0) {
@@ -4544,6 +5038,9 @@
           console.warn('Respuesta inesperada al consultar solicitudes PRO:', list);
           return;
         }
+        allProRequestsCache = list;
+        updateNotificationBadges();
+
         const tbody = document.getElementById('pro-requests-body');
         if (!tbody) return;
 
@@ -4797,6 +5294,9 @@
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success) return;
+
+        allSecurityAlertsCache = Array.isArray(data.alerts) ? data.alerts : (data.latestAlert ? [data.latestAlert] : []);
+        updateNotificationBadges();
 
         const badge = document.getElementById('sec-alert-badge');
         const hubSecBadge = document.getElementById('hub-badge-security');
@@ -5837,9 +6337,6 @@
     /* ========================================================
        MÓDULO DE LICENCIAS EMITIDAS & EXCLUIDOS (TOMBSTONES)
        ======================================================== */
-    let allLicensesCache = [];
-    let excludedDevicesCache = [];
-
     async function loadAllLicensesModule() {
       const key = getAdminKey();
       if (!key) return;
@@ -5890,6 +6387,8 @@
           allLicensesCache = Array.from(licenseMap.values());
         }
         if (Array.isArray(data.excludedDevices)) excludedDevicesCache = data.excludedDevices;
+        if (Array.isArray(data.revokedKeys)) revokedKeysCache = data.revokedKeys;
+        updateNotificationBadges();
 
         const totalLic = allLicensesCache.length;
         const proCount = allLicensesCache.filter(l => l.mode === 'PRO' && !l.isExpired).length;
@@ -6636,7 +7135,9 @@
 
       const selVal = document.getElementById('keygen-duration-select').value;
       let durationType = 'LIFETIME';
-      let days = 0;
+      let days = undefined;
+      let hours = undefined;
+      let minutes = undefined;
       let vigenciaLabel = '♾️ Vitalicia (Permanente)';
 
       if (selVal === 'custom') {
@@ -6647,6 +7148,14 @@
         durationType = 'DAYS';
         days = customDays;
         vigenciaLabel = `${customDays} Días`;
+      } else if (selVal.endsWith('h')) {
+        durationType = 'HOURS';
+        hours = parseInt(selVal, 10);
+        vigenciaLabel = `${hours} Horas`;
+      } else if (selVal.endsWith('m')) {
+        durationType = 'MINUTES';
+        minutes = parseInt(selVal, 10);
+        vigenciaLabel = `${minutes} Minutos`;
       } else if (selVal !== 'LIFETIME') {
         durationType = 'DAYS';
         days = parseInt(selVal, 10);
@@ -6658,7 +7167,7 @@
         const res = await fetch('/api/admin/device/generate-key', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ hwid, plan: 'PRO', durationType, days })
+          body: JSON.stringify({ hwid, plan: 'PRO', durationType, days, hours, minutes })
         });
         const data = await res.json();
         if (data.success) {
@@ -6667,13 +7176,13 @@
           const safeHwid = escapeHtml(hwid);
           const safeKey = escapeHtml(data.key);
           const finalVigencia = data.expiresAt 
-            ? `${days} Días (Vence: ${new Date(data.expiresAt).toLocaleDateString()})` 
+            ? `${vigenciaLabel} (Vence: ${new Date(data.expiresAt).toLocaleString()})` 
             : '♾️ Vitalicia (Permanente)';
 
           box.innerHTML = `
-            <div style="font-size: 13px; color: #AAA; margin-bottom: 6px;">CLAVE PRO GENERADA PARA <strong>${safeHwid}</strong>:</div>
+            <div style="font-size: 13px; color: #C8BEAF; margin-bottom: 6px;">CLAVE PRO GENERADA PARA <strong>${safeHwid}</strong>:</div>
             <div style="font-size: 24px; font-weight: 800; color: #3FCF8E; font-family: monospace; letter-spacing: 1px; margin-bottom: 8px;" id="copy-target-key">${safeKey}</div>
-            <div style="font-size: 13px; color: #FFF; font-weight: 700; margin-bottom: 12px;">⏳ Vigencia: <span style="color:#3FCF8E;">${escapeHtml(finalVigencia)}</span></div>
+            <div style="font-size: 13px; color: #FAF6EE; font-weight: 700; margin-bottom: 12px;">⏳ Vigencia: <span style="color:#3FCF8E;">${escapeHtml(finalVigencia)}</span></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
               <button class="btn btn-dark btn-sm" id="btn-copy-keygen-key">📋 Copiar Solo Clave</button>
               <button class="btn btn-green btn-sm" id="btn-copy-keygen-wa">📲 Copiar Mensaje para WhatsApp / Telegram</button>
@@ -6754,14 +7263,18 @@
       if (_isPolling) return; // evitar solapamiento de polls
       _isPolling = true;
       try {
-        await refreshDevices();
-        await refreshUsers();
-        checkSecurityAlerts();
+        await Promise.allSettled([
+          refreshDevices(),
+          refreshUsers(),
+          loadProRequests(),
+          loadAllLicensesModule(),
+          checkSecurityAlerts()
+        ]);
         if (document.getElementById('tab-all-licenses') && document.getElementById('tab-all-licenses').classList.contains('active')) {
-          await loadAllLicensesModule();
+          // Licencias sincronizadas con DOM
         }
         if (document.getElementById('tab-pro-requests') && document.getElementById('tab-pro-requests').classList.contains('active')) {
-          await loadProRequests();
+          // Solicitudes PRO sincronizadas con DOM
         }
         if (document.getElementById('tab-security') && document.getElementById('tab-security').classList.contains('active')) {
           await loadSecurityLogs();

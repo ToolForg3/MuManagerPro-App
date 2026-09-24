@@ -1122,11 +1122,13 @@ export const ConfigScreen = () => {
                     <View style={[styles.licensePill, licenseStatus.plan === 'PRO' ? styles.pillPro : styles.pillDemo]}>
                       <Text style={[styles.licensePillText, licenseStatus.plan === 'PRO' ? styles.pillTextPro : styles.pillTextDemo]}>
                         {licenseStatus.plan === 'PRO'
-                          ? (licenseStatus.isLifetime
+                          ? (licenseStatus.isLifetime || !licenseStatus.expiresAt
                               ? 'PRO VITALICIA'
-                              : (licenseStatus.expiresAt
-                                  ? `PRO (${licenseStatus.daysRemaining !== undefined ? `${licenseStatus.daysRemaining}d` : 'ACTIVA'})`
-                                  : 'PRO ACTIVA'))
+                              : (licenseStatus.hoursRemaining !== undefined && licenseStatus.hoursRemaining < 24
+                                  ? `PRO (${licenseStatus.hoursRemaining}h)`
+                                  : (licenseStatus.daysRemaining !== undefined
+                                      ? `PRO (${licenseStatus.daysRemaining}d)`
+                                      : 'PRO ACTIVA')))
                           : 'MODO DEMO'}
                       </Text>
                     </View>

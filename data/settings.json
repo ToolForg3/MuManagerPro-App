@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.5",
+  "latestVersion": "2.1.6",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.5 (Build 117) - Remediación Integral de Seguridad, Privacidad y Rendimiento:\n• BLINDAJE CRIPTOGRÁFICO: Cifrado autenticado de credenciales locales (ENC_V3 con PBKDF2/SHA-256 y HMAC-SHA256 Encrypt-then-MAC). Eliminación de secretos embebidos en cliente con autorización y validación centralizada estricta.\n• PRIVACIDAD Y MINIMIZACIÓN: Enmascaramiento de HWID con revelado táctil, confirmación de identificador en canales de soporte, y sanitización de registros de red y diagnósticos sin exposición de contraseñas ni IP.\n• TRANSPARENCIA Y RENDIMIENTO: Acotación de permisos de almacenamiento legacy (maxSdkVersion=28), caché administrativa segura en sessionStorage y compatibilidad completa con emuladores Season 6 (Louis Update 40 y MSPro).",
+  "updateChangelog": "MuManager PRO v2.1.6 (Build 118) - Centro de Notificaciones en Vivo, Estandarización de Licencias y Blindaje:\n• NOTIFICACIONES EN VIVO: Centro de Notificaciones integrado en el Dashboard Administrativo con conteo de alertas en tiempo real, desglose por categoría (solicitudes PRO, bloqueos, revocaciones, seguridad) y actualización reactiva.\n• PRECISIÓN DE LICENCIAS: Estandarización de telemetría con desglose exacto de días, horas y minutos restantes en la aplicación móvil y panel web.\n• REVOCACIÓN AUTOMÁTICA DE IMPEDIMENTOS: Al conceder o reactivar licencias PRO, el sistema purga automáticamente lápidas, listas de revocación y bloqueos residuales para acceso inmediato.\n• ESTABILIDAD Y COMPATIBILIDAD: Blindaje integral en pasarela en la nube y servidor conector local para emuladores Season 6 (Louis Update 40 y MSPro).",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.5 (Build 117)",
+  "updateTitle": "MuManager PRO v2.1.6 (Build 118)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 117,
+  "versionCode": 118,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.5 (Build 117) - Remediación Integral de Seguridad, Privacidad y Rendimiento:\n• BLINDAJE CRIPTOGRÁFICO: Cifrado autenticado de credenciales locales (ENC_V3 con PBKDF2/SHA-256 y HMAC-SHA256 Encrypt-then-MAC). Eliminación de secretos embebidos en cliente con autorización y validación centralizada estricta.\n• PRIVACIDAD Y MINIMIZACIÓN: Enmascaramiento de HWID con revelado táctil, confirmación de identificador en canales de soporte, y sanitización de registros de red y diagnósticos sin exposición de contraseñas ni IP.\n• TRANSPARENCIA Y RENDIMIENTO: Acotación de permisos de almacenamiento legacy (maxSdkVersion=28), caché administrativa segura en sessionStorage y compatibilidad completa con emuladores Season 6 (Louis Update 40 y MSPro).",
+  "releaseNotes": "MuManager PRO v2.1.6 (Build 118) - Centro de Notificaciones en Vivo, Estandarización de Licencias y Blindaje:\n• NOTIFICACIONES EN VIVO: Centro de Notificaciones integrado en el Dashboard Administrativo con conteo de alertas en tiempo real, desglose por categoría (solicitudes PRO, bloqueos, revocaciones, seguridad) y actualización reactiva.\n• PRECISIÓN DE LICENCIAS: Estandarización de telemetría con desglose exacto de días, horas y minutos restantes en la aplicación móvil y panel web.\n• REVOCACIÓN AUTOMÁTICA DE IMPEDIMENTOS: Al conceder o reactivar licencias PRO, el sistema purga automáticamente lápidas, listas de revocación y bloqueos residuales para acceso inmediato.\n• ESTABILIDAD Y COMPATIBILIDAD: Blindaje integral en pasarela en la nube y servidor conector local para emuladores Season 6 (Louis Update 40 y MSPro).",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.5",
-  "buildNumber": 117,
+  "appVersion": "2.1.6",
+  "buildNumber": 118,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.5",
-  "build": 117
+  "version": "2.1.6",
+  "build": 118
 }

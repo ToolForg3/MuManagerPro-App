@@ -17,6 +17,8 @@ export interface LicenseStatus {
   isExpired?: boolean;
   isLifetime?: boolean;
   daysRemaining?: number;
+  hoursRemaining?: number;
+  timeRemainingFormatted?: string;
   // MEJORA 1: TTL de licencia — si el servidor no confirma PRO en 48h, se fuerza DEMO
   licenseValidUntil?: string;
 }
@@ -191,7 +193,9 @@ export class LicenseService {
     if (res.mode === 'PRO') {
       const key = res.licenseKey || this.currentStatus.licenseKey || '';
       const isLifetime = !!res.isLifetime && !res.expiresAt;
-      const daysRemaining = (res as any).daysRemaining;
+      const daysRemaining = res.daysRemaining;
+      const hoursRemaining = res.hoursRemaining;
+      const timeRemainingFormatted = res.timeRemainingFormatted;
       const expiresAt = res.expiresAt || undefined;
 
       this.currentStatus.isActivated = true;
@@ -199,6 +203,8 @@ export class LicenseService {
       this.currentStatus.isBlocked = false;
       this.currentStatus.isLifetime = isLifetime;
       this.currentStatus.daysRemaining = daysRemaining;
+      this.currentStatus.hoursRemaining = hoursRemaining;
+      this.currentStatus.timeRemainingFormatted = timeRemainingFormatted;
       this.currentStatus.expiresAt = expiresAt;
 
       if (key) {
@@ -218,6 +224,8 @@ export class LicenseService {
             isLifetime,
             expiresAt,
             daysRemaining,
+            hoursRemaining,
+            timeRemainingFormatted,
             // MEJORA 1: guardar TTL del servidor para enforcement offline
             licenseValidUntil: (res as any).licenseValidUntil || null,
           })
@@ -231,7 +239,13 @@ export class LicenseService {
         if (!isLifetime && expiresAt) {
           const expD = new Date(expiresAt);
           const fechaStr = expD.toLocaleDateString() + ' ' + expD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          duracionTxt = `${daysRemaining !== undefined && daysRemaining > 0 ? `${daysRemaining} días ` : ''}(Vence: ${fechaStr})`;
+          if (timeRemainingFormatted) {
+            duracionTxt = `${timeRemainingFormatted} (Vence: ${fechaStr})`;
+          } else if (hoursRemaining !== undefined && hoursRemaining < 24) {
+            duracionTxt = `${hoursRemaining} horas (Vence: ${fechaStr})`;
+          } else {
+            duracionTxt = `${daysRemaining !== undefined && daysRemaining > 0 ? `${daysRemaining} días ` : ''}(Vence: ${fechaStr})`;
+          }
         } else if ((res as any).durationText) {
           duracionTxt = (res as any).durationText;
         }
@@ -249,6 +263,8 @@ export class LicenseService {
       this.currentStatus.licenseKey = undefined;
       this.currentStatus.isLifetime = false;
       this.currentStatus.daysRemaining = undefined;
+      this.currentStatus.hoursRemaining = undefined;
+      this.currentStatus.timeRemainingFormatted = undefined;
       this.currentStatus.expiresAt = undefined;
       AsyncStorage.removeItem(LICENSE_STORAGE_KEY).catch(() => {});
       if (wasPro) {

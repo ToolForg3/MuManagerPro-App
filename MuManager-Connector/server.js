@@ -26,9 +26,7 @@ try {
 let Jimp;
 try {
   Jimp = require('jimp');
-} catch (e) {
-  console.warn('[!] jimp package not installed');
-}
+} catch (_) {}
 
 const app = express();
 
@@ -50,6 +48,7 @@ const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const PRO_REQUESTS_FILE = path.join(__dirname, 'data', 'proRequests.json');
 const SECURITY_LOGS_FILE = path.join(__dirname, 'data', 'securityLogs.json');
 const SECRETS_FILE = path.join(__dirname, 'data', 'connector-secrets.json');
+const TOMBSTONES_FILE = path.join(__dirname, 'data', 'tombstones.json');
 
 function loadOrInitConnectorSecrets() {
   let sec = {};
@@ -84,15 +83,7 @@ const MASTER_SECURITY_SALT = (process.env.MASTER_SECURITY_SALT && process.env.MA
   : connectorSecrets.masterSalt;
 const GITHUB_RELEASE_DOWNLOAD_URL = process.env.GITHUB_RELEASE_DOWNLOAD_URL || 'https://github.com/ToolForg3/MuManagerPro-App/releases/latest/download/MuManagerPro.apk';
 
-// [H02/H05] Verificación de variables de entorno críticas al arranque del conector
-if (!process.env.JWT_SECRET) {
-  console.warn('\x1b[33m[⚠ SECURITY] JWT_SECRET env var no configurada en el conector. Configura JWT_SECRET en producción.\x1b[0m');
-}
-if (!process.env.ADMIN_KEY) {
-  console.warn('\x1b[33m[⚠ SECURITY] ADMIN_KEY env var no configurada en el conector. Se usará la clave efímera aleatoria de desarrollo. Configura ADMIN_KEY en producción.\x1b[0m');
-}
-
-// [SEC-02] Clave admin efímera — aleatoria en cada arranque en DEV, nunca hardcodeada.
+// [SEC-02] Clave admin efímera o persistente por settings
 let devEphemeralAdminKey = null;
 function getActiveAdminKey() {
   if (process.env.ADMIN_KEY && typeof process.env.ADMIN_KEY === 'string' && process.env.ADMIN_KEY.trim().length >= 8) {
@@ -426,6 +417,118 @@ function loadUsers() {
 function saveUsers(data) {
   if (!safeAtomicWriteJson(USERS_FILE, data)) throw new Error("Disk error saving users");
   return true;
+}
+
+function loadTombstones() {
+  try {
+    if (fs.existsSync(TOMBSTONES_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(TOMBSTONES_FILE, 'utf8'));
+      if (parsed && typeof parsed === 'object') {
+        if (!parsed.revokedKeys) parsed.revokedKeys = {};
+        if (!parsed.deletedUsers) parsed.deletedUsers = {};
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading tombstones data', e);
+  }
+  return { revokedKeys: {}, deletedUsers: {} };
+}
+
+function saveTombstones(data) {
+  if (!safeAtomicWriteJson(TOMBSTONES_FILE, data)) throw new Error("Disk error saving tombstones");
+  return true;
+}
+
+/**
+ * Revocar de forma absoluta e inmediata cualquier impedimento o bloqueo sobre un dispositivo.
+ * Invocado al activar o renovar PRO, o al desbloquear manualmente desde el panel de control.
+ */
+function revokeAllImpediments(hwid, options = {}) {
+  if (!hwid) return { modifiedDevices: false, modifiedTombstones: false };
+  const cleanHwid = String(hwid).trim().toUpperCase();
+  const rawHwid = String(hwid).trim();
+  let modifiedDevices = false;
+  let modifiedTombstones = false;
+
+  const devices = loadDevices();
+  const targetDev = devices[cleanHwid] || devices[rawHwid] || devices[hwid];
+
+  if (targetDev) {
+    targetDev.blocked = false;
+    targetDev.blockReason = '';
+    targetDev.forceDemo = false;
+    targetDev.sessionInvalidated = false;
+    targetDev.sessionInvalidatedReason = '';
+    targetDev.forceWipe = false;
+    targetDev.forceWipeKey = false;
+    modifiedDevices = true;
+  }
+
+  const tombstones = loadTombstones();
+  if (tombstones[cleanHwid]) {
+    delete tombstones[cleanHwid];
+    modifiedTombstones = true;
+  }
+  if (tombstones[rawHwid]) {
+    delete tombstones[rawHwid];
+    modifiedTombstones = true;
+  }
+  if (tombstones[hwid]) {
+    delete tombstones[hwid];
+    modifiedTombstones = true;
+  }
+
+  if (tombstones.revokedKeys && typeof tombstones.revokedKeys === 'object') {
+    const keysToCheck = [
+      options.key,
+      options.licenseKey,
+      options.generatedKey,
+      targetDev?.licenseKey,
+      targetDev?.generatedKey
+    ].filter(Boolean);
+
+    for (const k of keysToCheck) {
+      if (tombstones.revokedKeys[k]) {
+        delete tombstones.revokedKeys[k];
+        modifiedTombstones = true;
+      }
+    }
+
+    for (const [rKey, rData] of Object.entries(tombstones.revokedKeys)) {
+      if (rData && (rData.hwid === cleanHwid || rData.hwid === rawHwid || rData.hwid === hwid)) {
+        delete tombstones.revokedKeys[rKey];
+        modifiedTombstones = true;
+      }
+    }
+  }
+
+  if (modifiedDevices) {
+    saveDevices(devices);
+  }
+  if (modifiedTombstones) {
+    saveTombstones(tombstones);
+  }
+
+  return { modifiedDevices, modifiedTombstones };
+}
+
+function formatTimeRemaining(expiresAt, isLifetime, nowMs = Date.now()) {
+  if (isLifetime === true) return '♾️ Vitalicia';
+  if (!expiresAt) return 'Sin vigencia fijada';
+  const diffMs = new Date(expiresAt).getTime() - nowMs;
+  if (diffMs <= 0) return 'Expirado';
+  const totalMin = Math.floor(diffMs / 60000);
+  const days = Math.floor(totalMin / 1440);
+  const hours = Math.floor((totalMin % 1440) / 60);
+  const mins = totalMin % 60;
+  if (days > 0) {
+    return `${days}d ${hours}h ${mins}m`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${mins}m`;
+  }
+  return `${mins} min`;
 }
 
 function loadProRequests() {
@@ -1594,9 +1697,6 @@ app.post('/api/accounts/unban', async (req, res) => {
 });
 
 
-console.log('----------------------------------------------------');
-console.log('  MU MANAGER PRO - PUENTE SQL SERVER & TELEMETRÍA');
-console.log('----------------------------------------------------');
 
 function sha256(ascii) {
   function rightRotate(value, amount) {
@@ -8201,9 +8301,13 @@ app.post('/api/telemetry/ping', (req, res) => {
     : '';
 
   const isLifetimeAuth = !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt);
-  const daysRemainingAuth = devices[hwid].expiresAt
-    ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : (isLifetimeAuth ? 9999 : 0);
+  const diffMs = devices[hwid].expiresAt ? (new Date(devices[hwid].expiresAt).getTime() - Date.now()) : null;
+  const daysRemainingAuth = diffMs !== null ? Math.max(0, Math.ceil(diffMs / 86400000)) : (isLifetimeAuth ? 9999 : 0);
+  const hoursRemainingAuth = diffMs !== null ? Math.max(0, Math.round(diffMs / 3600000)) : null;
+  const minutesRemainingAuth = diffMs !== null ? Math.max(0, Math.round(diffMs / 60000)) : null;
+  const timeRemainingFormattedAuth = (typeof formatTimeRemaining === 'function')
+    ? formatTimeRemaining(devices[hwid].expiresAt, isLifetimeAuth, Date.now())
+    : null;
 
   res.json({
     success: true,
@@ -8215,6 +8319,9 @@ app.post('/api/telemetry/ping', (req, res) => {
     forceDemo: isForcedDemo,
     isLifetime: isLifetimeAuth,
     daysRemaining: daysRemainingAuth,
+    hoursRemaining: hoursRemainingAuth,
+    minutesRemaining: minutesRemainingAuth,
+    timeRemainingFormatted: timeRemainingFormattedAuth,
     licenseKey: effectiveKey,
     announcement: settings.broadcastAnnouncement || '',
     broadcast,
@@ -8974,6 +9081,7 @@ app.post('/api/admin/device/toggle-block', (req, res) => {
     sendWhatsAppAlert('deviceBlocked', 'CELULAR BLOQUEADO', `Dispositivo ${hwid} bloqueado. Motivo: ${devices[hwid].blockReason}`, hwid, devices[hwid].ip);
   } else {
     devices[hwid].blockReason = '';
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid);
     addAuditLog('UNBLOCK', hwid, devices[hwid].ip, 'Celular DESBLOQUEADO.');
     sendWhatsAppAlert('deviceBlocked', 'CELULAR DESBLOQUEADO', `Dispositivo ${hwid} reactivado por el administrador.`, hwid, devices[hwid].ip);
   }
@@ -8981,14 +9089,13 @@ app.post('/api/admin/device/toggle-block', (req, res) => {
   res.json({ success: true, blocked: devices[hwid].blocked, reason: devices[hwid].blockReason, hwid });
 });
 
-// Asignar o extender expiración de prueba (en horas)
+// Asignar o extender expiración de prueba (en minutos, horas o días)
 app.post('/api/admin/device/set-expiration', (req, res) => {
-  const { hwid, hours, durationType } = req.body;
+  const { hwid, minutes, hours, days, durationType, isLifetime: isExplicitReq, unblock } = req.body;
   const devices = loadDevices();
   if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
-  const numHours = parseFloat(hours);
-  const isExplicitLifetime = durationType === 'LIFETIME' || req.body.lifetime === true || hours === 0 || hours === '0';
+  const isExplicitLifetime = durationType === 'LIFETIME' || req.body.lifetime === true || isExplicitReq === true || hours === 0 || hours === '0';
 
   if (isExplicitLifetime) {
     devices[hwid].expiresAt = null;
@@ -8996,18 +9103,38 @@ app.post('/api/admin/device/set-expiration', (req, res) => {
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
     addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Licencia fijada como PERMANENTE/VITALICIA.');
-  } else if (numHours > 0) {
-    const expDate = new Date(Date.now() + numHours * 3600 * 1000);
-    devices[hwid].expiresAt = expDate.toISOString();
-    devices[hwid].isLifetime = false;
-    devices[hwid].blocked = false;
-    devices[hwid].blockReason = '';
-    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, `Vigencia configurada por ${numHours} horas (Vence: ${expDate.toLocaleString()})`);
   } else {
-    devices[hwid].expiresAt = null;
-    devices[hwid].isLifetime = false;
-    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Vigencia removida / sin vigencia fijada.');
+    let addMs = 0;
+    let label = '';
+    if (minutes !== undefined && Number(minutes) > 0) {
+      addMs = Number(minutes) * 60 * 1000;
+      label = `${minutes} minutos`;
+    } else if (days !== undefined && Number(days) > 0) {
+      addMs = Number(days) * 86400 * 1000;
+      label = `${days} días`;
+    } else if (hours !== undefined && Number(hours) > 0) {
+      addMs = Number(hours) * 3600 * 1000;
+      label = `${hours} horas`;
+    }
+
+    if (addMs > 0) {
+      const expDate = new Date(Date.now() + addMs);
+      devices[hwid].expiresAt = expDate.toISOString();
+      devices[hwid].isLifetime = false;
+      devices[hwid].blocked = false;
+      devices[hwid].blockReason = '';
+      addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, `Vigencia configurada por ${label} (Vence: ${expDate.toLocaleString()})`);
+    } else {
+      devices[hwid].expiresAt = null;
+      devices[hwid].isLifetime = false;
+      addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Vigencia removida / sin vigencia fijada.');
+    }
   }
+
+  if (unblock || devices[hwid].mode === 'PRO') {
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid);
+  }
+
   saveDevices(devices);
   res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt, isLifetime: !!devices[hwid].isLifetime });
 });
@@ -9038,10 +9165,14 @@ app.post('/api/admin/device/delete', (req, res) => {
 
 // Generar clave PRO para un HWID desde el dashboard web
 app.post('/api/admin/device/generate-key', (req, res) => {
-  const { hwid, plan, durationType, durationDays } = req.body;
+  const { hwid, plan, durationType, durationDays, days, hours, minutes } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
   const targetPlan = plan || 'PRO';
   const key = generateKey(hwid, targetPlan);
+
+  if (targetPlan === 'PRO') {
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid, { key });
+  }
 
   const devices = loadDevices();
   const now = new Date().toISOString();
@@ -9070,27 +9201,47 @@ app.post('/api/admin/device/generate-key', (req, res) => {
     devices[hwid].generatedKey = key;
     devices[hwid].licenseKey = key;
     devices[hwid].mode = targetPlan;
+    devices[hwid].blocked = false;
+    devices[hwid].blockReason = '';
+    devices[hwid].forceDemo = false;
+    devices[hwid].sessionInvalidated = false;
+    devices[hwid].forceWipe = false;
+    devices[hwid].forceWipeKey = false;
   }
 
   if (targetPlan === 'PRO') {
+    const numDays = parseFloat(days !== undefined ? days : durationDays) || 0;
+    const numHours = parseFloat(hours) || 0;
+    const numMin = parseFloat(minutes) || 0;
+    const totalMs = (numMin * 60 + numHours * 3600 + numDays * 86400) * 1000;
+
     if (durationType === 'LIFETIME' || durationDays === 0) {
       devices[hwid].isLifetime = true;
       devices[hwid].expiresAt = null;
-    } else {
-      const days = Number(durationDays) || 30;
+    } else if (totalMs > 0) {
       devices[hwid].isLifetime = false;
-      devices[hwid].expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+      devices[hwid].expiresAt = new Date(Date.now() + totalMs).toISOString();
+    } else {
+      devices[hwid].isLifetime = false;
+      devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
     }
   }
   saveDevices(devices);
 
   addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${targetPlan} generada`);
-  res.json({ success: true, hwid, key, plan: targetPlan });
+  res.json({
+    success: true,
+    hwid,
+    key,
+    plan: targetPlan,
+    expiresAt: (devices[hwid] && devices[hwid].expiresAt) || null,
+    isLifetime: !!(devices[hwid] && devices[hwid].isLifetime === true && !devices[hwid].expiresAt)
+  });
 });
 
 // Activar o degradar plan PRO/DEMO con 1 solo clic desde el panel
 app.post('/api/admin/device/toggle-plan', (req, res) => {
-  const { hwid, plan, durationType, durationDays } = req.body;
+  const { hwid, plan, durationType, durationDays, days, hours, minutes } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
   const targetPlan = (plan === 'PRO') ? 'PRO' : 'DEMO';
 
@@ -9120,27 +9271,55 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
   }
 
   devices[hwid].mode = targetPlan;
+  let durationText = '30 Días';
+
   if (targetPlan === 'PRO') {
-    const key = devices[hwid].generatedKey || devices[hwid].licenseKey || generateKey(hwid, 'PRO');
+    const key = generateKey(hwid, 'PRO');
     devices[hwid].generatedKey = key;
     devices[hwid].licenseKey = key;
+
+    // Revocar incondicionalmente cualquier bloqueo, exclusión o impedimento
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid, { key });
+
+    const numDays = parseFloat(days !== undefined ? days : durationDays) || 0;
+    const numHours = parseFloat(hours) || 0;
+    const numMin = parseFloat(minutes) || 0;
+    const totalMs = (numMin * 60 + numHours * 3600 + numDays * 86400) * 1000;
+
     if (durationType === 'LIFETIME' || durationDays === 0) {
       devices[hwid].isLifetime = true;
       devices[hwid].expiresAt = null;
-    } else if (!devices[hwid].expiresAt || new Date(devices[hwid].expiresAt) <= new Date()) {
-      const days = Number(durationDays) || 30;
+      durationText = 'Vitalicia (Permanente)';
+    } else if (totalMs > 0) {
       devices[hwid].isLifetime = false;
-      devices[hwid].expiresAt = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+      devices[hwid].expiresAt = new Date(Date.now() + totalMs).toISOString();
+      if (numDays > 0) durationText = `${numDays} Días`;
+      else if (numHours > 0) durationText = `${numHours} Horas`;
+      else durationText = `${numMin} Minutos`;
+    } else {
+      devices[hwid].isLifetime = false;
+      devices[hwid].expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
+      durationText = '30 Días';
     }
   } else {
+    devices[hwid].mode = 'DEMO';
+    devices[hwid].forceDemo = true;
     devices[hwid].licenseKey = '';
     devices[hwid].generatedKey = '';
     devices[hwid].isLifetime = false;
   }
 
   saveDevices(devices);
-  addAuditLog('PLAN_TOGGLE', hwid, req.socket.remoteAddress || '127.0.0.1', `Plan cambiado a ${targetPlan} con 1 clic`);
-  res.json({ success: true, hwid, mode: targetPlan, licenseKey: devices[hwid].licenseKey || '' });
+  addAuditLog('PLAN_TOGGLE', hwid, req.socket.remoteAddress || '127.0.0.1', `Plan cambiado a ${targetPlan} con 1 clic (${durationText})`);
+  res.json({
+    success: true,
+    hwid,
+    mode: targetPlan,
+    licenseKey: devices[hwid].licenseKey || '',
+    expiresAt: devices[hwid].expiresAt || null,
+    isLifetime: !!devices[hwid].isLifetime,
+    durationText
+  });
 });
 
 // 1. Extender tiempo DEMO desde el panel
@@ -9176,6 +9355,173 @@ app.post('/api/admin/device/extend-demo', (req, res) => {
     expiresAt: newExpires,
     message: `Tiempo DEMO extendido +${hoursToAdd} horas exitosamente.`
   });
+});
+
+// Restaurar dispositivo excluido / remover de la lista negra de tombstones
+app.post('/api/admin/device/unexclude', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
+  }
+
+  const { hwid } = req.body;
+  if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
+  const tombstones = loadTombstones();
+  if (!tombstones[cleanHwid] && !tombstones[hwid]) {
+    return res.status(404).json({ success: false, error: 'Dispositivo no encontrado en la lista de exclusión' });
+  }
+
+  if (typeof revokeAllImpediments === 'function') revokeAllImpediments(cleanHwid);
+  addAuditLog('DEVICE_UNEXCLUDED', cleanHwid, req.socket.remoteAddress || '127.0.0.1', 'Dispositivo restaurado de la lista de exclusión.');
+  res.json({ success: true, hwid: cleanHwid, message: 'Dispositivo restaurado con éxito. Ahora podrá volver a conectarse.' });
+});
+
+// Módulo de Licencias Emitidas & Dispositivos Excluidos
+app.get('/api/admin/licenses', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
+  }
+
+  const devices = loadDevices();
+  const tombstones = loadTombstones();
+  const now = Date.now();
+
+  const activeLicenses = [];
+  Object.values(devices).forEach(dev => {
+    let key = dev.licenseKey || dev.generatedKey;
+    if (dev.mode === 'PRO' && !key && dev.hwid) {
+      key = generateKey(dev.hwid, 'PRO');
+      dev.licenseKey = key;
+      dev.generatedKey = key;
+      saveDevices(devices);
+    }
+    const isRevokedKey = !!(key && tombstones.revokedKeys && tombstones.revokedKeys[key]);
+    const isHwidTombstoned = !!(dev.hwid && tombstones[dev.hwid] && 
+      typeof tombstones[dev.hwid] === 'object' &&
+      dev.hwid !== 'deletedUsers' && dev.hwid !== 'revokedKeys');
+
+    if (dev.mode === 'PRO' && !isRevokedKey && !isHwidTombstoned) {
+      const isLifetime = !!(dev.mode === 'PRO' && dev.isLifetime === true && !dev.expiresAt);
+      const isExpired = dev.expiresAt && new Date(dev.expiresAt).getTime() < now;
+      const diffMs = dev.expiresAt ? (new Date(dev.expiresAt).getTime() - now) : null;
+      const daysRemaining = diffMs !== null ? Math.max(0, Math.ceil(diffMs / 86400000)) : null;
+      const hoursRemaining = diffMs !== null ? Math.max(0, Math.round(diffMs / 3600000)) : null;
+      const minutesRemaining = diffMs !== null ? Math.max(0, Math.round(diffMs / 60000)) : null;
+      const timeRemainingFormatted = formatTimeRemaining(dev.expiresAt, isLifetime, now);
+
+      activeLicenses.push({
+        hwid: dev.hwid,
+        mode: dev.mode,
+        licenseKey: key,
+        isLifetime,
+        isExpired,
+        expiresAt: dev.expiresAt || null,
+        daysRemaining,
+        hoursRemaining,
+        minutesRemaining,
+        timeRemainingFormatted,
+        currentUser: dev.currentUser || 'N/A',
+        deviceBrand: dev.deviceBrand || '',
+        deviceModel: dev.deviceModel || dev.platform || '',
+        note: dev.note || '',
+        lastSeen: dev.lastSeen || '',
+        isOnline: dev.lastSeen ? (now - new Date(dev.lastSeen).getTime()) < 180000 : false
+      });
+    }
+  });
+
+  const excludedDevices = [];
+  for (const [hwid, data] of Object.entries(tombstones)) {
+    if (hwid === 'deletedUsers' || hwid === 'revokedKeys' || hwid.startsWith('_')) continue;
+    excludedDevices.push({
+      hwid,
+      deletedAt: data.deletedAt || 'N/A',
+      revokedKey: data.revokedKey || 'N/A',
+      previousUser: data.previousUser || 'N/A',
+      previousModel: data.previousModel || 'N/A',
+      reason: data.reason || 'Eliminado del panel por el administrador'
+    });
+  }
+
+  const revokedKeysList = [];
+  if (tombstones.revokedKeys && typeof tombstones.revokedKeys === 'object') {
+    for (const [key, rData] of Object.entries(tombstones.revokedKeys)) {
+      revokedKeysList.push({
+        licenseKey: key,
+        revokedAt: rData.revokedAt || 'N/A',
+        hwid: rData.hwid || 'N/A',
+        reason: rData.reason || 'Revocada'
+      });
+    }
+  }
+
+  const deletedUsers = [];
+  if (tombstones.deletedUsers && typeof tombstones.deletedUsers === 'object') {
+    for (const [email, uData] of Object.entries(tombstones.deletedUsers)) {
+      deletedUsers.push({
+        email,
+        deletedAt: uData.deletedAt || 'N/A',
+        id: uData.id || 'N/A',
+        hwid: uData.hwid || 'N/A'
+      });
+    }
+  }
+
+  res.json({
+    success: true,
+    summary: {
+      totalLicenses: activeLicenses.length,
+      activeProCount: activeLicenses.filter(l => l.mode === 'PRO' && !l.isExpired).length,
+      lifetimeCount: activeLicenses.filter(l => l.isLifetime).length,
+      daysCount: activeLicenses.filter(l => l.mode === 'PRO' && !l.isLifetime && !l.isExpired).length,
+      expiredCount: activeLicenses.filter(l => l.isExpired).length,
+      excludedCount: excludedDevices.length + revokedKeysList.length,
+      revokedKeysCount: revokedKeysList.length,
+      deletedUsersCount: deletedUsers.length
+    },
+    licenses: activeLicenses,
+    excludedDevices,
+    revokedKeys: revokedKeysList,
+    deletedUsers
+  });
+});
+
+// Eliminar y revocar permanentemente una licencia emitida
+app.post('/api/admin/license/delete', (req, res) => {
+  const { hwid, licenseKey } = req.body || {};
+  if (!hwid && !licenseKey) {
+    return res.status(400).json({ success: false, error: 'HWID o licenseKey requerido' });
+  }
+
+  const tombstones = loadTombstones();
+  if (!tombstones.revokedKeys) tombstones.revokedKeys = {};
+
+  if (licenseKey) {
+    tombstones.revokedKeys[licenseKey] = {
+      revokedAt: new Date().toISOString(),
+      hwid: hwid || 'N/A',
+      reason: req.body.reason || 'Revocada manualmente por el administrador'
+    };
+  }
+
+  const devices = loadDevices();
+  if (hwid && devices[hwid]) {
+    devices[hwid].mode = 'DEMO';
+    devices[hwid].isLifetime = false;
+    devices[hwid].licenseKey = '';
+    devices[hwid].generatedKey = '';
+    devices[hwid].forceDemo = true;
+    devices[hwid].forceWipeKey = true;
+    devices[hwid].sessionInvalidated = true;
+    devices[hwid].sessionInvalidatedReason = 'Licencia revocada por el administrador.';
+    saveDevices(devices);
+  }
+
+  saveTombstones(tombstones);
+  addAuditLog('LICENSE_REVOKED', hwid || licenseKey, req.socket.remoteAddress || '127.0.0.1', `Licencia revocada: ${licenseKey || hwid}`);
+  res.json({ success: true, message: 'Licencia revocada con éxito' });
 });
 
 // 2. Forzar Cierre de Sesión / Desvincular Cuenta de Celular
@@ -9289,7 +9635,7 @@ app.post('/api/admin/pro-request/action', (req, res) => {
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
-  const { id, action, durationType, days, hours } = req.body;
+  const { id, action, durationType, days, hours, minutes } = req.body;
   const requests = loadProRequests();
   const target = requests.find(r => r.id === id);
   if (!target) return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
@@ -9319,12 +9665,20 @@ app.post('/api/admin/pro-request/action', (req, res) => {
       dev.mode = 'PRO';
       dev.forceDemo = false;
       dev.blocked = false;
+      dev.blockReason = '';
+      dev.sessionInvalidated = false;
+      dev.forceWipe = false;
+      dev.forceWipeKey = false;
       dev.generatedKey = generatedKey;
       dev.licenseKey = generatedKey;
 
+      // Revocar incondicionalmente cualquier bloqueo, exclusión o clave revocada
+      if (typeof revokeAllImpediments === 'function') revokeAllImpediments(target.hwid, { key: generatedKey });
+
       const numDays = parseFloat(days) || 0;
       const numHours = parseFloat(hours) || 0;
-      const totalMs = (numHours * 3600 + numDays * 86400) * 1000;
+      const numMin = parseFloat(minutes) || 0;
+      const totalMs = (numMin * 60 + numHours * 3600 + numDays * 86400) * 1000;
 
       if (durationType === 'LIFETIME') {
         dev.expiresAt = null;
@@ -9333,7 +9687,13 @@ app.post('/api/admin/pro-request/action', (req, res) => {
       } else if (totalMs > 0) {
         dev.expiresAt = new Date(Date.now() + totalMs).toISOString();
         dev.isLifetime = false;
-        durationText = numDays > 0 ? `${numDays} Días` : `${numHours} Horas`;
+        if (numDays > 0) {
+          durationText = `${numDays} Días`;
+        } else if (numHours > 0) {
+          durationText = `${numHours} Horas`;
+        } else {
+          durationText = `${numMin} Minutos`;
+        }
       } else {
         // 30 días de vigencia por defecto
         dev.expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
@@ -9583,7 +9943,9 @@ app.get('/', (req, res) => {
 
 // Dashboard Web de Monitoreo y Administración (Ruta Privada con Login Maestro)
 app.get('/admin', (req, res) => {
-  const htmlPath = path.join(__dirname, 'adminDashboard.html');
+  const localPath = path.join(__dirname, 'adminDashboard.html');
+  const parentPath = path.join(__dirname, '../server/adminDashboard.html');
+  const htmlPath = fs.existsSync(localPath) ? localPath : parentPath;
   if (fs.existsSync(htmlPath)) {
     res.sendFile(htmlPath);
   } else {
@@ -10318,20 +10680,20 @@ app.use((err, req, res, next) => {
 });
 
 const server1 = app.listen(PORT, '0.0.0.0', () => {
-  console.log('====================================================');
-  console.log('  MU MANAGER PRO - PUENTE SQL SERVER Y TELEMETRÍA');
-  console.log('====================================================');
-  console.log(`  Servidor escuchando en: http://0.0.0.0:${PORT}`);
-  console.log(`  Panel de Monitoreo Web : http://localhost:${PORT}/admin`);
-  console.log('====================================================');
+  console.log('======================================================');
+  console.log('  MU MANAGER PRO — CONECTOR LOCAL SQL SERVER v2.1.5');
+  console.log('======================================================');
+  console.log(`  Estado     : Activo y listo para conexiones`);
+  console.log(`  Puerto     : ${PORT}`);
+  console.log(`  Seguridad  : Cifrado y validación de tokens activos`);
+  console.log('======================================================');
+  console.log('  Presione Ctrl+C para finalizar el servicio.\n');
 });
 server1.on('error', (err) => console.log(`  Nota puerto ${PORT}: ${err.message}`));
 
 if (PORT !== 30001) {
   try {
-    const server2 = app.listen(30001, '0.0.0.0', () => {
-      console.log('  [OK] Puerto secundario 30001 también activo.');
-    });
+    const server2 = app.listen(30001, '0.0.0.0', () => {});
     server2.on('error', () => {});
   } catch (e) {}
 }

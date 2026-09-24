@@ -56,6 +56,9 @@ export interface TelemetryPingResult {
   demoRemainingHours?: number;
   isLifetime?: boolean;
   daysRemaining?: number;
+  hoursRemaining?: number;
+  minutesRemaining?: number;
+  timeRemainingFormatted?: string;
   updateInfo?: AppUpdateInfo | null;
   broadcast?: BroadcastNoticeInfo | null;
   registeredUser?: {
@@ -1442,6 +1445,9 @@ export class SqlClient {
         expiresAt: data.expiresAt,
         isLifetime: !!data.isLifetime,
         daysRemaining: data.daysRemaining,
+        hoursRemaining: data.hoursRemaining,
+        minutesRemaining: data.minutesRemaining,
+        timeRemainingFormatted: data.timeRemainingFormatted,
         updateInfo: effectiveUpdateInfo,
         broadcast: data.broadcast,
         sessionInvalidated: !!data.sessionInvalidated,
@@ -1547,11 +1553,11 @@ export class SqlClient {
   }
 
   /**
-   * Enviar Solicitud de Licencia PRO desde el APK con datos de contacto
+   * Enviar Solicitud de Licencia PRO desde el APK al Panel Central Cloud
    */
   static async sendProRequest(data: {
-    name: string;
-    phone: string;
+    name?: string;
+    phone?: string;
     email?: string;
     serverName?: string;
     notes?: string;
@@ -1565,10 +1571,10 @@ export class SqlClient {
     try {
       const hwid = await SecurityService.getDeviceHwid();
       const meta = SecurityService.getDeviceMetadata();
-      const res = await this.sendSecureRequest('/api/license/request-pro', {
+      const payload = {
         hwid,
-        name: data.name.trim(),
-        phone: data.phone.trim(),
+        name: (data.name || '').trim() || 'Administrador',
+        phone: (data.phone || '').trim() || 'Sin número',
         email: (data.email || this.activeUserEmail || '').trim(),
         serverName: (data.serverName || '').trim(),
         notes: (data.notes || '').trim(),
@@ -1576,15 +1582,40 @@ export class SqlClient {
         deviceModel: meta.model,
         deviceBrand: meta.brand,
         appVersion: APP_VERSION,
-      }, 10000);
+      };
 
+      // 1. Envío directo al Panel de Control Central en la Nube (Upstash Redis)
+      let res: Response | null = null;
+      try {
+        const bodyStr = JSON.stringify(payload);
+        const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
+        const cloudUrl = `${this.DEFAULT_CLOUD_GATEWAY}/api/license/request-pro`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        res = await fetch(cloudUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-App-Version': APP_VERSION,
+            ...secHeaders,
+          },
+          body: bodyStr,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (_) {
+        // 2. Fallback al puente/conector configurado si falla el enlace cloud directo
+        res = await this.sendSecureRequest('/api/license/request-pro', payload, 10000);
+      }
+
+      if (!res) throw new Error('No se pudo establecer conexión con el servidor.');
       const json = await this.safeJson(res);
       return {
         success: !!json.success,
         alreadyRequested: !!json.alreadyRequested,
         existingStatus: json.existingStatus,
         existingCreatedAt: json.existingCreatedAt,
-        message: json.message || (json.success ? 'Solicitud enviada exitosamente.' : 'Error al enviar solicitud.'),
+        message: json.message || (json.success ? 'Solicitud enviada exitosamente al panel de control.' : 'Error al enviar solicitud.'),
       };
     } catch (e: any) {
       return {

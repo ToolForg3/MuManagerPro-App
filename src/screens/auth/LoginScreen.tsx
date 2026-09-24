@@ -452,14 +452,7 @@ export const LoginScreen = () => {
 
   const handleSendProRequest = async () => {
     const cleanName = proName.trim() || username.trim() || 'Administrador';
-    const cleanPhone = proPhone.trim();
-    if (!cleanPhone) {
-      Alert.alert(
-        'WhatsApp / Teléfono Requerido',
-        'Por favor completa tu número de WhatsApp para que el administrador pueda comunicarse contigo directamente desde el panel de control.'
-      );
-      return;
-    }
+    const cleanPhone = proPhone.trim() || 'Sin número';
 
     setProLoading(true);
     try {
@@ -474,7 +467,7 @@ export const LoginScreen = () => {
       if (res.success) {
         Alert.alert(
           '✅ Solicitud Enviada al Panel',
-          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${proHwid || 'Registrado'}\n💬 WhatsApp: ${cleanPhone}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
+          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${proHwid || 'Registrado'}\n💬 Contacto: ${cleanPhone !== 'Sin número' ? cleanPhone : (proEmail.trim() || 'Registrado en sistema')}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
           [
             {
               text: 'Entendido',
@@ -1078,7 +1071,7 @@ export const LoginScreen = () => {
 
               {/* Teléfono / WhatsApp */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Teléfono / WhatsApp (con código de país) *</Text>
+                <Text style={styles.label}>Teléfono / WhatsApp (Opcional)</Text>
                 <View style={styles.inputWrapper}>
                   <MaterialCommunityIcons name="whatsapp" size={20} color={THEME.colors.jade} style={styles.inputIcon} />
                   <TextInput

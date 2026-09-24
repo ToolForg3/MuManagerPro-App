@@ -116,19 +116,12 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   };
 
   const handleSendProRequest = async () => {
-    if (!reqPhone.trim()) {
-      Alert.alert(
-        'WhatsApp / Teléfono Requerido',
-        'Por favor completa tu número de WhatsApp para que el administrador pueda comunicarse contigo directamente desde el panel de control.'
-      );
-      return;
-    }
-
     setSendingReq(true);
     try {
+      const cleanPhone = reqPhone.trim() || 'Sin número';
       const res = await SqlClient.sendProRequest({
         name: reqName.trim() || 'Administrador',
-        phone: reqPhone.trim(),
+        phone: cleanPhone,
         email: reqEmail.trim() || undefined,
         serverName: reqServer.trim() || undefined,
         notes: reqNotes.trim() || undefined,
@@ -137,7 +130,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
       if (res.success) {
         Alert.alert(
           '✅ Solicitud Enviada al Panel',
-          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${status.hwid || 'Registrado'}\n💬 WhatsApp: ${reqPhone.trim()}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
+          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${status.hwid || 'Registrado'}\n💬 Contacto: ${cleanPhone !== 'Sin número' ? cleanPhone : 'Registrado en sistema'}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
           [{ text: 'Entendido' }]
         );
         setReqNotes('');
@@ -275,7 +268,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       Completa tus datos de contacto para que nuestro equipo te envíe tu clave de activación oficial:
                     </Text>
 
-                    <Text style={styles.inputLabel}>Tu Nombre / Alias *</Text>
+                    <Text style={styles.inputLabel}>Tu Nombre / Alias (Opcional)</Text>
                     <TextInput
                       style={styles.textInput}
                       placeholder="Ej: Carlos Silva (Admin Mu)"
@@ -284,7 +277,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       onChangeText={setReqName}
                     />
 
-                    <Text style={styles.inputLabel}>Número de WhatsApp / Teléfono *</Text>
+                    <Text style={styles.inputLabel}>Número de WhatsApp / Teléfono (Opcional)</Text>
                     <TextInput
                       style={styles.textInput}
                       placeholder="Ej: +54 9 11 2345-6789"
@@ -386,7 +379,15 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                   ]}>
                     {status.isLifetime || !status.expiresAt
                       ? 'Licencia Vitalicia (Acceso Permanente)'
-                      : `Vigencia: Vence el ${new Date(status.expiresAt).toLocaleDateString()}${status.daysRemaining !== undefined ? ` (${status.daysRemaining} días)` : ''}`}
+                      : `Vigencia: Vence el ${new Date(status.expiresAt).toLocaleDateString()} ${new Date(status.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${
+                          status.timeRemainingFormatted
+                            ? ` (${status.timeRemainingFormatted} restantes)`
+                            : status.hoursRemaining !== undefined && status.hoursRemaining < 24
+                              ? ` (${status.hoursRemaining}h restantes)`
+                              : status.daysRemaining !== undefined
+                                ? ` (${status.daysRemaining} días)`
+                                : ''
+                        }`}
                   </Text>
                 </View>
 
