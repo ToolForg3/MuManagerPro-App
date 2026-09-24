@@ -6,10 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME } from '../constants/theme';
 import { MainTabParamList } from '../types/navigation';
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
+import { PlayersHubScreen } from '../screens/players/PlayersHubScreen';
+import { ObjectsHubScreen } from '../screens/objects/ObjectsHubScreen';
+import { ToolsHubScreen } from '../screens/tools/ToolsHubScreen';
+import { ConfigScreen } from '../screens/config/ConfigScreen';
 import { AccountsScreen } from '../screens/accounts/AccountsScreen';
 import { CharacterListScreen } from '../screens/characters/CharacterListScreen';
 import { ToolsScreen } from '../screens/tools/ToolsScreen';
-import { ConfigScreen } from '../screens/config/ConfigScreen';
 import { useLanguage } from '../context/LanguageContext';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -48,6 +51,9 @@ export const BottomTabs = () => {
         },
       }}
     >
+      {/* ========================================================================= */}
+      {/* 5 ÁREAS PRINCIPALES DEL SISTEMA                                           */}
+      {/* ========================================================================= */}
       <Tab.Screen
         name="Inicio"
         component={DashboardScreen}
@@ -66,10 +72,10 @@ export const BottomTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Cuentas"
-        component={AccountsScreen}
+        name="Jugadores"
+        component={PlayersHubScreen}
         options={{
-          tabBarLabel: t('tabAccounts'),
+          tabBarLabel: t('tabPlayers') || 'Jugadores',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIconWrap, focused && styles.tabIconWrapFocused]}>
               {focused && <View style={styles.tabGlowAura} />}
@@ -83,15 +89,15 @@ export const BottomTabs = () => {
         }}
       />
       <Tab.Screen
-        name="PJs"
-        component={CharacterListScreen}
+        name="Objetos"
+        component={ObjectsHubScreen}
         options={{
-          tabBarLabel: t('tabPJs'),
+          tabBarLabel: t('tabObjects') || 'Objetos',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIconWrap, focused && styles.tabIconWrapFocused]}>
               {focused && <View style={styles.tabGlowAura} />}
               <MaterialCommunityIcons
-                name="sword-cross"
+                name="treasure-chest"
                 size={focused ? 24 : 21}
                 color={color}
               />
@@ -100,10 +106,10 @@ export const BottomTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Mas"
-        component={ToolsScreen}
+        name="Herramientas"
+        component={ToolsHubScreen}
         options={{
-          tabBarLabel: t('tabMore'),
+          tabBarLabel: t('tabTools') || 'Herramientas',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIconWrap, focused && styles.tabIconWrapFocused]}>
               {focused && <View style={styles.tabGlowAura} />}
@@ -117,10 +123,10 @@ export const BottomTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Config"
+        name="Ajustes"
         component={ConfigScreen}
         options={{
-          tabBarLabel: t('tabConfig'),
+          tabBarLabel: t('tabSettings') || 'Ajustes',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.tabIconWrap, focused && styles.tabIconWrapFocused]}>
               {focused && <View style={styles.tabGlowAura} />}
@@ -131,6 +137,42 @@ export const BottomTabs = () => {
               />
             </View>
           ),
+        }}
+      />
+
+      {/* ========================================================================= */}
+      {/* RUTAS DE COMPATIBILIDAD RETROACTIVA (Ocultas de la barra inferior)        */}
+      {/* ========================================================================= */}
+      <Tab.Screen
+        name="Cuentas"
+        component={AccountsScreen}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
+        }}
+      />
+      <Tab.Screen
+        name="PJs"
+        component={CharacterListScreen}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
+        }}
+      />
+      <Tab.Screen
+        name="Mas"
+        component={ToolsScreen}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
+        }}
+      />
+      <Tab.Screen
+        name="Config"
+        component={ConfigScreen}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
         }}
       />
     </Tab.Navigator>

@@ -28,15 +28,25 @@ import { AutocompleteInput } from '../../components/common/AutocompleteInput';
 import { LicenseService } from '../../services/security/licenseService';
 import { LicenseModal } from '../../components/security/LicenseModal';
 
-export const CharacterListScreen = () => {
+export interface CharacterListScreenProps {
+  hideTopPadding?: boolean;
+  route?: any;
+  navigation?: any;
+}
+
+export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) => {
   const insets = useSafeAreaInsets();
-  const topInset = Math.max(
-    insets.top,
-    Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
-  );
+  const topInset = props?.hideTopPadding
+    ? 0
+    : Math.max(
+        insets.top,
+        Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
+      );
   const { t } = useLanguage();
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const navHook = useNavigation<any>();
+  const routeHook = useRoute<any>();
+  const navigation = props?.navigation || navHook;
+  const route = props?.route || routeHook;
 
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -415,7 +425,7 @@ export const CharacterListScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: topInset + 10 }]}>
+    <View style={[styles.container, { paddingTop: props?.hideTopPadding ? 6 : (topInset + 10) }]}>
       {/* Header Principal con Botón de Crear Personaje (+) */}
       <View style={styles.headerRow}>
         <Text style={styles.mainTitle}>{t('tabPJs') || 'Personajes'}</Text>

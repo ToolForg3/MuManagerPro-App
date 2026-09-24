@@ -329,8 +329,8 @@
     .btn-red:hover { background: #E53935; }
     .btn-dark { background: #222; color: #FFF; border: 1px solid #3A3A40; }
     .btn-dark:hover { background: #2E2E34; }
-    .btn-warning { background: #E65100; color: #FFF; }
-    .btn-warning:hover { background: #EF6C00; }
+    .btn-warning { background: #FFB74D; color: #100D0B; font-weight: 700; border: 1px solid #FFA726; }
+    .btn-warning:hover { background: #FFA726; color: #100D0B; }
     .btn-pro { background: #3FCF8E; color: #191512; font-weight: 700; }
     .btn-pro:hover { background: #5EE5A5; color: #191512; }
     .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 6px; }
@@ -1452,67 +1452,67 @@
 
   <!-- Master Module Hub: 5 Zonas Principales de Control -->
   <div class="module-hub-grid" id="main-module-hub">
-    <!-- Módulo 1: Celulares & Licencias -->
+    <!-- Módulo 1: Dispositivos / Licencias -->
     <div class="module-hub-card active" id="card-mod-devices" onclick="selectMainModule('mod-devices')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
           <div class="module-hub-icon" style="color: #FF7043; background: rgba(255, 87, 34, 0.12);">📱</div>
           <div>
-            <div class="module-hub-title">Celulares & Licencias</div>
-            <div class="module-hub-desc">Dispositivos, HWID, Keygen y Solicitudes PRO</div>
+            <div class="module-hub-title">Dispositivos / Licencias</div>
+            <div class="module-hub-desc">Celulares, HWID, Keygen y Solicitudes PRO</div>
           </div>
         </div>
         <span id="hub-badge-requests" class="module-hub-badge" style="display:none;" title="Solicitudes PRO de clientes pendientes">0</span>
       </div>
     </div>
 
-    <!-- Módulo 2: Cuentas de Usuarios -->
+    <!-- Módulo 2: Usuarios / Cuentas -->
     <div class="module-hub-card" id="card-mod-users" onclick="selectMainModule('mod-users')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
           <div class="module-hub-icon" style="color: #42A5F5; background: rgba(33, 150, 243, 0.12);">👥</div>
           <div>
-            <div class="module-hub-title">Cuentas de Usuarios</div>
+            <div class="module-hub-title">Usuarios / Cuentas</div>
             <div class="module-hub-desc">Directorio de accesos, roles y contraseñas</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Módulo 3: Seguridad & Anti-Hack -->
+    <!-- Módulo 3: Seguridad / Telemetría -->
     <div class="module-hub-card" id="card-mod-security" onclick="selectMainModule('mod-security')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
           <div class="module-hub-icon" style="color: #FF5252; background: rgba(255, 82, 82, 0.12);">🛡️</div>
           <div>
-            <div class="module-hub-title">Seguridad & Anti-Hack</div>
-            <div class="module-hub-desc">Bugs, Kill-Switch Maestro y Alertas WhatsApp</div>
+            <div class="module-hub-title">Seguridad / Telemetría</div>
+            <div class="module-hub-desc">Bugs, Kill-Switch Maestro, WhatsApp y SMTP</div>
           </div>
         </div>
         <span id="hub-badge-security" class="module-hub-badge" style="background: rgba(255, 82, 82, 0.2); color: #FF5252; border-color: rgba(255, 82, 82, 0.4); display:none;" title="Alertas de seguridad">0</span>
       </div>
     </div>
 
-    <!-- Módulo 4: Distribución & APK -->
+    <!-- Módulo 4: Distribución / APK -->
     <div class="module-hub-card" id="card-mod-deploy" onclick="selectMainModule('mod-deploy')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
           <div class="module-hub-icon" style="color: #3FCF8E; background: rgba(63, 207, 142, 0.12);">🚀</div>
           <div>
-            <div class="module-hub-title">Distribución & APK</div>
+            <div class="module-hub-title">Distribución / APK</div>
             <div class="module-hub-desc">Versión Oficial, Canal Beta y Avisos Push</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Módulo 5: Base de Datos & Sistema -->
+    <!-- Módulo 5: Configuración / Mantenimiento -->
     <div class="module-hub-card" id="card-mod-system" onclick="selectMainModule('mod-system')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
           <div class="module-hub-icon" style="color: #5B8DEF; background: rgba(91, 141, 239, 0.12);">⚙️</div>
           <div>
-            <div class="module-hub-title">Base de Datos & Sistema</div>
+            <div class="module-hub-title">Configuración / Mantenimiento</div>
             <div class="module-hub-desc">Auditoría forense, diagnóstico SQL y Upstash</div>
           </div>
         </div>

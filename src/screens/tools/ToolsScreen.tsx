@@ -84,22 +84,61 @@ import {
 export { QuickSetPiece, QuickSetDef, QUICK_SETS_CATALOG, MakerCategoryDef, MAKER_CATEGORIES };
 
 
-export const ToolsScreen = () => {
+export interface ToolsScreenProps {
+  mode?: 'all' | 'objects' | 'tools' | 'players';
+  initialTab?: ToolTab;
+  playerSubTab?: 'online' | 'bans' | 'gm';
+  hideTopPadding?: boolean;
+  route?: any;
+  navigation?: any;
+}
+
+export const ToolsScreen: React.FC<ToolsScreenProps> = (props) => {
   const { t } = useLanguage();
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
-  const [activeTab, setActiveTab] = useState<ToolTab>('maker');
-  const [playerSubTab, setPlayerSubTab] = useState<'online' | 'bans' | 'gm'>('online');
+  const navHook = useNavigation<any>();
+  const routeHook = useRoute<any>();
+  const navigation = props?.navigation || navHook;
+  const route = props?.route || routeHook;
+
+  const currentMode = props?.mode || route?.params?.mode || 'all';
+
+  const OBJECT_TABS: ToolTab[] = ['maker', 'kit', 'jewels', 'prizes'];
+  const TOOL_TABS: ToolTab[] = ['antidupe', 'fixes', 'rankings', 'parsers'];
+  const PLAYER_TABS: ToolTab[] = ['players', 'guilds', 'pk'];
+
+  const allowedTabs: ToolTab[] = useMemo(() => {
+    if (currentMode === 'objects') return OBJECT_TABS;
+    if (currentMode === 'tools') return TOOL_TABS;
+    if (currentMode === 'players') return PLAYER_TABS;
+    return ALL_TABS;
+  }, [currentMode]);
+
+  const defaultInitialTab: ToolTab = useMemo(() => {
+    const fromProps = props?.initialTab;
+    if (fromProps && allowedTabs.includes(fromProps)) return fromProps;
+    const fromRoute = route?.params?.initialTab;
+    if (fromRoute && allowedTabs.includes(fromRoute)) return fromRoute;
+    return allowedTabs[0] || 'maker';
+  }, [allowedTabs, props?.initialTab, route?.params?.initialTab]);
+
+  const [activeTab, setActiveTab] = useState<ToolTab>(defaultInitialTab);
+  const [playerSubTab, setPlayerSubTab] = useState<'online' | 'bans' | 'gm'>(
+    props?.playerSubTab || route?.params?.playerSubTab || 'online'
+  );
   const [licenseModalVisible, setLicenseModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
-    if (route.params?.initialTab) {
-      setActiveTab(route.params.initialTab);
+    const targetTab = props?.initialTab || route?.params?.initialTab;
+    if (targetTab && allowedTabs.includes(targetTab)) {
+      setActiveTab(targetTab);
+    } else if (!allowedTabs.includes(activeTab)) {
+      setActiveTab(allowedTabs[0] || 'maker');
     }
-    if (route.params?.playerSubTab) {
-      setPlayerSubTab(route.params.playerSubTab);
+    const targetPlayerSub = props?.playerSubTab || route?.params?.playerSubTab;
+    if (targetPlayerSub) {
+      setPlayerSubTab(targetPlayerSub);
     }
-  }, [route.params]);
+  }, [props?.initialTab, props?.playerSubTab, route?.params, allowedTabs]);
   const tabScrollRef = useRef<ScrollView>(null);
   const [showScrollHint, setShowScrollHint] = useState<boolean>(true);
 
@@ -117,11 +156,11 @@ export const ToolsScreen = () => {
 
   useEffect(() => {
     // Scroll auto on tab switch
-    const tabIndex = ALL_TABS.indexOf(activeTab);
+    const tabIndex = allowedTabs.indexOf(activeTab);
     if (tabIndex >= 0) {
       tabScrollRef.current?.scrollTo({ x: tabIndex * 85, animated: true });
     }
-  }, [activeTab]);
+  }, [activeTab, allowedTabs]);
 
   useEffect(() => {
     // Asegurar que las herramientas cuenten con la clave de administración activa
@@ -2566,8 +2605,24 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
     <ErrorBoundary tabName="Pantalla de Herramientas">
       <View style={styles.container}>
       <Header
-        title={t('toolsTitle')}
-        subtitle="Pack Completo de Super-Herramientas"
+        title={
+          currentMode === 'objects'
+            ? (t('tabObjects') || 'Objetos & Tesorería')
+            : currentMode === 'players'
+            ? (t('tabPlayers') || 'Jugadores & Clanes')
+            : currentMode === 'tools'
+            ? (t('tabTools') || 'Herramientas')
+            : (t('toolsTitle') || 'Herramientas')
+        }
+        subtitle={
+          currentMode === 'objects'
+            ? 'Editor de Ítems, Starter Kits, Joyas y Premios'
+            : currentMode === 'players'
+            ? 'Monitoreo Online, Alianzas y PKs'
+            : currentMode === 'tools'
+            ? 'Anti-Dupe, Fixes, Rankings y Parsers'
+            : 'Pack Completo de Super-Herramientas'
+        }
         showConnectionBadge={true}
       />
 
@@ -2588,166 +2643,193 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               setShowScrollHint(true);
             }
           }}
-          contentContainerStyle={styles.tabBarScroll}
+          contentContainerStyle={[
+            styles.tabBarScroll,
+            allowedTabs.length <= 4 && { flexGrow: 1, justifyContent: 'space-around' }
+          ]}
         >
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'maker' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('maker')}
-          >
-            <MaterialCommunityIcons
-              name="cube-send"
-              size={18}
-              color={activeTab === 'maker' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'maker' && styles.tabButtonTextActive]}>
-              Item Maker
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('maker') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'maker' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('maker')}
+            >
+              <MaterialCommunityIcons
+                name="cube-send"
+                size={18}
+                color={activeTab === 'maker' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'maker' && styles.tabButtonTextActive]}>
+                Item Maker
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'jewels' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('jewels')}
-          >
-            <MaterialCommunityIcons
-              name="diamond-stone"
-              size={18}
-              color={activeTab === 'jewels' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'jewels' && styles.tabButtonTextActive]}>
-              Joyas
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('kit') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'kit' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('kit')}
+            >
+              <MaterialCommunityIcons
+                name="package-variant-closed"
+                size={18}
+                color={activeTab === 'kit' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'kit' && styles.tabButtonTextActive]}>
+                Starter Kit
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'antidupe' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('antidupe')}
-          >
-            <MaterialCommunityIcons
-              name="shield-search"
-              size={18}
-              color={activeTab === 'antidupe' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'antidupe' && styles.tabButtonTextActive]}>
-              Anti-Dupe
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('jewels') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'jewels' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('jewels')}
+            >
+              <MaterialCommunityIcons
+                name="diamond-stone"
+                size={18}
+                color={activeTab === 'jewels' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'jewels' && styles.tabButtonTextActive]}>
+                Joyas
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'rankings' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('rankings')}
-          >
-            <MaterialCommunityIcons
-              name="trophy"
-              size={18}
-              color={activeTab === 'rankings' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'rankings' && styles.tabButtonTextActive]}>
-              Rankings
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('prizes') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'prizes' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('prizes')}
+            >
+              <MaterialCommunityIcons
+                name="gift-outline"
+                size={18}
+                color={activeTab === 'prizes' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'prizes' && styles.tabButtonTextActive]}>
+                Premios
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'fixes' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('fixes')}
-          >
-            <MaterialCommunityIcons
-              name="wrench"
-              size={18}
-              color={activeTab === 'fixes' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'fixes' && styles.tabButtonTextActive]}>
-              Fixes
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('antidupe') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'antidupe' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('antidupe')}
+            >
+              <MaterialCommunityIcons
+                name="shield-search"
+                size={18}
+                color={activeTab === 'antidupe' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'antidupe' && styles.tabButtonTextActive]}>
+                Anti-Dupe
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'parsers' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('parsers')}
-          >
-            <MaterialCommunityIcons
-              name="file-cog-outline"
-              size={18}
-              color={activeTab === 'parsers' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'parsers' && styles.tabButtonTextActive]}>
-              Parsers
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('fixes') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'fixes' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('fixes')}
+            >
+              <MaterialCommunityIcons
+                name="wrench"
+                size={18}
+                color={activeTab === 'fixes' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'fixes' && styles.tabButtonTextActive]}>
+                Fixes
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          {/* Visual Divider between Original 5 and New 4 Tabs */}
-          <View style={{ width: 1, height: 24, backgroundColor: '#6B5533', alignSelf: 'center', marginHorizontal: 4 }} />
+          {allowedTabs.includes('rankings') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'rankings' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('rankings')}
+            >
+              <MaterialCommunityIcons
+                name="trophy"
+                size={18}
+                color={activeTab === 'rankings' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'rankings' && styles.tabButtonTextActive]}>
+                Rankings
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'kit' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('kit')}
-          >
-            <MaterialCommunityIcons
-              name="package-variant-closed"
-              size={18}
-              color={activeTab === 'kit' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'kit' && styles.tabButtonTextActive]}>
-              Starter Kit
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('parsers') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'parsers' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('parsers')}
+            >
+              <MaterialCommunityIcons
+                name="file-cog-outline"
+                size={18}
+                color={activeTab === 'parsers' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'parsers' && styles.tabButtonTextActive]}>
+                Parsers
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'prizes' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('prizes')}
-          >
-            <MaterialCommunityIcons
-              name="gift-outline"
-              size={18}
-              color={activeTab === 'prizes' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'prizes' && styles.tabButtonTextActive]}>
-              Premios
-            </Text>
-          </TouchableOpacity>
+          {/* Visual Divider between Original 5 and New 4 Tabs en modo completo */}
+          {currentMode === 'all' && (
+            <View style={{ width: 1, height: 24, backgroundColor: '#6B5533', alignSelf: 'center', marginHorizontal: 4 }} />
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'players' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('players')}
-          >
-            <MaterialCommunityIcons
-              name="account-group"
-              size={18}
-              color={activeTab === 'players' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'players' && styles.tabButtonTextActive]}>
-              Jugadores & GM
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('players') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'players' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('players')}
+            >
+              <MaterialCommunityIcons
+                name="account-group"
+                size={18}
+                color={activeTab === 'players' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'players' && styles.tabButtonTextActive]}>
+                Jugadores & GM
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'guilds' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('guilds')}
-          >
-            <MaterialCommunityIcons
-              name="shield-account"
-              size={18}
-              color={activeTab === 'guilds' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'guilds' && styles.tabButtonTextActive]}>
-              Clanes
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('guilds') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'guilds' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('guilds')}
+            >
+              <MaterialCommunityIcons
+                name="shield-account"
+                size={18}
+                color={activeTab === 'guilds' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'guilds' && styles.tabButtonTextActive]}>
+                Clanes
+              </Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === 'pk' && styles.tabButtonActive]}
-            onPress={() => setActiveTab('pk')}
-          >
-            <MaterialCommunityIcons
-              name="skull"
-              size={18}
-              color={activeTab === 'pk' ? '#E8C86A' : THEME.colors.textoSecundario}
-            />
-            <Text style={[styles.tabButtonText, activeTab === 'pk' && styles.tabButtonTextActive]}>
-              PK / Asesinos
-            </Text>
-          </TouchableOpacity>
+          {allowedTabs.includes('pk') && (
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'pk' && styles.tabButtonActive]}
+              onPress={() => setActiveTab('pk')}
+            >
+              <MaterialCommunityIcons
+                name="skull"
+                size={18}
+                color={activeTab === 'pk' ? '#E8C86A' : THEME.colors.textoSecundario}
+              />
+              <Text style={[styles.tabButtonText, activeTab === 'pk' && styles.tabButtonTextActive]}>
+                PK / Asesinos
+              </Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
-        {showScrollHint && activeTab !== 'pk' && (
+        {showScrollHint && currentMode === 'all' && activeTab !== 'pk' && (
           <View style={styles.scrollHintOverlay} pointerEvents="none">
             <MaterialCommunityIcons name="chevron-right" size={20} color="#E8C86A" />
           </View>

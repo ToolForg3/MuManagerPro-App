@@ -95,15 +95,25 @@ const JEWEL_CONFIG: { key: keyof JewelBankData; label: string; icon: string; col
   { key: 'HighStone', label: 'Higher Refining Stone', icon: 'octagram-outline', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
 ];
 
-export const AccountsScreen = () => {
+export interface AccountsScreenProps {
+  hideTopPadding?: boolean;
+  route?: any;
+  navigation?: any;
+}
+
+export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
   const insets = useSafeAreaInsets();
-  const topInset = Math.max(
-    insets.top,
-    Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
-  );
+  const topInset = props?.hideTopPadding
+    ? 0
+    : Math.max(
+        insets.top,
+        Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
+      );
   const { t } = useLanguage();
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const navHook = useNavigation<any>();
+  const routeHook = useRoute<any>();
+  const navigation = props?.navigation || navHook;
+  const route = props?.route || routeHook;
 
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [filtered, setFiltered] = useState<AccountSummary[]>([]);
@@ -1772,7 +1782,7 @@ export const AccountsScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: topInset + 10 }]}>
+    <View style={[styles.container, { paddingTop: props?.hideTopPadding ? 6 : (topInset + 10) }]}>
       {/* Header Principal estilo Captura 1 */}
       <View style={styles.headerRow}>
         <Text style={styles.mainTitle}>{t('tabAccounts') || 'Cuentas'}</Text>

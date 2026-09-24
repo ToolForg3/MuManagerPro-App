@@ -140,6 +140,10 @@ const TRANSLATIONS = {
 
     // Tabs
     tabHome: 'Inicio',
+    tabPlayers: 'Jugadores',
+    tabObjects: 'Objetos',
+    tabTools: 'Herramientas',
+    tabSettings: 'Ajustes',
     tabAccounts: 'Cuentas',
     tabPJs: 'PJs',
     tabMore: 'Más',
@@ -260,6 +264,10 @@ const TRANSLATIONS = {
     signOut: 'Sign Out',
 
     tabHome: 'Home',
+    tabPlayers: 'Players',
+    tabObjects: 'Items',
+    tabTools: 'Tools',
+    tabSettings: 'Settings',
     tabAccounts: 'Accounts',
     tabPJs: 'Chars',
     tabMore: 'More',
@@ -380,6 +388,10 @@ const TRANSLATIONS = {
     signOut: 'Sair da Conta',
 
     tabHome: 'Início',
+    tabPlayers: 'Jogadores',
+    tabObjects: 'Objetos',
+    tabTools: 'Ferramentas',
+    tabSettings: 'Ajustes',
     tabAccounts: 'Contas',
     tabPJs: 'PJs',
     tabMore: 'Mais',

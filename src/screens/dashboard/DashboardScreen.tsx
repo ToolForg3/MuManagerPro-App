@@ -186,7 +186,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.metricCol}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Cuentas')}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas' })}
           >
             <Panel style={styles.kpiPanel}>
               <View style={styles.kpiHeaderRow}>
@@ -201,7 +201,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.metricCol}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('PJs')}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'personajes' })}
           >
             <Panel style={styles.kpiPanel}>
               <View style={styles.kpiHeaderRow}>
@@ -216,7 +216,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.metricCol}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Mas', { initialTab: 'players', playerSubTab: 'online' })}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'online' })}
           >
             <Panel style={styles.kpiPanel}>
               <View style={styles.kpiHeaderRow}>
@@ -231,7 +231,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.metricCol}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Cuentas', { filter: 'vip' })}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', filter: 'vip' })}
           >
             <Panel style={styles.kpiPanel}>
               <View style={styles.kpiHeaderRow}>
@@ -246,7 +246,7 @@ export const DashboardScreen = () => {
         {/* Clanes / Guilds (5to KPI elegante a lo ancho) */}
         <TouchableOpacity
           activeOpacity={0.75}
-          onPress={() => navigation.navigate('Mas', { initialTab: 'guilds' })}
+          onPress={() => navigation.navigate('Jugadores', { subTab: 'clanes' })}
           style={{ marginBottom: 8 }}
         >
           <Panel style={styles.guildPanel}>
@@ -266,7 +266,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Cuentas', { openCreateModal: true })}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', openCreateModal: true })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="user-plus" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
@@ -278,7 +278,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Cuentas', { focusSearch: true })}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', focusSearch: true })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="search" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
@@ -290,7 +290,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('PJs')}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'personajes' })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="shield" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
@@ -302,7 +302,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Config')}
+            onPress={() => navigation.navigate('Ajustes')}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="settings" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
@@ -318,7 +318,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Mas', { initialTab: 'prizes' })}
+            onPress={() => navigation.navigate('Objetos', { initialTab: 'prizes' })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="gift" size={20} color={THEME.colors.brasa} style={styles.actionIcon} />
@@ -330,7 +330,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Mas', { initialTab: 'guilds' })}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'clanes' })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="flag" size={20} color={THEME.colors.brasa} style={styles.actionIcon} />
@@ -342,7 +342,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Mas', { initialTab: 'kit' })}
+            onPress={() => navigation.navigate('Objetos', { initialTab: 'kit' })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="package" size={20} color={THEME.colors.brasa} style={styles.actionIcon} />
@@ -354,7 +354,7 @@ export const DashboardScreen = () => {
           <TouchableOpacity
             style={styles.actionCardWrap}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Mas', { initialTab: 'players', playerSubTab: 'gm' })}
+            onPress={() => navigation.navigate('Jugadores', { subTab: 'gm' })}
           >
             <Panel sinRemaches style={styles.actionCard}>
               <Feather name="award" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
@@ -374,7 +374,7 @@ export const DashboardScreen = () => {
               <TouchableOpacity
                 key={acc.memb___id || index}
                 activeOpacity={0.7}
-                onPress={() => navigation.navigate('Cuentas', { searchAccount: acc.memb___id })}
+                onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', searchAccount: acc.memb___id })}
                 style={[
                   styles.accountRow,
                   index < recentAccounts.length - 1 && styles.accountRowBorder,

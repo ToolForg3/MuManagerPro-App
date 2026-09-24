@@ -1,10 +1,10 @@
 {
-  "version": "2.1.7",
+  "version": "2.1.8",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-24T17:55:00.000Z",
+  "publishedAt": "2026-09-24T18:30:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 119,
+  "build": 120,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.1.7 (Build 119) - Expiración Sin Bloqueo, Renovación Amigable y Precisión de Tiempos:\n• EXPIRACIÓN SIN AUTO-BLOQUEO: Al concluir el período PRO o de Prueba, el dispositivo ya no se bloquea automáticamente. El usuario permanece en la pantalla de Login con aviso informativo.\n• SOLICITUD DIRECTA DE RENOVACIÓN: Integración directa en Login del botón para solicitar licencia PRO o tiempo adicional de demo hacia el Panel de Control.\n• PANEL DE CONTROL MEJORADO: Tarjetas KPI, filtros en vivo, badges distintivos (ámbar/brasa) y centro de notificaciones para dispositivos vencidos, preservando el bloqueo manual para el administrador.\n• TIEMPOS Y TELEMETRÍA PRECISOS: Cálculo universal UTC sin desfases de huso horario y extensiones de tiempo acumulativas."
+  "changelog": "MuManager PRO v2.1.8 (Build 120) - Reorganización Integral de Interfaz Season 6 y Usabilidad Optimizada:\n• NAVEGACIÓN Y ARQUITECTURA LIMPIA: 5 áreas canónicas principales (Inicio, Jugadores, Objetos, Herramientas, Ajustes) con preservación absoluta del 100% de funciones, submódulos y filtros.\n• HUB DE JUGADORES COMPLETO: Nueva vista centralizada para Cuentas, Personajes, Conectados en Vivo, Clanes, Asesinos PK y Game Masters con filtros directos.\n• HUBS ESPECIALIZADOS DE OBJETOS Y HERRAMIENTAS: Acceso inmediato e intuitivo a inventarios, baúles, inyectores, reparadores y utilidades del servidor.\n• DISEÑO MEDIEVAL SEASON 6 PIEDRA & ORO CERTIFICADO: 100% cumplimiento WCAG AAA (>7:1), contraste optimizado en botones y paneles, cero pérdida funcional.\n• WEB PÚBLICA Y PANEL WEB ARMONIZADOS: Navegación sincronizada en el portal y métricas administrativas de alta legibilidad."
 }

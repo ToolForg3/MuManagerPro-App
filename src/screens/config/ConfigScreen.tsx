@@ -895,7 +895,7 @@ export const ConfigScreen = () => {
                         onPress={() => handleLoadProfile(p)}
                         activeOpacity={0.7}
                       >
-                        <MaterialCommunityIcons name="cloud-upload-outline" size={16} color="#FFFFFF" />
+                        <MaterialCommunityIcons name="cloud-upload-outline" size={16} color="#100D0B" />
                         <Text style={styles.profileLoadBtnText}>Cargar</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -970,7 +970,7 @@ export const ConfigScreen = () => {
                       }}
                       activeOpacity={0.8}
                     >
-                      <MaterialCommunityIcons name="lock-reset" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                      <MaterialCommunityIcons name="lock-reset" size={16} color="#100D0B" style={{ marginRight: 6 }} />
                       <Text style={styles.pinChangeBtnText}>Cambiar PIN</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -992,7 +992,7 @@ export const ConfigScreen = () => {
                     }}
                     activeOpacity={0.8}
                   >
-                    <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#100D0B" style={{ marginRight: 6 }} />
                     <Text style={styles.pinEnableBtnText}>Activar Bloqueo por PIN (4 Dígitos)</Text>
                   </TouchableOpacity>
                 )}
@@ -1210,7 +1210,7 @@ export const ConfigScreen = () => {
                       onPress={() => setUpdateModalManualVisible(true)}
                       activeOpacity={0.8}
                     >
-                      <MaterialCommunityIcons name="download" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                      <MaterialCommunityIcons name="download" size={16} color="#100D0B" style={{ marginRight: 6 }} />
                       <Text style={styles.downloadUpdateBtnText}>Instalar v{remoteConfig.updateInfo.latestVersion}</Text>
                     </TouchableOpacity>
                   )}
@@ -1642,7 +1642,7 @@ export const ConfigScreen = () => {
                 disabled={verifyingAdminKey}
               >
                 {verifyingAdminKey ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color="#100D0B" />
                 ) : (
                   <Text style={styles.adminModalBtnSubmitText}>Acceder</Text>
                 )}
@@ -1742,7 +1742,7 @@ export const ConfigScreen = () => {
                 disabled={isChangingPw}
               >
                 {isChangingPw ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color="#100D0B" />
                 ) : (
                   <Text style={styles.adminModalBtnSubmitText}>Guardar</Text>
                 )}
@@ -2186,14 +2186,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: THEME.borderRadius.md,
-    backgroundColor: THEME.colors.primaryOrange,
+    backgroundColor: THEME.colors.oroClaro,
     minWidth: 90,
     alignItems: 'center',
     justifyContent: 'center',
   },
   adminModalBtnSubmitText: {
     fontSize: 13,
-    color: '#FFFFFF',
+    color: '#100D0B',
     fontWeight: 'bold',
   },
   cardHeaderRow: {
@@ -2268,7 +2268,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.primaryOrange,
+    backgroundColor: THEME.colors.oroClaro,
     borderRadius: THEME.borderRadius.md,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -2276,7 +2276,7 @@ const styles = StyleSheet.create({
   downloadUpdateBtnText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#100D0B',
   },
   settingDescText: {
     fontSize: 12,
@@ -2333,7 +2333,7 @@ const styles = StyleSheet.create({
   profileLoadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.primaryOrange,
+    backgroundColor: THEME.colors.oroClaro,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: THEME.borderRadius.sm,
@@ -2342,7 +2342,7 @@ const styles = StyleSheet.create({
   profileLoadBtnText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#100D0B',
   },
   profileDeleteBtn: {
     padding: 6,
@@ -2377,14 +2377,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.primaryOrange,
+    backgroundColor: THEME.colors.oroClaro,
     borderRadius: THEME.borderRadius.md,
     paddingVertical: 10,
   },
   pinChangeBtnText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#100D0B',
   },
   pinDisableBtn: {
     flexDirection: 'row',
@@ -2407,14 +2407,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.primaryOrange,
+    backgroundColor: THEME.colors.oroClaro,
     borderRadius: THEME.borderRadius.md,
     paddingVertical: 11,
   },
   pinEnableBtnText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#100D0B',
   },
   ipLimitOptionsBox: {
     backgroundColor: THEME.colors.surface,
