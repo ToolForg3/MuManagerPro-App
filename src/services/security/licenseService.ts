@@ -37,6 +37,20 @@ export class LicenseService {
 
   private static listeners: Array<(status: LicenseStatus) => void> = [];
   private static sessionInvalidatedCallback: ((reason?: string) => void) | null = null;
+  private static lastProcessedRevision: number = 0;
+  private static lastProcessedUpdatedAt: number = 0;
+  private static lastServerId: string = '';
+  private static lastProcessedHwid: string = '';
+  private static storagePromiseQueue: Promise<void> = Promise.resolve();
+
+  private static queueStorageOperation(op: () => Promise<void>): Promise<void> {
+    this.storagePromiseQueue = this.storagePromiseQueue
+      .then(op)
+      .catch((err) => {
+        console.warn('[LicenseService] Error in storage queue:', err);
+      });
+    return this.storagePromiseQueue;
+  }
 
   static onSessionInvalidated(cb: (reason?: string) => void) {
     this.sessionInvalidatedCallback = cb;
@@ -96,6 +110,12 @@ export class LicenseService {
               daysRemaining: parsed.daysRemaining,
               licenseValidUntil: parsed.licenseValidUntil,
             };
+            if (typeof parsed.authRevision === 'number') {
+              this.lastProcessedRevision = parsed.authRevision;
+            }
+            if (typeof parsed.authUpdatedAt === 'number') {
+              this.lastProcessedUpdatedAt = parsed.authUpdatedAt;
+            }
             this.notifyListeners();
             this.reportTelemetry(hwid, 'PRO', parsed.licenseKey);
             return this.currentStatus;
@@ -125,6 +145,40 @@ export class LicenseService {
     const wasPro = this.currentStatus.isActivated && this.currentStatus.plan === 'PRO';
     const wasBlocked = !!this.currentStatus.isBlocked;
 
+    const incomingRev = typeof res.authRevision === 'number' ? res.authRevision : 0;
+    const incomingUpdatedAt = typeof res.authUpdatedAt === 'number' ? res.authUpdatedAt : 0;
+    const incomingServerId = res.serverId || '';
+
+    // Si cambió de HWID (cambio de dispositivo), resetear la revisión local
+    if (this.lastProcessedHwid && currentHwid && this.lastProcessedHwid !== currentHwid) {
+      this.lastProcessedRevision = 0;
+      this.lastProcessedUpdatedAt = 0;
+    }
+    this.lastProcessedHwid = currentHwid;
+
+    // Control de orden estricto: Si la respuesta tiene authRevision y es menor que la última procesada,
+    // o es igual pero con authUpdatedAt menor, se descarta como obsoleta/desfasada.
+    if (incomingRev > 0 || this.lastProcessedRevision > 0) {
+      if (incomingRev < this.lastProcessedRevision) {
+        console.warn(`[LicenseService] Descartando respuesta de telemetría obsoleta (rev ${incomingRev} < ${this.lastProcessedRevision})`);
+        return;
+      }
+      if (incomingRev === this.lastProcessedRevision && incomingUpdatedAt > 0 && incomingUpdatedAt < this.lastProcessedUpdatedAt) {
+        console.warn(`[LicenseService] Descartando respuesta de telemetría con marca temporal anterior (${incomingUpdatedAt} < ${this.lastProcessedUpdatedAt})`);
+        return;
+      }
+    }
+
+    if (incomingRev > 0) {
+      this.lastProcessedRevision = Math.max(this.lastProcessedRevision, incomingRev);
+    }
+    if (incomingUpdatedAt > 0) {
+      this.lastProcessedUpdatedAt = Math.max(this.lastProcessedUpdatedAt, incomingUpdatedAt);
+    }
+    if (incomingServerId) {
+      this.lastServerId = incomingServerId;
+    }
+
     // Concurrencia de Sesión: Si la cuenta fue abierta en otro celular
     if (res.sessionInvalidated && this.sessionInvalidatedCallback) {
       this.sessionInvalidatedCallback(res.reason || 'Tu cuenta ha iniciado sesión en otro celular.');
@@ -139,7 +193,9 @@ export class LicenseService {
         this.currentStatus.licenseKey = undefined;
         this.currentStatus.isLifetime = false;
         this.currentStatus.daysRemaining = 0;
-        AsyncStorage.removeItem(LICENSE_STORAGE_KEY).catch(() => {});
+        this.queueStorageOperation(async () => {
+          await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+        });
       }
       this.notifyListeners();
       if (!wasBlocked) {
@@ -178,7 +234,9 @@ export class LicenseService {
           this.currentStatus.licenseKey = undefined;
           this.currentStatus.isLifetime = false;
           this.currentStatus.daysRemaining = 0;
-          AsyncStorage.removeItem(LICENSE_STORAGE_KEY).catch(() => {});
+          this.queueStorageOperation(async () => {
+            await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+          });
         }
         this.notifyListeners();
         if (!wasExpiredAlready && !res.blocked) {
@@ -215,24 +273,30 @@ export class LicenseService {
       }
       if (currentHwid) {
         const checksum = SecurityService.computeChecksum(`${currentHwid}:${key}:PRO`);
-        AsyncStorage.setItem(
-          LICENSE_STORAGE_KEY,
-          JSON.stringify({
-            licenseKey: key,
-            plan: 'PRO',
-            serverActivated: true,
-            activatedAt: new Date().toISOString(),
-            hwid: currentHwid,
-            deviceChecksum: checksum,
-            isLifetime,
-            expiresAt,
-            daysRemaining,
-            hoursRemaining,
-            timeRemainingFormatted,
-            // MEJORA 1: guardar TTL del servidor para enforcement offline
-            licenseValidUntil: (res as any).licenseValidUntil || null,
-          })
-        ).catch(() => {});
+        const revToSave = incomingRev || this.lastProcessedRevision;
+        const updatedToSave = incomingUpdatedAt || this.lastProcessedUpdatedAt;
+        this.queueStorageOperation(async () => {
+          await AsyncStorage.setItem(
+            LICENSE_STORAGE_KEY,
+            JSON.stringify({
+              licenseKey: key,
+              plan: 'PRO',
+              serverActivated: true,
+              activatedAt: new Date().toISOString(),
+              hwid: currentHwid,
+              deviceChecksum: checksum,
+              isLifetime,
+              expiresAt,
+              daysRemaining,
+              hoursRemaining,
+              timeRemainingFormatted,
+              // MEJORA 1: guardar TTL del servidor para enforcement offline
+              licenseValidUntil: (res as any).licenseValidUntil || null,
+              authRevision: revToSave,
+              authUpdatedAt: updatedToSave,
+            })
+          );
+        });
       }
       this.notifyListeners();
 
@@ -269,7 +333,9 @@ export class LicenseService {
       this.currentStatus.hoursRemaining = undefined;
       this.currentStatus.timeRemainingFormatted = undefined;
       this.currentStatus.expiresAt = undefined;
-      AsyncStorage.removeItem(LICENSE_STORAGE_KEY).catch(() => {});
+      this.queueStorageOperation(async () => {
+        await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+      });
       if (wasPro) {
         this.notifyListeners();
         // Notificación al APK cuando la licencia es revocada (PRO -> DEMO)
@@ -347,7 +413,9 @@ export class LicenseService {
       isBlocked: false,
     };
 
-    await AsyncStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(statusData));
+    await this.queueStorageOperation(async () => {
+      await AsyncStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(statusData));
+    });
     this.currentStatus = statusData;
     this.notifyListeners();
 
@@ -364,7 +432,9 @@ export class LicenseService {
    * Resets license back to DEMO mode
    */
   static async resetToDemo(): Promise<void> {
-    await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+    await this.queueStorageOperation(async () => {
+      await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+    });
     const hwid = await SecurityService.getDeviceHwid();
     this.currentStatus = {
       isActivated: false,

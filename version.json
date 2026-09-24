@@ -1,10 +1,10 @@
 {
-  "version": "2.2.0",
+  "version": "2.2.1",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-24T20:20:00.000Z",
+  "publishedAt": "2026-09-24T21:00:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 122,
+  "build": 123,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.0 (Build 122) - Auto-Activación Web, Banco de Joyas Kundun +1..+5 y Erradicación de Estado Zombie:\n• AUTO-ACTIVACIÓN WEB Y DEEP LINKING: Cierre automático instantáneo del modal de verificación al activar por enlace de correo o al regresar desde el navegador web (AppState check-status).\n• ELIMINACIÓN DE REDUNDANCIA UI: Depuración estética en sección Jugadores (PlayersHub), suprimiendo barras de pestañas y títulos duplicados.\n• BANCO DE JOYAS KUNDUN +1 A +5: Incorporación oficial de Box of Kundun +1 al +5 con sprites transparentes auténticos del cliente de juego y soporte completo en base de datos.\n• BLINDAJE DE SESIÓN Y ZERO ESTADO ZOMBIE: Erradicación del falso positivo 'SQL Conectada' ante errores 401; validación activa de token al inicio de app y botón directo de reautenticación sin reinstalación."
+  "changelog": "MuManager PRO v2.2.1 (Build 123) - Estabilidad Definitiva de Licencias PRO/DEMO y Blindaje Multi-Instancia:\n• RESOLUCIÓN DE INTERMITENCIA (TOGGLING): Erradicada la alternancia entre estados PRO y DEMO mediante control secuencial de revisiones autoritativas (authRevision y authUpdatedAt UTC).\n• COHERENCIA TOTAL EN NUBE Y REDIS: Merge monotónico autoritativo en syncCloudStorage; eliminación definitiva de resurrección de claves reactivadas en tombstones.\n• TELEMETRÍA Y CONTROL SILENCIOSO: Pings rutinarios desacoplados de escrituras pesadas en cloud storage (skipCloudWrite); prevención de democión ante claves antiguas enviadas por clientes.\n• BLINDAJE DEFENSIVO EN APK: Filtro contra respuestas desordenadas en red móvil y cola serializada FIFO en almacenamiento local (AsyncStorage)."
 }

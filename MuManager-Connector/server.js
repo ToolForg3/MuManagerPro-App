@@ -49,6 +49,7 @@ const PRO_REQUESTS_FILE = path.join(__dirname, 'data', 'proRequests.json');
 const SECURITY_LOGS_FILE = path.join(__dirname, 'data', 'securityLogs.json');
 const SECRETS_FILE = path.join(__dirname, 'data', 'connector-secrets.json');
 const TOMBSTONES_FILE = path.join(__dirname, 'data', 'tombstones.json');
+const SERVER_INSTANCE_ID = `conn_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
 function loadOrInitConnectorSecrets() {
   let sec = {};
@@ -436,8 +437,15 @@ function loadTombstones() {
 }
 
 function saveTombstones(data) {
-  if (!safeAtomicWriteJson(TOMBSTONES_FILE, data)) throw new Error("Disk error saving tombstones");
-  return true;
+  try {
+    if (!data || typeof data !== 'object') return false;
+    data.version = (Number(data.version) || 0) + 1;
+    data.updatedAt = Date.now();
+    return safeAtomicWriteJson(TOMBSTONES_FILE, data);
+  } catch (e) {
+    console.error('Error saving tombstones', e);
+    return false;
+  }
 }
 
 /**
@@ -462,6 +470,9 @@ function revokeAllImpediments(hwid, options = {}) {
     targetDev.sessionInvalidatedReason = '';
     targetDev.forceWipe = false;
     targetDev.forceWipeKey = false;
+    targetDev.authRevision = (Number(targetDev.authRevision) || 0) + 1;
+    targetDev.authUpdatedAt = Date.now();
+    targetDev.authAction = 'REVOKE_ALL_IMPEDIMENTS';
     modifiedDevices = true;
   }
 
@@ -8098,7 +8109,7 @@ app.post('/api/telemetry/ping', (req, res) => {
   }
 
   const storedMode = devices[hwid]?.mode;
-  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !isKeyRevoked && !devices[hwid]?.forceDemo;
+  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !devices[hwid]?.forceDemo && !devices[hwid]?.blocked && (!devices[hwid]?.expiresAt || new Date(devices[hwid]?.expiresAt).getTime() > Date.now());
 
   if (!devices[hwid]) {
     const demoDurationHours = Number(settings.demoDurationHours) || 72;
@@ -8123,7 +8134,11 @@ app.post('/api/telemetry/ping', (req, res) => {
       isEmulator: authoritativeIsEmulator,
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
-      demoExtendedHours: 0
+      demoExtendedHours: 0,
+      forceDemo: isRevokedByAdmin || isKeyRevoked,
+      authRevision: 1,
+      authUpdatedAt: Date.now(),
+      authAction: 'REGISTER'
     };
     addAuditLog('NEW_DEVICE', hwid, clientIp, `Nuevo celular registrado (${platform || 'Android'} v${appVersion || '1.0.0'}, ${devices[hwid].isEmulator ? 'EMULADOR' : 'FÍSICO'}: ${deviceBrand || ''} ${deviceModel || ''})`);
   } else {
@@ -8132,14 +8147,28 @@ app.post('/api/telemetry/ping', (req, res) => {
       devices[hwid].licenseKey = '';
       devices[hwid].generatedKey = '';
       devices[hwid].forceDemo = true;
+    } else if (isServerAuthoritativePro) {
+      // Si el servidor determinó autoritativamente que el dispositivo es PRO,
+      // una clave antigua o revocada enviada por el cliente NO destruye la concesión del servidor.
+      const activeServerKey = (devices[hwid].licenseKey || devices[hwid].generatedKey || '').trim().toUpperCase();
+      const isCurrentActiveKeyRevoked = !!(activeServerKey && tombstones.revokedKeys && tombstones.revokedKeys[activeServerKey]);
+      if (isCurrentActiveKeyRevoked) {
+        devices[hwid].mode = 'DEMO';
+        devices[hwid].forceDemo = true;
+        devices[hwid].licenseKey = '';
+        devices[hwid].generatedKey = '';
+        devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+        devices[hwid].authUpdatedAt = Date.now();
+        devices[hwid].authAction = 'KEY_REVOKED';
+      } else {
+        devices[hwid].mode = 'PRO';
+        devices[hwid].forceDemo = false;
+      }
     } else if (devices[hwid].forceDemo || isKeyRevoked) {
       devices[hwid].mode = 'DEMO';
       devices[hwid].forceDemo = true;
       devices[hwid].licenseKey = '';
       devices[hwid].generatedKey = '';
-    } else if (isServerAuthoritativePro) {
-      devices[hwid].mode = 'PRO';
-      devices[hwid].forceDemo = false;
     } else {
       devices[hwid].mode = 'DEMO';
     }
@@ -8311,6 +8340,9 @@ app.post('/api/telemetry/ping', (req, res) => {
       deviceModel: devices[hwid].deviceModel || '',
       deviceBrand: devices[hwid].deviceBrand || '',
       demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+      authRevision: Number(devices[hwid].authRevision) || 1,
+      authUpdatedAt: Number(devices[hwid].authUpdatedAt) || Date.now(),
+      serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'conn_default')
     });
   }
 
@@ -8354,6 +8386,9 @@ app.post('/api/telemetry/ping', (req, res) => {
     deviceModel: devices[hwid].deviceModel || '',
     deviceBrand: devices[hwid].deviceBrand || '',
     demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+    authRevision: Number(devices[hwid].authRevision) || 1,
+    authUpdatedAt: Number(devices[hwid].authUpdatedAt) || Date.now(),
+    serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'conn_default')
   });
 });
 
@@ -9221,6 +9256,9 @@ app.post('/api/admin/device/toggle-block', (req, res) => {
     addAuditLog('UNBLOCK', hwid, devices[hwid].ip, 'Celular DESBLOQUEADO.');
     sendWhatsAppAlert('deviceBlocked', 'CELULAR DESBLOQUEADO', `Dispositivo ${hwid} reactivado por el administrador.`, hwid, devices[hwid].ip);
   }
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = devices[hwid].blocked ? 'BLOCK' : 'UNBLOCK';
   saveDevices(devices);
   res.json({ success: true, blocked: devices[hwid].blocked, reason: devices[hwid].blockReason, hwid });
 });
@@ -9270,6 +9308,10 @@ app.post('/api/admin/device/set-expiration', (req, res) => {
   if (unblock || devices[hwid].mode === 'PRO') {
     if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid);
   }
+
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'SET_EXPIRATION';
 
   saveDevices(devices);
   res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt, isLifetime: !!devices[hwid].isLifetime });
@@ -9362,6 +9404,9 @@ app.post('/api/admin/device/generate-key', (req, res) => {
       devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
     }
   }
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'GENERATE_KEY';
   saveDevices(devices);
 
   addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${targetPlan} generada`);
@@ -9453,6 +9498,10 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
     devices[hwid].isLifetime = false;
   }
 
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = targetPlan === 'PRO' ? 'ACTIVATE_PRO' : 'REVOKE_PRO';
+
   saveDevices(devices);
   addAuditLog('PLAN_TOGGLE', hwid, req.socket.remoteAddress || '127.0.0.1', `Plan cambiado a ${targetPlan} con 1 clic (${durationText})`);
   res.json({
@@ -9489,6 +9538,9 @@ app.post('/api/admin/device/extend-demo', (req, res) => {
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
   }
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'EXTEND_DEMO';
   saveDevices(devices);
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';

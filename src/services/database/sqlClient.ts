@@ -67,6 +67,9 @@ export interface TelemetryPingResult {
     role: string;
   } | null;
   connectionError?: boolean;
+  authRevision?: number;
+  authUpdatedAt?: number;
+  serverId?: string;
 }
 
 const CONFIG_STORAGE_KEY = '@mumanager_sql_config';
@@ -1470,6 +1473,9 @@ export class SqlClient {
         forceWipe: !!data.forceWipe || !!data.forceWipeKey,
         isEmulator: data.isEmulator !== undefined ? !!data.isEmulator : meta.isEmulator,
         demoRemainingHours: data.demoRemainingHours,
+        authRevision: data.authRevision !== undefined ? Number(data.authRevision) : undefined,
+        authUpdatedAt: data.authUpdatedAt !== undefined ? Number(data.authUpdatedAt) : undefined,
+        serverId: data.serverId ? String(data.serverId) : undefined,
       };
     } catch (e) {
       // Fallback resiliente a GitHub CDN: Si Render o la pasarela están caídos/suspendidos,

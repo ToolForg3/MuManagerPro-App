@@ -5,8 +5,8 @@
  */
 
 (function () {
-  const OFFICIAL_HASH = 'AA324D5FD497648489726B52EBFF91BE1E3E27899F8BC4743AC0E43E050BE9D2';
-  const OFFICIAL_SIZE_BYTES = 66660282; // ~63.55 MB (v2.2.0 Build 120)
+  const OFFICIAL_HASH = '227B48DCB183BC0F5D4B9BAE6E09132CC180CC10A2FE5DE65043EEE1944DC820';
+  const OFFICIAL_SIZE_BYTES = 66662198; // ~63.55 MB (v2.2.1 Build 120)
 
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('apk-file-input');
@@ -96,7 +96,7 @@
       resultCard.innerHTML = `
         <div class="result-header">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-          <span>INTEGRIDAD CRIPTOGRÁFICA VERIFICADA — v2.2.0 OFICIAL</span>
+          <span>INTEGRIDAD CRIPTOGRÁFICA VERIFICADA — v2.2.1 OFICIAL</span>
         </div>
         <div style="font-size: 0.85rem; color: var(--text-main); display: flex; flex-direction: column; gap: 4px;">
           <div><strong>Archivo analizado:</strong> ${escapeHtml(file.name)}</div>
@@ -105,14 +105,14 @@
           <div style="font-family: var(--font-mono); font-size: 0.8rem; word-break: break-all; color: var(--green-verified); background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(0, 230, 118, 0.3);">
             ${calculatedHash}
           </div>
-          <p style="margin-top: 6px; color: var(--text-secondary);">El archivo analizado coincide bit a bit con la compilación oficial distribuida v2.2.0. Su integridad de descarga está confirmada.</p>
+          <p style="margin-top: 6px; color: var(--text-secondary);">El archivo analizado coincide bit a bit con la compilación oficial distribuida v2.2.1. Su integridad de descarga está confirmada.</p>
         </div>
       `;
     } else {
       resultCard.innerHTML = `
         <div class="result-header">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-          <span>ALERTA: HASH NO COINCIDE CON LA VERSIÓN OFICIAL v2.2.0</span>
+          <span>ALERTA: HASH NO COINCIDE CON LA VERSIÓN OFICIAL v2.2.1</span>
         </div>
         <div style="font-size: 0.85rem; color: var(--text-main); display: flex; flex-direction: column; gap: 4px;">
           <div><strong>Archivo analizado:</strong> ${escapeHtml(file.name)} (${formattedSize})</div>
@@ -120,11 +120,11 @@
           <div style="font-family: var(--font-mono); font-size: 0.8rem; word-break: break-all; color: var(--red-alert); background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(255, 51, 102, 0.3);">
             ${calculatedHash}
           </div>
-          <div><strong>Hash oficial esperado (v2.2.0):</strong></div>
+          <div><strong>Hash oficial esperado (v2.2.1):</strong></div>
           <div style="font-family: var(--font-mono); font-size: 0.8rem; word-break: break-all; color: var(--gold-primary); background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 4px;">
             ${OFFICIAL_HASH}
           </div>
-          <p style="margin-top: 6px; color: var(--text-secondary);">El archivo analizado difiere de la compilación v2.2.0 oficial. Por seguridad, verifica la versión instalada o descarga el APK oficial provisto en este sitio web.</p>
+          <p style="margin-top: 6px; color: var(--text-secondary);">El archivo analizado difiere de la compilación v2.2.1 oficial. Por seguridad, verifica la versión instalada o descarga el APK oficial provisto en este sitio web.</p>
         </div>
       `;
     }

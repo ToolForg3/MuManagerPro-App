@@ -464,6 +464,8 @@ function safeAtomicWriteJson(filePath, data) {
 const MAX_AUDIT_LOGS = 250;
 const auditLogs = [];
 
+const SERVER_INSTANCE_ID = process.env.SERVER_INSTANCE_ID || ('gateway_' + process.pid + '_' + Date.now().toString(36));
+
 const CLOUD_STORAGE = {
   enabled: !!(process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL),
   url: (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').replace(/\/+$/, ''),
@@ -582,12 +584,25 @@ function loadTombstones() {
 }
 
 function saveTombstones(data) {
+  if (data && typeof data === 'object') {
+    data.version = (Number(data.version) || 0) + 1;
+    data.updatedAt = Date.now();
+  }
   inMemoryFallback[TOMBSTONES_FILE] = data;
   if (!safeAtomicWriteJson(TOMBSTONES_FILE, data)) {
     throw new Error("Disk error saving tombstones");
   }
   if (CLOUD_STORAGE.enabled) {
-    const p = CLOUD_STORAGE.set('mumanager:tombstones', data).catch(() => {});
+    const p = CLOUD_STORAGE.set('mumanager:tombstones', data).catch((err) => {
+      CLOUD_STORAGE.lastError = {
+        timestamp: Date.now(),
+        target: 'mumanager:tombstones',
+        message: err ? err.message : 'Error al persistir tombstones en nube'
+      };
+      if (typeof addSecurityLog === 'function') {
+        addSecurityLog('WARN', 'CLOUD_TOMBSTONES_FAILED', 'Fallo al sincronizar tombstones en nube: ' + (err ? err.message : 'Error'));
+      }
+    });
     if (typeof queueCloudWrite === 'function') {
       queueCloudWrite(p);
     }
@@ -645,7 +660,7 @@ function loadDevices() {
   return merged;
 }
 
-function saveDevices(data) {
+function saveDevices(data, options = {}) {
   inMemoryFallback[DATA_FILE] = data;
   if (!safeAtomicWriteJson(DATA_FILE, data)) {
     throw new Error("Disk error saving devices");
@@ -656,6 +671,13 @@ function saveDevices(data) {
       safeAtomicWriteJson(seed, data);
     }
   } catch (_) {}
+
+  // Pings rutinarios de telemetría sin cambio de autorización omiten sobrescritura cloud
+  // para no perder cambios de otras instancias concurrentes.
+  if (options && options.skipCloudWrite) {
+    return true;
+  }
+
   if (CLOUD_STORAGE.enabled) {
     const p = CLOUD_STORAGE.set('mumanager:devices', data).catch((err) => {
       CLOUD_STORAGE.lastError = {
@@ -696,6 +718,9 @@ function revokeAllImpediments(hwid, options = {}) {
     targetDev.sessionInvalidatedReason = '';
     targetDev.forceWipe = false;
     targetDev.forceWipeKey = false;
+    targetDev.authRevision = (Number(targetDev.authRevision) || 0) + 1;
+    targetDev.authUpdatedAt = Date.now();
+    targetDev.authAction = 'REVOKE_ALL_IMPEDIMENTS';
     modifiedDevices = true;
   }
 
@@ -900,6 +925,7 @@ function saveSecurityLogs(data) {
 let cloudStorageInitialized = false;
 let lastCloudSyncTime = 0;
 let isSyncingCloud = false;
+let activeSyncPromise = null;
 
 async function syncCloudStorage(force = false) {
   if (!CLOUD_STORAGE.enabled) return;
@@ -907,95 +933,158 @@ async function syncCloudStorage(force = false) {
   if (!force && (now - lastCloudSyncTime < 2000)) {
     return;
   }
-  if (isSyncingCloud) return;
+  if (activeSyncPromise) {
+    return await activeSyncPromise;
+  }
   isSyncingCloud = true;
+  activeSyncPromise = (async () => {
+    try {
+      const keys = [
+        'mumanager:devices',
+        'mumanager:settings',
+        'mumanager:users',
+        'mumanager:tombstones',
+        'mumanager:proRequests',
+        'mumanager:securityLogs',
+        'mumanager:auditLogs'
+      ];
+      const data = await CLOUD_STORAGE.mget(keys);
+      lastCloudSyncTime = Date.now();
 
-  try {
-    const keys = [
-      'mumanager:devices',
-      'mumanager:settings',
-      'mumanager:users',
-      'mumanager:tombstones',
-      'mumanager:proRequests',
-      'mumanager:securityLogs',
-      'mumanager:auditLogs'
-    ];
-    const data = await CLOUD_STORAGE.mget(keys);
-    lastCloudSyncTime = Date.now();
+      // 1. DISPOSITIVOS: Conciliación autoritativa basada en revisión/versión
+      const cloudDevs = data['mumanager:devices'];
+      if (cloudDevs && typeof cloudDevs === 'object') {
+        const currentDevs = inMemoryFallback[DATA_FILE] || {};
+        const mergedDevs = { ...currentDevs };
 
-    // 1. DISPOSITIVOS: Smart Merge acumulativo con preservación permanente de PRO
-    const cloudDevs = data['mumanager:devices'];
-    if (cloudDevs && typeof cloudDevs === 'object') {
-      const currentDevs = inMemoryFallback[DATA_FILE] || {};
-      const mergedDevs = { ...currentDevs };
-
-      for (const [hwid, cDev] of Object.entries(cloudDevs)) {
-        if (!mergedDevs[hwid]) {
-          mergedDevs[hwid] = cDev;
-        } else {
-          const lDev = mergedDevs[hwid];
-          const lIsActivePro = lDev.mode === 'PRO' && !lDev.forceDemo && !lDev.blocked && (!lDev.expiresAt || new Date(lDev.expiresAt).getTime() > now);
-          const cIsActivePro = cDev.mode === 'PRO' && !cDev.forceDemo && !cDev.blocked && (!cDev.expiresAt || new Date(cDev.expiresAt).getTime() > now);
-          const isPro = (lIsActivePro || cIsActivePro) && !cDev.blocked && !lDev.blocked;
-          const chosenKey = (cIsActivePro ? (cDev.licenseKey || cDev.generatedKey) : null) || (lIsActivePro ? (lDev.licenseKey || lDev.generatedKey) : null) || cDev.licenseKey || lDev.licenseKey || cDev.generatedKey || lDev.generatedKey || '';
-          const chosenExpires = (cIsActivePro ? cDev.expiresAt : (lIsActivePro ? lDev.expiresAt : (cDev.expiresAt || lDev.expiresAt))) || null;
-          const chosenLifetime = !!(cIsActivePro ? cDev.isLifetime : (lIsActivePro ? lDev.isLifetime : (cDev.isLifetime || lDev.isLifetime)));
-
-          mergedDevs[hwid] = {
-            ...lDev,
-            ...cDev,
-            mode: isPro ? 'PRO' : (cDev.mode || lDev.mode || 'DEMO'),
-            licenseKey: isPro ? chosenKey : '',
-            generatedKey: isPro ? (chosenKey || cDev.generatedKey || lDev.generatedKey || '') : '',
-            expiresAt: isPro ? chosenExpires : (cDev.expiresAt || lDev.expiresAt || null),
-            isLifetime: isPro ? chosenLifetime : false,
-            forceDemo: isPro ? false : (cDev.forceDemo || lDev.forceDemo || false),
-            totalPings: Math.max(cDev.totalPings || 0, lDev.totalPings || 0),
-            lastSeen: (new Date(cDev.lastSeen || 0) > new Date(lDev.lastSeen || 0)) ? cDev.lastSeen : lDev.lastSeen
-          };
-        }
-      }
-      inMemoryFallback[DATA_FILE] = mergedDevs;
-      safeAtomicWriteJson(DATA_FILE, mergedDevs);
-    }
-
-    // 2. USUARIOS: Smart Merge sin purgas (cero eliminación salvo tombstones)
-    const cloudUsers = data['mumanager:users'];
-    if (cloudUsers && Array.isArray(cloudUsers)) {
-      const currentUsers = inMemoryFallback[USERS_FILE] || [];
-      const userMap = new Map();
-      currentUsers.forEach(u => {
-        const k = (u.email || u.id || '').toLowerCase().trim();
-        if (k) userMap.set(k, u);
-      });
-      cloudUsers.forEach(u => {
-        const k = (u.email || u.id || '').toLowerCase().trim();
-        if (k) {
-          if (userMap.has(k)) {
-            userMap.set(k, { ...userMap.get(k), ...u });
+        for (const [hwid, cDev] of Object.entries(cloudDevs)) {
+          if (!mergedDevs[hwid]) {
+            mergedDevs[hwid] = cDev;
           } else {
-            userMap.set(k, u);
+            const lDev = mergedDevs[hwid];
+            const lRev = Number(lDev.authRevision) || 0;
+            const cRev = Number(cDev.authRevision) || 0;
+            const lTs = Number(lDev.authUpdatedAt) || 0;
+            const cTs = Number(cDev.authUpdatedAt) || 0;
+
+            // Determinación autoritativa del ganador:
+            // 1. Mayor authRevision
+            // 2. Si las revisiones son iguales, mayor authUpdatedAt
+            // 3. En caso de empate o registros legacy sin revisión:
+            //    La nube tiene autoridad administrativa sobre el estado de autorización.
+            let winner = cDev;
+            if (lRev > cRev) {
+              winner = lDev;
+            } else if (cRev > lRev) {
+              winner = cDev;
+            } else if (lTs > cTs) {
+              winner = lDev;
+            } else if (cTs > lTs) {
+              winner = cDev;
+            } else {
+              if (lDev.blocked && !cDev.blocked) {
+                winner = lDev;
+              } else {
+                winner = cDev;
+              }
+            }
+
+            const isPro = winner.mode === 'PRO' && !winner.forceDemo && !winner.blocked && (!winner.expiresAt || new Date(winner.expiresAt).getTime() > now);
+            const chosenKey = isPro ? (winner.licenseKey || winner.generatedKey || '') : '';
+            const chosenExpires = isPro ? winner.expiresAt : (winner.expiresAt || null);
+            const chosenLifetime = isPro ? !!winner.isLifetime : false;
+
+            mergedDevs[hwid] = {
+              ...lDev,
+              ...cDev,
+              mode: isPro ? 'PRO' : (winner.mode || 'DEMO'),
+              licenseKey: chosenKey,
+              generatedKey: isPro ? (chosenKey || winner.generatedKey || '') : '',
+              expiresAt: chosenExpires,
+              isLifetime: chosenLifetime,
+              forceDemo: isPro ? false : (winner.forceDemo !== undefined ? winner.forceDemo : (winner.mode !== 'PRO')),
+              blocked: !!winner.blocked,
+              blockReason: winner.blocked ? (winner.blockReason || '') : '',
+              authRevision: Math.max(lRev, cRev, winner.authRevision || 1),
+              authUpdatedAt: Math.max(lTs, cTs, winner.authUpdatedAt || now),
+              authAction: winner.authAction || 'SYNC',
+              totalPings: Math.max(cDev.totalPings || 0, lDev.totalPings || 0),
+              lastSeen: (new Date(cDev.lastSeen || 0) > new Date(lDev.lastSeen || 0)) ? cDev.lastSeen : lDev.lastSeen
+            };
           }
         }
-      });
-      const mergedUsers = Array.from(userMap.values());
-      inMemoryFallback[USERS_FILE] = mergedUsers;
-      safeAtomicWriteJson(USERS_FILE, mergedUsers);
-    }
+        inMemoryFallback[DATA_FILE] = mergedDevs;
+        safeAtomicWriteJson(DATA_FILE, mergedDevs);
+      }
 
-    // 3. TOMBSTONES
-    const cloudTom = data['mumanager:tombstones'];
-    if (cloudTom && typeof cloudTom === 'object') {
-      const currentTom = inMemoryFallback[TOMBSTONES_FILE] || {};
-      const mergedTom = {
-        ...currentTom,
-        ...cloudTom,
-        revokedKeys: { ...(currentTom.revokedKeys || {}), ...(cloudTom.revokedKeys || {}) },
-        deletedUsers: { ...(currentTom.deletedUsers || {}), ...(cloudTom.deletedUsers || {}) }
-      };
-      inMemoryFallback[TOMBSTONES_FILE] = mergedTom;
-      safeAtomicWriteJson(TOMBSTONES_FILE, mergedTom);
-    }
+      // 2. USUARIOS: Smart Merge sin purgas (cero eliminación salvo tombstones)
+      const cloudUsers = data['mumanager:users'];
+      if (cloudUsers && Array.isArray(cloudUsers)) {
+        const currentUsers = inMemoryFallback[USERS_FILE] || [];
+        const userMap = new Map();
+        currentUsers.forEach(u => {
+          const k = (u.email || u.id || '').toLowerCase().trim();
+          if (k) userMap.set(k, u);
+        });
+        cloudUsers.forEach(u => {
+          const k = (u.email || u.id || '').toLowerCase().trim();
+          if (k) {
+            if (userMap.has(k)) {
+              userMap.set(k, { ...userMap.get(k), ...u });
+            } else {
+              userMap.set(k, u);
+            }
+          }
+        });
+        const mergedUsers = Array.from(userMap.values());
+        inMemoryFallback[USERS_FILE] = mergedUsers;
+        safeAtomicWriteJson(USERS_FILE, mergedUsers);
+      }
+
+      // 3. TOMBSTONES: Conciliación autoritativa basada en versión y coherencia con dispositivos activos
+      const cloudTom = data['mumanager:tombstones'];
+      if (cloudTom && typeof cloudTom === 'object') {
+        const currentTom = inMemoryFallback[TOMBSTONES_FILE] || {};
+        const cTomVer = Number(cloudTom.version) || 0;
+        const lTomVer = Number(currentTom.version) || 0;
+        const cTomTs = Number(cloudTom.updatedAt) || 0;
+        const lTomTs = Number(currentTom.updatedAt) || 0;
+
+        let mergedRevokedKeys;
+        let mergedDeletedUsers;
+
+        if (cTomVer > lTomVer || (cTomVer === lTomVer && cTomTs >= lTomTs)) {
+          mergedRevokedKeys = { ...(cloudTom.revokedKeys || {}) };
+          mergedDeletedUsers = { ...(cloudTom.deletedUsers || {}) };
+        } else {
+          mergedRevokedKeys = { ...(currentTom.revokedKeys || {}) };
+          mergedDeletedUsers = { ...(currentTom.deletedUsers || {}) };
+        }
+
+        // Invariante de coherencia: ninguna clave de un dispositivo que esté activo en PRO puede coexistir como revocada
+        const currentDevices = inMemoryFallback[DATA_FILE] || {};
+        for (const dev of Object.values(currentDevices)) {
+          if (dev && dev.mode === 'PRO' && !dev.forceDemo && !dev.blocked) {
+            const activeKeys = [dev.licenseKey, dev.generatedKey].filter(Boolean);
+            for (const k of activeKeys) {
+              if (mergedRevokedKeys[k]) {
+                delete mergedRevokedKeys[k];
+              }
+            }
+          }
+        }
+
+        const mergedTom = {
+          ...currentTom,
+          ...cloudTom,
+          version: Math.max(lTomVer, cTomVer, 1),
+          updatedAt: Math.max(lTomTs, cTomTs, now),
+          revokedKeys: mergedRevokedKeys,
+          deletedUsers: mergedDeletedUsers
+        };
+        inMemoryFallback[TOMBSTONES_FILE] = mergedTom;
+        safeAtomicWriteJson(TOMBSTONES_FILE, mergedTom);
+      }
 
     // 4. SETTINGS (Preservación estricta de nuevas versiones)
     const cloudSet = data['mumanager:settings'];
@@ -1072,7 +1161,10 @@ async function syncCloudStorage(force = false) {
     console.error('[CloudStorage Sync Error]', err.message);
   } finally {
     isSyncingCloud = false;
+    activeSyncPromise = null;
   }
+  })();
+  return await activeSyncPromise;
 }
 
 async function initCloudStorage() {
@@ -9044,7 +9136,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
   // Server-side authoritative check: El modo PRO solo puede ser otorgado por el servidor/administrador
   // Jamás se promueve a PRO mediante auto-activación matemática en telemetría pública
   const storedMode = devices[hwid]?.mode;
-  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !isKeyRevoked && !devices[hwid]?.forceDemo;
+  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !devices[hwid]?.forceDemo && !devices[hwid]?.blocked && (!devices[hwid]?.expiresAt || new Date(devices[hwid]?.expiresAt).getTime() > Date.now());
 
   // Evaluación autoritativa anti-falsos positivos de emulador en el Servidor
   const cleanBrand = String(deviceBrand || (devices[hwid] && devices[hwid].deviceBrand) || '').toLowerCase().trim();
@@ -9084,7 +9176,9 @@ app.post('/api/telemetry/ping', async (req, res) => {
     authoritativeIsEmulator = isEmulator !== undefined ? !!isEmulator : false;
   }
 
+  let isNewDevice = false;
   if (!devices[hwid]) {
+    isNewDevice = true;
     const demoDurationHours = Number(settings.demoDurationHours) || 72;
     const demoExpires = new Date(Date.now() + demoDurationHours * 3600 * 1000).toISOString();
 
@@ -9110,6 +9204,9 @@ app.post('/api/telemetry/ping', async (req, res) => {
       demoExtendedHours: 0,
       isTest: isTestDevice({ hwid, deviceModel }),
       forceDemo: isRevokedByAdmin || isKeyRevoked,
+      authRevision: 1,
+      authUpdatedAt: Date.now(),
+      authAction: 'REGISTER',
       countryCode: geo.countryCode || '',
       country: geo.countryName || 'Desconocido',
       city: geo.city || '',
@@ -9123,16 +9220,30 @@ app.post('/api/telemetry/ping', async (req, res) => {
       devices[hwid].licenseKey = '';
       devices[hwid].generatedKey = '';
       devices[hwid].forceDemo = true;
+    } else if (isServerAuthoritativePro) {
+      // Si el servidor determinó autoritativamente que el dispositivo es PRO,
+      // una clave antigua o revocada enviada por el cliente NO destruye la concesión del servidor.
+      // Solo si la clave autoritativa actual del servidor fue revocada, se degrada.
+      const activeServerKey = (devices[hwid].licenseKey || devices[hwid].generatedKey || '').trim().toUpperCase();
+      const isCurrentActiveKeyRevoked = !!(activeServerKey && tombstones.revokedKeys && tombstones.revokedKeys[activeServerKey]);
+      if (isCurrentActiveKeyRevoked) {
+        devices[hwid].mode = 'DEMO';
+        devices[hwid].forceDemo = true;
+        devices[hwid].licenseKey = '';
+        devices[hwid].generatedKey = '';
+        devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+        devices[hwid].authUpdatedAt = Date.now();
+        devices[hwid].authAction = 'KEY_REVOKED';
+      } else {
+        devices[hwid].mode = 'PRO';
+        devices[hwid].forceDemo = false;
+      }
     } else if (devices[hwid].forceDemo || isKeyRevoked) {
       // forceDemo tiene prioridad absoluta: mantener en DEMO
       devices[hwid].mode = 'DEMO';
       devices[hwid].forceDemo = true;
       devices[hwid].licenseKey = '';
       devices[hwid].generatedKey = '';
-    } else if (isServerAuthoritativePro) {
-      // Conservar PRO previamente otorgado autoritativamente por el servidor
-      devices[hwid].mode = 'PRO';
-      devices[hwid].forceDemo = false;
     } else {
       // Dispositivos DEMO se mantienen en DEMO, sin autoelevación matemática
       devices[hwid].mode = 'DEMO';
@@ -9160,12 +9271,17 @@ app.post('/api/telemetry/ping', async (req, res) => {
 
     // Verificar si expiró PRO o DEMO (sin bloqueo automático; solo el administrador decide bloquear manualmente)
     const isDeviceExpired = devices[hwid].expiresAt && new Date(devices[hwid].expiresAt) < new Date();
+    let authStateChanged = false;
     if (isDeviceExpired) {
       if (devices[hwid].mode === 'PRO') {
         devices[hwid].mode = 'DEMO';
         devices[hwid].forceDemo = true;
         devices[hwid].licenseKey = '';
+        devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+        devices[hwid].authUpdatedAt = Date.now();
+        devices[hwid].authAction = 'EXPIRED';
         devices[hwid].expireReason = 'Tu licencia PRO por tiempo ha vencido. Contacta al administrador para renovar o solicitar tiempo extra de demo.';
+        authStateChanged = true;
         addAuditLog('PRO_EXPIRED', hwid, clientIp, 'Licencia PRO por tiempo vencida. Celular en espera de renovación (sin bloqueo automático).');
       } else {
         devices[hwid].expireReason = 'Período de prueba finalizado. Contacta al administrador para adquirir PRO o solicitar tiempo extra de demo.';
@@ -9173,7 +9289,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
       }
     }
 
-  const saved = saveDevices(devices);
+  const saved = saveDevices(devices, { skipCloudWrite: !isNewDevice && !authStateChanged });
   if (!saved) {
     console.warn('Notice: saveDevices handled via in-memory serverless cache');
   }
@@ -9342,6 +9458,9 @@ app.post('/api/telemetry/ping', async (req, res) => {
       deviceModel: devices[hwid].deviceModel || '',
       deviceBrand: devices[hwid].deviceBrand || '',
       demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+      authRevision: devices[hwid].authRevision || 1,
+      authUpdatedAt: devices[hwid].authUpdatedAt || Date.now(),
+      serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'gateway_default')
     });
   }
 
@@ -9409,6 +9528,9 @@ app.post('/api/telemetry/ping', async (req, res) => {
     deviceModel: devices[hwid].deviceModel || '',
     deviceBrand: devices[hwid].deviceBrand || '',
     demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+    authRevision: devices[hwid].authRevision || 1,
+    authUpdatedAt: devices[hwid].authUpdatedAt || Date.now(),
+    serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'gateway_default')
   });
 });
 
@@ -11728,6 +11850,9 @@ app.post('/api/admin/device/toggle-block', async (req, res) => {
     addAuditLog('UNBLOCK', hwid, devices[hwid].ip, 'Celular DESBLOQUEADO.');
     sendWhatsAppAlert('deviceBlocked', 'CELULAR DESBLOQUEADO', `Dispositivo ${hwid} reactivado por el administrador.`, hwid, devices[hwid].ip);
   }
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = blocked ? 'BLOCK' : 'UNBLOCK';
   saveDevices(devices);
   if (typeof flushCloudWrites === 'function') {
     await flushCloudWrites();
@@ -11800,6 +11925,10 @@ app.post('/api/admin/device/set-expiration', async (req, res) => {
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
   }
+
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'SET_EXPIRATION';
 
   saveDevices(devices);
   if (typeof flushCloudWrites === 'function') {
@@ -12160,6 +12289,10 @@ app.post('/api/admin/device/generate-key', async (req, res) => {
     devices[hwid].isLifetime = false;
   }
 
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'GENERATE_KEY';
+
   saveDevices(devices);
   if (typeof flushCloudWrites === 'function') {
     await flushCloudWrites();
@@ -12295,6 +12428,9 @@ app.post('/api/admin/device/toggle-plan', async (req, res) => {
 
     devices[hwid].blocked = false;
     devices[hwid].blockReason = '';
+    devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+    devices[hwid].authUpdatedAt = Date.now();
+    devices[hwid].authAction = 'ACTIVATE_PRO';
   } else {
     // DEGRADAR A DEMO: ¡JAMÁS bloquear automáticamente en tombstones[hwid]!
     devices[hwid].mode = 'DEMO';
@@ -12305,6 +12441,9 @@ app.post('/api/admin/device/toggle-plan', async (req, res) => {
     devices[hwid].licenseKey = '';
     devices[hwid].generatedKey = '';
     devices[hwid].isLifetime = false;
+    devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+    devices[hwid].authUpdatedAt = Date.now();
+    devices[hwid].authAction = 'REVOKE_PRO';
 
     // Revocar únicamente la clave anterior en revokedKeys (sin bloquear el HWID)
     const tombstones = loadTombstones();
@@ -12317,6 +12456,7 @@ app.post('/api/admin/device/toggle-plan', async (req, res) => {
       tombstones.revokedKeys[oldKey] = {
         revokedAt: new Date().toISOString(),
         hwid,
+        rev: devices[hwid].authRevision,
         reason: 'Licencia revocada por administrador al quitar PRO'
       };
       modifiedTomb = true;
@@ -12425,6 +12565,9 @@ app.post('/api/admin/device/emergency-lock', (req, res) => {
   devices[hwid].mode = 'DEMO';
   devices[hwid].licenseKey = '';
   devices[hwid].blockReason = reason || 'Acceso revocado de emergencia por sospecha de hackeo/crack.';
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'EMERGENCY_LOCK';
 
   saveDevices(devices);
   addAuditLog('EMERGENCY_LOCK', hwid, getClientIp(req), `Kill-switch de emergencia ejecutado: ${devices[hwid].blockReason}`, 'BLOCKED');
@@ -12486,6 +12629,10 @@ app.post('/api/admin/device/extend-demo', async (req, res) => {
       devices[hwid].blockReason = '';
     }
   }
+
+  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+  devices[hwid].authUpdatedAt = Date.now();
+  devices[hwid].authAction = 'EXTEND_DEMO';
 
   saveDevices(devices);
   if (typeof flushCloudWrites === 'function') {
