@@ -393,7 +393,36 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleDemoAccess = async () => {
+  const promptDemoAccess = () => {
+    Alert.alert(
+      'Acceso Rápido Demo (10 Minutos)',
+      'Este modo te permite explorar la aplicación de forma inmediata durante 10 minutos sin necesidad de registrarte.\n\nUna vez culminados los 10 minutos, podrás crear tu cuenta registrada para adquirir 72 horas completas de demo gratuita o solicitar el Plan PRO.',
+      [
+        {
+          text: '⚡ Iniciar Demo (10 min)',
+          onPress: () => executeDemoLogin(),
+        },
+        {
+          text: 'Crear Cuenta (72h Demo)',
+          onPress: () => setIsRegisterMode(true),
+        },
+        {
+          text: '⭐ Solicitar PRO',
+          onPress: () => openProModal(),
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const handleDemoAccess = () => {
+    promptDemoAccess();
+  };
+
+  const executeDemoLogin = async () => {
     setLoadingDemo(true);
     try {
       const res = await loginDemo();
@@ -422,12 +451,12 @@ export const LoginScreen = () => {
   };
 
   const handleSendProRequest = async () => {
-    const cleanName = proName.trim();
+    const cleanName = proName.trim() || username.trim() || 'Administrador';
     const cleanPhone = proPhone.trim();
-    if (!cleanName || !cleanPhone) {
+    if (!cleanPhone) {
       Alert.alert(
-        'Campos Requeridos',
-        'Por favor completa al menos tu Nombre y tu Teléfono/WhatsApp para que podamos comunicarnos contigo.'
+        'WhatsApp / Teléfono Requerido',
+        'Por favor completa tu número de WhatsApp para que el administrador pueda comunicarse contigo directamente desde el panel de control.'
       );
       return;
     }
@@ -444,8 +473,8 @@ export const LoginScreen = () => {
 
       if (res.success) {
         Alert.alert(
-          '¡Solicitud PRO Enviada!',
-          `Hemos registrado tu solicitud de prueba comercial para este dispositivo (${proHwid || 'Registrado'}).\n\nNuestro equipo se pondrá en contacto contigo a la brevedad por WhatsApp para habilitar tu período de prueba PRO.`,
+          '✅ Solicitud Enviada al Panel',
+          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${proHwid || 'Registrado'}\n💬 WhatsApp: ${cleanPhone}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
           [
             {
               text: 'Entendido',
@@ -454,6 +483,17 @@ export const LoginScreen = () => {
                 setProNotes('');
               },
             },
+          ]
+        );
+      } else if (res.alreadyRequested) {
+        Alert.alert(
+          '⚠️ Solicitud Previa Registrada',
+          res.message || `Este dispositivo (${proHwid || 'HWID'}) ya tiene una solicitud previa registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
+          [
+            {
+              text: 'Entendido',
+              onPress: () => setProModalVisible(false),
+            }
           ]
         );
       } else {
@@ -1005,7 +1045,7 @@ export const LoginScreen = () => {
 
             <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
               <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>
-                Completa tus datos de contacto para solicitar una prueba comercial del Plan PRO (gestión de cuentas, personajes, baúl, inventario y más).
+                Esta solicitud se enviará directamente al Panel de Control del Administrador con el identificador único de tu dispositivo para gestionar tu prueba del Plan PRO.
               </Text>
 
               {/* HWID Device Badge */}
@@ -1023,7 +1063,7 @@ export const LoginScreen = () => {
 
               {/* Nombre / Administrador */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nombre o Apodo *</Text>
+                <Text style={styles.label}>Nombre o Apodo</Text>
                 <View style={styles.inputWrapper}>
                   <Feather name="user" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
                   <TextInput
@@ -1101,7 +1141,7 @@ export const LoginScreen = () => {
 
               {/* Enviar Solicitud Button */}
               <BotonOro
-                titulo="Enviar Solicitud PRO"
+                titulo="Enviar Solicitud al Panel"
                 onPress={handleSendProRequest}
                 cargando={proLoading}
                 icono="check-circle"

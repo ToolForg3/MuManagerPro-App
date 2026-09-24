@@ -1556,7 +1556,13 @@ export class SqlClient {
     email?: string;
     serverName?: string;
     notes?: string;
-  }): Promise<{ success: boolean; message: string }> {
+  }): Promise<{
+    success: boolean;
+    alreadyRequested?: boolean;
+    existingStatus?: string;
+    existingCreatedAt?: string;
+    message: string;
+  }> {
     try {
       const hwid = await SecurityService.getDeviceHwid();
       const meta = SecurityService.getDeviceMetadata();
@@ -1576,6 +1582,9 @@ export class SqlClient {
       const json = await this.safeJson(res);
       return {
         success: !!json.success,
+        alreadyRequested: !!json.alreadyRequested,
+        existingStatus: json.existingStatus,
+        existingCreatedAt: json.existingCreatedAt,
         message: json.message || (json.success ? 'Solicitud enviada exitosamente.' : 'Error al enviar solicitud.'),
       };
     } catch (e: any) {

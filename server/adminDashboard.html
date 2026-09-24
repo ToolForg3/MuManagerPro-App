@@ -779,7 +779,7 @@
     <div class="modal-box" style="max-width: 500px;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom: 6px;">
         <span style="font-size:22px;">💎</span>
-        <h3 style="font-size: 18px; font-weight: 800; margin: 0; color: #FFF;">Activar Licencia PRO</h3>
+        <h3 id="pro-modal-title" style="font-size: 18px; font-weight: 800; margin: 0; color: #FFF;">Activar Licencia PRO</h3>
       </div>
       <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;" id="pro-modal-hwid-text"></p>
       
@@ -798,7 +798,7 @@
           <button type="button" class="btn btn-dark pro-dur-btn" onclick="selectProDuration('HOURS', 1, this)" style="justify-content:center; padding:8px; font-size:12px;">
             ⚡ 1 Hora
           </button>
-          <button type="button" class="btn btn-dark pro-dur-btn" onclick="selectProDuration('DAYS', 30, this)" style="justify-content:center; padding:8px; font-size:12px;">
+          <button type="button" class="btn btn-dark pro-dur-btn" id="pro-btn-30d" onclick="selectProDuration('DAYS', 30, this)" style="justify-content:center; padding:8px; font-size:12px;">
             📅 30 Días (1M)
           </button>
           <button type="button" class="btn btn-dark pro-dur-btn" onclick="selectProDuration('DAYS', 90, this)" style="justify-content:center; padding:8px; font-size:12px;">
@@ -3712,28 +3712,49 @@
 
     let selectedProDurationType = 'LIFETIME';
     let selectedProDurationVal = 0;
+    let currentProRequestId = null;
 
-    function openProActivationModal(hwid) {
+    function openProActivationModal(hwid, proReqId = null) {
       currentActiveHwid = hwid;
-      selectedProDurationType = 'LIFETIME';
-      selectedProDurationVal = 0;
-      document.getElementById('pro-modal-hwid-text').innerText = 'Dispositivo: ' + hwid;
+      currentProRequestId = proReqId;
+      
+      const titleEl = document.getElementById('pro-modal-title');
+      if (titleEl) {
+        titleEl.innerText = proReqId ? 'Aprobar Licencia PRO (Solicitud de Cliente)' : 'Activar Licencia PRO';
+      }
+      document.getElementById('pro-modal-hwid-text').innerText = 'Dispositivo: ' + hwid + (proReqId ? ' • Solicitud Directa del Panel' : '');
       const customInput = document.getElementById('pro-custom-val-input');
       if (customInput) customInput.value = '';
       const unitSelect = document.getElementById('pro-custom-unit-select');
       if (unitSelect) unitSelect.value = 'DAYS';
-      document.getElementById('pro-duration-summary').innerText = '♾️ Licencia Vitalicia (Permanente)';
-      
+
       document.querySelectorAll('.pro-dur-btn').forEach(b => {
         b.classList.remove('active');
         b.style.borderColor = '';
         b.style.color = '';
       });
-      const defBtn = document.getElementById('pro-btn-lifetime');
-      if (defBtn) {
-        defBtn.classList.add('active');
-        defBtn.style.borderColor = '#3FCF8E';
-        defBtn.style.color = '#3FCF8E';
+
+      if (proReqId) {
+        // En solicitudes de clientes sugerir 30 días por defecto
+        selectedProDurationType = 'DAYS';
+        selectedProDurationVal = 30;
+        document.getElementById('pro-duration-summary').innerText = '📅 30 Días de Licencia PRO';
+        const btn30d = document.getElementById('pro-btn-30d');
+        if (btn30d) {
+          btn30d.classList.add('active');
+          btn30d.style.borderColor = '#3FCF8E';
+          btn30d.style.color = '#3FCF8E';
+        }
+      } else {
+        selectedProDurationType = 'LIFETIME';
+        selectedProDurationVal = 0;
+        document.getElementById('pro-duration-summary').innerText = '♾️ Licencia Vitalicia (Permanente)';
+        const defBtn = document.getElementById('pro-btn-lifetime');
+        if (defBtn) {
+          defBtn.classList.add('active');
+          defBtn.style.borderColor = '#3FCF8E';
+          defBtn.style.color = '#3FCF8E';
+        }
       }
 
       document.getElementById('pro-activation-modal').style.display = 'flex';
@@ -3810,29 +3831,59 @@
         else if (selectedProDurationType === 'HOURS') payload.hours = selectedProDurationVal;
         else if (selectedProDurationType === 'DAYS') payload.days = selectedProDurationVal;
 
-        const res = await fetch('/api/admin/device/toggle-plan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-          closeModal('pro-activation-modal');
-          const vigTxt = data.isLifetime ? 'VITALICIA (Permanente)' : `hasta ${new Date(data.expiresAt).toLocaleString()}`;
-          showToast(`⚡ Licencia PRO ${vigTxt} ACTIVADA para ${currentActiveHwid}`);
-          const cachedDev = allDevicesCache.find(d => d.hwid === currentActiveHwid);
-          if (cachedDev) {
-            cachedDev.mode = 'PRO';
-            cachedDev.forceDemo = false;
-            cachedDev.blocked = false;
-            cachedDev.expiresAt = data.expiresAt || null;
-            cachedDev.isLifetime = !data.expiresAt;
-            renderDevicesTable(allDevicesCache);
+        if (currentProRequestId) {
+          // Aprobación desde Solicitud PRO de cliente
+          payload.id = currentProRequestId;
+          payload.action = 'approve';
+          const res = await fetch('/api/admin/pro-request/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeModal('pro-activation-modal');
+            const durText = data.durationText || (data.isLifetime ? 'Vitalicia (Permanente)' : (data.expiresAt ? `hasta ${new Date(data.expiresAt).toLocaleString()}` : '30 Días'));
+            showToast(`⚡ Licencia PRO (${durText}) ACTIVADA para ${currentActiveHwid}`);
+            alert(`✅ ¡Licencia PRO Activada con Éxito!\n\n👤 Cliente: ${data.name || 'Cliente'}\n📱 Dispositivo HWID: ${data.hwid}\n⏳ Tiempo Activado: ${durText}\n${data.expiresAt ? '📅 Vence: ' + new Date(data.expiresAt).toLocaleString() : '♾️ Licencia Vitalicia (Permanente)'}\n\n🔑 Clave Oficial:\n${data.generatedKey || 'Generada para el dispositivo'}`);
+            if (data.generatedKey && confirm('¿Deseas copiar el mensaje de bienvenida y activación para enviárselo al cliente por WhatsApp?')) {
+              copyWhatsAppMessage(data.hwid, data.generatedKey, durText);
+            }
+            currentProRequestId = null;
+            loadProRequests();
+            refreshDevices();
+            loadAllLicensesModule();
+            loadAuditLogs();
+          } else {
+            showToast('Error: ' + (data.error || 'No se pudo aprobar la solicitud'), true);
           }
-          setTimeout(() => { refreshDevices(); loadAllLicensesModule(); }, 1500);
-          loadAuditLogs();
         } else {
-          showToast('Error: ' + (data.error || 'No se pudo activar el plan PRO'), true);
+          // Activación directa desde pestaña de dispositivos
+          const res = await fetch('/api/admin/device/toggle-plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeModal('pro-activation-modal');
+            const vigTxt = data.durationText || (data.isLifetime ? 'VITALICIA (Permanente)' : `hasta ${new Date(data.expiresAt).toLocaleString()}`);
+            showToast(`⚡ Licencia PRO ${vigTxt} ACTIVADA para ${currentActiveHwid}`);
+            alert(`✅ ¡Licencia PRO Activada con Éxito!\n\n📱 Dispositivo HWID: ${currentActiveHwid}\n⏳ Tiempo Activado: ${vigTxt}\n${data.expiresAt ? '📅 Vence: ' + new Date(data.expiresAt).toLocaleString() : '♾️ Licencia Vitalicia (Permanente)'}\n\n🔑 Clave Licencia: ${data.licenseKey || 'Activada directamente'}`);
+            const cachedDev = allDevicesCache.find(d => d.hwid === currentActiveHwid);
+            if (cachedDev) {
+              cachedDev.mode = 'PRO';
+              cachedDev.forceDemo = false;
+              cachedDev.blocked = false;
+              cachedDev.expiresAt = data.expiresAt || null;
+              cachedDev.isLifetime = !data.expiresAt;
+              renderDevicesTable(allDevicesCache);
+            }
+            setTimeout(() => { refreshDevices(); loadAllLicensesModule(); }, 1500);
+            loadAuditLogs();
+          } else {
+            showToast('Error: ' + (data.error || 'No se pudo activar el plan PRO'), true);
+          }
         }
       } catch (err) {
         showToast('Error de conexión al activar PRO: ' + err.message, true);
@@ -4523,11 +4574,24 @@
           return String(a.id || '').localeCompare(String(b.id || ''));
         });
 
+        // Contabilizar peticiones por HWID para alertar reincidentes
+        const hwidCounts = {};
+        list.forEach(item => {
+          if (item.hwid) {
+            const h = item.hwid.trim();
+            hwidCounts[h] = (hwidCounts[h] || 0) + 1;
+          }
+        });
+
         const activeReqIds = new Set();
         sorted.forEach(r => {
           const reqId = String(r.id || (r.phone + '_' + r.createdAt));
           activeReqIds.add(reqId);
-          const sig = `${reqId}_${r.status}_${r.name}_${r.phone}_${r.email}_${r.hwid}_${r.serverName}_${r.notes}`;
+          const hTrim = (r.hwid || '').trim();
+          const reqCount = hTrim ? (hwidCounts[hTrim] || 1) : 1;
+          const isRepeat = reqCount > 1 || r.alreadyRequested;
+          const existingDev = hTrim ? allDevicesCache.find(d => d.hwid === hTrim) : null;
+          const sig = `${reqId}_${r.status}_${r.name}_${r.phone}_${r.email}_${r.hwid}_${r.serverName}_${r.notes}_${reqCount}_${existingDev ? existingDev.mode : 'none'}`;
 
           const cleanPhone = String(r.phone || '').replace(/[^0-9]/g, '');
           const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Hola ' + (r.name || '') + ', te contactamos de Mu Manager PRO respecto a tu solicitud de activación de licencia.')}`;
@@ -4538,6 +4602,18 @@
           if (r.status === 'DISMISSED') statusBadge = '<span class="badge" style="background:rgba(142,142,147,0.15); color:#C8BEAF; border:1px solid #555;">DESCARTADO</span>';
 
           const dateStr = new Date(r.createdAt).toLocaleDateString() + ' ' + new Date(r.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+          let devBadge = '';
+          if (existingDev) {
+            const isDevPro = (existingDev.mode === 'PRO');
+            const statusTxt = isDevPro ? '💎 PRO' : (existingDev.blocked ? '🚫 BLOQUEADO' : '⏱️ DEMO');
+            const bg = isDevPro ? 'rgba(63,207,142,0.15)' : (existingDev.blocked ? 'rgba(255,82,82,0.15)' : 'rgba(255,179,0,0.15)');
+            const col = isDevPro ? '#3FCF8E' : (existingDev.blocked ? '#FF5252' : '#FFB300');
+            devBadge = `<br><span class="badge" style="font-size:10px; margin-top:3px; display:inline-block; background:${bg}; color:${col}; border:1px solid ${col};">En BD: ${statusTxt}</span>`;
+          }
+          const repeatBadge = isRepeat
+            ? `<br><span class="badge" style="background:rgba(255,87,34,0.15); color:#FF5252; border:1px solid #FF5252; font-size:10px; margin-top:3px; display:inline-block;">⚠️ Reincidente (${reqCount} peticiones)</span>`
+            : '';
 
           const rowHtml = `
             <td>
@@ -4550,15 +4626,20 @@
               <strong>${escapeHtml(r.serverName || 'No especificado')}</strong><br>
               <small style="color:var(--muted);">${escapeHtml(r.email || 'Sin email')}</small>
             </td>
-            <td><span class="hwid-code" style="font-size:11px;">${escapeHtml(r.hwid || 'N/A')}</span></td>
+            <td>
+              <span class="hwid-code" style="font-size:11px;">${escapeHtml(r.hwid || 'N/A')}</span>
+              ${repeatBadge}
+              ${devBadge}
+            </td>
             <td><small style="color:#DDD;">${escapeHtml(r.notes || 'Sin notas adicionales')}</small></td>
             <td><small>${dateStr}</small></td>
             <td>${statusBadge}</td>
             <td class="actions-cell">
               <a href="${escapeHtml(waLink)}" target="_blank" class="btn btn-green btn-sm" title="Abrir chat en WhatsApp">💬 Chat</a>
-              ${r.status !== 'APPROVED' ? `<button class="btn btn-pro btn-sm" data-action="pro-approve" data-id="${escapeHtml(r.id)}">⚡ Aprobar PRO</button>` : ''}
+              ${r.status !== 'APPROVED' ? `<button class="btn btn-pro btn-sm" data-action="pro-approve" data-id="${escapeHtml(r.id)}" data-hwid="${escapeHtml(r.hwid || '')}">⚡ Aprobar PRO</button>` : ''}
               ${r.status === 'PENDING' ? `<button class="btn btn-blue btn-sm" data-action="pro-contacted" data-id="${escapeHtml(r.id)}">📞 Contactado</button>` : ''}
-              <button class="btn btn-dark btn-sm" style="color:#FF5252;" data-action="pro-dismiss" data-id="${escapeHtml(r.id)}">❌</button>
+              ${r.status !== 'PENDING' ? `<button class="btn btn-dark btn-sm" data-action="pro-reset" data-id="${escapeHtml(r.id)}" title="Reabrir / Marcar Pendiente">🔄</button>` : ''}
+              <button class="btn btn-dark btn-sm" style="color:#FF5252;" data-action="pro-delete" data-id="${escapeHtml(r.id)}" title="Eliminar solicitud permanentemente">🗑️</button>
             </td>
           `;
 
@@ -4605,10 +4686,21 @@
             if (!btn) return;
             const action = btn.dataset.action;
             const id = btn.dataset.id;
+            const hwid = btn.dataset.hwid || '';
             if (!id) return;
-            if (action === 'pro-approve') handleProAction(id, 'approve');
-            else if (action === 'pro-contacted') handleProAction(id, 'contacted');
-            else if (action === 'pro-dismiss') handleProAction(id, 'dismiss');
+            if (action === 'pro-approve') {
+              if (hwid) {
+                openProActivationModal(hwid, id);
+              } else {
+                handleProAction(id, 'approve');
+              }
+            } else if (action === 'pro-contacted') {
+              handleProAction(id, 'contacted');
+            } else if (action === 'pro-reset') {
+              handleProAction(id, 'reset');
+            } else if (action === 'pro-delete') {
+              deleteProRequest(id);
+            }
           });
         }
       } catch (e) {
@@ -4626,8 +4718,12 @@
         });
         const data = await res.json();
         if (data.success) {
-          if (action === 'approve' && data.generatedKey) {
-            prompt('¡Licencia PRO activada con éxito! Esta es la clave oficial generada para el cliente:', data.generatedKey);
+          if (action === 'approve') {
+            const durText = data.durationText || '30 Días';
+            alert(`✅ ¡Licencia PRO Activada con Éxito!\n\n👤 Cliente: ${data.name || 'Cliente'}\n📱 Dispositivo: ${data.hwid}\n⏳ Tiempo Activado: ${durText}\n${data.expiresAt ? '📅 Vence: ' + new Date(data.expiresAt).toLocaleString() : '♾️ Licencia Vitalicia (Permanente)'}\n\n🔑 Clave Oficial:\n${data.generatedKey || 'Generada para el dispositivo'}`);
+            if (data.generatedKey && confirm('¿Deseas copiar el mensaje de activación para enviárselo al cliente por WhatsApp?')) {
+              copyWhatsAppMessage(data.hwid, data.generatedKey, durText);
+            }
           }
           showToast(`Solicitud actualizada.`);
           loadProRequests();
@@ -4638,6 +4734,26 @@
         }
       } catch (e) {
         showToast('Error: ' + e.message, true);
+      }
+    }
+
+    async function deleteProRequest(id) {
+      if (!confirm('¿Estás seguro de que deseas eliminar permanentemente esta solicitud del panel?')) return;
+      const key = getAdminKey();
+      try {
+        const res = await fetch(`/api/admin/pro-request/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': key }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('🗑️ Solicitud eliminada correctamente.');
+          loadProRequests();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo eliminar'), true);
+        }
+      } catch (e) {
+        showToast('Error al eliminar: ' + e.message, true);
       }
     }
 

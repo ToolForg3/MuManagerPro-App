@@ -91,10 +91,10 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   };
 
   const handleSendProRequest = async () => {
-    if (!reqName.trim() || !reqPhone.trim()) {
+    if (!reqPhone.trim()) {
       Alert.alert(
-        'Campos Requeridos',
-        'Por favor completa al menos tu Nombre y tu Teléfono/WhatsApp para que nuestro equipo pueda contactarte.'
+        'WhatsApp / Teléfono Requerido',
+        'Por favor completa tu número de WhatsApp para que el administrador pueda comunicarse contigo directamente desde el panel de control.'
       );
       return;
     }
@@ -102,20 +102,26 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
     setSendingReq(true);
     try {
       const res = await SqlClient.sendProRequest({
-        name: reqName,
-        phone: reqPhone,
-        email: reqEmail,
-        serverName: reqServer,
-        notes: reqNotes,
+        name: reqName.trim() || 'Administrador',
+        phone: reqPhone.trim(),
+        email: reqEmail.trim() || undefined,
+        serverName: reqServer.trim() || undefined,
+        notes: reqNotes.trim() || undefined,
       });
 
       if (res.success) {
         Alert.alert(
-          '¡Solicitud Recibida!',
-          `Hemos registrado tu solicitud comercial y el ID de tu celular (${status.hwid || 'Registrado'}).\n\nNuestro equipo revisará tu mensaje y se pondrá en contacto contigo a la brevedad por WhatsApp.`,
+          '✅ Solicitud Enviada al Panel',
+          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${status.hwid || 'Registrado'}\n💬 WhatsApp: ${reqPhone.trim()}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
           [{ text: 'Entendido' }]
         );
         setReqNotes('');
+      } else if (res.alreadyRequested) {
+        Alert.alert(
+          '⚠️ Solicitud Previa Registrada',
+          res.message || `Este dispositivo (${status.hwid || 'HWID'}) ya tiene una solicitud previa registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
+          [{ text: 'Entendido' }]
+        );
       } else {
         Alert.alert('Aviso', res.message || 'No se pudo registrar la solicitud en este momento.');
       }

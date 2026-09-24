@@ -9186,21 +9186,48 @@ app.post('/api/admin/device/invalidate-session', (req, res) => {
 
 // 3. Solicitud de Licencia PRO desde la APK por el Cliente
 app.post('/api/license/request-pro', async (req, res) => {
-  const { name, phone, email, serverName, notes, hwid } = req.body;
-  if (!name || !phone) {
-    return res.status(400).json({ success: false, error: 'Nombre y teléfono requeridos.' });
+  const { name, phone, email, serverName, notes, hwid, deviceModel, deviceBrand } = req.body;
+  const hwidTrim = String(hwid || '').trim();
+  if (!hwidTrim) {
+    return res.status(400).json({ success: false, error: 'HWID del dispositivo requerido.' });
   }
 
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
   const requests = loadProRequests();
+
+  // Control estricto: Verificar si este HWID ya envió una solicitud previa
+  const existing = requests.find(r => r.hwid && r.hwid.trim() === hwidTrim);
+  if (existing) {
+    const statusMap = {
+      PENDING: 'Pendiente de revisión en el panel',
+      CONTACTED: 'En contacto con soporte',
+      APPROVED: 'Aprobada (Licencia PRO activa)',
+      DISMISSED: 'Descartada por el administrador'
+    };
+    const stText = statusMap[existing.status] || existing.status;
+    const fechaStr = new Date(existing.createdAt).toLocaleDateString() + ' ' + new Date(existing.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return res.json({
+      success: false,
+      alreadyRequested: true,
+      existingStatus: existing.status,
+      existingCreatedAt: existing.createdAt,
+      message: `Este dispositivo (HWID: ${hwidTrim}) ya tiene una solicitud previa registrada el ${fechaStr}.\n\nEstado actual: ${stText}.\n\nEl administrador ya cuenta con tus datos en el panel de control.`
+    });
+  }
+
+  const cleanName = String(name || '').trim() || 'Administrador';
+  const cleanPhone = String(phone || '').trim() || 'Sin número';
+
   const newReq = {
     id: 'req_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-    name: String(name).trim(),
-    phone: String(phone).trim(),
+    name: cleanName,
+    phone: cleanPhone,
     email: (email || '').trim(),
     serverName: (serverName || '').trim(),
     notes: (notes || '').trim(),
-    hwid: (hwid || '').trim(),
+    hwid: hwidTrim,
+    deviceModel: (deviceModel || '').trim(),
+    deviceBrand: (deviceBrand || '').trim(),
     ip: clientIp,
     status: 'PENDING',
     createdAt: new Date().toISOString()
@@ -9209,20 +9236,20 @@ app.post('/api/license/request-pro', async (req, res) => {
   requests.unshift(newReq);
   saveProRequests(requests);
 
-  addAuditLog('PRO_REQUEST', hwid, clientIp, `Nueva solicitud PRO: ${newReq.name} (${newReq.phone})`);
+  addAuditLog('PRO_REQUEST', hwidTrim, clientIp, `Nueva solicitud PRO: ${newReq.name} (${newReq.phone})`);
 
   // Notificar al WhatsApp del Administrador inmediatamente
   sendWhatsAppAlert(
     'tamper',
     '⭐ NUEVA SOLICITUD DE LICENCIA PRO ⭐',
     `Cliente: ${newReq.name}\nWhatsApp: ${newReq.phone}\nEmail: ${newReq.email || 'N/A'}\nServidor: ${newReq.serverName || 'N/A'}\nHWID: ${newReq.hwid}\nNotas: ${newReq.notes || 'Sin notas adicionales'}`,
-    hwid || 'N/A',
+    hwidTrim,
     clientIp
   ).catch(() => {});
 
   res.json({
     success: true,
-    message: 'Solicitud enviada exitosamente. Nuestro equipo se pondrá en contacto contigo a la brevedad.'
+    message: 'Solicitud enviada exitosamente al panel de control. El administrador revisará tu dispositivo.'
   });
 });
 
@@ -9236,18 +9263,21 @@ app.get('/api/admin/pro-requests', (req, res) => {
   res.json(requests);
 });
 
-// 5. Acción sobre Solicitud PRO (Contactar / Aprobar / Descartar)
+// 5. Acción sobre Solicitud PRO (Aprobar con tiempo, Contactar, Descartar, Reabrir)
 app.post('/api/admin/pro-request/action', (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
-  const { id, action } = req.body;
+  const { id, action, durationType, days, hours } = req.body;
   const requests = loadProRequests();
   const target = requests.find(r => r.id === id);
   if (!target) return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
 
   let generatedKey = null;
+  let durationText = '30 Días';
+  let expiresAt = null;
+  let isLifetime = false;
 
   if (action === 'approve') {
     target.status = 'APPROVED';
@@ -9260,16 +9290,39 @@ app.post('/api/admin/pro-request/action', (req, res) => {
         totalPings: 1,
         ip: target.ip || '127.0.0.1',
         platform: 'Android',
-        appVersion: '1.2.1',
+        appVersion: '2.1.3',
         blocked: false,
         note: `${target.name} (${target.phone})`,
         currentUser: target.email || ''
       };
       generatedKey = generateKey(target.hwid, 'PRO');
       dev.mode = 'PRO';
+      dev.forceDemo = false;
+      dev.blocked = false;
       dev.generatedKey = generatedKey;
       dev.licenseKey = generatedKey;
-      dev.expiresAt = null;
+
+      const numDays = parseFloat(days) || 0;
+      const numHours = parseFloat(hours) || 0;
+      const totalMs = (numHours * 3600 + numDays * 86400) * 1000;
+
+      if (durationType === 'LIFETIME') {
+        dev.expiresAt = null;
+        dev.isLifetime = true;
+        durationText = 'Vitalicia (Permanente)';
+      } else if (totalMs > 0) {
+        dev.expiresAt = new Date(Date.now() + totalMs).toISOString();
+        dev.isLifetime = false;
+        durationText = numDays > 0 ? `${numDays} Días` : `${numHours} Horas`;
+      } else {
+        // 30 días de vigencia por defecto
+        dev.expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
+        dev.isLifetime = false;
+        durationText = '30 Días';
+      }
+
+      expiresAt = dev.expiresAt;
+      isLifetime = !!dev.isLifetime;
       devices[target.hwid] = dev;
       saveDevices(devices);
     }
@@ -9277,13 +9330,42 @@ app.post('/api/admin/pro-request/action', (req, res) => {
     target.status = 'CONTACTED';
   } else if (action === 'dismiss') {
     target.status = 'DISMISSED';
+  } else if (action === 'reset' || action === 'pending') {
+    target.status = 'PENDING';
   }
 
   saveProRequests(requests);
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
-  addAuditLog('PRO_REQUEST_ACTION', target.hwid, clientIp, `Solicitud PRO de ${target.name} marcada como: ${target.status}`);
+  addAuditLog('PRO_REQUEST_ACTION', target.hwid, clientIp, `Solicitud PRO de ${target.name} marcada como: ${target.status} (${durationText})`);
 
-  res.json({ success: true, status: target.status, generatedKey });
+  res.json({
+    success: true,
+    status: target.status,
+    generatedKey,
+    durationText,
+    expiresAt,
+    isLifetime,
+    hwid: target.hwid,
+    name: target.name
+  });
+});
+
+// 5.1 Eliminar Solicitud PRO desde el Panel
+app.delete('/api/admin/pro-request/:id', (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  const { id } = req.params;
+  let requests = loadProRequests();
+  const initLen = requests.length;
+  requests = requests.filter(r => r.id !== id);
+  if (requests.length === initLen) {
+    return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
+  }
+  saveProRequests(requests);
+  addAuditLog('PRO_REQUEST_DELETED', id, req.socket.remoteAddress || '127.0.0.1', `Solicitud PRO eliminada: ${id}`);
+  res.json({ success: true, message: 'Solicitud eliminada con éxito' });
 });
 
 // 6. Reporte de Fallos, Errores y Manipulaciones (Crash Telemetry & Tamper)

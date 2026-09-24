@@ -227,9 +227,18 @@ export class LicenseService {
 
       // Notificación al APK cuando la licencia es asignada (DEMO -> PRO)
       if (!wasPro) {
+        let duracionTxt = 'Vitalicia (Permanente sin límite de tiempo)';
+        if (!isLifetime && expiresAt) {
+          const expD = new Date(expiresAt);
+          const fechaStr = expD.toLocaleDateString() + ' ' + expD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          duracionTxt = `${daysRemaining !== undefined && daysRemaining > 0 ? `${daysRemaining} días ` : ''}(Vence: ${fechaStr})`;
+        } else if ((res as any).durationText) {
+          duracionTxt = (res as any).durationText;
+        }
+
         Alert.alert(
-          '¡Licencia PRO Activada!',
-          'El administrador ha asignado tu licencia PRO para este dispositivo. Ya tienes acceso completo a todas las funciones.',
+          '🎉 ¡Licencia PRO Activada!',
+          `El administrador ha asignado tu licencia PRO para este dispositivo.\n\n⏳ Tiempo activado: ${duracionTxt}\n\nTienes acceso completo a todas las funciones avanzadas.`,
           [{ text: '¡Excelente!' }]
         );
       }

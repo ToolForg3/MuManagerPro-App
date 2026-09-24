@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.3",
+  "latestVersion": "2.1.4",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.3 (Build 115) - Licencias PRO en 1-Clic, Auto-Sanación de Sesiones e Historial Permanente:\n• AUTO-SANACIÓN DE SESIONES: Eliminación total de caídas de sesión ante reinicios de contenedores serverless (preservación automática de tokens JWT válidos).\n• LICENCIAS PRO EN 1-CLIC: Activación autoritativa e instantánea desde el Panel de Control Web hacia el APK con persistencia atómica en Upstash Redis.\n• PANEL DE CONTROL SIN PÉRDIDA: Fusión acumulativa inteligente (Smart Cumulative Merge) para que dispositivos, cuentas e historial nunca desaparezcan tras refrescos periódicos.",
+  "updateChangelog": "MuManager PRO v2.1.4 (Build 116) - Solicitudes PRO Directas, Control Anti-Duplicados y Aviso de Vigencia:\n• DEMO RÁPIDO GUIADO: Aviso informativo previo al iniciar el demo rápido (10 min), explicando el beneficio de 72h de prueba gratuita al registrar una cuenta.\n• SOLICITUDES PRO DIRECTAS: Envío de solicitudes desde el APK hacia el Panel de Control Web con blindaje anti-duplicados por HWID y gestión administrativa completa (aprobación con vigencia configurable y eliminación).\n• AVISO DE TIEMPO ACTIVADO: Notificación explícita del tiempo activado y fecha de vencimiento de licencias PRO tanto en el APK móvil como en el Panel de Control Web.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.3 (Build 115)",
+  "updateTitle": "MuManager PRO v2.1.4 (Build 116)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 115,
+  "versionCode": 116,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.3 (Build 115) - Licencias PRO en 1-Clic, Auto-Sanación de Sesiones e Historial Permanente:\n• AUTO-SANACIÓN DE SESIONES: Eliminación total de caídas de sesión ante reinicios de contenedores serverless (preservación automática de tokens JWT válidos).\n• LICENCIAS PRO EN 1-CLIC: Activación autoritativa e instantánea desde el Panel de Control Web hacia el APK con persistencia atómica en Upstash Redis.\n• PANEL DE CONTROL SIN PÉRDIDA: Fusión acumulativa inteligente (Smart Cumulative Merge) para que dispositivos, cuentas e historial nunca desaparezcan tras refrescos periódicos.",
+  "releaseNotes": "MuManager PRO v2.1.4 (Build 116) - Solicitudes PRO Directas, Control Anti-Duplicados y Aviso de Vigencia:\n• DEMO RÁPIDO GUIADO: Aviso informativo previo al iniciar el demo rápido (10 min), explicando el beneficio de 72h de prueba gratuita al registrar una cuenta.\n• SOLICITUDES PRO DIRECTAS: Envío de solicitudes desde el APK hacia el Panel de Control Web con blindaje anti-duplicados por HWID y gestión administrativa completa (aprobación con vigencia configurable y eliminación).\n• AVISO DE TIEMPO ACTIVADO: Notificación explícita del tiempo activado y fecha de vencimiento de licencias PRO tanto en el APK móvil como en el Panel de Control Web.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.3",
-  "buildNumber": 115,
+  "appVersion": "2.1.4",
+  "buildNumber": 116,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.3",
-  "build": 115
+  "version": "2.1.4",
+  "build": 116
 }
