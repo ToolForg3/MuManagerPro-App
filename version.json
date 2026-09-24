@@ -1,10 +1,10 @@
 {
-  "version": "2.2.1",
+  "version": "2.2.2",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-24T21:00:00.000Z",
+  "publishedAt": "2026-09-24T22:30:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 123,
+  "build": 124,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.1 (Build 123) - Estabilidad Definitiva de Licencias PRO/DEMO y Blindaje Multi-Instancia:\n• RESOLUCIÓN DE INTERMITENCIA (TOGGLING): Erradicada la alternancia entre estados PRO y DEMO mediante control secuencial de revisiones autoritativas (authRevision y authUpdatedAt UTC).\n• COHERENCIA TOTAL EN NUBE Y REDIS: Merge monotónico autoritativo en syncCloudStorage; eliminación definitiva de resurrección de claves reactivadas en tombstones.\n• TELEMETRÍA Y CONTROL SILENCIOSO: Pings rutinarios desacoplados de escrituras pesadas en cloud storage (skipCloudWrite); prevención de democión ante claves antiguas enviadas por clientes.\n• BLINDAJE DEFENSIVO EN APK: Filtro contra respuestas desordenadas en red móvil y cola serializada FIFO en almacenamiento local (AsyncStorage)."
+  "changelog": "MuManager PRO v2.2.2 (Build 124) - Inicio de Sesión Social y Acceso Unificado:\n• GOOGLE OAUTH 2.0 (ACCESO RÁPIDO Y SEGURO): Vinculación e inicio de sesión con 1 solo toque mediante cuenta Google oficial; autoactivación instantánea y período demo de 72 horas para nuevos usuarios.\n• ACCESO UNIFICADO POR USUARIO O CORREO: Inicio de sesión transparente tanto con el identificador de cuenta como con el correo electrónico registrado (online y offline protegido).\n• CÓDIGO DE ACTIVACIÓN CON COPIADO RÁPIDO: Plantilla de correo electrónico mejorada con selector instantáneo al toque para agilizar la verificación de cuenta.\n• INTERFAZ GÓTICA SEASON 6: Botón oficial Google integrado con diseño gótico Season 6 de alto contraste (WCAG AAA)."
 }

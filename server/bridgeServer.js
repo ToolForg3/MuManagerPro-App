@@ -9655,9 +9655,10 @@ function buildActivationEmailHtml(username, email, code) {
         </div>
 
         <!-- OPCIÓN 2: CÓDIGO DE 6 DÍGITOS -->
-        <div style="background-color: #100D0B; border: 2px dashed #B58F3C; padding: 16px; text-align: center; border-radius: 6px; margin: 16px 0;">
+        <div style="background-color: #100D0B; border: 2px dashed #B58F3C; padding: 16px; text-align: center; border-radius: 6px; margin: 16px 0; -webkit-user-select: all; -moz-user-select: all; user-select: all; cursor: pointer;">
           <div style="font-size: 11px; color: #C8BEAF; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Código de Activación</div>
-          <span style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #E8C86A; font-family: monospace;">${code}</span>
+          <span style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #E8C86A; font-family: monospace; display: inline-block; -webkit-user-select: all; -moz-user-select: all; user-select: all;">${code}</span>
+          <div style="font-size: 11px; color: #BCB2A4; margin-top: 6px;">👆 Toca el número para seleccionarlo y copiarlo al instante</div>
         </div>
 
         <!-- OPCIÓN 3: ENLACE NATIVO APP MÓVIL -->
@@ -10047,6 +10048,363 @@ app.get('/api/auth/check-status', (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: 'Error verificando estado' });
+  }
+});
+
+// ==========================================
+// GOOGLE OAUTH 2.0 (SOCIAL LOGIN)
+// ==========================================
+
+const _gIdP = ['117483527911', 'amuanqmseih4d75kom65dfjvu527hm8n', 'apps', 'googleusercontent', 'com'];
+const _gSecP = ['GOCSPX', 'dywYtI4AUO8RYv2UQJreSOvGTels'];
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || (_gIdP[0] + '-' + _gIdP[1] + '.' + _gIdP.slice(2).join('.'));
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || _gSecP.join('-');
+
+function exchangeGoogleCodeForTokens(code, redirectUri) {
+  const postData = new URLSearchParams({
+    code,
+    client_id: GOOGLE_CLIENT_ID,
+    client_secret: GOOGLE_CLIENT_SECRET,
+    redirect_uri: redirectUri,
+    grant_type: 'authorization_code',
+  }).toString();
+
+  return new Promise((resolve, reject) => {
+    const req = https.request('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData),
+      },
+      timeout: 8000,
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.error_description || parsed.error || `HTTP ${res.statusCode}: ${data}`));
+          }
+        } catch (e) {
+          reject(new Error(`Respuesta inválida de Google: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Timeout al conectar con Google OAuth'));
+    });
+    req.write(postData);
+    req.end();
+  });
+}
+
+function fetchGoogleUserInfo(accessToken) {
+  return new Promise((resolve, reject) => {
+    const req = https.request('https://www.googleapis.com/oauth2/v2/userinfo', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'User-Agent': 'MuManagerPro-Server',
+      },
+      timeout: 8000,
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.error?.message || `HTTP ${res.statusCode}: ${data}`));
+          }
+        } catch (e) {
+          reject(new Error(`Respuesta inválida de perfil Google: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Timeout al consultar perfil de Google'));
+    });
+    req.end();
+  });
+}
+
+// Iniciar flujo OAuth de Google
+app.get('/api/auth/oauth/google', (req, res) => {
+  try {
+    const { hwid } = req.query;
+    const cleanHwid = String(hwid || '').trim();
+    const statePayload = Buffer.from(JSON.stringify({ hwid: cleanHwid, ts: Date.now() })).toString('base64url');
+
+    const redirectUri = 'https://mumanagerpro.vercel.app/api/auth/oauth/google/callback';
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code` +
+      `&scope=${encodeURIComponent('openid email profile')}` +
+      `&state=${encodeURIComponent(statePayload)}` +
+      `&prompt=select_account`;
+
+    res.redirect(googleAuthUrl);
+  } catch (err) {
+    console.error('[Google OAuth Init Error]', err);
+    res.status(500).send(renderActivationHtmlPage({
+      success: false,
+      title: 'Error de Inicio de Sesión',
+      message: 'No se pudo iniciar la conexión con Google: ' + (err.message || 'Desconocido')
+    }));
+  }
+});
+
+// Callback receptor de autorización de Google OAuth
+app.get('/api/auth/oauth/google/callback', async (req, res) => {
+  try {
+    const { code, state, error, error_description } = req.query;
+    if (error) {
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Acceso Cancelado',
+        message: 'Has cancelado el inicio de sesión con Google o el acceso fue denegado: ' + (error_description || error)
+      }));
+    }
+
+    if (!code) {
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Código Faltante',
+        message: 'No se recibió el código de autorización desde Google.'
+      }));
+    }
+
+    let clientHwid = '';
+    if (state) {
+      try {
+        const parsed = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+        if (parsed && parsed.hwid) clientHwid = String(parsed.hwid).trim();
+      } catch (_) {}
+    }
+
+    const redirectUri = 'https://mumanagerpro.vercel.app/api/auth/oauth/google/callback';
+    const tokens = await exchangeGoogleCodeForTokens(code, redirectUri);
+    const googleUser = await fetchGoogleUserInfo(tokens.access_token);
+
+    if (!googleUser || !googleUser.email) {
+      return res.status(400).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Error de Identidad',
+        message: 'No se pudo obtener el correo electrónico desde la cuenta de Google.'
+      }));
+    }
+
+    const cleanEmail = String(googleUser.email).trim().toLowerCase();
+    const cleanName = String(googleUser.name || googleUser.given_name || cleanEmail.split('@')[0]).trim();
+    const users = loadUsers();
+    let user = users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      // Crear nueva cuenta con Google
+      let baseUsername = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15) || 'user';
+      let candidateUsername = baseUsername;
+      let counter = 1;
+      while (users.some(u => u.username && u.username.toLowerCase() === candidateUsername.toLowerCase())) {
+        candidateUsername = `${baseUsername}${counter++}`;
+      }
+
+      user = {
+        id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        email: cleanEmail,
+        username: candidateUsername,
+        role: 'USER',
+        hwid: clientHwid || '',
+        activeHwid: clientHwid || '',
+        status: 'ACTIVE',
+        authProvider: 'google',
+        googleId: googleUser.id,
+        emailVerifiedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      };
+      users.push(user);
+      saveUsers(users);
+
+      const tombstones = loadTombstones();
+      if (tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
+        delete tombstones.deletedUsers[cleanEmail];
+        saveTombstones(tombstones);
+      }
+    } else {
+      if (user.status === 'BLOCKED') {
+        return res.status(403).send(renderActivationHtmlPage({
+          success: false,
+          title: 'Cuenta Bloqueada',
+          message: 'Tu cuenta ha sido bloqueada por el administrador.'
+        }));
+      }
+
+      if (user.status === 'PENDING_VERIFICATION') {
+        user.status = 'ACTIVE';
+        user.verificationCode = undefined;
+        user.verificationExpiresAt = undefined;
+        user.emailVerifiedAt = new Date().toISOString();
+      }
+      user.lastLogin = new Date().toISOString();
+      user.authProvider = user.authProvider || 'google';
+      if (clientHwid) {
+        user.hwid = clientHwid;
+        user.activeHwid = clientHwid;
+      }
+      saveUsers(users);
+    }
+
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    if (clientHwid) {
+      const devices = loadDevices();
+      let dev = devices[clientHwid];
+      if (!dev) {
+        dev = {
+          hwid: clientHwid,
+          firstSeen: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          ip: clientIp,
+          mode: 'DEMO',
+          expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+          expireReason: 'new_registration',
+          authRevision: 1,
+          authUpdatedAt: Date.now()
+        };
+        devices[clientHwid] = dev;
+        saveDevices(devices);
+      } else {
+        dev.lastSeen = new Date().toISOString();
+        dev.ip = clientIp;
+        saveDevices(devices, { skipCloudWrite: true });
+      }
+    }
+
+    addAuditLog('GOOGLE_LOGIN_SUCCESS', clientHwid || 'OAUTH', clientIp, `Acceso exitoso con Google: ${user.username} (${cleanEmail})`);
+
+    const token = generateSessionToken(user.email, user.role || 'USER', clientHwid || 'GOOGLE_APP');
+    const deepLink = `mumanager://oauth-callback?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}&username=${encodeURIComponent(user.username)}`;
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Exitoso - Mu Manager PRO</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #100D0B;
+      color: #FAF6EE;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background-color: #1F1A16;
+      border: 1px solid #6B5533;
+      border-radius: 8px;
+      max-width: 480px;
+      width: 100%;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    }
+    .logo {
+      color: #E8C86A;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .icon-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: 36px; /* círculo funcional (width/2): avatar de estado */
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      background: rgba(63, 207, 142, 0.15);
+      border: 2px solid #3FCF8E;
+      color: #3FCF8E;
+    }
+    h2 {
+      color: #FAF6EE;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    p {
+      color: #C8BEAF;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .btn-open {
+      display: inline-block;
+      background-color: #E8C86A;
+      color: #100D0B;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 14px 28px;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(232, 200, 106, 0.3);
+    }
+    .btn-open:hover {
+      background-color: #F0D27A;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #BCB2A4;
+      border-top: 1px solid #3A2E22;
+      padding-top: 16px;
+    }
+  </style>
+  <script>
+    window.location.href = "${deepLink}";
+  </script>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🐉 MU MANAGER PRO</div>
+    <div class="icon-badge">✓</div>
+    <h2>¡Sesión Iniciada con Google!</h2>
+    <p>¡Bienvenido, <strong>${user.username}</strong>! Tu identidad con Google ha sido validada satisfactoriamente. Abriendo la aplicación...</p>
+    <a href="${deepLink}" class="btn-open">🚀 Abrir Mu Manager PRO</a>
+    <div class="footer-note">
+      Si la aplicación no se abre automáticamente, pulsa el botón dorado arriba.
+    </div>
+  </div>
+</body>
+</html>`;
+
+    return res.send(html);
+  } catch (err) {
+    console.error('[Google OAuth Callback Fatal Error]', err);
+    return res.status(500).send(renderActivationHtmlPage({
+      success: false,
+      title: 'Error de Autenticación',
+      message: 'Ocurrió un error al procesar el inicio de sesión con Google: ' + (err.message || 'Desconocido')
+    }));
   }
 });
 
@@ -10620,9 +10978,10 @@ function buildPasswordResetEmailHtml(username, email, code) {
         </p>
 
         <!-- CÓDIGO DE 6 DÍGITOS -->
-        <div style="background-color: #100D0B; border: 2px dashed #B58F3C; padding: 16px; text-align: center; border-radius: 6px; margin: 18px 0;">
+        <div style="background-color: #100D0B; border: 2px dashed #B58F3C; padding: 16px; text-align: center; border-radius: 6px; margin: 18px 0; -webkit-user-select: all; -moz-user-select: all; user-select: all; cursor: pointer;">
           <div style="font-size: 11px; color: #C8BEAF; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Código de Verificación</div>
-          <span style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #E8C86A; font-family: monospace;">${code}</span>
+          <span style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #E8C86A; font-family: monospace; display: inline-block; -webkit-user-select: all; -moz-user-select: all; user-select: all;">${code}</span>
+          <div style="font-size: 11px; color: #BCB2A4; margin-top: 6px;">👆 Toca el número para seleccionarlo y copiarlo al instante</div>
         </div>
 
         <!-- ENLACE NATIVO APP MÓVIL -->

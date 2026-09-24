@@ -34,6 +34,7 @@ export const LoginScreen = () => {
   const { t } = useLanguage();
   const {
     login,
+    loginWithToken,
     loginDemo,
     register,
     verifyRegistration,
@@ -44,6 +45,7 @@ export const LoginScreen = () => {
     clearDemoExpiredNotice,
   } = useAuth();
 
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
 
   // PRO Request Modal State
@@ -187,6 +189,22 @@ export const LoginScreen = () => {
           if (targetCode) setForgotCode(targetCode);
           setForgotStep(2);
           setForgotModalVisible(true);
+        } else if (rawUrl.includes('oauth-callback')) {
+          const targetToken = params.token || '';
+          const targetEmail = params.email || '';
+          const targetUsername = params.username || '';
+          if (targetToken) {
+            loginWithToken(targetToken, { email: targetEmail, username: targetUsername }).then((res) => {
+              if (res.success) {
+                Alert.alert(
+                  '¡Sesión Iniciada con Google!',
+                  `Bienvenido ${targetUsername || targetEmail}. Tu identidad ha sido verificada con éxito.`
+                );
+              } else {
+                Alert.alert('Error de Autenticación', res.error || 'No se pudo iniciar sesión con Google.');
+              }
+            });
+          }
         }
       } catch (err) {
         console.warn('[DeepLink Handler Error]', err);
@@ -484,7 +502,7 @@ export const LoginScreen = () => {
       }
     } else {
       if (!cleanUser || !cleanPass) {
-        Alert.alert('Datos requeridos', 'Por favor ingresa tu nombre de usuario y contraseña.');
+        Alert.alert('Datos requeridos', 'Por favor ingresa tu usuario o correo y contraseña.');
         return;
       }
 
@@ -528,7 +546,7 @@ export const LoginScreen = () => {
               ]
             );
           } else {
-            Alert.alert('Acceso Denegado', loginRes.error || 'Nombre de usuario o contraseña incorrectos.');
+            Alert.alert('Acceso Denegado', loginRes.error || 'Usuario o contraseña incorrectos.');
           }
         }
       } catch (e: any) {
@@ -536,6 +554,25 @@ export const LoginScreen = () => {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      const hwid = await SecurityService.getDeviceHwid().catch(() => '');
+      const bridgeUrl = SqlClient.getBridgeUrl();
+      const authUrl = `${bridgeUrl}/api/auth/oauth/google?hwid=${encodeURIComponent(hwid)}`;
+      const supported = await Linking.canOpenURL(authUrl);
+      if (supported) {
+        await Linking.openURL(authUrl);
+      } else {
+        await Linking.openURL(`https://mumanagerpro.vercel.app/api/auth/oauth/google?hwid=${encodeURIComponent(hwid)}`);
+      }
+    } catch (err: any) {
+      Alert.alert('Error con Google', 'No se pudo abrir el inicio de sesión con Google: ' + (err.message || 'Desconocido'));
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -685,7 +722,7 @@ export const LoginScreen = () => {
           {/* Username Input */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
-              {isRegisterMode ? 'Nombre de Usuario (Para Iniciar Sesión)' : (t('username') || 'Nombre de Usuario')}
+              {isRegisterMode ? 'Nombre de Usuario (Para Iniciar Sesión)' : 'Usuario o Correo Electrónico'}
             </Text>
             <View style={styles.inputWrapper}>
               <Feather
@@ -696,7 +733,7 @@ export const LoginScreen = () => {
               />
               <TextInput
                 style={styles.input}
-                placeholder={isRegisterMode ? 'Ej: admin_mu' : 'Ingresa tu usuario'}
+                placeholder={isRegisterMode ? 'Ej: admin_mu' : 'Ingresa tu usuario o correo'}
                 placeholderTextColor={THEME.colors.textoSecundario}
                 value={username}
                 onChangeText={setUsername}
@@ -836,6 +873,24 @@ export const LoginScreen = () => {
             altura={56}
             style={styles.submitBtn}
           />
+
+          {/* Botón Iniciar Sesión con Google OAuth */}
+          <TouchableOpacity
+            style={styles.googleBtn}
+            onPress={handleGoogleLogin}
+            disabled={googleLoading}
+            activeOpacity={0.8}
+            accessibilityLabel="Continuar con Google"
+          >
+            {googleLoading ? (
+              <ActivityIndicator size="small" color={THEME.colors.oroClaro} />
+            ) : (
+              <>
+                <FontAwesome5 name="google" size={16} color={THEME.colors.oroClaro} style={{ marginRight: 10 }} />
+                <Text style={styles.googleBtnText}>Continuar con Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
           {/* Acceso Rápido Modo Prueba (Botón Piedra de 44 dp) */}
           {!isRegisterMode && (
@@ -1483,6 +1538,23 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 8,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    backgroundColor: THEME.colors.superficie,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
+    marginTop: 12,
+  },
+  googleBtnText: {
+    color: THEME.colors.texto,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   toggleModeBtn: {
     marginTop: 16,

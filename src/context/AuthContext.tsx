@@ -18,6 +18,7 @@ interface AuthContextType {
   isDemoExpired: boolean;
   clearDemoExpiredNotice: () => void;
   login: (usernameOrEmail: string, pass: string, remember: boolean) => Promise<{ success: boolean; requiresVerification?: boolean; email?: string; error?: string }>;
+  loginWithToken: (token: string, userData: { email: string; username: string }) => Promise<{ success: boolean; error?: string }>;
   loginDemo: () => Promise<{ success: boolean; error?: string }>;
   register: (email: string, pass: string, username?: string) => Promise<{ success: boolean; requiresVerification?: boolean; email?: string; error?: string; message?: string; pendingSmtp?: boolean; devCode?: string }>;
   verifyRegistration: (email: string, code: string) => Promise<{ success: boolean; token?: string; error?: string; message?: string }>;
@@ -48,6 +49,7 @@ const AuthContext = createContext<AuthContextType>({
   isDemoExpired: false,
   clearDemoExpiredNotice: () => {},
   login: async () => ({ success: false }),
+  loginWithToken: async () => ({ success: false }),
   loginDemo: async () => ({ success: false }),
   register: async () => ({ success: false }),
   verifyRegistration: async () => ({ success: false }),
@@ -349,12 +351,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storedHash = await SecureStorage.getItem('@mumanager_auth_pwhash');
     const storedEmail = await AsyncStorage.getItem('@mumanager_auth_email');
     const storedUsername = await AsyncStorage.getItem('@mumanager_auth_username');
+    const cleanLower = cleanUser.toLowerCase();
     const isConfiguredKey = storedHash && (storedEmail || storedUsername)
-      ? sha256(cleanPass + ':' + cleanUser.toLowerCase()) === storedHash && (
-          (storedUsername && cleanUser.toLowerCase() === storedUsername.toLowerCase()) ||
-          (storedEmail && cleanUser.toLowerCase() === storedEmail.toLowerCase())
+      ? (
+          (storedUsername && sha256(cleanPass + ':' + storedUsername.toLowerCase()) === storedHash && (
+            cleanLower === storedUsername.toLowerCase() ||
+            (storedEmail && cleanLower === storedEmail.toLowerCase())
+          )) ||
+          (storedEmail && sha256(cleanPass + ':' + storedEmail.toLowerCase()) === storedHash && (
+            cleanLower === storedUsername?.toLowerCase() ||
+            cleanLower === storedEmail.toLowerCase()
+          ))
         )
       : false;
+
+    if (!remoteSuccess && isConfiguredKey) {
+      resolvedUser = storedUsername || resolvedUser;
+      resolvedEmail = storedEmail || resolvedEmail;
+    }
 
     if (remoteSuccess || isConfiguredKey) {
       setIsAuthenticated(true);
@@ -396,6 +410,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     return { success: false, error: 'Usuario o contraseña incorrectos.' };
+  };
+
+  const loginWithToken = async (
+    token: string,
+    userData: { email: string; username: string }
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const cleanUser = String(userData.username || userData.email.split('@')[0] || 'Usuario').trim();
+      const cleanEmail = String(userData.email || '').trim().toLowerCase();
+
+      SqlClient.setSessionToken(token);
+      setIsAuthenticated(true);
+      setUserName(cleanUser);
+      setUserEmail(cleanEmail || `${cleanUser}@muonline.local`);
+      SqlClient.setActiveUser(cleanUser);
+      setIsDemoSession(false);
+      setIsDemoExpired(false);
+
+      await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
+      await AsyncStorage.removeItem('@mumanager_auth_password');
+      await AsyncStorage.removeItem(DEMO_SESSION_KEY);
+      await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
+      await SecureStorage.setItem('@mumanager_session_token', token);
+      await AsyncStorage.setItem('@mumanager_auth_username', cleanUser);
+      if (cleanEmail) await AsyncStorage.setItem('@mumanager_auth_email', cleanEmail);
+      await AsyncStorage.setItem(SAVED_USERNAME_KEY, cleanUser);
+      if (cleanEmail) await AsyncStorage.setItem(SAVED_EMAIL_KEY, cleanEmail);
+
+      const hwid = await SecurityService.getDeviceHwid();
+      const currentLicense = LicenseService.getStatus();
+      SqlClient.sendTelemetryPing(
+        hwid,
+        currentLicense.plan || 'DEMO',
+        currentLicense.licenseKey,
+        cleanEmail,
+        cleanUser
+      ).catch(() => {});
+
+      return { success: true };
+    } catch (e: any) {
+      console.warn('[loginWithToken Error]', e);
+      return { success: false, error: e.message || 'Error al iniciar sesión con token' };
+    }
   };
 
   const loginDemo = async (): Promise<{ success: boolean; error?: string }> => {
@@ -674,6 +731,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isDemoExpired,
         clearDemoExpiredNotice,
         login,
+        loginWithToken,
         loginDemo,
         register,
         verifyRegistration,
