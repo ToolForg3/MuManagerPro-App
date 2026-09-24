@@ -9281,6 +9281,14 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
     // Revocar incondicionalmente cualquier bloqueo, exclusión o impedimento
     if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid, { key });
 
+    devices[hwid].forceDemo = false;
+    devices[hwid].forceWipe = false;
+    devices[hwid].forceWipeKey = false;
+    devices[hwid].sessionInvalidated = false;
+    devices[hwid].sessionInvalidatedReason = '';
+    devices[hwid].blocked = false;
+    devices[hwid].blockReason = '';
+
     const numDays = parseFloat(days !== undefined ? days : durationDays) || 0;
     const numHours = parseFloat(hours) || 0;
     const numMin = parseFloat(minutes) || 0;

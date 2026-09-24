@@ -3947,13 +3947,19 @@
           <div style="font-weight: 700; font-size: 12px; color: ${isExpired ? '#FF5252' : (dev.mode === 'PRO' ? '#3FCF8E' : '#FFB300')};">
             ${expText}
           </div>
-          ${dev.mode !== 'PRO' ? `
+          ${dev.mode === 'PRO' && !dev.isLifetime ? `
+            <div style="display:flex; gap:4px; margin-top:6px;">
+              <button type="button" class="btn btn-dark btn-sm" style="padding:2px 6px; font-size:10px; color:#3FCF8E; border-color:rgba(63,207,142,0.35);" data-action="extend-demo" data-hours="24" title="Extender licencia PRO +24 horas">+24h</button>
+              <button type="button" class="btn btn-dark btn-sm" style="padding:2px 6px; font-size:10px; color:#3FCF8E; border-color:rgba(63,207,142,0.35);" data-action="extend-demo" data-hours="72" title="Extender licencia PRO +3 días">+3d</button>
+              <button type="button" class="btn btn-dark btn-sm" style="padding:2px 6px; font-size:10px; color:#3FCF8E; border-color:rgba(63,207,142,0.35);" data-action="extend-demo" data-hours="168" title="Extender licencia PRO +7 días">+7d</button>
+            </div>
+          ` : (dev.mode !== 'PRO' ? `
             <div style="display:flex; gap:4px; margin-top:6px;">
               <button type="button" class="btn btn-dark btn-sm" style="padding:2px 6px; font-size:10px; color:#FFB300; border-color:#554400;" data-action="extend-demo" data-hours="24" title="Sumar 24 horas de prueba">+24h</button>
               <button type="button" class="btn btn-dark btn-sm" style="padding:2px 6px; font-size:10px; color:#FFB300; border-color:#554400;" data-action="extend-demo" data-hours="72" title="Sumar 3 días de prueba">+3d</button>
               <button type="button" class="btn btn-dark btn-sm" style="padding:2px 6px; font-size:10px; color:#FFB300; border-color:#554400;" data-action="extend-demo" data-hours="168" title="Sumar 7 días de prueba">+7d</button>
             </div>
-          ` : ''}
+          ` : '')}
         </td>
         <td class="dev-last-seen-cell"><small class="dev-last-seen-text" style="color: ${isOnline ? '#3FCF8E' : 'inherit'}; font-weight: ${isOnline ? '600' : 'normal'};">${dateStr}</small></td>
         <td class="actions-cell">
@@ -4985,7 +4991,7 @@
         const data = await res.json();
         if (data.success) {
           const desc = minutes ? `+${minutes} min` : `+${hours} horas`;
-          showToast(`⏱️ DEMO extendido ${desc} con éxito.`);
+          showToast(data.message || `⏱️ Tiempo extendido ${desc} con éxito.`);
           refreshDevices();
           loadAuditLogs();
         } else {
