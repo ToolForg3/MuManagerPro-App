@@ -436,19 +436,22 @@ export const GothicAlertContainer: React.FC = () => {
           style={[styles.cardContainer, { borderColor: config.borderColor }]}
           onPress={(e) => e.stopPropagation()}
         >
-          {/* Remaches góticos superiores */}
-          <View style={styles.rivetRow}>
-            <View style={styles.rivet} />
-            <View style={styles.rivet} />
-          </View>
+          {/* Remaches ornamentales en las 4 esquinas del marco */}
+          <View style={[styles.cornerRivet, styles.cornerRivetTL]} />
+          <View style={[styles.cornerRivet, styles.cornerRivetTR]} />
+          <View style={[styles.cornerRivet, styles.cornerRivetBL]} />
+          <View style={[styles.cornerRivet, styles.cornerRivetBR]} />
+
+          {/* Grabado perimetral interno */}
+          <View style={styles.innerBorder} />
 
           {/* Cabecera gótica Season 6 */}
-          <View style={[styles.header, { backgroundColor: config.glowBg }]}>
+          <View style={styles.header}>
             <View style={[styles.iconBox, { borderColor: config.color }]}>
-              <MaterialCommunityIcons name={iconName} size={26} color={config.color} />
+              <MaterialCommunityIcons name={iconName} size={24} color={config.color} />
             </View>
             <View style={styles.headerTextCol}>
-              <View style={styles.badgeRow}>
+              <View style={[styles.badgeContainer, { borderColor: config.color, backgroundColor: config.glowBg }]}>
                 <Text style={[styles.badgeText, { color: config.color }]}>
                   {badgeText}
                 </Text>
@@ -467,27 +470,29 @@ export const GothicAlertContainer: React.FC = () => {
             </View>
           </View>
 
-          {/* Divisor ornamental de piedra */}
+          {/* Divisor ornamental de piedra grabado */}
           <View style={styles.ornamentalDivider} />
 
-          {/* Cuerpo desplazable con ScrollView anidado */}
+          {/* Cuerpo desplazable con panel de pergamino oscuro tallado */}
           <View style={styles.bodyWrapper}>
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              nestedScrollEnabled={true}
-              showsVerticalScrollIndicator={true}
-            >
-              {alert.message ? (
-                <Text
-                  style={styles.messageText}
-                  selectable={true}
-                  accessibilityLabel={alert.message}
+            {alert.message ? (
+              <View style={styles.messageBox}>
+                <ScrollView
+                  style={styles.scrollView}
+                  contentContainerStyle={styles.scrollContent}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
                 >
-                  {alert.message}
-                </Text>
-              ) : null}
-            </ScrollView>
+                  <Text
+                    style={styles.messageText}
+                    selectable={true}
+                    accessibilityLabel={alert.message}
+                  >
+                    {alert.message}
+                  </Text>
+                </ScrollView>
+              </View>
+            ) : null}
           </View>
 
           {/* Contenedor de Botones Accesibles (minHeight: 44, alto contraste) */}
@@ -539,12 +544,6 @@ export const GothicAlertContainer: React.FC = () => {
               );
             })}
           </View>
-
-          {/* Remaches góticos inferiores */}
-          <View style={styles.rivetRowBottom}>
-            <View style={styles.rivet} />
-            <View style={styles.rivet} />
-          </View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -566,67 +565,77 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     maxHeight: '90%',
-    backgroundColor: THEME.colors.superficie, // #2B2521
+    backgroundColor: THEME.colors.card, // #241E1A (Superficie continua de piedra noble)
     borderRadius: 6,
     borderWidth: 1.5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.7,
-    shadowRadius: 12,
-    elevation: 16,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+    elevation: 20,
+    position: 'relative',
     overflow: 'hidden',
   },
-  rivetRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingTop: 6,
-    paddingBottom: 2,
-    backgroundColor: THEME.colors.fondo,
+  innerBorder: {
+    position: 'absolute',
+    top: 3,
+    left: 3,
+    right: 3,
+    bottom: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(107, 85, 51, 0.40)', // Grabado dorado perimetral
+    pointerEvents: 'none',
   },
-  rivetRowBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingBottom: 6,
-    paddingTop: 2,
-    backgroundColor: THEME.colors.fondo,
-  },
-  rivet: {
+  cornerRivet: {
+    position: 'absolute',
     width: 6,
     height: 6,
-    borderRadius: 3, /* círculo funcional (width/2): remache gótico */
+    borderRadius: 3, /* círculo funcional (width/2): remache ornamental gótico */
     backgroundColor: THEME.colors.oro,
     borderWidth: 1,
     borderColor: '#0A0807',
+    zIndex: 10,
   },
+  cornerRivetTL: { top: 8, left: 8 },
+  cornerRivetTR: { top: 8, right: 8 },
+  cornerRivetBL: { bottom: 8, left: 8 },
+  cornerRivetBR: { bottom: 8, right: 8 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.borde,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
   iconBox: {
     width: 44,
     height: 44,
     borderRadius: 22, /* círculo funcional (width/2): avatar de icono del aviso */
-    backgroundColor: THEME.colors.fondo,
+    backgroundColor: THEME.colors.casillaFondo, // #100D0B
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 3,
   },
   headerTextCol: {
     flex: 1,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    marginBottom: 2,
+  badgeContainer: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    marginBottom: 4,
   },
   badgeText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
@@ -636,39 +645,48 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: THEME.colors.texto, // #FAF6EE (14.02:1 AAA)
     letterSpacing: 0.3,
+    lineHeight: 22,
   },
   headerSubtitle: {
-    fontSize: 11.5,
-    color: THEME.colors.textoSecundario, // #C8BEAF
+    fontSize: 12,
+    color: THEME.colors.textoSecundario, // #C8BEAF (8.23:1 AAA)
     marginTop: 2,
+    lineHeight: 16,
   },
   ornamentalDivider: {
     height: 1,
-    backgroundColor: THEME.colors.borde,
+    backgroundColor: 'rgba(107, 85, 51, 0.35)', // Línea grabada sutil
+    marginHorizontal: 18,
   },
   bodyWrapper: {
-    maxHeight: Math.min(360, windowHeight * 0.55),
-    backgroundColor: THEME.colors.fondo, // #191512
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  messageBox: {
+    backgroundColor: THEME.colors.casillaFondo, // #100D0B (Fondo profundo tipo pergamino tallado)
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(107, 85, 51, 0.35)',
+    maxHeight: Math.min(340, windowHeight * 0.52),
+    overflow: 'hidden',
   },
   scrollView: {
     flexGrow: 0,
   },
   scrollContent: {
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: THEME.colors.textoSecundario, // #C8BEAF (8.23:1 AAA)
-    letterSpacing: 0.2,
+    fontSize: 14.5,
+    lineHeight: 22,
+    color: THEME.colors.texto, // #FAF6EE (16.98:1 AAA sobre casillaFondo #100D0B)
+    letterSpacing: 0.25,
   },
   buttonContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: THEME.colors.superficie, // #2B2521
-    borderTopWidth: 1,
-    borderTopColor: THEME.colors.borde,
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+    paddingTop: 4,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -697,7 +715,7 @@ const styles = StyleSheet.create({
     borderColor: THEME.colors.oro,
     shadowColor: THEME.colors.oro,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 3,
     elevation: 2,
   },
@@ -707,7 +725,7 @@ const styles = StyleSheet.create({
     borderColor: '#B84514',
     shadowColor: THEME.colors.brasa,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 3,
     elevation: 2,
   },
@@ -717,17 +735,17 @@ const styles = StyleSheet.create({
     borderColor: '#2DA873',
     shadowColor: THEME.colors.jade,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 3,
     elevation: 2,
   },
   btnSecondary: {
-    backgroundColor: THEME.colors.fondo, // #191512
+    backgroundColor: '#27201B',
     borderWidth: 1,
     borderColor: THEME.colors.bordeBrillante, // #A8894D
   },
   btnCancel: {
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: THEME.colors.borde, // #6B5533
   },
@@ -747,5 +765,6 @@ const styles = StyleSheet.create({
   btnTextCancel: {
     color: THEME.colors.textoSecundario, // #C8BEAF
     fontSize: 14,
+    fontWeight: '600',
   },
 });

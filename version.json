@@ -1,10 +1,10 @@
 {
-  "version": "2.2.3",
+  "version": "2.2.4",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-24T23:15:00.000Z",
+  "publishedAt": "2026-09-24T23:48:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 125,
+  "build": 126,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.3 (Build 125) - Sistema Oficial de Avisos y Diálogos Góticos Season 6:\n• DIÁLOGOS OFICIALES SEASON 6 PIEDRA & ORO: Erradicación definitiva de avisos claros nativos de Android; todos los avisos y confirmaciones utilizan el diseño gótico canónico (superficies de piedra #2B2521, bordes dorados y remaches).\n• ACCESO RÁPIDO DEMO CON 4 ACCIONES: Desbloqueada la limitación de 3 botones de Android; visualización y operatividad al 100% de 'Iniciar Demo (10 min)', 'Crear Cuenta (72h Demo)', 'Solicitar PRO' y 'Cancelar'.\n• COLA DE AVISOS Y STACKING DE MODALES: Procesamiento secuencial FIFO de alertas consecutivas sin pérdida de eventos y superposición limpia sobre modales existentes.\n• ACCESIBILIDAD Y ALTO CONTRASTE (WCAG AAA): Botones táctiles adaptativos de 44 dp con texto oscuro canónico #100D0B, ScrollView anidado para mensajes extensos e identificación dual por texto e iconos."
+  "changelog": "MuManager PRO v2.2.4 (Build 126) - Armonía Visual Season 6, Kundun Louis/MSPro y Google OAuth:\n• DIÁLOGOS Y AVISOS GÓTICOS REFINADOS: Superficie continua de piedra noble (#241E1A), remaches ornamentales en las 4 esquinas, grabado perimetral interno, pastilla gótica para badges, panel tallado de pergamino (#100D0B) y tipografía marfil apergaminada #FAF6EE con ratio de contraste 16.98:1 AAA.\n• BANCO DE JOYAS (LOUIS S6 & MSPRO): Mapeo y aislamiento estricto por nivel (8..12 / 1..5) para Box of Kundun +1 a +5 en tablas normalizadas CustomItemBank, previniendo colisiones o sobreescritura de ranuras.\n• GOOGLE OAUTH: Corrección criptográfica de la clave de cliente en el flujo de inicio de sesión con Google.\n• SEGURIDAD Y ACCESIBILIDAD: Cumplimiento de directrices WCAG AAA, controles táctiles adaptativos de 44 dp y persistencia de cuentas permanente (zero purgas)."
 }

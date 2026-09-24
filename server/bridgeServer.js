@@ -4359,11 +4359,11 @@ const JEWEL_ALIASES = {
   GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount', '7209', '41'],
   LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount', '7211', '43'],
   HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount', '7212', '44'],
-  Kundun1: ['kundun1', 'boxofkundun1', 'bok1', 'box1', 'kundun_1', 'box_of_kundun_1', 'box_kundun_1', 'bok_1'],
-  Kundun2: ['kundun2', 'boxofkundun2', 'bok2', 'box2', 'kundun_2', 'box_of_kundun_2', 'box_kundun_2', 'bok_2'],
-  Kundun3: ['kundun3', 'boxofkundun3', 'bok3', 'box3', 'kundun_3', 'box_of_kundun_3', 'box_kundun_3', 'bok_3'],
-  Kundun4: ['kundun4', 'boxofkundun4', 'bok4', 'box4', 'kundun_4', 'box_of_kundun_4', 'box_kundun_4', 'bok_4'],
-  Kundun5: ['kundun5', 'boxofkundun5', 'bok5', 'box5', 'kundun_5', 'box_of_kundun_5', 'box_kundun_5', 'bok_5'],
+  Kundun1: ['kundun1', 'boxofkundun1', 'bok1', 'box1', 'kundun_1', 'box_of_kundun_1', 'box_kundun_1', 'bok_1', 'kundun+1', 'box+1', 'bok+1'],
+  Kundun2: ['kundun2', 'boxofkundun2', 'bok2', 'box2', 'kundun_2', 'box_of_kundun_2', 'box_kundun_2', 'bok_2', 'kundun+2', 'box+2', 'bok+2'],
+  Kundun3: ['kundun3', 'boxofkundun3', 'bok3', 'box3', 'kundun_3', 'box_of_kundun_3', 'box_kundun_3', 'bok_3', 'kundun+3', 'box+3', 'bok+3'],
+  Kundun4: ['kundun4', 'boxofkundun4', 'bok4', 'box4', 'kundun_4', 'box_of_kundun_4', 'box_kundun_4', 'bok_4', 'kundun+4', 'box+4', 'bok+4'],
+  Kundun5: ['kundun5', 'boxofkundun5', 'bok5', 'box5', 'kundun_5', 'box_of_kundun_5', 'box_kundun_5', 'bok_5', 'kundun+5', 'box+5', 'bok+5'],
 };
 
 // Mapeo estándar de ItemIndex para MU Online Season 6 (Section * 512 + Index)
@@ -4378,6 +4378,21 @@ const JEWEL_TO_ITEM_INDEX = {
   Harmony: 7210,   // Section 14, Index 42 = (14 * 512) + 42
   LowStone: 7211,  // Section 14, Index 43 = (14 * 512) + 43
   HighStone: 7212, // Section 14, Index 44 = (14 * 512) + 44
+  // Box of Kundun +1 a +5 (Section 14, Index 11 = 7179)
+  Kundun1: 7179,
+  Kundun2: 7179,
+  Kundun3: 7179,
+  Kundun4: 7179,
+  Kundun5: 7179,
+};
+
+// Mapeo de niveles para Box of Kundun en esquemas normalizados (Louis S6 y MSPro: 8..12 por defecto; fallback 1..5)
+const KUNDUN_LEVELS = {
+  Kundun1: { defaultLevel: 8, altLevel: 1 },
+  Kundun2: { defaultLevel: 9, altLevel: 2 },
+  Kundun3: { defaultLevel: 10, altLevel: 3 },
+  Kundun4: { defaultLevel: 11, altLevel: 4 },
+  Kundun5: { defaultLevel: 12, altLevel: 5 },
 };
 
 const ITEM_INDEX_TO_JEWEL = {
@@ -4623,11 +4638,38 @@ app.post('/api/character/jewel-bank', async (req, res) => {
               const countVal = Math.max(0, parseInt(rawVal, 10) || 0);
               const itemIndex = key === 'Life' ? lifeItemIndex : defaultIndex;
 
+              // Determinar nivel exacto (Kundun 1..5: 8..12 en Louis/MSPro o 1..5; joyas estándar: 0)
+              let itemLevel = 0;
+              const kConf = KUNDUN_LEVELS[key];
+              if (kConf) {
+                itemLevel = kConf.defaultLevel;
+                if (levelCol) {
+                  try {
+                    const existingLvlCheck = await pool.request()
+                      .input('Acc', sql.VarChar(50), accountId.trim())
+                      .input('Idx', sql.Int, itemIndex)
+                      .input('AltLvl', sql.Int, kConf.altLevel)
+                      .query(`
+                        SELECT TOP 1 [${levelCol}] AS ExistingLvl
+                        FROM [${targetTable}]
+                        WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                           OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+                           OR [${accColName}] = @Acc)
+                          AND [${indexCol}] = @Idx
+                          AND [${levelCol}] = @AltLvl;
+                      `);
+                    if (existingLvlCheck.recordset && existingLvlCheck.recordset.length > 0) {
+                      itemLevel = kConf.altLevel;
+                    }
+                  } catch (_) {}
+                }
+              }
+
               const extraCols = [];
               const extraVals = [];
               if (levelCol) {
                 extraCols.push(`[${levelCol}]`);
-                extraVals.push('0');
+                extraVals.push('@Lvl');
               }
               if (autoPickCol) {
                 extraCols.push(`[${autoPickCol}]`);
@@ -4635,33 +4677,41 @@ app.post('/api/character/jewel-bank', async (req, res) => {
               }
               const insertColsStr = [`[${accColName}]`, `[${indexCol}]`, `[${countCol}]`, ...extraCols].join(', ');
               const insertValsStr = ['@Acc', '@Idx', '@Cnt', ...extraVals].join(', ');
+              const levelWhereClause = levelCol ? `AND [${levelCol}] = @Lvl` : '';
 
-              await pool.request()
+              const reqItem = pool.request()
                 .input('Acc', sql.VarChar(50), accountId.trim())
                 .input('Idx', sql.Int, itemIndex)
-                .input('Cnt', sql.Int, countVal)
-                .query(`
-                  IF EXISTS (
-                    SELECT 1 FROM [${targetTable}]
-                    WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
-                       OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
-                       OR [${accColName}] = @Acc)
-                      AND [${indexCol}] = @Idx
-                  )
-                  BEGIN
-                    UPDATE [${targetTable}]
-                    SET [${countCol}] = @Cnt
-                    WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
-                       OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
-                       OR [${accColName}] = @Acc)
-                      AND [${indexCol}] = @Idx;
-                  END
-                  ELSE IF @Cnt > 0
-                  BEGIN
-                    INSERT INTO [${targetTable}] (${insertColsStr})
-                    VALUES (${insertValsStr});
-                  END
-                `);
+                .input('Cnt', sql.Int, countVal);
+
+              if (levelCol) {
+                reqItem.input('Lvl', sql.Int, itemLevel);
+              }
+
+              await reqItem.query(`
+                IF EXISTS (
+                  SELECT 1 FROM [${targetTable}]
+                  WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                     OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+                     OR [${accColName}] = @Acc)
+                    AND [${indexCol}] = @Idx
+                    ${levelWhereClause}
+                )
+                BEGIN
+                  UPDATE [${targetTable}]
+                  SET [${countCol}] = @Cnt
+                  WHERE (LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
+                     OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
+                     OR [${accColName}] = @Acc)
+                    AND [${indexCol}] = @Idx
+                    ${levelWhereClause};
+                END
+                ELSE IF @Cnt > 0
+                BEGIN
+                  INSERT INTO [${targetTable}] (${insertColsStr})
+                  VALUES (${insertValsStr});
+                END
+              `);
             }
           }
         }
@@ -4670,7 +4720,9 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         const qRows = await pool.request()
           .input('Acc', sql.VarChar(50), accountId.trim())
           .query(`
-            SELECT [${indexCol}] AS ItemIndex, [${countCol}] AS ItemCount
+            SELECT [${indexCol}] AS ItemIndex,
+                   ${levelCol ? `ISNULL([${levelCol}], 0)` : '0'} AS ItemLevel,
+                   [${countCol}] AS ItemCount
             FROM [${targetTable}]
             WHERE LOWER(LTRIM(RTRIM([${accColName}]))) = LOWER(LTRIM(RTRIM(@Acc)))
                OR LTRIM(RTRIM([${accColName}])) = LTRIM(RTRIM(@Acc))
@@ -4698,7 +4750,19 @@ app.post('/api/character/jewel-bank', async (req, res) => {
 
         for (const row of (qRows.recordset || [])) {
           const idx = parseInt(row.ItemIndex, 10);
+          const lvl = parseInt(row.ItemLevel, 10) || 0;
           const cnt = Math.max(0, parseInt(row.ItemCount, 10) || 0);
+
+          // Box of Kundun +1 a +5 (Group 14, Index 11 = 7179)
+          if (idx === 7179 || idx === 11) {
+            if (lvl === 8 || lvl === 1) bankData.Kundun1 = cnt;
+            else if (lvl === 9 || lvl === 2) bankData.Kundun2 = cnt;
+            else if (lvl === 10 || lvl === 3) bankData.Kundun3 = cnt;
+            else if (lvl === 11 || lvl === 4) bankData.Kundun4 = cnt;
+            else if (lvl === 12 || lvl === 5) bankData.Kundun5 = cnt;
+            continue;
+          }
+
           const jewelKey = ITEM_INDEX_TO_JEWEL[idx];
           if (jewelKey && bankData[jewelKey] !== undefined) {
             bankData[jewelKey] = cnt;
@@ -10056,7 +10120,7 @@ app.get('/api/auth/check-status', (req, res) => {
 // ==========================================
 
 const _gIdP = ['117483527911', 'amuanqmseih4d75kom65dfjvu527hm8n', 'apps', 'googleusercontent', 'com'];
-const _gSecP = ['GOCSPX', 'dywYtI4AUO8RYv2UQJreSOvGTels'];
+const _gSecP = ['GOCSPX', 'dywYtl4AUO8RYv2UQJreSOvGTels'];
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || (_gIdP[0] + '-' + _gIdP[1] + '.' + _gIdP.slice(2).join('.'));
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || _gSecP.join('-');
 
