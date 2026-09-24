@@ -381,6 +381,23 @@ export const LoginScreen = () => {
                 },
               ]
             );
+          } else if (
+            loginRes.error?.includes('concluido') || 
+            loginRes.error?.includes('finalizado') || 
+            loginRes.error?.includes('LICENCIA_EXPIRADA') ||
+            loginRes.error?.includes('tiempo extra')
+          ) {
+            Alert.alert(
+              'Período de Licencia Finalizado',
+              loginRes.error,
+              [
+                {
+                  text: '⭐ Solicitar PRO / Extra Demo',
+                  onPress: () => openProModal(),
+                },
+                { text: 'Entendido', style: 'cancel' }
+              ]
+            );
           } else {
             Alert.alert('Acceso Denegado', loginRes.error || 'Nombre de usuario o contraseña incorrectos.');
           }

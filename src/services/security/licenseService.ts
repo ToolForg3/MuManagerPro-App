@@ -159,16 +159,19 @@ export class LicenseService {
       this.notifyListeners();
     }
 
-    // Verificar expiración de período de prueba o licencia PRO
+    // Verificar expiración de período de prueba o licencia PRO (sin bloqueo automático; bloqueo solo manual por admin)
     if ((res as any).expiresAt) {
       const expiryTime = new Date((res as any).expiresAt).getTime();
       if (Date.now() > expiryTime) {
         const wasExpiredAlready = !!this.currentStatus.isExpired;
-        this.currentStatus.isBlocked = true;
         this.currentStatus.isExpired = true;
-        this.currentStatus.blockReason = res.mode === 'PRO'
-          ? 'Tu licencia PRO por tiempo ha vencido. Contacta a soporte para renovar.'
-          : 'El período de prueba para este celular ha expirado.';
+        // Solo marcar isBlocked si el servidor indicó res.blocked === true (bloqueo manual del administrador)
+        this.currentStatus.isBlocked = !!res.blocked;
+        this.currentStatus.blockReason = res.blocked
+          ? ((res as any).reason || 'Dispositivo bloqueado por el administrador.')
+          : (res.mode === 'PRO'
+              ? 'Tu licencia PRO por tiempo ha finalizado. Contacta al administrador para renovar o solicitar tiempo extra de demo.'
+              : 'El período de prueba para este celular ha finalizado. Contacta al administrador para adquirir una licencia PRO o solicitar tiempo extra de demo.');
         if (res.mode === 'PRO') {
           this.currentStatus.isActivated = false;
           this.currentStatus.plan = 'DEMO';
@@ -178,9 +181,9 @@ export class LicenseService {
           AsyncStorage.removeItem(LICENSE_STORAGE_KEY).catch(() => {});
         }
         this.notifyListeners();
-        if (!wasExpiredAlready) {
+        if (!wasExpiredAlready && !res.blocked) {
           Alert.alert(
-            'Vigencia Expirada',
+            'Período Finalizado',
             this.currentStatus.blockReason,
             [{ text: 'Entendido' }]
           );

@@ -100,6 +100,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const isDemo = await AsyncStorage.getItem(DEMO_SESSION_KEY);
         if (session === 'active') {
           if (isDemo === 'true') {
+            if (LicenseService.isPro()) {
+              setIsDemoSession(false);
+              setIsDemoExpired(false);
+              await AsyncStorage.removeItem(DEMO_SESSION_KEY);
+              await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
+              setUserEmail(storedEmail || 'demo@muonline.local');
+              setUserName(storedUser || 'Demo');
+              SqlClient.setActiveUser(storedUser || storedEmail || 'Demo');
+              setIsAuthenticated(true);
+              return;
+            }
             const startStr = await AsyncStorage.getItem(DEMO_START_TIME_KEY);
             const startTime = startStr ? parseInt(startStr, 10) : 0;
             const elapsed = Date.now() - startTime;
@@ -182,13 +193,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout();
       }
     });
+    const unsubLicense = LicenseService.subscribe((status) => {
+      if (status.isActivated && status.plan === 'PRO' && !status.isBlocked) {
+        setIsDemoSession(false);
+        setIsDemoExpired(false);
+        AsyncStorage.removeItem(DEMO_SESSION_KEY).catch(() => {});
+        AsyncStorage.removeItem(DEMO_START_TIME_KEY).catch(() => {});
+      }
+    });
+
+    return () => {
+      unsubLicense();
+    };
   }, []);
 
   // Temporizador regresivo de 10 minutos para la sesión de Modo Demo
   useEffect(() => {
     let interval: any = null;
     if (isAuthenticated && isDemoSession) {
+      if (LicenseService.isPro()) {
+        setIsDemoSession(false);
+        setIsDemoExpired(false);
+        AsyncStorage.removeItem(DEMO_SESSION_KEY).catch(() => {});
+        AsyncStorage.removeItem(DEMO_START_TIME_KEY).catch(() => {});
+        return;
+      }
+
       interval = setInterval(async () => {
+        if (LicenseService.isPro()) {
+          if (interval) clearInterval(interval);
+          setIsDemoSession(false);
+          setIsDemoExpired(false);
+          AsyncStorage.removeItem(DEMO_SESSION_KEY).catch(() => {});
+          AsyncStorage.removeItem(DEMO_START_TIME_KEY).catch(() => {});
+          return;
+        }
+
         const startStr = await AsyncStorage.getItem(DEMO_START_TIME_KEY);
         const startTime = startStr ? parseInt(startStr, 10) : Date.now();
         const elapsed = Date.now() - startTime;
@@ -267,7 +307,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else if (!res.ok) {
         return {
           success: false,
-          error: data.error || 'Usuario o contraseña incorrectos.',
+          error: data.message || data.error || 'Usuario o contraseña incorrectos.',
         };
       }
     } catch (e) {
@@ -329,9 +369,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginDemo = async (): Promise<{ success: boolean; error?: string }> => {
     try {
+      const isDevicePro = LicenseService.isPro();
       const hwid = await SecurityService.getDeviceHwid();
       const localConsumed = await AsyncStorage.getItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`);
-      if (localConsumed === 'true') {
+      if (localConsumed === 'true' && !isDevicePro) {
         return {
           success: false,
           error: 'El tiempo de acceso rápido de 10 minutos para este dispositivo ya ha sido utilizado. Crea tu cuenta para disfrutar de 72 horas de prueba.',
@@ -357,17 +398,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           token = data.token;
           SqlClient.setSessionToken(data.token);
         } else if (!res.ok || !data.success) {
-          if (res.status === 403 || data.error === 'QUICK_DEMO_EXPIRED') {
+          if (!isDevicePro && (res.status === 403 || data.error === 'QUICK_DEMO_EXPIRED')) {
             await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
             return {
               success: false,
               error: data.message || 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.',
             };
           }
-          return {
-            success: false,
-            error: data.message || data.error || 'No se pudo iniciar la sesión demo.',
-          };
+          if (!isDevicePro) {
+            return {
+              success: false,
+              error: data.message || data.error || 'No se pudo iniciar la sesión demo.',
+            };
+          }
         }
       } catch (e) {
         console.warn('Remote demo login error, checking local fallback', e);
@@ -379,26 +422,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       setIsAuthenticated(true);
-      setUserName('Demo');
-      setUserEmail('demo@muonline.local');
-      SqlClient.setActiveUser('Demo');
       setRememberUser(false);
       setRememberEmail(false);
-      setIsDemoSession(true);
-      setDemoRemainingSeconds(DEMO_DURATION_SECONDS);
-      setIsDemoExpired(false);
 
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
-      await AsyncStorage.setItem(DEMO_SESSION_KEY, 'true');
-      await AsyncStorage.setItem(DEMO_START_TIME_KEY, Date.now().toString());
+      if (isDevicePro) {
+        setUserName('PRO User');
+        setUserEmail('pro@muonline.local');
+        SqlClient.setActiveUser('PRO User');
+        setIsDemoSession(false);
+        setIsDemoExpired(false);
+        await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
+        await AsyncStorage.removeItem(DEMO_SESSION_KEY);
+        await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
+      } else {
+        setUserName('Demo');
+        setUserEmail('demo@muonline.local');
+        SqlClient.setActiveUser('Demo');
+        setIsDemoSession(true);
+        setDemoRemainingSeconds(DEMO_DURATION_SECONDS);
+        setIsDemoExpired(false);
+        await AsyncStorage.setItem(AUTH_STORAGE_KEY, 'active');
+        await AsyncStorage.setItem(DEMO_SESSION_KEY, 'true');
+        await AsyncStorage.setItem(DEMO_START_TIME_KEY, Date.now().toString());
+      }
 
       const currentLicense = LicenseService.getStatus();
       SqlClient.sendTelemetryPing(
         hwid,
-        currentLicense.plan || 'DEMO',
+        currentLicense.plan || (isDevicePro ? 'PRO' : 'DEMO'),
         currentLicense.licenseKey,
-        'demo@muonline.local',
-        'Demo'
+        isDevicePro ? 'pro@muonline.local' : 'demo@muonline.local',
+        isDevicePro ? 'PRO User' : 'Demo'
       ).catch(() => {});
 
       return { success: true };

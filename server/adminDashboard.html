@@ -369,6 +369,8 @@
     .badge-pro { background: rgba(63, 207, 142, 0.15); color: var(--green-bright); border: 1px solid var(--green-bright); }
     .badge-blocked { background: rgba(211, 47, 47, 0.15); color: var(--red-bright); border: 1px solid var(--red-bright); }
     .badge-expired { background: rgba(226, 112, 58, 0.15); color: #FF884D; border: 1px solid #E2703A; }
+    .badge-expired-pro { background: rgba(255, 179, 0, 0.15); color: #FFB300; border: 1px solid #FFB300; font-weight: 700; }
+    .badge-expired-demo { background: rgba(226, 112, 58, 0.15); color: #FF884D; border: 1px solid #E2703A; font-weight: 700; }
     .badge-admin { background: rgba(255, 87, 34, 0.15); color: #FF7043; border: 1px solid var(--orange); }
     .badge-user { background: rgba(41, 182, 246, 0.15); color: var(--blue); border: 1px solid var(--blue); }
 
@@ -1361,6 +1363,7 @@
           <div class="notif-filters">
             <button type="button" class="notif-filter-btn active" data-filter="all" onclick="filterNotifications('all')">Todos (<span id="notif-count-all">0</span>)</button>
             <button type="button" class="notif-filter-btn" data-filter="requests" onclick="filterNotifications('requests')">⭐ Solicitudes (<span id="notif-count-requests">0</span>)</button>
+            <button type="button" class="notif-filter-btn" data-filter="expired" onclick="filterNotifications('expired')">⏳ Vencidos (<span id="notif-count-expired">0</span>)</button>
             <button type="button" class="notif-filter-btn" data-filter="blocks" onclick="filterNotifications('blocks')">⛔ Bloqueos (<span id="notif-count-blocks">0</span>)</button>
             <button type="button" class="notif-filter-btn" data-filter="revoked" onclick="filterNotifications('revoked')">⚠️ Revocadas (<span id="notif-count-revoked">0</span>)</button>
             <button type="button" class="notif-filter-btn" data-filter="security" onclick="filterNotifications('security')">🚨 Seguridad (<span id="notif-count-security">0</span>)</button>
@@ -1430,8 +1433,13 @@
       <div class="metric-value" id="metric-demo">0</div>
       <span class="metric-hint">Ver Período Demo →</span>
     </div>
-    <div class="metric-card red" onclick="selectMainModule('mod-devices', 'tab-all-licenses')" title="Clic para ver Excluidos o Bloqueados">
-      <div class="metric-label">⛔ Bloqueados / Expirados</div>
+    <div class="metric-card yellow" onclick="selectMainModule('mod-devices', 'tab-devices'); setDeviceView('expired');" title="Clic para ver Licencias PRO o Pruebas Vencidas (sin bloqueo)">
+      <div class="metric-label">⏳ Vencidos (Renovación)</div>
+      <div class="metric-value" id="metric-expired" style="color: #FFB300;">0</div>
+      <span class="metric-hint">Extender o Bloquear →</span>
+    </div>
+    <div class="metric-card red" onclick="selectMainModule('mod-devices', 'tab-devices')" title="Clic para ver Dispositivos Bloqueados Manualmente por el Administrador">
+      <div class="metric-label">⛔ Bloqueados (Admin)</div>
       <div class="metric-value" id="metric-blocked">0</div>
       <span class="metric-hint">Ver Bloqueados →</span>
     </div>
@@ -1587,6 +1595,9 @@
           <button id="view-btn-tests" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('tests')">
             🧪 Pruebas & Tests <span id="count-tests" class="badge" style="background: rgba(255, 152, 0, 0.2); color: #FFB74D; margin-left: 6px; font-weight: 700;">0</span>
           </button>
+          <button id="view-btn-expired" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('expired')">
+            ⏳ Vencidos <span id="count-expired" class="badge" style="background: rgba(255, 179, 0, 0.2); color: #FFB300; margin-left: 6px; font-weight: 700;">0</span>
+          </button>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
           <button class="btn btn-dark btn-sm" onclick="openPurgeInactiveModal()" title="Eliminar celulares desconectados por varios días">🧹 Purgar Inactivos</button>
@@ -1595,6 +1606,18 @@
             <button class="btn btn-red btn-sm" onclick="purgeTestDevices()" title="Eliminar definitivamente todos los dispositivos de prueba">🗑️ Purgar Todos los Tests</button>
           </div>
         </div>
+      </div>
+
+      <!-- Banner de Notificación de Dispositivos con Licencia o Prueba Vencida -->
+      <div id="dev-expired-alert-banner" style="display:none; background:rgba(255,179,0,0.1); border:1px solid rgba(255,179,0,0.35); border-radius:6px; padding:10px 14px; margin-bottom:14px; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">⏳</span>
+          <div>
+            <div style="color:#FAF6EE; font-size:12px; font-weight:700;">Dispositivos con Licencia o Período de Prueba Finalizado (<span id="dev-expired-alert-count">0</span>)</div>
+            <div style="color:#C8BEAF; font-size:11px;">Estos celulares <strong>no han sido bloqueados</strong>; el usuario ve el aviso para solicitar PRO o tiempo extra. Puedes extender su vigencia (+24h, +3d, +7d) o pulsar "Bloquear" si deseas suspender su acceso.</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-warning btn-sm" style="font-size:11px; padding:4px 10px; white-space:nowrap;" onclick="setDeviceView('expired')">Ver Vencidos</button>
       </div>
 
       <div class="table-container">
@@ -2563,7 +2586,35 @@
         });
       }
 
-      // 2. Dispositivos Bloqueados (Kill-Switch o Suspendidos)
+      // 2. Dispositivos con Licencia o Prueba Vencida (Sin bloqueo manual, pendientes de acción del administrador)
+      if (Array.isArray(allDevicesCache)) {
+        allDevicesCache.forEach(dev => {
+          const isExp = dev && dev.expiresAt && new Date(dev.expiresAt).getTime() < Date.now();
+          if (isExp && !dev.blocked && !locallyDeletedHwids.has(String(dev.hwid).toUpperCase())) {
+            const id = `exp_${dev.hwid}`;
+            const devTime = dev.expiresAt ? new Date(dev.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            const isPro = dev.mode === 'PRO';
+            events.push({
+              id,
+              category: 'expired',
+              typeBadge: isPro ? 'PRO VENCIDO' : 'DEMO VENCIDO',
+              typeBadgeBg: isPro ? 'rgba(255, 179, 0, 0.2)' : 'rgba(255, 82, 82, 0.2)',
+              typeBadgeColor: isPro ? '#FFB300' : '#FF8A80',
+              icon: '⏳',
+              title: `${isPro ? 'Licencia PRO' : 'Prueba Demo'} Vencida: ${dev.hwid}`,
+              desc: `Venció el: ${new Date(dev.expiresAt).toLocaleString()}${dev.currentUser ? ' • Usuario: ' + dev.currentUser : ''}. Puedes extender tiempo (+24h, +3d, +7d) o bloquear manualmente si lo deseas.`,
+              time: devTime,
+              rawTime: new Date(dev.expiresAt).getTime(),
+              targetTab: 'tab-devices',
+              targetId: dev.hwid,
+              hwid: dev.hwid,
+              unread: !dismissedNotificationIds.has(id)
+            });
+          }
+        });
+      }
+
+      // 3. Dispositivos Bloqueados (Kill-Switch o Suspendidos)
       if (Array.isArray(allDevicesCache)) {
         allDevicesCache.forEach(dev => {
           if (dev && dev.blocked && !locallyDeletedHwids.has(String(dev.hwid).toUpperCase())) {
@@ -2689,6 +2740,7 @@
       }
 
       const reqCount = unreadEvents.filter(e => e.category === 'requests').length;
+      const expiredCount = unreadEvents.filter(e => e.category === 'expired').length;
       const blockCount = unreadEvents.filter(e => e.category === 'blocks').length;
       const revokedCount = unreadEvents.filter(e => e.category === 'revoked').length;
       const secCount = unreadEvents.filter(e => e.category === 'security').length;
@@ -2697,6 +2749,8 @@
       if (elAll) elAll.innerText = unreadCount;
       const elReq = document.getElementById('notif-count-requests');
       if (elReq) elReq.innerText = reqCount;
+      const elExp = document.getElementById('notif-count-expired');
+      if (elExp) elExp.innerText = expiredCount;
       const elBlk = document.getElementById('notif-count-blocks');
       if (elBlk) elBlk.innerText = blockCount;
       const elRev = document.getElementById('notif-count-revoked');
@@ -3752,7 +3806,7 @@
 
     function setDeviceView(view) {
       currentDeviceView = view;
-      ['all', 'online', 'clients', 'tests'].forEach(v => {
+      ['all', 'online', 'clients', 'tests', 'expired'].forEach(v => {
         const b = document.getElementById(`view-btn-${v}`);
         if (b) {
           if (v === view) b.classList.add('active');
@@ -3855,8 +3909,13 @@
         badgeClass = 'badge-blocked';
         statusText = 'BLOQUEADO';
       } else if (isExpired) {
-        badgeClass = 'badge-expired';
-        statusText = 'EXPIRADO';
+        if (dev.mode === 'PRO') {
+          badgeClass = 'badge-expired-pro';
+          statusText = '⏳ PRO VENCIDO';
+        } else {
+          badgeClass = 'badge-expired-demo';
+          statusText = '⏳ PRUEBA VENCIDA';
+        }
       } else if (dev.mode === 'PRO') {
         badgeClass = 'badge-pro';
         statusText = 'LICENCIA PRO';
@@ -3982,11 +4041,13 @@
       let total = list.length;
       let demo = 0;
       let pro = 0;
-      let blocked = 0;
+      let blockedCount = 0;
+      let expiredCount = 0;
 
       let countClients = 0;
       let countTests = 0;
       let countOnline = 0;
+      let countExpired = 0;
       let countAll = list.length;
 
       list.forEach(d => {
@@ -3995,19 +4056,39 @@
         if (d.isOnline) countOnline++;
 
         const isExp = d.expiresAt && new Date(d.expiresAt) < new Date();
-        if (d.blocked || isExp) blocked++;
-        else if (d.mode === 'PRO') pro++;
-        else demo++;
+        if (d.blocked) {
+          blockedCount++;
+        } else if (isExp) {
+          expiredCount++;
+          countExpired++;
+        }
+
+        if (d.mode === 'PRO' && !d.blocked && !isExp) pro++;
+        else if (d.mode !== 'PRO' && !d.blocked && !isExp) demo++;
       });
 
       updateTextIfDifferent('metric-total', total);
       updateTextIfDifferent('metric-demo', demo);
       updateTextIfDifferent('metric-pro', pro);
-      updateTextIfDifferent('metric-blocked', blocked);
+      updateTextIfDifferent('metric-expired', expiredCount);
+      updateTextIfDifferent('metric-blocked', blockedCount);
       updateTextIfDifferent('count-clients', countClients);
       updateTextIfDifferent('count-tests', countTests);
       updateTextIfDifferent('count-online', countOnline);
+      updateTextIfDifferent('count-expired', countExpired);
       updateTextIfDifferent('count-all', countAll);
+
+      // Banner de notificación en vivo para dispositivos vencidos
+      const expiredAlertBanner = document.getElementById('dev-expired-alert-banner');
+      if (expiredAlertBanner) {
+        if (expiredCount > 0) {
+          expiredAlertBanner.style.display = 'flex';
+          const alertCountSpan = document.getElementById('dev-expired-alert-count');
+          if (alertCountSpan) alertCountSpan.innerText = expiredCount;
+        } else {
+          expiredAlertBanner.style.display = 'none';
+        }
+      }
 
       let displayList = list;
       if (currentDeviceView === 'clients') {
@@ -4016,6 +4097,8 @@
         displayList = list.filter(d => !!d.isTest);
       } else if (currentDeviceView === 'online') {
         displayList = list.filter(d => !!d.isOnline);
+      } else if (currentDeviceView === 'expired') {
+        displayList = list.filter(d => !d.blocked && d.expiresAt && new Date(d.expiresAt) < new Date());
       }
 
       const tbody = document.getElementById('devices-body');
@@ -4029,6 +4112,8 @@
           emptyMsg = 'No hay celulares de clientes registrados en este momento.';
         } else if (currentDeviceView === 'online') {
           emptyMsg = 'No hay celulares conectados activamente en este instante.';
+        } else if (currentDeviceView === 'expired') {
+          emptyMsg = '✨ No hay dispositivos con vigencia vencida. ¡Todas las licencias y pruebas están al día!';
         }
         if (!tbody.querySelector('.empty-devices-cell') || tbody.dataset.emptyView !== currentDeviceView || tbody.querySelector('#devices-loading-row')) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-devices-cell" style="text-align:center; padding: 28px; color: var(--muted);">${emptyMsg}</td></tr>`;

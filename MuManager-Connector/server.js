@@ -1162,11 +1162,6 @@ app.use((req, res, next) => {
     const devices = loadDevices();
     const dev = devices[hwid];
     if (dev) {
-      if (dev.expiresAt && new Date(dev.expiresAt) < new Date() && !dev.blocked) {
-        dev.blocked = true;
-        dev.blockReason = 'Período de prueba finalizado.';
-        saveDevices(devices);
-      }
       if (dev.blocked) {
         addAuditLog('SQL_BLOCKED', hwid, clientIp, `Acceso bloqueado: ${dev.blockReason || 'Dispositivo revocado'}`, 'BLOCKED');
         return res.status(403).json({
@@ -8144,11 +8139,19 @@ app.post('/api/telemetry/ping', (req, res) => {
     if (deviceModel) devices[hwid].deviceModel = deviceModel;
     if (deviceBrand) devices[hwid].deviceBrand = deviceBrand;
 
-    // Verificar si expiró la prueba
-    if (devices[hwid].expiresAt && new Date(devices[hwid].expiresAt) < new Date() && !devices[hwid].blocked) {
-      devices[hwid].blocked = true;
-      devices[hwid].blockReason = 'Período de prueba finalizado. Adquiere una licencia PRO.';
-      addAuditLog('EXPIRED', hwid, clientIp, 'Período de prueba vencido. Celular bloqueado automáticamente.');
+    // Verificar si expiró PRO o DEMO (sin bloqueo automático; solo el administrador decide bloquear manualmente)
+    const isDeviceExpired = devices[hwid].expiresAt && new Date(devices[hwid].expiresAt) < new Date();
+    if (isDeviceExpired) {
+      if (devices[hwid].mode === 'PRO') {
+        devices[hwid].mode = 'DEMO';
+        devices[hwid].forceDemo = true;
+        devices[hwid].licenseKey = '';
+        devices[hwid].expireReason = 'Tu licencia PRO por tiempo ha vencido. Contacta al administrador para renovar o solicitar tiempo extra de demo.';
+        addAuditLog('PRO_EXPIRED', hwid, clientIp, 'Licencia PRO por tiempo vencida. Celular en espera de renovación (sin bloqueo automático).');
+      } else {
+        devices[hwid].expireReason = 'Período de prueba finalizado. Contacta al administrador para adquirir PRO o solicitar tiempo extra de demo.';
+        addAuditLog('EXPIRED', hwid, clientIp, 'Período de prueba finalizado. Celular en espera de renovación (sin bloqueo automático).');
+      }
     }
   }
 
@@ -8490,26 +8493,28 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
       if (deviceBrand && !dev.deviceBrand) dev.deviceBrand = String(deviceBrand).trim();
       if (deviceModel && !dev.deviceModel) dev.deviceModel = String(deviceModel).trim();
       if (isEmulator !== undefined && dev.isEmulator === undefined) dev.isEmulator = !!isEmulator;
-      if (dev.quickDemoUsed) {
-        return res.status(403).json({
-          success: false,
-          error: 'QUICK_DEMO_EXPIRED',
-          message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
-        });
-      }
-      if (dev.quickDemoExpiresAt && new Date(dev.quickDemoExpiresAt).getTime() <= Date.now()) {
-        dev.quickDemoUsed = true;
-        saveDevices(devices);
-        return res.status(403).json({
-          success: false,
-          error: 'QUICK_DEMO_EXPIRED',
-          message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
-        });
-      }
-      if (!dev.quickDemoStartedAt) {
-        dev.quickDemoStartedAt = new Date().toISOString();
-        dev.quickDemoExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        saveDevices(devices);
+      if (dev.mode !== 'PRO') {
+        if (dev.quickDemoUsed) {
+          return res.status(403).json({
+            success: false,
+            error: 'QUICK_DEMO_EXPIRED',
+            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+          });
+        }
+        if (dev.quickDemoExpiresAt && new Date(dev.quickDemoExpiresAt).getTime() <= Date.now()) {
+          dev.quickDemoUsed = true;
+          saveDevices(devices);
+          return res.status(403).json({
+            success: false,
+            error: 'QUICK_DEMO_EXPIRED',
+            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+          });
+        }
+        if (!dev.quickDemoStartedAt) {
+          dev.quickDemoStartedAt = new Date().toISOString();
+          dev.quickDemoExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+          saveDevices(devices);
+        }
       }
     }
   }
@@ -8614,6 +8619,28 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
   // Actualización transparente de hash legado SHA-256 a PBKDF2 (H05)
   if (authResult.needsUpgrade) {
     user.passwordHash = await hashPassword(cleanPass);
+  }
+
+  const devices = loadDevices();
+  const dev = cleanHwid ? devices[cleanHwid] : null;
+  if (dev) {
+    if (dev.blocked) {
+      return res.status(403).json({
+        success: false,
+        blocked: true,
+        error: 'DISPOSITIVO_BLOQUEADO',
+        message: dev.blockReason || 'Tu dispositivo ha sido bloqueado por el administrador.'
+      });
+    }
+    const isExpired = dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now();
+    if (isExpired && user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        expired: true,
+        error: 'LICENCIA_EXPIRADA',
+        message: 'Tu tiempo de prueba o licencia PRO para este dispositivo ha concluido. Por favor comunícate con el administrador para adquirir una licencia PRO o solicitar tiempo extra de demo.'
+      });
+    }
   }
 
   failedLogins.delete(clientIp);
@@ -9052,10 +9079,16 @@ app.get('/api/admin/devices', (req, res) => {
   const now = new Date();
   const nowMs = Date.now();
   const list = Object.values(devices).map(dev => {
-    if (dev.expiresAt && new Date(dev.expiresAt) < now && !dev.blocked) {
-      dev.blocked = true;
-      dev.blockReason = 'Período de prueba finalizado.';
-      modified = true;
+    if (dev.expiresAt && new Date(dev.expiresAt) < now) {
+      if (dev.mode === 'PRO') {
+        dev.mode = 'DEMO';
+        dev.forceDemo = true;
+        dev.licenseKey = '';
+        dev.expireReason = 'Licencia PRO por tiempo finalizada. Contacta a soporte para renovar.';
+        modified = true;
+      } else {
+        dev.expireReason = 'Período de prueba finalizado.';
+      }
     }
     const lastSeenMs = dev.lastSeen ? new Date(dev.lastSeen).getTime() : 0;
     const isOnline = (nowMs - lastSeenMs) < 75000; // Activo en los últimos 75 segundos

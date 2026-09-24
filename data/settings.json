@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.6",
+  "latestVersion": "2.1.7",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.6 (Build 118) - Centro de Notificaciones en Vivo, Estandarización de Licencias y Blindaje:\n• NOTIFICACIONES EN VIVO: Centro de Notificaciones integrado en el Dashboard Administrativo con conteo de alertas en tiempo real, desglose por categoría (solicitudes PRO, bloqueos, revocaciones, seguridad) y actualización reactiva.\n• PRECISIÓN DE LICENCIAS: Estandarización de telemetría con desglose exacto de días, horas y minutos restantes en la aplicación móvil y panel web.\n• REVOCACIÓN AUTOMÁTICA DE IMPEDIMENTOS: Al conceder o reactivar licencias PRO, el sistema purga automáticamente lápidas, listas de revocación y bloqueos residuales para acceso inmediato.\n• ESTABILIDAD Y COMPATIBILIDAD: Blindaje integral en pasarela en la nube y servidor conector local para emuladores Season 6 (Louis Update 40 y MSPro).",
+  "updateChangelog": "MuManager PRO v2.1.7 (Build 119) - Expiración Sin Bloqueo, Renovación Amigable y Precisión de Tiempos:\n• EXPIRACIÓN SIN AUTO-BLOQUEO: Al concluir el período PRO o de Prueba, el dispositivo ya no se bloquea automáticamente. El usuario permanece en la pantalla de Login con aviso informativo.\n• SOLICITUD DIRECTA DE RENOVACIÓN: Integración directa en Login del botón para solicitar licencia PRO o tiempo adicional de demo hacia el Panel de Control.\n• PANEL DE CONTROL MEJORADO: Tarjetas KPI, filtros en vivo, badges distintivos (ámbar/brasa) y centro de notificaciones para dispositivos vencidos, preservando el bloqueo manual para el administrador.\n• TIEMPOS Y TELEMETRÍA PRECISOS: Cálculo universal UTC sin desfases de huso horario y extensiones de tiempo acumulativas.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.6 (Build 118)",
+  "updateTitle": "MuManager PRO v2.1.7 (Build 119)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 118,
+  "versionCode": 119,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.6 (Build 118) - Centro de Notificaciones en Vivo, Estandarización de Licencias y Blindaje:\n• NOTIFICACIONES EN VIVO: Centro de Notificaciones integrado en el Dashboard Administrativo con conteo de alertas en tiempo real, desglose por categoría (solicitudes PRO, bloqueos, revocaciones, seguridad) y actualización reactiva.\n• PRECISIÓN DE LICENCIAS: Estandarización de telemetría con desglose exacto de días, horas y minutos restantes en la aplicación móvil y panel web.\n• REVOCACIÓN AUTOMÁTICA DE IMPEDIMENTOS: Al conceder o reactivar licencias PRO, el sistema purga automáticamente lápidas, listas de revocación y bloqueos residuales para acceso inmediato.\n• ESTABILIDAD Y COMPATIBILIDAD: Blindaje integral en pasarela en la nube y servidor conector local para emuladores Season 6 (Louis Update 40 y MSPro).",
+  "releaseNotes": "MuManager PRO v2.1.7 (Build 119) - Expiración Sin Bloqueo, Renovación Amigable y Precisión de Tiempos:\n• EXPIRACIÓN SIN AUTO-BLOQUEO: Al concluir el período PRO o de Prueba, el dispositivo ya no se bloquea automáticamente. El usuario permanece en la pantalla de Login con aviso informativo.\n• SOLICITUD DIRECTA DE RENOVACIÓN: Integración directa en Login del botón para solicitar licencia PRO o tiempo adicional de demo hacia el Panel de Control.\n• PANEL DE CONTROL MEJORADO: Tarjetas KPI, filtros en vivo, badges distintivos (ámbar/brasa) y centro de notificaciones para dispositivos vencidos, preservando el bloqueo manual para el administrador.\n• TIEMPOS Y TELEMETRÍA PRECISOS: Cálculo universal UTC sin desfases de huso horario y extensiones de tiempo acumulativas.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.6",
-  "buildNumber": 118,
+  "appVersion": "2.1.7",
+  "buildNumber": 119,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.6",
-  "build": 118
+  "version": "2.1.7",
+  "build": 119
 }
