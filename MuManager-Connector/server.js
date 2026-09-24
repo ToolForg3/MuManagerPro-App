@@ -3373,6 +3373,11 @@ const JEWEL_ALIASES = {
   GemStone: ['gemstone', 'gem_stone', 'jewelofgemstone', 'jewelgemstone', 'b_gemstone', 'j_gemstone', 'gemstonecount', '7209', '41'],
   LowStone: ['lowstone', 'low_stone', 'refiningstonelow', 'refininglow', 'lowrefining', 'b_lowstone', 'j_lowstone', 'lowstonecount', '7211', '43'],
   HighStone: ['highstone', 'high_stone', 'refiningstonehigh', 'refininghigh', 'highrefining', 'b_highstone', 'j_highstone', 'highstonecount', '7212', '44'],
+  Kundun1: ['kundun1', 'boxofkundun1', 'bok1', 'box1', 'kundun_1', 'box_of_kundun_1', 'box_kundun_1', 'bok_1'],
+  Kundun2: ['kundun2', 'boxofkundun2', 'bok2', 'box2', 'kundun_2', 'box_of_kundun_2', 'box_kundun_2', 'bok_2'],
+  Kundun3: ['kundun3', 'boxofkundun3', 'bok3', 'box3', 'kundun_3', 'box_of_kundun_3', 'box_kundun_3', 'bok_3'],
+  Kundun4: ['kundun4', 'boxofkundun4', 'bok4', 'box4', 'kundun_4', 'box_of_kundun_4', 'box_kundun_4', 'bok_4'],
+  Kundun5: ['kundun5', 'boxofkundun5', 'bok5', 'box5', 'kundun_5', 'box_of_kundun_5', 'box_kundun_5', 'bok_5'],
 };
 
 // Mapeo estándar de ItemIndex para MU Online Season 6 (Section * 512 + Index)
@@ -3698,6 +3703,11 @@ app.post('/api/character/jewel-bank', async (req, res) => {
           GemStone: 0,
           LowStone: 0,
           HighStone: 0,
+          Kundun1: 0,
+          Kundun2: 0,
+          Kundun3: 0,
+          Kundun4: 0,
+          Kundun5: 0,
         };
 
         for (const row of (qRows.recordset || [])) {
@@ -3802,6 +3812,11 @@ app.post('/api/character/jewel-bank', async (req, res) => {
         GemStone: getVal(rawBank, 'GemStone'),
         LowStone: getVal(rawBank, 'LowStone'),
         HighStone: getVal(rawBank, 'HighStone'),
+        Kundun1: getVal(rawBank, 'Kundun1'),
+        Kundun2: getVal(rawBank, 'Kundun2'),
+        Kundun3: getVal(rawBank, 'Kundun3'),
+        Kundun4: getVal(rawBank, 'Kundun4'),
+        Kundun5: getVal(rawBank, 'Kundun5'),
       };
 
       return { hasTable: true, tableName: targetTable, bank };
@@ -8552,6 +8567,94 @@ app.post('/api/auth/demo-quick-consumed', (req, res) => {
     addAuditLog('DEMO_QUICK_EXPIRED', cleanHwid, req.socket.remoteAddress || '127.0.0.1', 'Prueba rápida de 10 minutos consumida por dispositivo');
   }
   res.json({ success: true });
+});
+
+// Endpoint público GET para comprobar si una cuenta ya fue activada vía web
+app.get('/api/auth/check-status', (req, res) => {
+  try {
+    const rawId = req.query.email || req.query.username || req.query.id;
+    if (!rawId) {
+      return res.status(400).json({ success: false, error: 'Identificador requerido' });
+    }
+    const cleanId = String(rawId).trim().toLowerCase();
+    const users = loadUsers();
+    const user = users.find(u =>
+      (u.email && u.email.toLowerCase() === cleanId) ||
+      (u.username && u.username.toLowerCase() === cleanId)
+    );
+    if (!user) {
+      return res.json({ success: true, exists: false, active: false });
+    }
+    return res.json({
+      success: true,
+      exists: true,
+      active: user.status === 'ACTIVE',
+      status: user.status || 'PENDING_VERIFICATION',
+      email: user.email,
+      username: user.username,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Error verificando estado' });
+  }
+});
+
+// Validación rápida y ligera de token de sesión sin incurrir en consultas SQL pesadas
+app.post('/api/auth/validate-session', (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'] || req.headers['x-session-token'];
+    const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : (req.body && req.body.token ? String(req.body.token).trim() : '');
+    const clientHwid = (req.headers['x-device-hwid'] || (req.body && req.body.hwid) || '').trim().toUpperCase();
+
+    if (!token) {
+      return res.status(401).json({ success: false, valid: false, error: 'TOKEN_REQUERIDO' });
+    }
+
+    const decoded = verifySessionToken(token);
+    if (!decoded) {
+      return res.status(401).json({ success: false, valid: false, error: 'TOKEN_INVALIDO_O_EXPIRADO' });
+    }
+
+    const tokenHwid = decoded.hwid ? String(decoded.hwid).trim().toUpperCase() : '';
+    if (clientHwid && tokenHwid && clientHwid !== tokenHwid) {
+      return res.status(403).json({ success: false, valid: false, error: 'HWID_MISMATCH' });
+    }
+
+    if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
+      const tombstones = loadTombstones();
+      const cleanEmail = String(decoded.sub).toLowerCase().trim();
+      if (tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
+        return res.status(401).json({ success: false, valid: false, error: 'USUARIO_NO_EXISTE' });
+      }
+
+      const allUsers = loadUsers();
+      const userRecord = allUsers.find(u =>
+        (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+        (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+      );
+
+      if (userRecord && (userRecord.status === 'BLOCKED' || userRecord.blocked)) {
+        return res.status(401).json({ success: false, valid: false, error: 'USUARIO_BLOQUEADO' });
+      }
+
+      const userSv = typeof userRecord?.sessionVersion === 'number' ? userRecord.sessionVersion : 1;
+      const tokenSv = typeof decoded.sessionVersion === 'number' ? decoded.sessionVersion : 1;
+      if (tokenSv < userSv) {
+        return res.status(401).json({ success: false, valid: false, error: 'SESION_EXPIRADA_O_REVOCADA' });
+      }
+    }
+
+    return res.json({
+      success: true,
+      valid: true,
+      user: {
+        email: decoded.sub,
+        role: decoded.role || 'USER',
+        username: decoded.username || decoded.sub.split('@')[0],
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, valid: false, error: 'INTERNAL_ERROR' });
+  }
 });
 
 app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {

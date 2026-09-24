@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.1.9",
+  "latestVersion": "2.2.0",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.1.9 (Build 121) - Activación Híbrida 1-Clic, Recuperación Serverless y Blindaje de Cuentas:\n• ACTIVACIÓN HÍBRIDA 1-CLIC: Activación instantánea mediante enlace web directo en correos, deep linking nativo ('mumanager://') y código numérico tradicional de 6 dígitos.\n• VERIFICACIÓN Y RECUPERACIÓN DUAL: Soporte integral para autenticación, verificación y reseteo de claves mediante nombre de usuario o correo electrónico indistintamente.\n• PERSISTENCIA EN LA NUBE (SERVERLESS RESILIENT): Resguardo atómico de tokens de seguridad OTP para tolerar cold-starts e instancias múltiples en Vercel.\n• PORTAPAPELES INTELIGENTE: Botón táctil 'Pegar' integrado en modales de verificación y recuperación de contraseña (1-tap OTP).\n• BLINDAJE DE CONTRASEÑAS SQL: Protección contra sobreescritura accidental de claves en cuentas de juego y validación uniforme de 8+ caracteres.",
+  "updateChangelog": "MuManager PRO v2.2.0 (Build 122) - Auto-Activación Web, Banco de Joyas Kundun +1..+5 y Erradicación de Estado Zombie:\n• AUTO-ACTIVACIÓN WEB Y DEEP LINKING: Cierre automático instantáneo del modal de verificación al activar por enlace de correo o al regresar desde el navegador web (AppState check-status).\n• ELIMINACIÓN DE REDUNDANCIA UI: Depuración estética en sección Jugadores (PlayersHub), suprimiendo barras de pestañas y títulos duplicados.\n• BANCO DE JOYAS KUNDUN +1 A +5: Incorporación oficial de Box of Kundun +1 al +5 con sprites transparentes auténticos del cliente de juego y soporte completo en base de datos.\n• BLINDAJE DE SESIÓN Y ZERO ESTADO ZOMBIE: Erradicación del falso positivo 'SQL Conectada' ante errores 401; validación activa de token al inicio de app y botón directo de reautenticación sin reinstalación.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.1.9 (Build 121)",
+  "updateTitle": "MuManager PRO v2.2.0 (Build 122)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 121,
+  "versionCode": 122,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.1.9 (Build 121) - Activación Híbrida 1-Clic, Recuperación Serverless y Blindaje de Cuentas:\n• ACTIVACIÓN HÍBRIDA 1-CLIC: Activación instantánea mediante enlace web directo en correos, deep linking nativo ('mumanager://') y código numérico tradicional de 6 dígitos.\n• VERIFICACIÓN Y RECUPERACIÓN DUAL: Soporte integral para autenticación, verificación y reseteo de claves mediante nombre de usuario o correo electrónico indistintamente.\n• PERSISTENCIA EN LA NUBE (SERVERLESS RESILIENT): Resguardo atómico de tokens de seguridad OTP para tolerar cold-starts e instancias múltiples en Vercel.\n• PORTAPAPELES INTELIGENTE: Botón táctil 'Pegar' integrado en modales de verificación y recuperación de contraseña (1-tap OTP).\n• BLINDAJE DE CONTRASEÑAS SQL: Protección contra sobreescritura accidental de claves en cuentas de juego y validación uniforme de 8+ caracteres.",
+  "releaseNotes": "MuManager PRO v2.2.0 (Build 122) - Auto-Activación Web, Banco de Joyas Kundun +1..+5 y Erradicación de Estado Zombie:\n• AUTO-ACTIVACIÓN WEB Y DEEP LINKING: Cierre automático instantáneo del modal de verificación al activar por enlace de correo o al regresar desde el navegador web (AppState check-status).\n• ELIMINACIÓN DE REDUNDANCIA UI: Depuración estética en sección Jugadores (PlayersHub), suprimiendo barras de pestañas y títulos duplicados.\n• BANCO DE JOYAS KUNDUN +1 A +5: Incorporación oficial de Box of Kundun +1 al +5 con sprites transparentes auténticos del cliente de juego y soporte completo en base de datos.\n• BLINDAJE DE SESIÓN Y ZERO ESTADO ZOMBIE: Erradicación del falso positivo 'SQL Conectada' ante errores 401; validación activa de token al inicio de app y botón directo de reautenticación sin reinstalación.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.1.9",
-  "buildNumber": 121,
+  "appVersion": "2.2.0",
+  "buildNumber": 122,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.1.9",
-  "build": 121
+  "version": "2.2.0",
+  "build": 122
 }

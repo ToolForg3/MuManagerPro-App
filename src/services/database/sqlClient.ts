@@ -380,21 +380,36 @@ export class SqlClient {
         });
         clearTimeout(timeoutId);
 
-        // Si el servidor responde 401 (Sesión invalidada por purga de usuario o concurrencia)
+        // Si el servidor responde 401 (Sesión invalidada, expirada, revocada o token no autorizado)
         if (response.status === 401) {
           try {
             const errData = await this.safeJson(response.clone());
-            if (errData && (errData.sessionInvalidated || errData.error === 'USUARIO_NO_EXISTE')) {
-              LicenseService.triggerSessionInvalidated(errData.message || 'Tu cuenta ha sido reiniciada o ya no existe en el servidor.');
-            }
+            // Purgar token inválido o desactualizado para evitar bloqueos continuos
+            this.sessionToken = '';
+            SecureStorage.removeItem('@mumanager_session_token').catch(() => {});
+
+            const reasonMsg = errData?.message || (
+              errData?.error === 'USUARIO_NO_EXISTE'
+                ? 'Tu cuenta ha sido reiniciada o ya no existe en el servidor.'
+                : errData?.error === 'USUARIO_BLOQUEADO'
+                ? 'Tu cuenta ha sido bloqueada por el administrador.'
+                : errData?.error === 'NO_AUTORIZADO'
+                ? 'Tu sesión ha expirado o requiere reautenticación. Por favor inicia sesión nuevamente.'
+                : (errData?.error || 'Tu sesión ha finalizado. Por favor inicia sesión nuevamente.')
+            );
+            LicenseService.triggerSessionInvalidated(reasonMsg);
           } catch {}
         }
 
-        // Si el servidor responde 403 (Kill-Switch activado remotamente)
+        // Si el servidor responde 403 (Kill-Switch activado remotamente o HWID mismatch)
         if (response.status === 403) {
           try {
             const errData = await this.safeJson(response.clone());
-            if (errData.blocked) {
+            if (errData && errData.error === 'HWID_MISMATCH') {
+              this.sessionToken = '';
+              SecureStorage.removeItem('@mumanager_session_token').catch(() => {});
+              LicenseService.triggerSessionInvalidated(errData.message || 'El dispositivo no coincide con la sesión activa. Por favor inicia sesión de nuevo.');
+            } else if (errData && errData.blocked) {
               LicenseService.checkKillSwitch().catch(() => {});
             }
           } catch {}

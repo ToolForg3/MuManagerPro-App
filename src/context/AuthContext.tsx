@@ -141,6 +141,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           if (storedEmail || storedUser) {
+            // Validar token contra la pasarela antes de asumir sesión activa
+            let isValidSession = false;
+            if (token) {
+              try {
+                const bridgeUrl = SqlClient.getBridgeUrl();
+                const hwid = await SecurityService.getDeviceHwid();
+                const valRes = await fetch(`${bridgeUrl}/api/auth/validate-session`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Device-Hwid': hwid,
+                  },
+                  body: JSON.stringify({ token, hwid }),
+                });
+                if (valRes.ok) {
+                  const valData = await valRes.json();
+                  if (valData && valData.success && valData.valid) {
+                    isValidSession = true;
+                  }
+                } else if (valRes.status === 401 || valRes.status === 403) {
+                  // Token rechazado o expirado
+                  console.log('[AuthContext] Token rechazado por el servidor:', valRes.status);
+                  isValidSession = false;
+                }
+              } catch (netErr) {
+                // Si la red no responde, permitir continuar en modo offline si hay credencial guardada
+                isValidSession = true;
+              }
+            }
+
+            if (!isValidSession && token) {
+              // El token fue rechazado por el servidor (ej: tras actualizar el APK o reiniciar servidor)
+              await SqlClient.setSessionToken('');
+              await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+              setIsAuthenticated(false);
+              setIsDemoSession(false);
+              return;
+            }
+
             setIsDemoSession(false);
             setUserEmail(storedEmail);
             setUserName(storedUser);
@@ -175,23 +215,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkSession();
 
     LicenseService.onSessionInvalidated((reason) => {
-      const msg = reason || 'Tu sesión ha sido finalizada por el administrador.';
-      const isAccountAction = !reason || 
-        reason.toLowerCase().includes('bloqueada') || 
-        reason.toLowerCase().includes('suspendida') || 
-        reason.toLowerCase().includes('eliminada') || 
-        reason.toLowerCase().includes('revocada') ||
-        reason.toLowerCase().includes('cerrada') ||
-        reason.toLowerCase().includes('no existe') ||
-        reason.toLowerCase().includes('reiniciada');
-      if (isAccountAction) {
-        Alert.alert(
-          'Sesión Finalizada',
-          msg,
-          [{ text: 'Entendido' }]
-        );
-        logout();
-      }
+      const msg = reason || 'Tu sesión ha finalizado. Por favor inicia sesión nuevamente.';
+      Alert.alert(
+        'Sesión Finalizada',
+        msg,
+        [{ text: 'Entendido' }]
+      );
+      logout();
     });
     const unsubLicense = LicenseService.subscribe((status) => {
       if (status.isActivated && status.plan === 'PRO' && !status.isBlocked) {

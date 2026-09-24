@@ -89,6 +89,8 @@ export interface ToolsScreenProps {
   initialTab?: ToolTab;
   playerSubTab?: 'online' | 'bans' | 'gm';
   hideTopPadding?: boolean;
+  hideHeader?: boolean;
+  hideTabBar?: boolean;
   route?: any;
   navigation?: any;
 }
@@ -2604,30 +2606,33 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
   return (
     <ErrorBoundary tabName="Pantalla de Herramientas">
       <View style={styles.container}>
-      <Header
-        title={
-          currentMode === 'objects'
-            ? (t('tabObjects') || 'Objetos & Tesorería')
-            : currentMode === 'players'
-            ? (t('tabPlayers') || 'Jugadores & Clanes')
-            : currentMode === 'tools'
-            ? (t('tabTools') || 'Herramientas')
-            : (t('toolsTitle') || 'Herramientas')
-        }
-        subtitle={
-          currentMode === 'objects'
-            ? 'Editor de Ítems, Starter Kits, Joyas y Premios'
-            : currentMode === 'players'
-            ? 'Monitoreo Online, Alianzas y PKs'
-            : currentMode === 'tools'
-            ? 'Anti-Dupe, Fixes, Rankings y Parsers'
-            : 'Pack Completo de Super-Herramientas'
-        }
-        showConnectionBadge={true}
-      />
+      {!props?.hideHeader && (
+        <Header
+          title={
+            currentMode === 'objects'
+              ? (t('tabObjects') || 'Objetos & Tesorería')
+              : currentMode === 'players'
+              ? (t('tabPlayers') || 'Jugadores & Clanes')
+              : currentMode === 'tools'
+              ? (t('tabTools') || 'Herramientas')
+              : (t('toolsTitle') || 'Herramientas')
+          }
+          subtitle={
+            currentMode === 'objects'
+              ? 'Editor de Ítems, Starter Kits, Joyas y Premios'
+              : currentMode === 'players'
+              ? 'Monitoreo Online, Alianzas y PKs'
+              : currentMode === 'tools'
+              ? 'Anti-Dupe, Fixes, Rankings y Parsers'
+              : 'Pack Completo de Super-Herramientas'
+          }
+          showConnectionBadge={true}
+        />
+      )}
 
       {/* Modern Segmented Navigation Bar */}
-      <View style={[styles.tabBarContainer, { position: 'relative' }]}>
+      {!props?.hideTabBar && (
+        <View style={[styles.tabBarContainer, { position: 'relative' }]}>
         <ScrollView
           ref={tabScrollRef}
           horizontal
@@ -2835,6 +2840,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           </View>
         )}
       </View>
+      )}
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {/* ========================================================================= */}

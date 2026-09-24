@@ -96,6 +96,8 @@ export const PlayersHubScreen = ({ route, navigation }: any) => {
             route={route}
             navigation={navigation}
             hideTopPadding={true}
+            hideHeader={true}
+            hideTabBar={true}
           />
         )}
         {activeSubTab === 'clanes' && (
@@ -105,6 +107,8 @@ export const PlayersHubScreen = ({ route, navigation }: any) => {
             route={route}
             navigation={navigation}
             hideTopPadding={true}
+            hideHeader={true}
+            hideTabBar={true}
           />
         )}
         {activeSubTab === 'pk' && (
@@ -114,6 +118,8 @@ export const PlayersHubScreen = ({ route, navigation }: any) => {
             route={route}
             navigation={navigation}
             hideTopPadding={true}
+            hideHeader={true}
+            hideTabBar={true}
           />
         )}
         {activeSubTab === 'gm' && (
@@ -124,6 +130,8 @@ export const PlayersHubScreen = ({ route, navigation }: any) => {
             route={route}
             navigation={navigation}
             hideTopPadding={true}
+            hideHeader={true}
+            hideTabBar={true}
           />
         )}
       </View>

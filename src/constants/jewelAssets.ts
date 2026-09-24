@@ -12,6 +12,11 @@ export const JEWEL_ASSET_IMAGES: Record<string, any> = {
   GemStone: require('../../assets/jewels/gemstone.png'),
   LowStone: require('../../assets/jewels/lowstone.png'),
   HighStone: require('../../assets/jewels/highstone.png'),
+  Kundun1: require('../../assets/jewels/kundun1.png'),
+  Kundun2: require('../../assets/jewels/kundun2.png'),
+  Kundun3: require('../../assets/jewels/kundun3.png'),
+  Kundun4: require('../../assets/jewels/kundun4.png'),
+  Kundun5: require('../../assets/jewels/kundun5.png'),
 };
 
 /**
@@ -45,6 +50,8 @@ export function getJewelImageByGroupIndex(group: number, index: number): any | n
     if (index === 42) return JEWEL_ASSET_IMAGES.Harmony;
     if (index === 43) return JEWEL_ASSET_IMAGES.LowStone;
     if (index === 44) return JEWEL_ASSET_IMAGES.HighStone;
+    // Box of Kundun +1 a +5 (Group 14, Index 11)
+    if (index === 11) return JEWEL_ASSET_IMAGES.Kundun1;
   }
   if (group === 12) {
     if (index === 15) return JEWEL_ASSET_IMAGES.Chaos;
@@ -79,5 +86,10 @@ export function getJewelImageByName(name: string): any | null {
   if (n.includes('gemstone') || n.includes('gem stone')) return JEWEL_ASSET_IMAGES.GemStone;
   if (n.includes('lower refining') || n.includes('lowstone') || n.includes('low stone')) return JEWEL_ASSET_IMAGES.LowStone;
   if (n.includes('higher refining') || n.includes('highstone') || n.includes('high stone')) return JEWEL_ASSET_IMAGES.HighStone;
+  if (n.includes('kundun +1') || n.includes('kundun 1') || n.includes('kundun+1') || n.includes('box 1') || n.includes('bok1') || n.includes('bok 1')) return JEWEL_ASSET_IMAGES.Kundun1;
+  if (n.includes('kundun +2') || n.includes('kundun 2') || n.includes('kundun+2') || n.includes('box 2') || n.includes('bok2') || n.includes('bok 2')) return JEWEL_ASSET_IMAGES.Kundun2;
+  if (n.includes('kundun +3') || n.includes('kundun 3') || n.includes('kundun+3') || n.includes('box 3') || n.includes('bok3') || n.includes('bok 3')) return JEWEL_ASSET_IMAGES.Kundun3;
+  if (n.includes('kundun +4') || n.includes('kundun 4') || n.includes('kundun+4') || n.includes('box 4') || n.includes('bok4') || n.includes('bok 4')) return JEWEL_ASSET_IMAGES.Kundun4;
+  if (n.includes('kundun +5') || n.includes('kundun 5') || n.includes('kundun+5') || n.includes('box 5') || n.includes('bok5') || n.includes('bok 5')) return JEWEL_ASSET_IMAGES.Kundun5;
   return null;
 }

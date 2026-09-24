@@ -93,6 +93,11 @@ const JEWEL_CONFIG: { key: keyof JewelBankData; label: string; icon: string; col
   { key: 'GemStone', label: 'GemStone', icon: 'rhombus', color: '#C8BEAF', bg: 'rgba(200, 190, 175, 0.15)' },
   { key: 'LowStone', label: 'Lower Refining Stone', icon: 'octagram', color: '#B8AEA0', bg: 'rgba(184, 174, 160, 0.15)' },
   { key: 'HighStone', label: 'Higher Refining Stone', icon: 'octagram-outline', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Kundun1', label: 'Box of Kundun +1', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Kundun2', label: 'Box of Kundun +2', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Kundun3', label: 'Box of Kundun +3', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Kundun4', label: 'Box of Kundun +4', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Kundun5', label: 'Box of Kundun +5', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
 ];
 
 export interface AccountsScreenProps {
@@ -181,6 +186,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     GemStone: 0,
     LowStone: 0,
     HighStone: 0,
+    Kundun1: 0,
+    Kundun2: 0,
+    Kundun3: 0,
+    Kundun4: 0,
+    Kundun5: 0,
   });
 
   // Modal Warehouse (Baúl)
@@ -738,6 +748,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             GemStone: getBankVal('GemStone'),
             LowStone: getBankVal('LowStone'),
             HighStone: getBankVal('HighStone'),
+            Kundun1: getBankVal('Kundun1'),
+            Kundun2: getBankVal('Kundun2'),
+            Kundun3: getBankVal('Kundun3'),
+            Kundun4: getBankVal('Kundun4'),
+            Kundun5: getBankVal('Kundun5'),
           });
         } else {
           setJewelBankData({
@@ -751,6 +766,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             GemStone: 0,
             LowStone: 0,
             HighStone: 0,
+            Kundun1: 0,
+            Kundun2: 0,
+            Kundun3: 0,
+            Kundun4: 0,
+            Kundun5: 0,
           });
         }
       }
@@ -821,6 +841,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       GemStone: amount,
       LowStone: amount,
       HighStone: amount,
+      Kundun1: amount,
+      Kundun2: amount,
+      Kundun3: amount,
+      Kundun4: amount,
+      Kundun5: amount,
     });
   };
 
@@ -1814,9 +1839,18 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             <Text style={styles.errorTitle}>Sin conexión a SQL Server</Text>
             <Text style={styles.errorSub}>{errorMessage}</Text>
           </View>
-          <TouchableOpacity onPress={fetchAccounts} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Reintentar</Text>
-          </TouchableOpacity>
+          {errorMessage.includes('NO_AUTORIZADO') || errorMessage.includes('Sesión') || errorMessage.includes('sesión') ? (
+            <TouchableOpacity
+              onPress={() => LicenseService.triggerSessionInvalidated('Tu sesión requiere reautenticación.')}
+              style={[styles.retryBtn, { backgroundColor: THEME.colors.primaryOrange }]}
+            >
+              <Text style={[styles.retryText, { color: '#100D0B', fontWeight: 'bold' }]}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={fetchAccounts} style={styles.retryBtn}>
+              <Text style={styles.retryText}>Reintentar</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

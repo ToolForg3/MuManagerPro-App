@@ -94,19 +94,20 @@ export const DatabaseProvider: React.FC<{ children: ReactNode }> = ({ children }
         VIP: 0,
         Guilds: 0,
         hostIp: config?.host || '127.0.0.1',
-        connected: true,
+        connected: false,
         accountType: 'Premium',
       };
       setMetrics((prev) => prev || fallbackMetrics);
+      setIsConnected(false);
       setLogs(SqlClient.getLogs());
       const isFatalNetwork = e?.message && (
         e.message.includes('Timeout') ||
         e.message.includes('No se pudo contactar') ||
         e.message.includes('Network request failed') ||
-        e.message.includes('Login failed')
+        e.message.includes('Login failed') ||
+        e.message.includes('NO_AUTORIZADO')
       );
       if (isFatalNetwork) {
-        setIsConnected(false);
         throw e;
       }
     }

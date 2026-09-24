@@ -210,4 +210,10 @@ export interface JewelBankData {
   GemStone: number;
   LowStone: number;
   HighStone: number;
+  Kundun1?: number;
+  Kundun2?: number;
+  Kundun3?: number;
+  Kundun4?: number;
+  Kundun5?: number;
+  [key: string]: any;
 }

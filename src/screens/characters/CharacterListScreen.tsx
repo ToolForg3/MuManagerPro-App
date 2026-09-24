@@ -477,9 +477,18 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
             <Text style={styles.errorTitle}>Sin conexión a SQL Server</Text>
             <Text style={styles.errorSub}>{errorMessage}</Text>
           </View>
-          <TouchableOpacity onPress={() => fetchCharacters()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Reintentar</Text>
-          </TouchableOpacity>
+          {errorMessage.includes('NO_AUTORIZADO') || errorMessage.includes('Sesión') || errorMessage.includes('sesión') ? (
+            <TouchableOpacity
+              onPress={() => LicenseService.triggerSessionInvalidated('Tu sesión requiere reautenticación.')}
+              style={[styles.retryBtn, { backgroundColor: THEME.colors.primaryOrange }]}
+            >
+              <Text style={[styles.retryText, { color: '#100D0B', fontWeight: 'bold' }]}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => fetchCharacters()} style={styles.retryBtn}>
+              <Text style={styles.retryText}>Reintentar</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

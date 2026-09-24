@@ -12,6 +12,8 @@ import {
   Linking,
   Modal,
   ActivityIndicator,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -155,14 +157,19 @@ export const LoginScreen = () => {
 
         if (rawUrl.includes('activate')) {
           if (params.status === 'success') {
+            setVerifyModalVisible(false);
+            setIsRegisterMode(false);
+            setVerifyCode('');
+            setIsEditingVerifyEmail(false);
+            if (params.email) {
+              const cleanMail = params.email.trim();
+              setEmail(cleanMail);
+              setUsername(cleanMail.includes('@') ? cleanMail.split('@')[0] : cleanMail);
+            }
             Alert.alert(
               '¡Cuenta Activada!',
               'Tu cuenta ha sido verificada y activada exitosamente vía web. Ya puedes iniciar sesión con tu usuario o correo y contraseña.'
             );
-            if (params.email) {
-              setEmail(params.email);
-              setUsername(params.email.includes('@') ? params.email.split('@')[0] : params.email);
-            }
           } else {
             const targetMail = params.email || '';
             const targetCode = params.code || '';
@@ -190,6 +197,38 @@ export const LoginScreen = () => {
     const sub = Linking.addEventListener('url', (e) => handleIncomingDeepLink(e.url));
     return () => sub.remove();
   }, []);
+
+  // Escuchar cuando el usuario regresa a la app desde el navegador para auto-cerrar la verificación
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && verifyModalVisible && verifyEmail.trim()) {
+        try {
+          const bridgeUrl = SqlClient.getBridgeUrl();
+          const target = encodeURIComponent(verifyEmail.trim().toLowerCase());
+          const resp = await fetch(`${bridgeUrl}/api/auth/check-status?email=${target}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data && data.success && data.active) {
+              setVerifyModalVisible(false);
+              setIsRegisterMode(false);
+              setVerifyCode('');
+              setIsEditingVerifyEmail(false);
+              const activeMail = data.email || verifyEmail.trim();
+              setEmail(activeMail);
+              setUsername(data.username || (activeMail.includes('@') ? activeMail.split('@')[0] : activeMail));
+              Alert.alert(
+                '¡Cuenta Activada!',
+                'Tu cuenta ha sido confirmada y activada con éxito vía web. Ya puedes ingresar al sistema.'
+              );
+            }
+          }
+        } catch (_) {}
+      }
+    };
+
+    const sub = AppState.addEventListener('change', handleAppStateChange);
+    return () => sub.remove();
+  }, [verifyModalVisible, verifyEmail]);
 
   const handleVerifyRegistration = async () => {
     const cleanMail = verifyEmail.trim();
