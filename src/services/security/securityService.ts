@@ -1,10 +1,6 @@
 import { Platform, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { getMasterSalt } from './stringObfuscator';
-
-// Master security secret salt derived dynamically at runtime (Anti-Decompilation)
-export const MASTER_SECURITY_SALT = getMasterSalt();
 
 /**
  * Pure JavaScript SHA-256 implementation for React Native / Expo
@@ -142,8 +138,8 @@ export class SecurityService {
     const fingerprint = String(c.Fingerprint || c.fingerprint || '').trim().toLowerCase();
     const hardwareSeed = `${Platform.OS}-${brand}-${model}-${manufacturer}-${hardware}-${board}-${fingerprint}`;
 
-    // 3. Cryptographically hash the unique mobile hardware signature with the master salt
-    const mobileEntropy = `MOBILE_PHONE_HW_${androidId || hardwareSeed}_${MASTER_SECURITY_SALT}`;
+    // 3. Cryptographically hash the unique mobile hardware signature
+    const mobileEntropy = `MOBILE_PHONE_HW_${androidId || hardwareSeed}`;
     const hash = sha256(mobileEntropy).toUpperCase();
 
     // 4. Format clean, friendly cell phone code: CEL-XXXX-XXXX-XXXX
@@ -161,15 +157,15 @@ export class SecurityService {
    * Computes the cryptographic checksum for a license payload to prevent local file tampering
    */
   static computeChecksum(payload: string): string {
-    return sha256(`${payload}#${MASTER_SECURITY_SALT}`).substring(0, 16).toUpperCase();
+    return sha256(`${payload}#MUMANAGER_LOCAL_INTEGRITY_2026`).substring(0, 16).toUpperCase();
   }
 
   /**
-   * Validates if an activation key mathematically matches the device's HWID
+   * Valida la estructura y formato canónico de una clave de activación (MUMANAGER-[PLAN]-[SIG1]-[SIG2]-[SIG3]).
+   * La verificación criptográfica y autorización es potestad exclusiva del servidor.
    */
   static verifyKey(hwid: string, key: string): { valid: boolean; plan: 'PRO' | 'DEMO'; expires?: string } {
     const cleanKey = key.trim().toUpperCase().replace(/\s+/g, '');
-    const cleanHwid = hwid.trim().toUpperCase();
     
     // Formato estricto de licencia: MUMANAGER-[PLAN]-[SIG1]-[SIG2]-[SIG3]
     // Ejemplo: MUMANAGER-PRO-A8F1-44B9-C012
@@ -187,7 +183,7 @@ export class SecurityService {
       return { valid: false, plan: 'DEMO' };
     }
 
-    // Hallazgo 5: Cada bloque de firma debe ser de exactamente 4 caracteres hexadecimales
+    // Cada bloque de firma debe ser de exactamente 4 caracteres hexadecimales
     const sig1 = parts[2];
     const sig2 = parts[3];
     const sig3 = parts[4];
@@ -201,15 +197,7 @@ export class SecurityService {
       return { valid: false, plan: 'DEMO' };
     }
 
-    // Recomputar firma con el Salt maestro usando el plan de la clave
-    const expectedFullHash = sha256(`${cleanHwid}:${plan}:${MASTER_SECURITY_SALT}`).toUpperCase();
-    const expectedSignature = expectedFullHash.substring(0, 12);
-
-    if (providedSignature === expectedSignature) {
-      return { valid: true, plan: 'PRO' };
-    }
-
-    return { valid: false, plan: 'DEMO' };
+    return { valid: true, plan: 'PRO' };
   }
 
   /**
@@ -219,7 +207,7 @@ export class SecurityService {
     const timestamp = Date.now().toString();
     const nonce = Math.random().toString(36).substring(2, 10);
     const bodyHash = sha256(bodyJson).substring(0, 16);
-    const signature = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${getMasterSalt()}`).toUpperCase();
+    const signature = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
 
     return {
       'X-Device-HWID': hwid,
@@ -228,6 +216,7 @@ export class SecurityService {
       'X-Req-Signature': signature,
     };
   }
+
 
   /**
    * Detects if the current running environment is an Android emulator

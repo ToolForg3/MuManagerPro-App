@@ -1829,9 +1829,10 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
     // Verificación de Firma Criptográfica
     const bodyStr = req.rawBody !== undefined ? req.rawBody : (req.body && Object.keys(req.body).length > 0 ? JSON.stringify(req.body) : '');
     const bodyHash = sha256(bodyStr).substring(0, 16);
-    const expectedSig = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
+    const expectedSigClient = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
+    const expectedSigLegacy = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
 
-    if (signature.toUpperCase() === expectedSig) {
+    if (signature.toUpperCase() === expectedSigClient || signature.toUpperCase() === expectedSigLegacy) {
       isCryptoValid = true;
       // Seguridad L02: La firma criptográfica valida integridad y anti-replay, pero no otorga sesión ni autorización por sí sola
     } else {
@@ -2551,6 +2552,31 @@ async function executeSql(configInput, callback) {
   }
 }
 
+// Sanitizador de Errores Internos: Evita filtrar estructuras SQL o nombres de servidor al cliente (H07)
+function sendSafeInternalError(res, err, context = 'OPERACION') {
+  const errId = 'ERR_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  console.error(`[${errId}] Error interno en ${context}:`, (err && err.message) || err);
+  let userMsg = 'Error interno del servidor. Por favor, reintenta.';
+  if (err && err.message) {
+    if (/timeout|ETIMEDOUT/i.test(err.message)) {
+      userMsg = 'Tiempo de espera agotado al conectar con el servidor SQL.';
+    } else if (/login failed/i.test(err.message)) {
+      userMsg = 'Error de autenticación: usuario o contraseña de SQL incorrectos.';
+    } else if (/ECONNREFUSED|ENOTFOUND|getaddrinfo/i.test(err.message)) {
+      userMsg = 'No se pudo establecer conexión con el host o puerto especificado.';
+    } else if (/network|socket closed/i.test(err.message)) {
+      userMsg = 'Conexión de red interrumpida con la base de datos.';
+    } else if (/HOST_PROHIBIDO/i.test(err.message)) {
+      userMsg = 'Conexión rechazada por políticas de protección de red.';
+    }
+  }
+  return res.status(500).json({
+    success: false,
+    error: userMsg,
+    code: errId
+  });
+}
+
 // =========================================================================
 // SISTEMA DE DESCONEXIÓN INMEDIATA Y BANEOS FORZADOS (RAM GAMESERVER + SQL)
 // =========================================================================
@@ -2605,7 +2631,7 @@ app.post('/api/character/ban', async (req, res) => {
 
     res.json({ success: true, message: "Personaje '" + charName + "' baneado y desconectado con éxito (CtlCode = 1)." });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return sendSafeInternalError(res, err, 'api/character/ban');
   }
 });
 
@@ -2633,7 +2659,7 @@ app.post('/api/character/unban', async (req, res) => {
 
     res.json({ success: true, message: "Personaje '" + charName + "' desbaneado con éxito (CtlCode = 0)." });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return sendSafeInternalError(res, err, 'api/character/unban');
   }
 });
 
@@ -2671,7 +2697,7 @@ app.post('/api/accounts/ban', async (req, res) => {
 
     res.json({ success: true, message: `Cuenta '${accountId}' baneada y desconectada forzosamente con éxito.` });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return sendSafeInternalError(res, err, 'api/accounts/ban');
   }
 });
 
@@ -2704,9 +2730,10 @@ app.post('/api/accounts/unban', async (req, res) => {
 
     res.json({ success: true, message: `Cuenta '${accountId}' reactivada y desbaneada con éxito.` });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return sendSafeInternalError(res, err, 'api/accounts/unban');
   }
 });
+
 
 app.post('/api/dashboard', async (req, res) => {
   try {
@@ -9238,8 +9265,9 @@ app.post('/api/telemetry/ping', async (req, res) => {
   if (pingSig && pingTs && pingNonce) {
     const bodyStr = req.rawBody !== undefined ? req.rawBody : (req.body ? JSON.stringify(req.body) : '');
     const bodyHash = sha256(bodyStr).substring(0, 16);
-    const expectedSig = sha256(`${hwid}:${pingTs}:${pingNonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
-    if (pingSig.toUpperCase() === expectedSig) {
+    const expectedSigClient = sha256(`${hwid}:${pingTs}:${pingNonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
+    const expectedSigLegacy = sha256(`${hwid}:${pingTs}:${pingNonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
+    if (pingSig.toUpperCase() === expectedSigClient || pingSig.toUpperCase() === expectedSigLegacy) {
       isCallerSigned = true;
     }
   }
@@ -9289,16 +9317,35 @@ app.post('/api/telemetry/ping', async (req, res) => {
   });
 });
 
-// Comprobar si un celular está bloqueado
+// Comprobar si un celular está bloqueado (H05: minimización de respuestas anónimas)
 app.get('/api/telemetry/check/:hwid', (req, res) => {
   const { hwid } = req.params;
+  const adminKey = req.headers['x-admin-key'];
+  const isAdmin = isValidAdminKey(adminKey);
+
+  const authHeader = req.headers['authorization'] || req.headers['x-session-token'];
+  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
+  const decoded = token ? verifySessionToken(token) : null;
+  const isDeviceOwner = decoded && decoded.hwid && String(decoded.hwid).toUpperCase() === String(hwid).toUpperCase();
+
   const settings = loadSettings();
   if (settings.globalMaintenance) {
-    return res.json({ registered: true, blocked: true, mode: 'BLOCKED', reason: settings.maintenanceMessage });
+    return res.json({ registered: true, blocked: true, mode: 'BLOCKED' });
   }
   const devices = loadDevices();
   const dev = devices[hwid];
   if (!dev) return res.json({ registered: false, blocked: false, mode: 'DEMO' });
+
+  // Si no es admin ni el dueño autenticado del dispositivo, devolver respuesta mínima sin filtrar datos de actividad
+  if (!isAdmin && !isDeviceOwner) {
+    return res.json({
+      registered: true,
+      blocked: !!dev.blocked,
+      mode: dev.mode === 'PRO' ? 'PRO' : 'DEMO'
+    });
+  }
+
+  // Respuesta autorizada para admin o dueño autenticado
   res.json({
     registered: true,
     blocked: !!dev.blocked,
@@ -9325,11 +9372,13 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
   if (hwid && timestamp && nonce && signature) {
     const bodyStr = req.rawBody !== undefined ? req.rawBody : (req.body ? JSON.stringify(req.body) : '');
     const bodyHash = sha256(bodyStr).substring(0, 16);
-    const expectedSig = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
-    if (signature.toUpperCase() === expectedSig) {
+    const expectedSigClient = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
+    const expectedSigLegacy = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
+    if (signature.toUpperCase() === expectedSigClient || signature.toUpperCase() === expectedSigLegacy) {
       isCryptoVerified = true;
     }
   }
+
 
   const shouldBlock = isAdmin || isCryptoVerified;
 

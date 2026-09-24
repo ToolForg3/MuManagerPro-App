@@ -2319,17 +2319,21 @@
     const locallyDeletedUserIds = new Set();
 
     try {
-      const savedDevs = localStorage.getItem('mumanager_devices_cache');
+      // H12: Migración de caché a sessionStorage con ciclo de vida vinculado a la sesión
+      const savedDevs = sessionStorage.getItem('mumanager_devices_cache');
       if (savedDevs) {
         const parsed = JSON.parse(savedDevs);
         if (Array.isArray(parsed) && parsed.length > 0) allDevicesCache = parsed;
       }
-      const savedUsers = localStorage.getItem('mumanager_users_cache');
+      const savedUsers = sessionStorage.getItem('mumanager_users_cache');
       if (savedUsers) {
         const parsed = JSON.parse(savedUsers);
         if (Array.isArray(parsed) && parsed.length > 0) allUsersCache = parsed;
       }
+      // Purgar residuos persistentes en localStorage
       try {
+        localStorage.removeItem('mumanager_devices_cache');
+        localStorage.removeItem('mumanager_users_cache');
         localStorage.removeItem('mumanager_deleted_hwids');
         localStorage.removeItem('mumanager_deleted_users');
       } catch (_) {}
@@ -2394,6 +2398,8 @@
     function logoutAdmin() {
       sessionStorage.removeItem('mumanager_admin_key');
       try {
+        sessionStorage.removeItem('mumanager_devices_cache');
+        sessionStorage.removeItem('mumanager_users_cache');
         localStorage.removeItem('mumanager_devices_cache');
         localStorage.removeItem('mumanager_users_cache');
         localStorage.removeItem('mumanager_deleted_hwids');
@@ -2734,7 +2740,7 @@
             }
           }
           allUsersCache = Array.from(userMap.values());
-          try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
+          try { sessionStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           updateTextIfDifferent('metric-users', allUsersCache.length);
           
           const searchInput = document.getElementById('search-users-filter');
@@ -2987,7 +2993,7 @@
             (cleanId ? String(u.id || '').toLowerCase().trim() !== cleanId : true) && 
             (cleanEmail ? (u.email || '').toLowerCase().trim() !== cleanEmail : true)
           );
-          try { localStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
+          try { sessionStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           renderUsersTable(allUsersCache);
           updateTextIfDifferent('metric-users', allUsersCache.length);
           updateTextIfDifferent('metric-users-total', allUsersCache.length);
@@ -3234,7 +3240,7 @@
             }
           }
           allDevicesCache = Array.from(devMap.values());
-          try { localStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
+          try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
 
           const searchInput = document.getElementById('search-filter');
           if (searchInput && searchInput.value.trim().length > 0) {
@@ -4317,7 +4323,7 @@
             localStorage.setItem('mumanager_deleted_hwids', JSON.stringify(Array.from(locallyDeletedHwids)));
           } catch (_) {}
           allDevicesCache = allDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
-          try { localStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
+          try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
           renderDevicesTable(allDevicesCache);
           updateTextIfDifferent('metric-devices-total', allDevicesCache.length);
           refreshDevices();

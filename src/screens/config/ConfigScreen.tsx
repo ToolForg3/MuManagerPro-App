@@ -87,6 +87,7 @@ export const ConfigScreen = () => {
     (config?.bridgeUrl && !config.bridgeUrl.includes('onrender.com')) ? config.bridgeUrl : SqlClient.DEFAULT_CLOUD_GATEWAY
   );
   const [debugVisible, setDebugVisible] = useState(false);
+  const [showHwid, setShowHwid] = useState(false);
 
   // --- PASO 4: PIN Security State ---
   const [hasPinConfigured, setHasPinConfigured] = useState(false);
@@ -473,6 +474,7 @@ export const ConfigScreen = () => {
   };
 
   const handleSecretTap = () => {
+    setShowHwid(prev => !prev);
     secretTapCountRef.current += 1;
     if (secretTapTimerRef.current) {
       clearTimeout(secretTapTimerRef.current);
@@ -515,7 +517,8 @@ export const ConfigScreen = () => {
         throw new Error(`Error del servidor (${res.status})`);
       }
 
-      await AsyncStorage.setItem('@mumanager_admin_key', key);
+      await SqlClient.setStoredAdminKey(key);
+      await AsyncStorage.removeItem('@mumanager_admin_key').catch(() => {});
       setAdminAuthModalVisible(false);
       setAdminKeyInput('');
       navigation.navigate('AppManager');
@@ -1130,7 +1133,7 @@ export const ConfigScreen = () => {
                   </View>
                   <TouchableOpacity activeOpacity={0.7} onPress={handleSecretTap}>
                     <Text style={styles.hwidSmall} numberOfLines={1}>
-                      HWID: {licenseStatus.hwid}
+                      HWID: {showHwid ? (licenseStatus.hwid || 'N/A') : `CEL-••••-••••-${(licenseStatus.hwid || '').slice(-4) || '••••'} (Toca para ver)`}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -1410,7 +1413,7 @@ export const ConfigScreen = () => {
                 <MaterialCommunityIcons name="console-network" size={24} color={THEME.colors.primaryOrange} />
                 <View>
                   <Text style={styles.debugTitle}>{t('debugPanel')}</Text>
-                  <Text style={styles.debugSubtitle}>Ver logs, latencia y consultas SQL en crudo</Text>
+                  <Text style={styles.debugSubtitle}>Diagnóstico de red, latencia y telemetría operativa</Text>
                 </View>
               </View>
               <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.textSecondary} />
@@ -1432,10 +1435,29 @@ export const ConfigScreen = () => {
                   style={styles.whatsappButtonConfig}
                   activeOpacity={0.8}
                   onPress={() => {
-                    const hwidCode = licenseStatus.hwid || 'N/A';
-                    const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).\n\nHWID: ${hwidCode}`;
-                    const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-                    Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
+                    Alert.alert(
+                      'Soporte por WhatsApp',
+                      '¿Deseas incluir el identificador de tu dispositivo (HWID) en el mensaje para agilizar la atención?',
+                      [
+                        {
+                          text: 'No incluir',
+                          onPress: () => {
+                            const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).`;
+                            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+                            Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
+                          }
+                        },
+                        {
+                          text: 'Incluir HWID',
+                          onPress: () => {
+                            const hwidCode = licenseStatus.hwid || 'N/A';
+                            const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).\n\nHWID: ${hwidCode}`;
+                            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+                            Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
+                          }
+                        }
+                      ]
+                    );
                   }}
                 >
                   <MaterialCommunityIcons name={"whatsapp" as any} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />

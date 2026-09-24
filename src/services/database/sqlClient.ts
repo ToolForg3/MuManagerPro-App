@@ -362,10 +362,9 @@ export class SqlClient {
           'X-App-Version': APP_VERSION,
           ...secHeaders,
           ...(licKey ? { 'X-License-Key': licKey } : {}),
-          ...(effectiveAdminKey ? { 'X-Admin-Key': effectiveAdminKey } : {}),
+          ...(effectiveAdminKey && endpoint.startsWith('/api/admin') ? { 'X-Admin-Key': effectiveAdminKey } : {}),
           ...(sessionToken ? {
             'Authorization': `Bearer ${sessionToken}`,
-            'X-Session-Token': sessionToken,
           } : {}),
           ...(isMutation ? { 'X-Idempotency-Key': `${hwid}_${endpoint.replace(/[^a-zA-Z0-9_-]/g, '_')}_${secHeaders['X-Req-Nonce'] || Date.now()}` } : {}),
         };

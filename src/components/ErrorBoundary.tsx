@@ -53,7 +53,12 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       const title = this.props.fallbackTitle || (this.props.tabName ? `Módulo ${this.props.tabName} Protegido` : 'Protección del Sistema Activa');
-      const errorMsg = this.state.error?.message || 'Se detectó una excepción no controlada en este módulo.';
+      const errCode = 'ERR_UI_' + Math.abs(
+        (this.state.error?.message || 'GENERIC')
+          .split('')
+          .reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
+      ).toString(16).toUpperCase();
+      const safeMsg = this.props.fallbackMessage || 'Se detectó una excepción no controlada en este módulo. Los datos y la sesión se mantuvieron protegidos.';
 
       return (
         <View style={styles.container}>
@@ -64,8 +69,11 @@ export class ErrorBoundary extends Component<Props, State> {
               La aplicación evitó un cierre forzado. Puedes reintentar cargar este módulo de forma segura.
             </Text>
             <View style={styles.errorBox}>
-              <Text style={styles.errorText} numberOfLines={3}>
-                {errorMsg}
+              <Text style={styles.errorText} numberOfLines={2}>
+                {safeMsg}
+              </Text>
+              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginTop: 4 }}>
+                Código de seguimiento: {errCode}
               </Text>
             </View>
             <TouchableOpacity style={styles.btn} onPress={this.handleReset} activeOpacity={0.8}>

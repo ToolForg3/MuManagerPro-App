@@ -76,12 +76,37 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   };
 
   const handleOpenWhatsApp = () => {
-    const hwidCode = status.hwid || 'N/A';
-    const text = `Hola equipo MuManager PRO! Me gustaría adquirir mi Licencia PRO para mi celular.\n\nID de Dispositivo: ${hwidCode}`;
-    const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-    Linking.openURL(url).catch(() => {
-      Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
-    });
+    Alert.alert(
+      'Contacto por WhatsApp',
+      '¿Deseas incluir el identificador de tu dispositivo (HWID) en el mensaje para agilizar la activación de tu licencia?',
+      [
+        {
+          text: 'No incluir',
+          onPress: () => {
+            const text = 'Hola equipo MuManager PRO! Me gustaría consultar sobre la Licencia PRO.';
+            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+            Linking.openURL(url).catch(() => {
+              Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
+            });
+          }
+        },
+        {
+          text: 'Incluir HWID',
+          onPress: () => {
+            const hwidCode = status.hwid || 'N/A';
+            const text = `Hola equipo MuManager PRO! Me gustaría adquirir mi Licencia PRO para mi celular.\n\nID de Dispositivo: ${hwidCode}`;
+            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+            Linking.openURL(url).catch(() => {
+              Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
+            });
+          }
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        }
+      ]
+    );
   };
 
   const handleOpenTelegram = () => {

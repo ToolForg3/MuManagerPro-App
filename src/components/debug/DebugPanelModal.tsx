@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Share,
+  Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
@@ -20,11 +21,49 @@ interface DebugPanelModalProps {
 export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClose }) => {
   const { logs, clearLogs, isConnected, latency, config, connect } = useDatabase();
 
+  const maskHost = (host?: string) => {
+    if (!host) return '-';
+    const ipMatch = host.match(/^(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+    if (ipMatch) return `${ipMatch[1]}.***.***`;
+    if (host === 'localhost' || host === '127.0.0.1') return 'local-instance';
+    if (host.length > 8) return host.substring(0, 4) + '***' + host.substring(host.length - 3);
+    return '***';
+  };
+
+  const sanitizeQueryForExport = (q: string) => {
+    return q
+      .replace(/'[^']*'/g, "'[REDACTED]'")
+      .replace(/= [0-9]+/g, "= [ID]")
+      .replace(/SET .*/i, 'SET [REDACTED_MUTATION]');
+  };
+
   const handleShareLogs = () => {
+    if (logs.length === 0) {
+      Alert.alert('Diagnóstico', 'No hay registros de diagnóstico para exportar.');
+      return;
+    }
+
+    const hostMasked = maskHost(config?.host);
     const text = logs
-      .map((l) => `[${l.timestamp}] (${l.durationMs}ms) ${l.success ? 'OK' : 'ERR'}\n${l.query}\n`)
+      .map((l) => `[${l.timestamp}] (${l.durationMs}ms) ${l.success ? 'OK' : 'ERR'}\n${sanitizeQueryForExport(l.query)}\n`)
       .join('\n---\n');
-    Share.share({ message: text, title: 'SQL Server Logs - Mu Manager PRO' });
+
+    Alert.alert(
+      'Exportar Diagnóstico Anonimizado',
+      `Se exportarán ${logs.length} eventos de rendimiento y latencia con identificadores y consultas anonimizadas (Host: ${hostMasked}).\n\n¿Deseas continuar?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Exportar',
+          onPress: () => {
+            Share.share({
+              message: `=== REPORTE DE RENDIMIENTO & DIAGNÓSTICO ===\nHost: ${hostMasked}\nPing: ${latency}ms\n\n${text}`,
+              title: 'Diagnóstico de Red - Mu Manager PRO'
+            });
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -35,7 +74,7 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <MaterialCommunityIcons name="console" size={22} color={THEME.colors.primaryOrange} />
-              <Text style={styles.title}>Panel de Debug & Logs SQL</Text>
+              <Text style={styles.title}>Diagnóstico y Rendimiento de Red</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
@@ -46,7 +85,7 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
           <View style={styles.statusBar}>
             <View style={styles.statusItem}>
               <Text style={styles.statusLabel}>Host:</Text>
-              <Text style={styles.statusValue}>{config?.host || '-'}:{config?.port || '-'}</Text>
+              <Text style={styles.statusValue}>{maskHost(config?.host)}:{config?.port || '-'}</Text>
             </View>
             <View style={styles.statusItem}>
               <Text style={styles.statusLabel}>DB:</Text>

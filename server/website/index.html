@@ -94,7 +94,7 @@
         <div class="hero-badge-container">
           <span class="hero-badge fx-gold-pulse">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            SISTEMA DE SEGURIDAD MILITAR • HWID SHA-256
+            ARQUITECTURA DE SEGURIDAD CRIPTOGRÁFICA • HWID VINCULADO
           </span>
         </div>
 
@@ -119,7 +119,7 @@
 
         <div class="hero-conn-callout">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8C86A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span><strong>Garantía de Seguridad Corporativa:</strong> Conexión directa disponible, o blinda tu SQL Server con el <a href="#conector" style="color: var(--gold-light); text-decoration: underline; font-weight: 700;">Conector .EXE Oficial</a> (cero exposición a internet).</span>
+          <span><strong>Arquitectura Segura y Flexible:</strong> Conéctate mediante HTTPS Gateway seguro o con el <a href="#conector" style="color: var(--gold-light); text-decoration: underline; font-weight: 700;">Conector Windows .EXE</a> para mantener SQL Server aislado en red local.</span>
         </div>
 
         <div class="hero-meta-stats">
@@ -641,13 +641,17 @@
               <span class="forensic-spec-val"><span class="spec-value-code">VIBRATE</span> (Alertas hápticas)</span>
             </div>
             <div class="forensic-spec-row">
-              <span class="forensic-spec-name">Privacidad Total</span>
-              <span class="forensic-spec-val" style="color: var(--green-verified);">✓ 0 Cámara, 0 Contactos, 0 SMS</span>
+              <span class="forensic-spec-name">Almacenamiento Local</span>
+              <span class="forensic-spec-val"><span class="spec-value-code">READ/WRITE_STORAGE</span> (maxSdk 28, backups)</span>
+            </div>
+            <div class="forensic-spec-row">
+              <span class="forensic-spec-name">Privacidad en Dispositivo</span>
+              <span class="forensic-spec-val" style="color: var(--green-verified);">✓ 0 Cámara, 0 Contactos, 0 SMS, 0 GPS</span>
             </div>
           </div>
 
           <div class="forensic-spec-note">
-            <strong>Auditoría de Seguridad:</strong> La app no solicita accesos invasivos a la privacidad del celular. Tu base de datos y credenciales permanecen exclusivamente bajo tu control.
+            <strong>Auditoría de Permisos:</strong> La app declara únicamente los permisos técnicos indispensables para su funcionamiento operativo y exportación de respaldos. No accede a datos personales ni privados del teléfono.
           </div>
         </div>
       </div>
@@ -660,10 +664,10 @@
   <section class="section section-altar-bg" id="seguridad">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">Blindaje Criptográfico Ancestral</span>
-        <h2 class="section-title">Arquitectura Anti-Hack & Privacidad</h2>
+        <span class="section-tag">Diseño de Seguridad y Privacidad</span>
+        <h2 class="section-title">Arquitectura de Seguridad & Privacidad</h2>
         <p class="section-subtitle">
-          Diseñado desde la raíz para proteger tu negocio: evita la clonación de licencias y nunca expone tu SQL Server a ataques directos de internet.
+          Diseñado para proteger la administración de tu servidor: vinculación estricta de licencias y opciones de aislamiento local para SQL Server.
         </p>
       </div>
 
@@ -672,7 +676,7 @@
           <div class="security-icon">📱</div>
           <h3 class="security-card-title">Hardware ID Binding</h3>
           <p class="security-card-desc">
-            Cada instalación genera un identificador único ligado al hardware físico del celular (<span class="spec-value-code">CEL-XXXX</span>). Una clave activada en un teléfono jamás funcionará en otro dispositivo.
+            Cada instalación genera un identificador anónimo derivado del dispositivo. La validación se gestiona de forma centralizada en el servidor para evitar activaciones concurrentes o no autorizadas.
           </p>
         </div>
 
@@ -680,23 +684,23 @@
           <div class="security-icon">🔒</div>
           <h3 class="security-card-title">Hermes AOT Bytecode</h3>
           <p class="security-card-desc">
-            En lugar de empaquetar JavaScript en texto plano, el motor Hermes compila el código en binario nativo optimizado, cerrando la puerta a herramientas de cracking como APKTool o JADX.
+            El motor Hermes precompila la lógica de la aplicación a bytecode optimizado (AOT), mejorando sustancialmente el rendimiento de arranque y la integridad de ejecución en el cliente móvil.
           </p>
         </div>
 
         <div class="security-card spotlight-card">
           <div class="security-icon">🛡️</div>
-          <h3 class="security-card-title">Aislamiento por Bridge</h3>
+          <h3 class="security-card-title">Aislamiento por Servicio</h3>
           <p class="security-card-desc">
-            El celular nunca se conecta directamente al puerto 1433 de SQL Server. La comunicación pasa por el microservicio seguro local, evitando exponer la base de datos a ataques DDoS o inyecciones.
+            La aplicación interactúa a través de APIs autenticadas (Gateway HTTPS o Conector local). Con el conector opcional, SQL Server escucha exclusivamente en localhost, sin abrir puertos de base de datos hacia internet.
           </p>
         </div>
 
         <div class="security-card spotlight-card">
           <div class="security-icon">✨</div>
-          <h3 class="security-card-title">Anti-Tampering Seal</h3>
+          <h3 class="security-card-title">Almacenamiento Autenticado</h3>
           <p class="security-card-desc">
-            La app valida la integridad del almacenamiento local en cada inicio. Si se detecta un intento de adulteración con herramientas de depuración o root, se revierte automáticamente a Modo DEMO protegido.
+            El resguardo local de credenciales utiliza cifrado autenticado (AES-256 / HMAC). Ante discrepancias de integridad o expiración de sesión, el acceso se bloquea protegiendo la base de datos.
           </p>
         </div>
       </div>
@@ -759,9 +763,9 @@
 
         <div class="feature-card spotlight-card">
           <span class="feature-badge" style="background: rgba(0, 212, 255, 0.15); color: var(--cyan-primary);">MODALIDAD HÍBRIDA</span>
-          <h3 class="feature-title">Conexión Directa o Conector</h3>
+          <h3 class="feature-title">Gateway HTTPS o Conector Local</h3>
           <p class="feature-desc">
-            Conexión nativa y directa a tu SQL Server por puerto 1433 sin instalar nada en tu VPS. Si tu proveedor bloquea puertos, dispones además del conector ligero opcional.
+            Conéctate a través del Gateway seguro preconfigurado o despliega el conector local en tu servidor Windows para mantener la base de datos aislada en tu red privada.
           </p>
         </div>
       </div>
@@ -1018,76 +1022,76 @@
         <span class="section-tag">Rendimiento & Flexibilidad</span>
         <h2 class="section-title">Elige el Modo de Despliegue Perfecto</h2>
         <p class="section-subtitle">
-          Mu Manager PRO te otorga libertad total de arquitectura. Puedes conectar de inmediato sin instalar software en tu VPS o aislar tu base de datos con el conector tokenizado.
+          Mu Manager PRO te otorga flexibilidad operativa de arquitectura. Puedes conectar de inmediato a través del Gateway seguro o desplegar el conector local para mantener tu base de datos aislada en tu red privada.
         </p>
       </div>
 
       <div class="matrix-grid">
-        <!-- Tarjeta 1: Conexión Directa -->
+        <!-- Tarjeta 1: Conexión Vía Gateway Cloud -->
         <div class="matrix-card featured-gold spotlight-card">
-          <span class="matrix-badge-top">RECOMENDADO • 95% DE SERVIDORES</span>
+          <span class="matrix-badge-top">ACCESO RÁPIDO • GATEWAY HTTPS</span>
           <div>
             <div class="matrix-card-header">
-              <h3 class="matrix-card-title">Conexión Directa SQL 1433</h3>
+              <h3 class="matrix-card-title">Conexión Vía Gateway Cloud</h3>
               <p class="matrix-card-desc">
-                Conexión nativa TDS directa desde el celular a tu Microsoft SQL Server. Cero instalación en el servidor.
+                Conexión a través de la pasarela HTTPS segura. Ideal para administración remota rápida con autenticación por token y rate-limiting.
               </p>
             </div>
 
             <ul class="matrix-features-list">
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>0 Archivos en tu VPS:</strong> No necesitas instalar Node.js ni subir ningún ejecutable.</span>
+                <span><strong>0 Archivos en tu VPS:</strong> Opera sin necesidad de instalar servicios adicionales en tu servidor.</span>
               </li>
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Latencia Ultra Baja (12-25 ms):</strong> Comunicación socket binaria nativa.</span>
+                <span><strong>Cifrado en Tránsito:</strong> Tráfico protegido bajo HTTPS con TLS 1.2+ y cabeceras de seguridad estrictas.</span>
               </li>
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Configuración en 30 Segundos:</strong> Solo ingresas IP, Usuario `sa` y Password en la app.</span>
+                <span><strong>Autenticación de Sesión:</strong> Tokens validados y vinculados a HWID en cada petición.</span>
               </li>
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Cifrado TDS SSL / TLS:</strong> Canales cifrados soportados en SQL Server 2008 R2 a 2022.</span>
+                <span><strong>Compatibilidad Dual:</strong> Soporte dinámico para Louis Update 40 y MSPro (RuudToken / ExtWarehouse).</span>
               </li>
             </ul>
           </div>
 
           <a href="#descargas" class="btn btn-sm btn-primary-gold" style="width: 100%;">
-            Usar Conexión Directa
+            Usar Conexión Gateway
           </a>
         </div>
 
-        <!-- Tarjeta 2: Conector Windows (.exe Autónomo) - Garantía Corporativa -->
+        <!-- Tarjeta 2: Conector Windows (.exe Autónomo) - Aislamiento Local -->
         <div class="matrix-card spotlight-card" style="border-color: rgba(232, 200, 106, 0.4); box-shadow: 0 8px 32px rgba(232, 200, 106, 0.15);">
           <div>
             <div class="matrix-card-header">
               <div style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--gold-light); font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px;">
-                ⭐ Recomendado para Servidores Grandes
+                ⭐ Recomendado para Máximo Aislamiento
               </div>
-              <h3 class="matrix-card-title" style="color: var(--gold-light);">Conector .EXE (Garantía Corporativa)</h3>
+              <h3 class="matrix-card-title" style="color: var(--gold-light);">Conector Local Windows (.EXE)</h3>
               <p class="matrix-card-desc">
-                <strong>El conector es tu garantía de seguridad corporativa:</strong> A los dueños de servidores grandes no les gusta exponer su SQL Server a internet; para ellos, el conector .exe es la función estrella que garantiza que su servidor jamás será vulnerado.
+                <strong>Aislamiento de red para tu motor SQL:</strong> Microservicio Windows que permite administrar SQL Server sin exponer el puerto 1433 a internet, manteniendo la base de datos en <em>localhost</em> y canalizando peticiones autenticadas.
               </p>
             </div>
 
             <ul class="matrix-features-list">
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Aislamiento Local Absoluto:</strong> SQL Server escucha exclusivamente en <em>localhost</em>. El puerto 1433 jamás se expone al exterior.</span>
+                <span><strong>Aislamiento Local:</strong> SQL Server puede escuchar exclusivamente en <em>localhost</em>, reduciendo la exposición externa.</span>
               </li>
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Blindaje contra Fuerza Bruta:</strong> Cero riesgo de ataques automatizados de diccionario contra el usuario maestro <code>sa</code>.</span>
+                <span><strong>Mitigación de Escaneos Externos:</strong> Minimiza riesgos de escaneos y ataques automatizados directos al puerto 1433.</span>
               </li>
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Ejecutable Autónomo con Ícono Oficial:</strong> 1-clic y listo. Cero dependencias (no requiere instalar Node.js en tu VPS).</span>
+                <span><strong>Ejecutable Autónomo:</strong> 1-clic y listo. Cero dependencias externas (empaquetado sin requerir Node.js en tu VPS).</span>
               </li>
               <li class="matrix-feature-item">
                 <span class="matrix-icon-ok">✓</span>
-                <span><strong>Bypass de Firewall / NAT:</strong> Conexión fluida incluso en hostings que bloquean puertos estándar de bases de datos.</span>
+                <span><strong>Flexibilidad de Puertos:</strong> Permite configurar puertos HTTP alternativos (3001, 30001) según tus reglas de firewall.</span>
               </li>
             </ul>
           </div>
@@ -1159,17 +1163,17 @@
 
         <div class="step-card">
           <div class="step-number">2</div>
-          <h3 class="step-title">Conexión Directa (Recomendado)</h3>
+          <h3 class="step-title">Conexión por Gateway HTTPS</h3>
           <p class="step-desc">
-            <strong>¡Sin instalar nada en tu VPS!</strong> Abre la app, ve a Conexión e ingresa la IP/Host de tu VPS y puerto 1433 de SQL Server. La app conectará directamente y de forma segura.
+            Abre la app, ingresa a Conexión y configura tus credenciales. La aplicación se comunicará a través de la pasarela HTTPS segura de manera autenticada.
           </p>
         </div>
 
         <div class="step-card">
           <div class="step-number">3</div>
-          <h3 class="step-title">Conector .EXE (Solo si es necesario)</h3>
+          <h3 class="step-title">Conector Local (Aislamiento Total)</h3>
           <p class="step-desc">
-            <em>¿Tu hosting bloquea el puerto 1433?</em> Solo en ese caso, descarga <span class="spec-value-code">MuManager-Connector.zip</span> en tu servidor y ejecuta <span class="spec-value-code">MuManager-Connector.exe</span> (con ícono oficial de Mu Manager PRO). ¡Sin instalar Node.js!
+            Si prefieres mantener SQL Server restringido a <em>localhost</em>, descarga <span class="spec-value-code">MuManager-Connector.zip</span> en tu servidor y ejecuta <span class="spec-value-code">MuManager-Connector.exe</span>. ¡Empaquetado sin requerir Node.js!
           </p>
         </div>
 
@@ -1177,7 +1181,7 @@
           <div class="step-number">4</div>
           <h3 class="step-title">Activar tu Licencia PRO</h3>
           <p class="step-desc">
-            Ve a <strong>Config ➔ LICENCIA</strong>, copia tu ID de celular (<span class="spec-value-code">CEL-XXXX</span>), genera la clave con <span class="spec-value-code">1-GENERAR-LICENCIA.bat</span> y activa el modo ilimitado.
+            Ve a <strong>Config ➔ Licencia</strong>, consulta tu identificador de dispositivo, ingresa la clave asignada por el administrador y disfruta de la suite completa.
           </p>
         </div>
       </div>
@@ -1255,15 +1259,15 @@
               </div>
             </div>
 
-            <!-- Callout Corporativo de Alto Impacto -->
+            <!-- Callout de Aislamiento de Red -->
             <div style="background: rgba(232, 200, 106, 0.08); border-left: 3px solid var(--gold-primary); border-radius: 6px; padding: 12px; margin-bottom: 14px;">
               <p style="color: var(--text-white); font-size: 0.88rem; line-height: 1.5; margin: 0; font-weight: 500;">
-                <strong style="color: var(--gold-light);">El conector es tu garantía de seguridad corporativa:</strong> A los dueños de servidores grandes no les gusta exponer su SQL Server a internet; para ellos, tu conector .exe es la función estrella que garantiza que su servidor no será hackeado, manteniendo la base de datos blindada en <em>localhost</em>.
+                <strong style="color: var(--gold-light);">Aislamiento y control de infraestructura:</strong> Para servidores que requieren políticas estrictas de firewall, el conector local permite administrar SQL Server sin exponer el puerto 1433 a redes externas, manteniendo el motor restringido en <em>localhost</em>.
               </p>
             </div>
 
             <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 14px;">
-              Si tu servidor ya permite conexiones remotas en el puerto 1433, puedes usar la <strong>Conexión Directa</strong> desde el APK. Pero si buscas máxima protección o tu hosting bloquea el puerto 1433, el conector es la solución definitiva.
+              Puedes operar mediante el <strong>Gateway Cloud HTTPS</strong> de forma inmediata, o desplegar el conector local si prefieres que la base de datos no reciba conexiones externas.
             </p>
 
             <div style="background: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 12px; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
@@ -1321,7 +1325,7 @@
             <span class="faq-icon">▼</span>
           </button>
           <div class="faq-answer">
-            <strong>No, es opcional pero es tu garantía de seguridad corporativa.</strong> Puedes conectar Mu Manager PRO directamente a tu base de datos SQL Server (puerto estándar 1433) ingresando tus credenciales en la app, sin instalar absolutamente nada en tu VPS. Sin embargo, a los dueños de servidores grandes no les gusta exponer su SQL Server a internet; para ellos, el conector .exe es la función estrella que garantiza que su servidor jamás será hackeado, manteniendo la base de datos blindada en <em>localhost</em> y operando en 1-clic con ícono oficial.
+            <strong>No es obligatorio.</strong> Puedes conectar la aplicación mediante el Gateway HTTPS predeterminado sin instalar nada en tu servidor. Sin embargo, para entornos de producción que exigen mantener el puerto SQL cerrado al exterior, el conector local .EXE permite operar canalizando las consultas directamente en <em>localhost</em>.
           </div>
         </div>
 
@@ -1331,7 +1335,7 @@
             <span class="faq-icon">▼</span>
           </button>
           <div class="faq-answer">
-            Al tratarse de una herramienta privada distribuida directamente fuera de Google Play Store, Android solicita confirmar la instalación. Nuestra aplicación es 100% limpia, no contiene publicidad ni solicita permisos invasivos (únicamente conexión de red).
+            Al tratarse de una herramienta técnica distribuida de forma independiente fuera de Google Play Store, Android requiere confirmar la instalación de fuentes desconocidas. La aplicación declara únicamente permisos esenciales de red, vibración háptica y almacenamiento heredado (Android &le; 9) para backups locales, sin accesos a cámara, contactos ni SMS.
           </div>
         </div>
 
@@ -1351,7 +1355,7 @@
             <span class="faq-icon">▼</span>
           </button>
           <div class="faq-answer">
-            Totalmente seguro. Mu Manager PRO utiliza protocolos TDS nativos con cifrado seguro y protección contra inyecciones SQL. Además, para administradores con políticas de máxima seguridad, se ofrece la opción del ejecutable autónomo <em>MuManager-Connector.exe</em> que mantiene SQL Server escuchando únicamente en <em>localhost</em> y corre protegido con código ofuscado e ícono oficial.
+            Las conexiones se protegen con cifrado TLS en tránsito, autenticación de sesión ligada al HWID y consultas parametrizadas contra una lista blanca estricta de rutas de servicio. Para mayor protección, el conector local te permite mantener SQL Server completamente aislado de internet escuchando en <em>localhost</em>.
           </div>
         </div>
 
@@ -1427,9 +1431,9 @@
         <button class="modal-close" aria-label="Cerrar ventana de Política de Privacidad" style="font-size: 1.4rem; color: var(--text-dimmed);">✕</button>
       </div>
       <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
-        <p><strong>1. Privacidad de Datos y Conexión Directa:</strong> Mu Manager PRO no recopila, no comercializa ni comparte con terceros ninguna información confidencial ni bases de datos de tus jugadores. Las conexiones a SQL Server se efectúan en forma directa contra tu conector privado.</p>
-        <p><strong>2. Telemetría de Licencia y Diagnóstico:</strong> La aplicación envía pings periódicos transparentes hacia el gateway que contienen únicamente el identificador de hardware (HWID), la versión de la app instalada y el estado de la licencia, con el único fin de activar funciones PRO, validar autorizaciones y notificar actualizaciones críticas.</p>
-        <p><strong>3. Permisos en el Sistema:</strong> La aplicación solicita exclusivamente los permisos necesarios declarados en el paquete: <span class="spec-value-code">INTERNET</span> y <span class="spec-value-code">ACCESS_NETWORK_STATE</span> para enlace con el servidor, <span class="spec-value-code">VIBRATE</span> para alertas de interfaz y permisos de almacenamiento para exportar backups locales.</p>
+        <p><strong>1. Tratamiento de Credenciales y Datos SQL:</strong> Mu Manager PRO no comercializa ni comparte con terceros ninguna información confidencial ni bases de datos de tus servidores. Las credenciales de base de datos viajan cifradas en tránsito (TLS) hacia el Gateway o Conector seleccionado exclusivamente para ejecutar las operaciones solicitadas por el usuario. En el dispositivo, las claves de acceso se resguardan en almacenamiento cifrado autenticado (AES-256 / HMAC-SHA256).</p>
+        <p><strong>2. Telemetría de Licenciamiento y Seguridad:</strong> Para la validación de licencias, control de accesos concurrentes y protección contra abusos, la aplicación transmite de forma periódica al gateway: el identificador de hardware (HWID anónimo), la versión instalada, el estado de la licencia, marca y modelo del dispositivo, indicador de entorno emulado y token de sesión. Esta información se utiliza exclusivamente para fines operativos de autorización, límites de tasa (rate limiting) y prevención de fraudes.</p>
+        <p><strong>3. Declaración de Permisos:</strong> La aplicación declara en su manifiesto únicamente: <span class="spec-value-code">INTERNET</span> y <span class="spec-value-code">ACCESS_NETWORK_STATE</span> (para comunicación segura con el gateway/conector), <span class="spec-value-code">VIBRATE</span> (retroalimentación háptica en la interfaz) y <span class="spec-value-code">READ/WRITE_EXTERNAL_STORAGE</span> (acotados a Android 9 o inferior mediante <span class="spec-value-code">maxSdkVersion="28"</span> para la exportación e importación de respaldos locales; en Android 10+ se utiliza almacenamiento privado scoped). La aplicación no solicita ni accede a cámara, contactos, micrófono, ubicación ni mensajes SMS.</p>
       </div>
     </div>
   </div>

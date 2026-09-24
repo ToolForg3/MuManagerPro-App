@@ -1,10 +1,10 @@
 {
-  "version": "2.1.4",
+  "version": "2.1.5",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-24T00:15:00.000Z",
+  "publishedAt": "2026-09-24T01:00:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 116,
+  "build": 117,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.1.4 (Build 116) - Solicitudes PRO Directas, Control Anti-Duplicados y Aviso de Vigencia:\n• DEMO RÁPIDO GUIADO: Aviso informativo previo al iniciar el demo rápido (10 min), explicando el beneficio de 72h de prueba gratuita al registrar una cuenta.\n• SOLICITUDES PRO DIRECTAS: Envío de solicitudes desde el APK hacia el Panel de Control Web con blindaje anti-duplicados por HWID y gestión administrativa completa (aprobación con vigencia configurable y eliminación).\n• AVISO DE TIEMPO ACTIVADO: Notificación explícita del tiempo activado y fecha de vencimiento de licencias PRO tanto en el APK móvil como en el Panel de Control Web."
+  "changelog": "MuManager PRO v2.1.5 (Build 117) - Remediación Integral de Seguridad, Privacidad y Rendimiento:\n• BLINDAJE CRIPTOGRÁFICO: Cifrado autenticado de credenciales locales (ENC_V3 con PBKDF2/SHA-256 y HMAC-SHA256 Encrypt-then-MAC). Eliminación de secretos embebidos en cliente con autorización y validación centralizada estricta.\n• PRIVACIDAD Y MINIMIZACIÓN: Enmascaramiento de HWID con revelado táctil, confirmación de identificador en canales de soporte, y sanitización de registros de red y diagnósticos sin exposición de contraseñas ni IP.\n• TRANSPARENCIA Y RENDIMIENTO: Acotación de permisos de almacenamiento legacy (maxSdkVersion=28), caché administrativa segura en sessionStorage y compatibilidad completa con emuladores Season 6 (Louis Update 40 y MSPro)."
 }

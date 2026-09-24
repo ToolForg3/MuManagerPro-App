@@ -40,7 +40,7 @@ export const WatermarkBanner: React.FC<WatermarkBannerProps> = ({ onPressActivat
           </View>
           <View>
             <Text style={styles.text}>MODO DEMO (SIN LICENCIA)</Text>
-            <Text style={styles.subText}>Acceso restringido • Ingrese licencia imperial</Text>
+            <Text style={styles.subText}>Acceso restringido • Ingrese clave de licencia PRO</Text>
           </View>
         </View>
         <View style={styles.badge}>

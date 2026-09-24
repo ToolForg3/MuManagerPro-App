@@ -1003,9 +1003,10 @@ app.use((req, res, next) => {
     // Verificación de Firma Criptográfica
     const bodyStr = req.rawBody !== undefined ? req.rawBody : (req.body && Object.keys(req.body).length > 0 ? JSON.stringify(req.body) : '');
     const bodyHash = sha256(bodyStr).substring(0, 16);
-    const expectedSig = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
+    const expectedSigClient = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
+    const expectedSigLegacy = sha256(`${hwid}:${timestamp}:${nonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
 
-    if (signature.toUpperCase() === expectedSig) {
+    if (signature.toUpperCase() === expectedSigClient || signature.toUpperCase() === expectedSigLegacy) {
       isCryptoValid = true;
       // Removed: signature no longer grants authorization (L02)
 
@@ -8231,16 +8232,35 @@ app.post('/api/telemetry/ping', (req, res) => {
   });
 });
 
-// Comprobar si un celular está bloqueado
+// Comprobar si un celular está bloqueado (H05: minimización de respuestas anónimas)
 app.get('/api/telemetry/check/:hwid', (req, res) => {
   const { hwid } = req.params;
+  const adminKey = req.headers['x-admin-key'];
+  const isAdmin = isValidAdminKey(adminKey);
+
+  const authHeader = req.headers['authorization'] || req.headers['x-session-token'];
+  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
+  const decoded = token ? verifySessionToken(token) : null;
+  const isDeviceOwner = decoded && decoded.hwid && String(decoded.hwid).toUpperCase() === String(hwid).toUpperCase();
+
   const settings = loadSettings();
   if (settings.globalMaintenance) {
-    return res.json({ registered: true, blocked: true, mode: 'BLOCKED', reason: settings.maintenanceMessage });
+    return res.json({ registered: true, blocked: true, mode: 'BLOCKED' });
   }
   const devices = loadDevices();
   const dev = devices[hwid];
   if (!dev) return res.json({ registered: false, blocked: false, mode: 'DEMO' });
+
+  // Si no es admin ni el dueño autenticado del dispositivo, devolver respuesta mínima sin filtrar datos de actividad
+  if (!isAdmin && !isDeviceOwner) {
+    return res.json({
+      registered: true,
+      blocked: !!dev.blocked,
+      mode: dev.mode === 'PRO' ? 'PRO' : 'DEMO'
+    });
+  }
+
+  // Respuesta autorizada para admin o dueño autenticado
   res.json({
     registered: true,
     blocked: !!dev.blocked,

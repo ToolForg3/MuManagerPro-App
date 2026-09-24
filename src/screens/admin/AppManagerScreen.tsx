@@ -89,8 +89,9 @@ export const AppManagerScreen = () => {
   useEffect(() => {
     const initKey = async () => {
       try {
-        const stored = await AsyncStorage.getItem(ADMIN_KEY_STORAGE);
+        const stored = await SqlClient.getStoredAdminKey();
         const activeKey = stored ? stored.trim() : '';
+        await AsyncStorage.removeItem(ADMIN_KEY_STORAGE).catch(() => {});
         setAdminKey(activeKey);
         if (activeKey) {
           fetchDevices(activeKey);
@@ -455,7 +456,8 @@ export const AppManagerScreen = () => {
                     return;
                   }
                   setAdminKey(newKey);
-                  await AsyncStorage.setItem(ADMIN_KEY_STORAGE, newKey);
+                  await SqlClient.setStoredAdminKey(newKey);
+                  await AsyncStorage.removeItem(ADMIN_KEY_STORAGE).catch(() => {});
                   setShowKeyModal(false);
                   fetchDevices(newKey);
                 }}
