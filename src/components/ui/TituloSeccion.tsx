@@ -41,5 +41,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: THEME.typography.trackingWide,
     marginHorizontal: 12,
+    ...THEME.effects.textShadow,
   },
 });

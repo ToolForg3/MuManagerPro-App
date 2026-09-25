@@ -62,8 +62,8 @@ export const BotonOro: React.FC<BotonOroProps> = ({
 
 const styles = StyleSheet.create({
   boton: {
-    backgroundColor: THEME.colors.oro,
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: THEME.colors.oroClaro,
+    borderColor: '#F0D27A',
     borderWidth: 1,
     borderRadius: THEME.shapes.radioEsquina,
     justifyContent: 'center',

@@ -31,7 +31,7 @@ export const PaperdollSlot: React.FC<PaperdollSlotProps> = memo(({
     if (item.level >= 13) return THEME.colors.oroClaro;
     if (item.option380) return THEME.colors.item380;
     if (item.harmonyType && item.harmonyType > 0) return THEME.colors.itemHarmony;
-    return THEME.colors.oro;
+    return THEME.colors.oroClaro;
   };
 
   const getItemGlowColor = () => {
@@ -40,7 +40,7 @@ export const PaperdollSlot: React.FC<PaperdollSlotProps> = memo(({
     if (item.isExcellent) return 'rgba(63, 207, 142, 0.15)';
     if (item.level >= 13) return 'rgba(232, 200, 106, 0.18)';
     if (item.sockets && item.sockets.some((s) => s !== 0xFF && s !== undefined)) return 'rgba(91, 141, 239, 0.15)';
-    return 'rgba(181, 143, 60, 0.12)';
+    return 'rgba(232, 200, 106, 0.12)';
   };
 
   // Silueta tallada en bajo relieve en piedra (MU Online clásico)
@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
     letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   levelBadge: {
     position: 'absolute',

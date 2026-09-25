@@ -4826,11 +4826,13 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.5,
     marginBottom: 2,
+    ...THEME.effects.textShadow,
   },
   accountEmailText: {
-    color: THEME.colors.textoSecundario,
-    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 11.5,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   cardRightGroup: {
     flexDirection: 'row',
@@ -4932,10 +4934,11 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   fieldLabel: {
-    color: '#8E8E93',
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 6,
+    ...THEME.effects.textShadowSubtle,
   },
   fieldBox: {
     backgroundColor: '#100D0B',

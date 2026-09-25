@@ -447,6 +447,7 @@ const styles = StyleSheet.create({
     color: '#E8C86A',
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.8,
+    ...THEME.effects.textShadow,
   },
   closeBtn: {
     padding: 6,
@@ -476,8 +477,9 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
-    fontWeight: THEME.typography.weightMedium,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   pill: {
     paddingHorizontal: 8,
@@ -498,16 +500,19 @@ const styles = StyleSheet.create({
     fontWeight: THEME.typography.weightBold,
   },
   pillTextDemo: {
-    color: '#E2703A',
+    color: '#FFA87D',
+    ...THEME.effects.textShadowSubtle,
   },
   pillTextPro: {
-    color: '#3FCF8E',
+    color: '#5DF5B0',
+    ...THEME.effects.textShadowSubtle,
   },
   statusDesc: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     lineHeight: 16,
     marginTop: 4,
+    ...THEME.effects.textShadowSubtle,
   },
   section: {
     backgroundColor: '#231D19',
@@ -518,18 +523,20 @@ const styles = StyleSheet.create({
     marginBottom: THEME.spacing.md,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: THEME.typography.weightBold,
     color: '#E8C86A',
     letterSpacing: 1,
     fontFamily: THEME.typography.fontTitle,
     marginBottom: 4,
+    ...THEME.effects.textShadow,
   },
   sectionHelp: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     lineHeight: 16,
     marginBottom: 10,
+    ...THEME.effects.textShadowSubtle,
   },
   hwidBox: {
     flexDirection: 'row',
@@ -547,6 +554,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: THEME.typography.weightBold,
     color: '#E8C86A',
+    ...THEME.effects.textShadow,
   },
   copyBtn: {
     flexDirection: 'row',
@@ -562,7 +570,8 @@ const styles = StyleSheet.create({
   copyBtnText: {
     fontSize: 11,
     color: THEME.colors.texto,
-    fontWeight: THEME.typography.weightMedium,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   contactButtonsRow: {
     flexDirection: 'row',
@@ -599,6 +608,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   tabSwitchContainer: {
     flexDirection: 'row',
@@ -627,26 +637,30 @@ const styles = StyleSheet.create({
   tabSwitchText: {
     fontSize: 12,
     fontWeight: '600',
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    ...THEME.effects.textShadowSubtle,
   },
   tabSwitchTextActive: {
     color: '#E8C86A',
     fontWeight: '700',
+    ...THEME.effects.textShadow,
   },
   formContainer: {
     gap: 6,
   },
   formInstructions: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginBottom: 6,
+    ...THEME.effects.textShadowSubtle,
   },
   inputLabel: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '700',
-    color: THEME.colors.texto,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 6,
     marginBottom: 3,
+    ...THEME.effects.textShadowSubtle,
   },
   textInput: {
     backgroundColor: '#100D0B',
@@ -685,11 +699,13 @@ const styles = StyleSheet.create({
     fontWeight: THEME.typography.weightBold,
     color: '#E8C86A',
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadow,
   },
   activatedSub: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontFamily: THEME.typography.fontMono,
+    ...THEME.effects.textShadowSubtle,
   },
   vigenciaBadge: {
     flexDirection: 'row',
@@ -707,11 +723,12 @@ const styles = StyleSheet.create({
   },
   vigenciaDays: {
     backgroundColor: 'rgba(232, 200, 106, 0.12)',
-    borderColor: '#B58F3C',
+    borderColor: '#E8C86A',
   },
   vigenciaText: {
     fontSize: 12,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   resetBtn: {
     marginTop: 10,
@@ -733,8 +750,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   securityText: {
-    fontSize: 10,
-    color: THEME.colors.textoSecundario,
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
 });

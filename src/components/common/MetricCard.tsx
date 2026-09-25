@@ -98,11 +98,12 @@ const styles = StyleSheet.create({
     fontSize: 7,
   },
   label: {
-    fontSize: 10,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
+    ...THEME.effects.textShadowSubtle,
   },
   valueRow: {
     flexDirection: 'row',

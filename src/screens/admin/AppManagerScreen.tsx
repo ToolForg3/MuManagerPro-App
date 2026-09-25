@@ -711,13 +711,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
+    ...THEME.effects.textShadow,
   },
   modalDesc: {
     fontSize: 13,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
     marginBottom: 16,
     lineHeight: 18,
+    ...THEME.effects.textShadowSubtle,
   },
   modalInput: {
     backgroundColor: THEME.colors.casillaFondo,
@@ -752,7 +755,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modalBtnSave: {
-    backgroundColor: THEME.colors.oro,
+    backgroundColor: THEME.colors.oroClaro,
     paddingHorizontal: 16,
     paddingVertical: 10,
     minHeight: 44,
@@ -760,7 +763,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   modalBtnSaveText: {
-    color: '#191512',
+    color: '#100D0B',
     fontSize: 13,
     fontWeight: 'bold',
   },

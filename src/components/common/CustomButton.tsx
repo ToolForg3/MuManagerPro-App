@@ -38,7 +38,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     if (disabled) return '#1A1613';
     switch (variant) {
       case 'gold':
-        return '#B58F3C';
+        return '#E8C86A';
       case 'neonBlue':
         return '#253B5E';
       case 'orange':
@@ -52,7 +52,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       case 'outline':
         return 'transparent';
       default:
-        return '#B58F3C';
+        return '#E8C86A';
     }
   };
 
@@ -60,7 +60,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     if (disabled) return '#3A2E22';
     switch (variant) {
       case 'gold':
-        return '#E8C86A';
+        return '#F0D27A';
       case 'neonBlue':
         return '#5B8DEF';
       case 'orange':
@@ -72,19 +72,19 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       case 'dark':
         return '#6B5533';
       case 'outline':
-        return '#6B5533';
+        return '#E8C86A';
       default:
         return '#6B5533';
     }
   };
 
   const getTextColor = () => {
-    if (disabled) return THEME.colors.textoSecundario;
-    if (variant === 'gold') return '#191512';
+    if (disabled) return THEME.colors.textoSecundarioLuminoso;
+    if (variant === 'gold') return '#100D0B';
     if (variant === 'orange') return THEME.colors.textoOscuro;
     if (variant === 'neonBlue') return THEME.colors.texto;
     if (variant === 'green') return '#3FCF8E';
-    if (variant === 'outline') return THEME.colors.oro;
+    if (variant === 'outline') return THEME.colors.oroClaro;
     return THEME.colors.texto;
   };
 

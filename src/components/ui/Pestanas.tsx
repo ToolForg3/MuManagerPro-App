@@ -81,11 +81,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
+    backgroundColor: '#1E1915',
+    borderWidth: 1,
+    borderColor: 'rgba(107, 85, 51, 0.55)',
   },
   tabActiva: {
-    backgroundColor: 'rgba(181, 143, 60, 0.25)',
+    backgroundColor: 'rgba(232, 200, 106, 0.20)',
     borderColor: THEME.colors.oroClaro,
-    borderWidth: 1,
+    borderWidth: 1.5,
     shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
@@ -97,9 +100,13 @@ const styles = StyleSheet.create({
   },
   tabTextoActivo: {
     color: THEME.colors.oroClaro,
+    fontWeight: '800',
+    ...THEME.effects.textShadow,
   },
   tabTextoInactivo: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   badge: {
     marginLeft: 6,

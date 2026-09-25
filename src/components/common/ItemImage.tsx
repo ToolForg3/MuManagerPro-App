@@ -5,6 +5,7 @@ import { ParsedItem } from '../../types/item';
 import { ItemDatabase } from '../../services/parser/itemDatabase';
 import { SqlClient } from '../../services/database/sqlClient';
 import { getJewelImageByGroupIndex, getJewelImageByName } from '../../constants/jewelAssets';
+import { THEME } from '../../constants/theme';
 
 interface ItemImageProps {
   item?: ParsedItem | { name?: string; spriteKey?: string; category?: string; group?: number; index?: number; hasTexture?: boolean; [key: string]: any } | null;
@@ -51,7 +52,7 @@ export const ItemImage: React.FC<ItemImageProps> = memo(({
   itemName,
   size = 32,
   fallbackIcon,
-  fallbackColor = '#FF5722',
+  fallbackColor = THEME.colors.oroClaro,
   style,
 }) => {
   const [hasError, setHasError] = useState(false);

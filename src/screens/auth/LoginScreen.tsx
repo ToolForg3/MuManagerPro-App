@@ -1454,14 +1454,16 @@ const styles = StyleSheet.create({
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: THEME.typography.trackingWide,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   brandSubtitle: {
     fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 4,
     letterSpacing: 1.5,
     fontWeight: '700',
     textTransform: 'uppercase',
+    ...THEME.effects.textShadowSubtle,
   },
   versionBadge: {
     marginTop: 8,
@@ -1486,11 +1488,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginBottom: 6,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    ...THEME.effects.textShadowSubtle,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -1564,7 +1567,9 @@ const styles = StyleSheet.create({
   },
   toggleModeText: {
     fontSize: 13,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
+    ...THEME.effects.textShadowSubtle,
   },
   toggleModeHighlight: {
     color: THEME.colors.oroClaro,
@@ -1586,8 +1591,10 @@ const styles = StyleSheet.create({
     color: THEME.colors.borde,
   },
   linkMuted: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   securityNotice: {
     flexDirection: 'row',
@@ -1598,7 +1605,8 @@ const styles = StyleSheet.create({
   },
   securityText: {
     fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
   },
   brandingSection: {
     alignItems: 'center',

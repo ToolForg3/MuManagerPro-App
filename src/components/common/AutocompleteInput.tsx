@@ -181,9 +181,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: THEME.colors.textSecondary,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginBottom: 4,
     fontWeight: 'bold',
+    ...THEME.effects.textShadowSubtle,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -244,9 +245,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: THEME.colors.textPrimary,
     flex: 1,
+    ...THEME.effects.textShadowSubtle,
   },
   highlight: {
-    color: THEME.colors.primaryOrange,
+    color: THEME.colors.oroClaro,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
 });

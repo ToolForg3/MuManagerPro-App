@@ -60,8 +60,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   chipActivo: {
-    backgroundColor: 'rgba(181, 143, 60, 0.22)',
+    backgroundColor: 'rgba(232, 200, 106, 0.20)',
     borderColor: THEME.colors.oroClaro,
+    borderWidth: 1.5,
     shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
@@ -69,8 +70,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   chipInactivo: {
-    backgroundColor: THEME.colors.casillaFondo,
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#1E1915',
+    borderColor: 'rgba(107, 85, 51, 0.55)',
   },
   texto: {
     fontSize: 12,
@@ -78,8 +79,12 @@ const styles = StyleSheet.create({
   },
   textoActivo: {
     color: THEME.colors.oroClaro,
+    fontWeight: '700',
+    ...THEME.effects.textShadow,
   },
   textoInactivo: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
 });

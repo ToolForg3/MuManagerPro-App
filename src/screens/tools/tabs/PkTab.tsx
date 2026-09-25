@@ -172,14 +172,19 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     color: THEME.colors.oroClaro,
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   bannerDesc: {
-    color: THEME.colors.textoSecundario,
-    fontSize: 12,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 12.5,
+    fontWeight: '500',
     marginBottom: 12,
-    lineHeight: 17,
+    lineHeight: 18,
+    ...THEME.effects.textShadowSubtle,
   },
   refreshBtn: {
     flexDirection: 'row',
@@ -241,9 +246,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   emptySub: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
+    fontWeight: '500',
     marginTop: 4,
+    ...THEME.effects.textShadowSubtle,
   },
   card: {
     backgroundColor: THEME.colors.superficie,
@@ -258,9 +265,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   charName: {
-    color: THEME.colors.texto,
+    color: THEME.colors.oroClaro,
     fontWeight: 'bold',
     fontSize: 15,
+    ...THEME.effects.textShadow,
   },
   badgeWrap: {
     paddingHorizontal: 8,
@@ -272,17 +280,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   charSub: {
-    color: THEME.colors.textoSecundario,
-    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 11.5,
+    fontWeight: '500',
     marginTop: 3,
+    ...THEME.effects.textShadowSubtle,
   },
   statRed: {
     color: THEME.colors.brasa,
     fontSize: 11,
   },
   statMuted: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 11,
+    fontWeight: '500',
+    ...THEME.effects.textShadowSubtle,
   },
   cleanSingleBtn: {
     flexDirection: 'row',

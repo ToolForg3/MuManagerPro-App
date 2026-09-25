@@ -389,13 +389,15 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: THEME.colors.texto,
+    color: '#E8C86A',
     letterSpacing: 0.4,
+    ...THEME.effects.textShadow,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   closeBtn: {
     padding: 6,
@@ -444,17 +446,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: THEME.colors.oroClaro,
+    ...THEME.effects.textShadow,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
     color: THEME.colors.oroClaro,
     flex: 1,
+    ...THEME.effects.textShadow,
   },
   sectionBody: {
-    fontSize: 12.5,
-    lineHeight: 18,
-    color: THEME.colors.textoSecundario,
+    fontSize: 13,
+    lineHeight: 19,
+    color: THEME.colors.textoSecundarioLuminoso,
+    ...THEME.effects.textShadowSubtle,
   },
   footerActions: {
     paddingHorizontal: 16,
@@ -491,7 +496,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(232, 200, 106, 0.12)',
     borderWidth: 1,
-    borderColor: THEME.colors.oro,
+    borderColor: THEME.colors.oroClaro,
     paddingVertical: 12,
     borderRadius: 6,
     flexDirection: 'row',
@@ -503,6 +508,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: THEME.colors.oroClaro,
     letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   primaryAcceptBtn: {
     width: '100%',
@@ -512,7 +518,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: THEME.colors.oro,
+    shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,
@@ -526,9 +532,10 @@ const styles = StyleSheet.create({
   },
   footerHelpText: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: THEME.colors.textoSecundarioLuminoso,
     textAlign: 'center',
     marginTop: 8,
+    ...THEME.effects.textShadowSubtle,
   },
   secondaryCloseBtn: {
     width: '100%',
@@ -545,5 +552,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: THEME.colors.oroClaro,
+    ...THEME.effects.textShadowSubtle,
   },
 });

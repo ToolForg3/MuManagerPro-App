@@ -77,7 +77,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
                       <Text style={styles.optionCountry}>{lang.country}</Text>
                     </View>
                     {isSelected && (
-                      <MaterialCommunityIcons name="check-circle" size={20} color={THEME.colors.oro} />
+                      <MaterialCommunityIcons name="check-circle" size={20} color={THEME.colors.oroClaro} />
                     )}
                   </TouchableOpacity>
                 );
@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: THEME.typography.weightBold,
     color: THEME.colors.texto,
     letterSpacing: 0.5,
+    ...THEME.effects.textShadowSubtle,
   },
   modalOverlay: {
     flex: 1,
@@ -155,6 +156,7 @@ const styles = StyleSheet.create({
     color: '#E8C86A',
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.8,
+    ...THEME.effects.textShadow,
   },
   langOption: {
     flexDirection: 'row',
@@ -183,14 +185,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: THEME.typography.weightMedium,
     color: THEME.colors.texto,
+    ...THEME.effects.textShadowSubtle,
   },
   optionNameSelected: {
     color: '#E8C86A',
     fontWeight: THEME.typography.weightBold,
+    ...THEME.effects.textShadow,
   },
   optionCountry: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    ...THEME.effects.textShadowSubtle,
   },
   scrollList: {
     maxHeight: 380,

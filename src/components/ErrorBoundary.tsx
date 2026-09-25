@@ -77,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </Text>
             </View>
             <TouchableOpacity style={styles.btn} onPress={this.handleReset} activeOpacity={0.8}>
-              <MaterialCommunityIcons name="refresh" size={18} color="#FFF" style={{ marginRight: 6 }} />
+              <MaterialCommunityIcons name="refresh" size={18} color="#100D0B" style={{ marginRight: 6 }} />
               <Text style={styles.btnText}>Reintentar Módulo</Text>
             </TouchableOpacity>
           </View>
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 6,
     textAlign: 'center',
+    ...THEME.effects.textShadow,
   },
   desc: {
     color: THEME.colors.texto,
@@ -118,6 +119,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 17,
+    ...THEME.effects.textShadowSubtle,
   },
   errorBox: {
     width: '100%',
@@ -136,12 +138,12 @@ const styles = StyleSheet.create({
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#B58F3C',
+    backgroundColor: '#E8C86A',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E8C86A',
+    borderColor: '#F0D27A',
     minHeight: 44,
     justifyContent: 'center',
   },

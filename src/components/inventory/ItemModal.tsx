@@ -1059,22 +1059,22 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               <MaterialCommunityIcons
                 name={isEditing ? 'pencil-lock' : 'pencil'}
                 size={20}
-                color="#FFFFFF"
+                color={isEditing ? '#100D0B' : '#E8C86A'}
               />
-              <Text style={styles.btnText}>{isEditing ? 'Editando' : 'Editar'}</Text>
+              <Text style={[styles.btnText, { color: isEditing ? '#100D0B' : '#FAF6EE' }]}>{isEditing ? 'Editando' : 'Editar'}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.okBtn, isEditing && { backgroundColor: THEME.colors.accentGreenBright }]}
+              style={[styles.okBtn, isEditing && { backgroundColor: THEME.colors.accentGreenBright, borderColor: '#5DF5B0' }]}
               onPress={isEditing ? handleSave : onClose}
               activeOpacity={0.7}
             >
               <MaterialCommunityIcons
                 name={isEditing ? 'content-save-check' : 'close'}
                 size={20}
-                color="#FFFFFF"
+                color="#100D0B"
               />
-              <Text style={styles.btnText}>{isEditing ? 'Guardar Cambios' : 'Cerrar'}</Text>
+              <Text style={[styles.btnText, { color: '#100D0B' }]}>{isEditing ? 'Guardar Cambios' : 'Cerrar'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1127,12 +1127,14 @@ const styles = StyleSheet.create({
     color: '#E8C86A',
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.8,
+    ...THEME.effects.textShadow,
   },
   subtitle: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 2,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   closeBtn: {
     padding: 6,
@@ -1186,12 +1188,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionHeading: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#E8C86A',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadow,
   },
   quickActionBtn: {
     backgroundColor: 'rgba(232, 200, 106, 0.12)',
@@ -1202,9 +1205,10 @@ const styles = StyleSheet.create({
     borderColor: '#6B5533',
   },
   quickActionBtnText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '800',
     color: '#E8C86A',
+    ...THEME.effects.textShadowSubtle,
   },
   rowItem: {
     flexDirection: 'row',
@@ -1216,11 +1220,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: THEME.colors.texto,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   rowVal: {
     fontSize: 13,
     fontWeight: '900',
     color: '#E8C86A',
+    ...THEME.effects.textShadow,
   },
   stepper: {
     flexDirection: 'row',
@@ -1250,8 +1256,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   maxBtn: {
-    backgroundColor: '#B58F3C',
-    borderColor: '#E8C86A',
+    backgroundColor: '#E8C86A',
+    borderColor: '#F0D27A',
     borderWidth: 1,
     paddingHorizontal: 8,
     height: 36,
@@ -1260,7 +1266,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   maxBtnText: {
-    color: '#191512',
+    color: '#100D0B',
     fontSize: 10,
     fontWeight: '900',
   },
@@ -1299,9 +1305,10 @@ const styles = StyleSheet.create({
   },
   excChipText: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     flex: 1,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   socketRow: {
     flexDirection: 'row',
@@ -1309,10 +1316,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   socketLabel: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '800',
     color: '#E8C86A',
     width: 60,
+    ...THEME.effects.textShadowSubtle,
   },
   socketOptionBtn: {
     paddingHorizontal: 8,
@@ -1327,13 +1335,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232, 200, 106, 0.2)',
   },
   socketOptionText: {
-    fontSize: 10,
-    color: THEME.colors.textoSecundario,
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   socketOptionTextActive: {
     color: '#E8C86A',
     fontWeight: '800',
+    ...THEME.effects.textShadow,
   },
   socketDisplayRow: {
     flexDirection: 'row',
@@ -1347,16 +1357,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   socketDisplayIndex: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '800',
     color: '#E8C86A',
     minWidth: 70,
+    ...THEME.effects.textShadow,
   },
   socketDisplayText: {
     fontSize: 12,
     fontWeight: '700',
     color: THEME.colors.texto,
     flex: 1,
+    ...THEME.effects.textShadowSubtle,
   },
   ancientRow: {
     flexDirection: 'row',
@@ -1372,9 +1384,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1A16',
   },
   ancientBtnText: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   rawHexCard: {
     backgroundColor: '#100D0B',
@@ -1385,10 +1398,11 @@ const styles = StyleSheet.create({
     marginBottom: THEME.spacing.md,
   },
   rawHexLabel: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '800',
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     letterSpacing: 0.5,
+    ...THEME.effects.textShadowSubtle,
   },
   rawHexCode: {
     fontFamily: THEME.typography.fontMono,
@@ -1396,6 +1410,7 @@ const styles = StyleSheet.create({
     color: '#E8C86A',
     marginTop: 4,
     fontWeight: '700',
+    ...THEME.effects.textShadow,
   },
   footer: {
     flexDirection: 'row',
@@ -1432,15 +1447,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   editBtnActive: {
-    backgroundColor: '#B58F3C',
-    borderColor: '#E8C86A',
+    backgroundColor: '#E8C86A',
+    borderColor: '#F0D27A',
   },
   okBtn: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#B58F3C',
+    backgroundColor: '#E8C86A',
     borderWidth: 1.2,
-    borderColor: '#E8C86A',
+    borderColor: '#F0D27A',
     paddingVertical: 12,
     minHeight: 44,
     borderRadius: 6,
@@ -1449,7 +1464,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   btnText: {
-    color: '#FFFFFF',
+    color: '#100D0B',
     fontWeight: '800',
     fontSize: 13,
   },
@@ -1467,12 +1482,14 @@ const styles = StyleSheet.create({
   },
   harmonyOptionText: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   harmonyOptionTextActive: {
     color: '#E8C86A',
     fontWeight: '800',
+    ...THEME.effects.textShadow,
   },
 });
 

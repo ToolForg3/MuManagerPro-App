@@ -49,12 +49,12 @@ export const Header: React.FC<HeaderProps> = ({
           )}
           <View style={styles.titleContainer}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <MaterialCommunityIcons name="shield-crown" size={18} color={THEME.colors.oro} />
+              <MaterialCommunityIcons name="shield-crown" size={18} color={THEME.colors.oroClaro} />
               <Text style={styles.title} numberOfLines={1}>{title}</Text>
             </View>
             {subtitle && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <MaterialCommunityIcons name="sword" size={11} color={THEME.colors.oro} />
+                <MaterialCommunityIcons name="sword" size={11} color={THEME.colors.oroClaro} />
                 <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
               </View>
             )}
@@ -131,19 +131,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    textShadowColor: 'rgba(232, 200, 106, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    ...THEME.effects.textShadow,
   },
   subtitle: {
     fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '700',
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadowSubtle,
   },
   rightContainer: {
     flexDirection: 'row',

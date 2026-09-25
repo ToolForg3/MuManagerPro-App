@@ -634,6 +634,7 @@ const styles = StyleSheet.create({
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: THEME.typography.trackingWide,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   realmSep: {
     color: THEME.colors.borde,
@@ -651,11 +652,12 @@ const styles = StyleSheet.create({
     color: THEME.colors.brasa,
   },
   hostSubText: {
-    fontSize: 10,
-    color: THEME.colors.textoSecundario,
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 3,
-    fontWeight: '700',
+    fontWeight: '600',
     letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   hostHighlight: {
     color: THEME.colors.oroClaro,
@@ -697,16 +699,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   kpiLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    color: THEME.colors.textoSecundario,
-    letterSpacing: 0.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.6,
+    ...THEME.effects.textShadowSubtle,
   },
   kpiValueBold: {
     fontSize: 24,
     fontWeight: '900',
     color: THEME.colors.texto,
     marginTop: 6,
+    ...THEME.effects.textShadow,
   },
   guildPanel: {
     padding: 12,
@@ -735,16 +739,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   actionText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 11.5,
+    fontWeight: '800',
     color: THEME.colors.texto,
     textAlign: 'center',
+    ...THEME.effects.textShadow,
   },
   actionSubText: {
-    fontSize: 9,
-    color: THEME.colors.textoSecundario,
-    marginTop: 2,
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.8,
+    marginTop: 3,
     textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
 
   sectionHeaderRow: {

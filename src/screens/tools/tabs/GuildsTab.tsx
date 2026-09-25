@@ -152,13 +152,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   headerTitle: {
-    color: THEME.colors.texto,
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: THEME.colors.oroClaro,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   headerSub: {
-    color: THEME.colors.textoSecundario,
-    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 11.5,
+    fontWeight: '500',
+    marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   refreshBtn: {
     flexDirection: 'row',
@@ -198,9 +204,11 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
   },
   emptyText: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 13,
+    fontWeight: '500',
     marginTop: 10,
+    ...THEME.effects.textShadowSubtle,
   },
   card: {
     backgroundColor: THEME.colors.superficie,
@@ -215,14 +223,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   guildName: {
-    color: THEME.colors.texto,
+    color: THEME.colors.oroClaro,
     fontWeight: 'bold',
     fontSize: 16,
+    ...THEME.effects.textShadow,
   },
   masterText: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
+    fontWeight: '500',
     marginTop: 4,
+    ...THEME.effects.textShadowSubtle,
   },
   statBlue: {
     color: THEME.colors.arcano,

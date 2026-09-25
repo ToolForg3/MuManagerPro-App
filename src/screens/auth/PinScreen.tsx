@@ -210,15 +210,18 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   subtitle: {
     fontSize: 13,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
     marginTop: THEME.spacing.xs,
     textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
   dotsContainer: {
     flexDirection: 'row',
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
   },
   dotFilled: {
-    backgroundColor: THEME.colors.oro,
+    backgroundColor: THEME.colors.oroClaro,
     borderColor: '#FFE866',
   },
   dotLocked: {
@@ -276,6 +279,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: THEME.typography.fontTitle,
     color: THEME.colors.texto,
+    ...THEME.effects.textShadow,
   },
   keyTextDisabled: {
     color: THEME.colors.textMuted,

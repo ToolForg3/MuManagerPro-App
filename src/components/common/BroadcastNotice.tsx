@@ -38,7 +38,7 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
         return {
           color: '#E8C86A',
           bg: 'rgba(232, 200, 106, 0.15)',
-          border: '#B58F3C',
+          border: '#E8C86A',
           iconName: 'alert-circle-outline' as const,
           label: 'Advertencia',
         };
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   modalScroll: {
     maxHeight: 180,
@@ -182,6 +183,7 @@ const styles = StyleSheet.create({
     color: THEME.colors.texto,
     textAlign: 'center',
     lineHeight: 20,
+    ...THEME.effects.textShadowSubtle,
   },
   dismissButton: {
     width: '100%',
@@ -225,18 +227,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   bannerMessage: {
     fontSize: 12,
     color: THEME.colors.texto,
     lineHeight: 16,
+    ...THEME.effects.textShadowSubtle,
   },
   bannerCloseBtn: {
     padding: 6,
     marginLeft: 8,
   },
   bannerCloseText: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 16,
     fontWeight: '700',
   },

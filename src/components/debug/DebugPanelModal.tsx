@@ -73,7 +73,7 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <MaterialCommunityIcons name="console" size={22} color={THEME.colors.primaryOrange} />
+              <MaterialCommunityIcons name="console" size={22} color={THEME.colors.oroClaro} />
               <Text style={styles.title}>Diagnóstico y Rendimiento de Red</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -196,9 +196,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: THEME.typography.weightBold,
-    color: THEME.colors.textPrimary,
+    color: '#E8C86A',
+    fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadow,
   },
   closeBtn: {
     padding: 4,
@@ -217,13 +219,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statusLabel: {
-    fontSize: 11,
-    color: THEME.colors.textSecondary,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    ...THEME.effects.textShadowSubtle,
   },
   statusValue: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: THEME.typography.weightBold,
     color: THEME.colors.textPrimary,
+    ...THEME.effects.textShadowSubtle,
   },
   logsContainer: {
     padding: THEME.spacing.md,

@@ -1,10 +1,10 @@
 {
-  "version": "2.2.5",
+  "version": "2.2.6",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-25T00:07:00.000Z",
+  "publishedAt": "2026-09-25T00:56:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 127,
+  "build": 128,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.5 (Build 127) - Relieve Visual, Nitidez Tipográfica y Directrices UX Globales:\n• NITIDEZ Y RELIEVE TIPOGRÁFICO (ANTI-DIFUMINADO): Implementación de sombra paralela sutil (drop shadow) en títulos, mensajes y badges de alertas; erradicación de fuentes delgadas mediante peso Medium (fontWeight: 500) en cuerpo y Bold en cabeceras.\n• ETIQUETA DE ALERTA DE ALTA LUMINANCIA: Distintivo 'ATENCIÓN / ERROR' en tono Llama Viva #FFA87D con pastilla translúcida de alto contraste (8.02:1 AAA), permitiendo escaneo inmediato sin sobreesfuerzo visual.\n• REGLAS MAESTRAS DE ERGONOMÍA GLOBAL (SECCIÓN 1.1): Adopción normativa permanente de las 4 directrices de diseño: contraste/peso secundario, consistencia estricta en whitespace (gap: 12, padding estándar), código cromático unificado para estados y reserva exclusiva de Serif/Uppercase para títulos cortos.\n• ESTABILIDAD GENERAL: Verificación integral de flujos de autenticación, banco de joyas Kundun normalizado y seguridad criptográfica."
+  "changelog": "MuManager PRO v2.2.6 (Build 128) - Unificación Visual Exhaustiva Season 6 Piedra & Oro:\n• CONTRASTE CERTIFICADO WCAG AAA (11.89:1): Sustitución sistemática del ocre apagado (#B58F3C) por Oro Resplandeciente Season 6 (#E8C86A) en todos los módulos, pantallas y modales de la APK.\n• NITIDEZ Y PROFUNDIDAD ANTI-DIFUMINADO: Implementación de sombra paralela sutil (drop shadow) y mayor peso tipográfico (Medium/Semi-bold/Bold) en textos secundarios, etiquetas de campos, subtítulos y cabeceras para máxima claridad sobre piedra oscura.\n• PÍLDORAS Y SELECTORES MEJORADOS: Erradicación del efecto caja marrón sobre marrón en selectores de baúles, categorías, rankings y badges [SIN PIN] / [MODO DEMO], ahora con fondo #1E1915 y bordes nítidos.\n• AUDITORÍA TOTAL DE MÓDULOS: Unificación completa en 32 componentes y pantallas (Dashboard, Config, Tools, Subtabs, Jugadores, Personajes, Cuentas, Login, PIN, Modales de Licencia, Kill-Switch, Ítems, Equipo, Actualización, Idioma, Avisos, Términos y ErrorBoundary)."
 }

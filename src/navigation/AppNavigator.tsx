@@ -17,7 +17,7 @@ export const AppNavigator = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={THEME.colors.primaryOrange} />
+        <ActivityIndicator size="large" color={THEME.colors.oroClaro} />
       </View>
     );
   }

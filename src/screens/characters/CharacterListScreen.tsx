@@ -918,16 +918,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   charName: {
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     fontFamily: THEME.typography.fontTitle,
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 2,
     letterSpacing: 0.3,
+    ...THEME.effects.textShadow,
   },
   charClass: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   levelResetsCol: {
     alignItems: 'flex-end',

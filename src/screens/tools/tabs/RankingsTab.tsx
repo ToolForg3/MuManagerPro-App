@@ -157,22 +157,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,
-    backgroundColor: '#191512',
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#1E1915',
+    borderWidth: 1.5,
+    borderColor: 'rgba(107, 85, 51, 0.55)',
   },
   rankPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
+    backgroundColor: 'rgba(232, 200, 106, 0.20)',
     borderColor: THEME.colors.oroClaro,
   },
   rankPillText: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   rankPillTextActive: {
     color: THEME.colors.oroClaro,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   refreshRankBtn: {
     flexDirection: 'row',
@@ -215,12 +217,15 @@ const styles = StyleSheet.create({
   rankName: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: THEME.colors.texto,
+    color: THEME.colors.oroClaro,
+    ...THEME.effects.textShadow,
   },
   rankSub: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
     marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   classBadge: {
     borderWidth: 1,

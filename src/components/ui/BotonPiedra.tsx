@@ -83,5 +83,6 @@ const styles = StyleSheet.create({
     color: THEME.colors.texto,
     fontSize: 13,
     fontWeight: THEME.typography.weightSemiBold,
+    ...THEME.effects.textShadowSubtle,
   },
 });

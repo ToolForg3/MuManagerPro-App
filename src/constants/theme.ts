@@ -29,6 +29,8 @@ export const THEME = {
     // 3. Tipografía (Alto Contraste WCAG AAA sobre fondo oscuro)
     texto: '#FAF6EE', // Texto principal claro de alto contraste (blanco pergamino luminoso)
     textoSecundario: '#C8BEAF', // Texto secundario de alta legibilidad (marfil cálido)
+    textoSecundarioLuminoso: '#D8CEBF', // Texto secundario de mayor claridad y nitidez
+    tituloTarjeta: '#E8C86A', // Títulos de tarjetas y secciones (11.89:1 AAA)
     textoOscuro: '#100D0B', // Texto sobre oro brillante
 
     // 4. Elementos y Remaches
@@ -127,6 +129,19 @@ export const THEME = {
     lg: 16,
     xl: 20,
     xxl: 24,
+  },
+
+  effects: {
+    textShadow: {
+      textShadowColor: 'rgba(0, 0, 0, 0.85)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
+    textShadowSubtle: {
+      textShadowColor: 'rgba(0, 0, 0, 0.70)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 1,
+    },
   },
 };
 

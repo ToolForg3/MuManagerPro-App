@@ -280,17 +280,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: THEME.colors.oro,
+    color: '#E8C86A',
     fontFamily: THEME.typography.fontTitle,
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 0.6,
+    ...THEME.effects.textShadow,
   },
   subtitle: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
     marginTop: 2,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   divider: {
     height: 1,
@@ -302,13 +304,14 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   sectionHeader: {
-    color: THEME.colors.oro,
+    color: '#E8C86A',
     fontFamily: THEME.typography.fontTitle,
     fontSize: 12,
     fontWeight: '800',
     marginBottom: 4,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   attrList: {
     paddingLeft: 4,
@@ -323,6 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   quickActionsRow: {
     flexDirection: 'row',
@@ -342,9 +346,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnQuickMaxText: {
-    color: THEME.colors.jade,
+    color: '#5DF5B0',
     fontSize: 12,
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   btnDuplicate: {
     flex: 1,
@@ -358,9 +363,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnDuplicateText: {
-    color: THEME.colors.arcano,
+    color: '#7BA4F5',
     fontSize: 12,
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   footerRow: {
     flexDirection: 'row',
@@ -380,9 +386,10 @@ const styles = StyleSheet.create({
     borderRightColor: THEME.colors.borde,
   },
   btnOkText: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 11,
     fontWeight: '800',
+    ...THEME.effects.textShadowSubtle,
   },
   btnMove: {
     flex: 1.1,
@@ -395,9 +402,10 @@ const styles = StyleSheet.create({
     borderRightColor: THEME.colors.borde,
   },
   btnMoveText: {
-    color: THEME.colors.oro,
+    color: '#E8C86A',
     fontSize: 11,
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   btnEdit: {
     flex: 1.2,
@@ -410,9 +418,10 @@ const styles = StyleSheet.create({
     borderRightColor: THEME.colors.borde,
   },
   btnEditText: {
-    color: THEME.colors.arcano,
+    color: '#7BA4F5',
     fontSize: 11,
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   btnDelete: {
     flex: 1.1,
@@ -422,8 +431,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnDeleteText: {
-    color: THEME.colors.brasa,
+    color: '#FFA87D',
     fontSize: 11,
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
 });

@@ -258,13 +258,15 @@ const styles = StyleSheet.create({
   },
   slotIndexText: {
     fontSize: 8,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   slotIndexMoving: {
     color: THEME.colors.oroClaro,
     fontSize: 10,
     fontWeight: '900',
+    ...THEME.effects.textShadow,
   },
   movingBadge: {
     position: 'absolute',

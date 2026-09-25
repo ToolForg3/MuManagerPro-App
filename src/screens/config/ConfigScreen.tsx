@@ -948,8 +948,14 @@ export const ConfigScreen = () => {
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>SEGURIDAD DE ACCESO (PIN)</Text>
-                <View style={[styles.versionPill, { backgroundColor: hasPinConfigured ? 'rgba(46, 125, 50, 0.2)' : 'rgba(255, 87, 34, 0.15)' }]}>
-                  <Text style={[styles.versionPillText, { color: hasPinConfigured ? THEME.colors.accentGreenBright : THEME.colors.primaryOrange }]}>
+                <View style={[
+                  styles.versionPill,
+                  hasPinConfigured ? styles.pinPillActive : styles.pinPillInactive
+                ]}>
+                  <Text style={[
+                    styles.versionPillText,
+                    hasPinConfigured ? styles.pinPillTextActive : styles.pinPillTextInactive
+                  ]}>
                     {hasPinConfigured ? 'PROTEGIDO CON PIN' : 'SIN PIN'}
                   </Text>
                 </View>
@@ -1790,23 +1796,25 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 4,
     borderRadius: 6,
-    backgroundColor: '#241E1A',
+    backgroundColor: '#1E1915',
     borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderColor: 'rgba(107, 85, 51, 0.55)',
     gap: 4,
   },
   sectionTabBtnActive: {
-    backgroundColor: 'rgba(181, 143, 60, 0.2)',
-    borderColor: THEME.colors.oro,
+    backgroundColor: 'rgba(232, 200, 106, 0.20)',
+    borderColor: THEME.colors.oroClaro,
   },
   sectionTabText: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '700',
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    ...THEME.effects.textShadowSubtle,
   },
   sectionTabTextActive: {
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     fontWeight: '900',
+    ...THEME.effects.textShadow,
   },
   card: {
     backgroundColor: '#2B2521',
@@ -1818,16 +1826,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 12,
-    textShadowColor: 'rgba(232, 200, 106, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    ...THEME.effects.textShadow,
   },
   langRow: {
     flexDirection: 'row',
@@ -1885,13 +1891,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     letterSpacing: 0.5,
+    ...THEME.effects.textShadow,
   },
   debugSubtitle: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
     marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   emuRow: {
     flexDirection: 'row',
@@ -2064,35 +2073,45 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   licenseTitle: {
-    fontSize: 12,
-    color: THEME.colors.textSecondary,
-    fontWeight: THEME.typography.weightMedium,
+    fontSize: 12.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
   },
   licensePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: THEME.borderRadius.round,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   pillDemo: {
-    backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    backgroundColor: 'rgba(226, 112, 58, 0.15)',
+    borderColor: 'rgba(226, 112, 58, 0.65)',
   },
   pillPro: {
-    backgroundColor: 'rgba(46, 125, 50, 0.2)',
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
+    borderColor: 'rgba(63, 207, 142, 0.65)',
   },
   licensePillText: {
-    fontSize: 10,
-    fontWeight: THEME.typography.weightBold,
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   pillTextDemo: {
-    color: THEME.colors.primaryOrange,
+    color: '#FFA87D',
+    ...THEME.effects.textShadowSubtle,
   },
   pillTextPro: {
-    color: THEME.colors.accentGreenBright,
+    color: '#5DF5B0',
+    ...THEME.effects.textShadowSubtle,
   },
   hwidSmall: {
     fontFamily: THEME.typography.fontMono,
-    fontSize: 10,
-    color: THEME.colors.textMuted,
+    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
+    marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   versionFooter: {
     paddingVertical: 18,
@@ -2205,15 +2224,32 @@ const styles = StyleSheet.create({
   versionPill: {
     paddingHorizontal: 10,
     paddingVertical: 3,
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
-    borderRadius: THEME.borderRadius.round,
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(76, 175, 80, 0.4)',
+    borderColor: 'rgba(63, 207, 142, 0.65)',
   },
   versionPillText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: THEME.colors.accentGreenBright,
+    color: '#5DF5B0',
+    ...THEME.effects.textShadowSubtle,
+  },
+  pinPillActive: {
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
+    borderColor: 'rgba(63, 207, 142, 0.65)',
+  },
+  pinPillInactive: {
+    backgroundColor: 'rgba(226, 112, 58, 0.15)',
+    borderColor: 'rgba(226, 112, 58, 0.65)',
+  },
+  pinPillTextActive: {
+    color: '#5DF5B0',
+    ...THEME.effects.textShadowSubtle,
+  },
+  pinPillTextInactive: {
+    color: '#FFA87D',
+    ...THEME.effects.textShadowSubtle,
   },
   updateCardBody: {
     marginTop: 4,
@@ -2279,10 +2315,12 @@ const styles = StyleSheet.create({
     color: '#100D0B',
   },
   settingDescText: {
-    fontSize: 12,
-    color: THEME.colors.textSecondary,
+    fontSize: 12.5,
+    fontWeight: '500',
+    color: THEME.colors.textoSecundarioLuminoso,
     marginBottom: THEME.spacing.sm,
     lineHeight: 18,
+    ...THEME.effects.textShadowSubtle,
   },
   emptyProfilesBox: {
     padding: THEME.spacing.md,

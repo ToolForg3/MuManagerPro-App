@@ -3208,12 +3208,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   cardTitle: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '900',
     color: THEME.colors.oroClaro,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: THEME.spacing.md,
+    ...THEME.effects.textShadow,
   },
   grid2: {
     flexDirection: 'row',
@@ -3225,11 +3226,12 @@ const styles = StyleSheet.create({
     marginBottom: THEME.spacing.xs,
   },
   fieldLabel: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginBottom: 4,
     fontWeight: '700',
     letterSpacing: 0.4,
+    ...THEME.effects.textShadowSubtle,
   },
   fieldStaticVal: {
     fontSize: 14,

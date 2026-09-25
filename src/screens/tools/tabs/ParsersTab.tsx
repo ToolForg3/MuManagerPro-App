@@ -146,7 +146,9 @@ const styles = StyleSheet.create({
   },
   statsLabel: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
+    ...THEME.effects.textShadowSubtle,
   },
   section: {
     backgroundColor: THEME.colors.superficie,
@@ -157,16 +159,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: THEME.colors.texto,
+    fontSize: 14,
+    fontWeight: '900',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
     marginBottom: 6,
+    ...THEME.effects.textShadow,
   },
   sectionDesc: {
-    fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    fontSize: 12.5,
+    fontWeight: '500',
+    color: THEME.colors.textoSecundarioLuminoso,
     lineHeight: 18,
     marginBottom: 14,
+    ...THEME.effects.textShadowSubtle,
   },
   fileButton: {
     flexDirection: 'row',
@@ -192,12 +199,15 @@ const styles = StyleSheet.create({
   fileTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: THEME.colors.texto,
+    color: THEME.colors.oroClaro,
+    ...THEME.effects.textShadow,
   },
   fileSub: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '500',
     marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
   },
   resetButton: {
     flexDirection: 'row',

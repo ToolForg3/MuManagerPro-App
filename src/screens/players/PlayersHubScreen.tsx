@@ -164,9 +164,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 6,
-    backgroundColor: 'rgba(25, 21, 18, 0.6)',
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#1E1915',
+    borderWidth: 1.5,
+    borderColor: 'rgba(107, 85, 51, 0.55)',
   },
   subTabButtonActive: {
     backgroundColor: THEME.colors.oroClaro,
@@ -175,8 +175,9 @@ const styles = StyleSheet.create({
   subTabText: {
     fontSize: 12,
     fontWeight: '700',
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   subTabTextActive: {
     color: '#100D0B',

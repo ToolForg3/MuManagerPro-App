@@ -86,7 +86,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
               <MaterialCommunityIcons
                 name={isRollback ? 'alert-octagon' : isBeta ? 'flask-outline' : 'shield-crown'}
                 size={36}
-                color={isRollback ? THEME.colors.brasa : isBeta ? THEME.colors.arcano : THEME.colors.oro}
+                color={isRollback ? THEME.colors.brasa : isBeta ? THEME.colors.arcano : THEME.colors.oroClaro}
               />
             </View>
 
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: 'rgba(232, 200, 106, 0.15)',
     borderWidth: 1,
-    borderColor: THEME.colors.oro,
+    borderColor: THEME.colors.oroClaro,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -266,10 +266,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     marginBottom: 6,
     textAlign: 'center',
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   versionBadge: {
     fontSize: 12,
@@ -285,10 +286,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 13,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 18,
+    ...THEME.effects.textShadowSubtle,
   },
   forcedBanner: {
     backgroundColor: 'rgba(226, 112, 58, 0.12)',
@@ -309,9 +311,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   forcedSub: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
   changelogBox: {
     width: '100%',
@@ -323,13 +326,14 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   changelogTitle: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '700',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.oro,
+    color: THEME.colors.oroClaro,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
+    ...THEME.effects.textShadow,
   },
   changelogScroll: {
     maxHeight: 110,
@@ -338,10 +342,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: THEME.colors.texto,
     lineHeight: 18,
+    ...THEME.effects.textShadowSubtle,
   },
   downloadButton: {
     width: '100%',
-    backgroundColor: THEME.colors.oro,
+    backgroundColor: THEME.colors.oroClaro,
     minHeight: 56,
     borderRadius: 6,
     alignItems: 'center',
@@ -352,7 +357,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: '#191512',
+    color: '#100D0B',
     textTransform: 'uppercase',
   },
   laterButton: {
@@ -368,8 +373,9 @@ const styles = StyleSheet.create({
   },
   laterButtonText: {
     fontSize: 12,
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   cardScroll: {
     width: '100%',
@@ -393,10 +399,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   errorBoxMsg: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
     lineHeight: 16,
     marginBottom: 10,
+    ...THEME.effects.textShadowSubtle,
   },
   errorActionsRow: {
     flexDirection: 'row',
@@ -418,6 +425,7 @@ const styles = StyleSheet.create({
     color: THEME.colors.texto,
     fontSize: 12,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   copyActionBtn: {
     flexDirection: 'row',
@@ -425,7 +433,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#3A2E22',
     borderWidth: 1,
-    borderColor: THEME.colors.oro,
+    borderColor: THEME.colors.oroClaro,
     borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -435,6 +443,7 @@ const styles = StyleSheet.create({
     color: THEME.colors.oroClaro,
     fontSize: 12,
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   instructionBox: {
     width: '100%',
@@ -451,17 +460,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   instructionMsg: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 12,
     lineHeight: 16,
     marginBottom: 6,
+    ...THEME.effects.textShadowSubtle,
   },
   instructionStep: {
     color: THEME.colors.texto,
-    fontSize: 11,
+    fontSize: 11.5,
     lineHeight: 16,
     marginBottom: 3,
+    ...THEME.effects.textShadowSubtle,
   },
 });

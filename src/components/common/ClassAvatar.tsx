@@ -63,11 +63,12 @@ export const ClassAvatar: React.FC<ClassAvatarProps> = ({
           style={[
             styles.tierBadge,
             {
-              backgroundColor: classInfo.tier === 3 ? THEME.colors.primaryOrange : THEME.colors.accentBlue,
+              backgroundColor: classInfo.tier === 3 ? THEME.colors.oroClaro : THEME.colors.arcano,
+              borderColor: classInfo.tier === 3 ? '#F0D27A' : '#7BA4F5',
             },
           ]}
         >
-          <Text style={styles.tierText}>{classInfo.code}</Text>
+          <Text style={[styles.tierText, { color: classInfo.tier === 3 ? '#100D0B' : '#FFFFFF' }]}>{classInfo.code}</Text>
         </View>
       )}
     </View>
@@ -93,11 +94,10 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: THEME.borderRadius.round,
     borderWidth: 1,
-    borderColor: '#0D0D0D',
   },
   tierText: {
     fontSize: 9,
-    fontWeight: THEME.typography.weightBold,
-    color: '#FFFFFF',
+    fontWeight: '800',
+    ...THEME.effects.textShadowSubtle,
   },
 });
