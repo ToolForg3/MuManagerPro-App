@@ -1,10 +1,10 @@
 {
-  "version": "2.2.4",
+  "version": "2.2.5",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-24T23:48:00.000Z",
+  "publishedAt": "2026-09-25T00:07:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 126,
+  "build": 127,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.4 (Build 126) - Armonía Visual Season 6, Kundun Louis/MSPro y Google OAuth:\n• DIÁLOGOS Y AVISOS GÓTICOS REFINADOS: Superficie continua de piedra noble (#241E1A), remaches ornamentales en las 4 esquinas, grabado perimetral interno, pastilla gótica para badges, panel tallado de pergamino (#100D0B) y tipografía marfil apergaminada #FAF6EE con ratio de contraste 16.98:1 AAA.\n• BANCO DE JOYAS (LOUIS S6 & MSPRO): Mapeo y aislamiento estricto por nivel (8..12 / 1..5) para Box of Kundun +1 a +5 en tablas normalizadas CustomItemBank, previniendo colisiones o sobreescritura de ranuras.\n• GOOGLE OAUTH: Corrección criptográfica de la clave de cliente en el flujo de inicio de sesión con Google.\n• SEGURIDAD Y ACCESIBILIDAD: Cumplimiento de directrices WCAG AAA, controles táctiles adaptativos de 44 dp y persistencia de cuentas permanente (zero purgas)."
+  "changelog": "MuManager PRO v2.2.5 (Build 127) - Relieve Visual, Nitidez Tipográfica y Directrices UX Globales:\n• NITIDEZ Y RELIEVE TIPOGRÁFICO (ANTI-DIFUMINADO): Implementación de sombra paralela sutil (drop shadow) en títulos, mensajes y badges de alertas; erradicación de fuentes delgadas mediante peso Medium (fontWeight: 500) en cuerpo y Bold en cabeceras.\n• ETIQUETA DE ALERTA DE ALTA LUMINANCIA: Distintivo 'ATENCIÓN / ERROR' en tono Llama Viva #FFA87D con pastilla translúcida de alto contraste (8.02:1 AAA), permitiendo escaneo inmediato sin sobreesfuerzo visual.\n• REGLAS MAESTRAS DE ERGONOMÍA GLOBAL (SECCIÓN 1.1): Adopción normativa permanente de las 4 directrices de diseño: contraste/peso secundario, consistencia estricta en whitespace (gap: 12, padding estándar), código cromático unificado para estados y reserva exclusiva de Serif/Uppercase para títulos cortos.\n• ESTABILIDAD GENERAL: Verificación integral de flujos de autenticación, banco de joyas Kundun normalizado y seguridad criptográfica."
 }

@@ -322,6 +322,7 @@ const VARIANT_CONFIG: Record<
     icon: keyof typeof MaterialCommunityIcons.glyphMap;
     color: string;
     badgeText: string;
+    badgeTextColor: string;
     borderColor: string;
     glowBg: string;
   }
@@ -330,36 +331,41 @@ const VARIANT_CONFIG: Record<
     icon: 'shield-check',
     color: THEME.colors.jade,
     badgeText: 'ÉXITO',
-    borderColor: 'rgba(63, 207, 142, 0.7)',
-    glowBg: 'rgba(63, 207, 142, 0.12)',
+    badgeTextColor: '#5DF5B0',
+    borderColor: 'rgba(63, 207, 142, 0.8)',
+    glowBg: 'rgba(63, 207, 142, 0.18)',
   },
   error: {
     icon: 'shield-alert',
     color: THEME.colors.brasa,
     badgeText: 'ATENCIÓN / ERROR',
-    borderColor: 'rgba(226, 112, 58, 0.8)',
-    glowBg: 'rgba(226, 112, 58, 0.14)',
+    badgeTextColor: '#FFA87D', // Llama viva de alto contraste contra fondo oscuro (8:1 AAA)
+    borderColor: 'rgba(226, 112, 58, 0.85)',
+    glowBg: 'rgba(226, 112, 58, 0.22)',
   },
   warning: {
     icon: 'alert-decagram',
     color: THEME.colors.oroClaro,
     badgeText: 'ADVERTENCIA',
-    borderColor: 'rgba(232, 200, 106, 0.8)',
-    glowBg: 'rgba(232, 200, 106, 0.12)',
+    badgeTextColor: '#FEE180',
+    borderColor: 'rgba(232, 200, 106, 0.85)',
+    glowBg: 'rgba(232, 200, 106, 0.18)',
   },
   confirm: {
     icon: 'shield-sword',
     color: THEME.colors.oroClaro,
     badgeText: 'CONFIRMACIÓN',
+    badgeTextColor: '#FEE180',
     borderColor: THEME.colors.bordeBrillante,
-    glowBg: 'rgba(232, 200, 106, 0.10)',
+    glowBg: 'rgba(232, 200, 106, 0.15)',
   },
   info: {
     icon: 'shield-crown',
     color: THEME.colors.oroClaro,
     badgeText: 'INFORMACIÓN',
+    badgeTextColor: '#FEE180',
     borderColor: THEME.colors.borde,
-    glowBg: 'rgba(232, 200, 106, 0.08)',
+    glowBg: 'rgba(232, 200, 106, 0.14)',
   },
 };
 
@@ -451,8 +457,8 @@ export const GothicAlertContainer: React.FC = () => {
               <MaterialCommunityIcons name={iconName} size={24} color={config.color} />
             </View>
             <View style={styles.headerTextCol}>
-              <View style={[styles.badgeContainer, { borderColor: config.color, backgroundColor: config.glowBg }]}>
-                <Text style={[styles.badgeText, { color: config.color }]}>
+              <View style={[styles.badgeContainer, { borderColor: config.borderColor, backgroundColor: config.glowBg }]}>
+                <Text style={[styles.badgeText, { color: config.badgeTextColor }]}>
                   {badgeText}
                 </Text>
               </View>
@@ -628,30 +634,40 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
     borderRadius: 4,
     borderWidth: 1,
-    marginBottom: 4,
+    marginBottom: 5,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.9,
     textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   headerTitle: {
-    fontSize: 16.5,
+    fontSize: 17.5,
     fontWeight: '700',
     color: THEME.colors.texto, // #FAF6EE (14.02:1 AAA)
-    letterSpacing: 0.3,
-    lineHeight: 22,
+    letterSpacing: 0.35,
+    lineHeight: 23,
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 12.5,
+    fontWeight: '500',
     color: THEME.colors.textoSecundario, // #C8BEAF (8.23:1 AAA)
     marginTop: 2,
-    lineHeight: 16,
+    lineHeight: 17,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   ornamentalDivider: {
     height: 1,
@@ -679,9 +695,13 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 14.5,
-    lineHeight: 22,
+    fontWeight: '500', // Medium definido: elimina delgadez y garantiza nitidez perfecta
+    lineHeight: 22.5,
     color: THEME.colors.texto, // #FAF6EE (16.98:1 AAA sobre casillaFondo #100D0B)
     letterSpacing: 0.25,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2, // Sombra paralela sutil para profundidad y relieve
   },
   buttonContainer: {
     paddingHorizontal: 18,
