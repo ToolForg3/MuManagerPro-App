@@ -826,8 +826,11 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     ℹ️ Esta pieza ({editedItem.name}) no posee ningún set Ancient oficial en Season 6.
                   </Text>
                   {editedItem.isAncient && isEditing && (
-                    <TouchableOpacity
-                      style={[styles.ancientBtn, { marginTop: 8, borderColor: '#FF5252' }]}
+                    <MuButton
+                      titulo="Quitar Ancient (Convertir a Normal)"
+                      icono="trash-can-outline"
+                      variante="danger"
+                      altura={38}
                       onPress={() => {
                         const baseDef = ItemDatabase.findItem(editedItem.group, editedItem.index);
                         setEditedItem({
@@ -841,11 +844,8 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                           isModified: true,
                         });
                       }}
-                    >
-                      <Text style={{ color: '#FF5252', fontSize: 11, fontWeight: 'bold' }}>
-                        Quitar Ancient (Convertir a Normal)
-                      </Text>
-                    </TouchableOpacity>
+                      style={{ marginTop: 8 }}
+                    />
                   )}
                 </View>
               ) : (
@@ -1381,9 +1381,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   maxBtnText: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontSize: 10,
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   numInput: {
     backgroundColor: '#0D0E0D',

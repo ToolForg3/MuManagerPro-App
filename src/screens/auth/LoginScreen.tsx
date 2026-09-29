@@ -1066,7 +1066,7 @@ export const LoginScreen = () => {
           <ImageBackground
             source={STITCH_ASSETS.decorations.gothicBottomFooter}
             style={styles.stitchFooterBannerBg}
-            resizeMode="contain"
+            resizeMode="stretch"
           >
             <Text style={styles.stitchFooterBannerText}>
               PORTAL DE SEGURIDAD Y CUENTAS

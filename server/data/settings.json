@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.2.8",
+  "latestVersion": "2.2.9",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.2.8 (Build 130) - Rediseño Oficial Stitch Approved Ironforge, Nitidez Tipográfica & Seguridad:\n• PULIDO VISUAL Y CONTRASTE WCAG AAA: Corrección integral de textos en pestañas activas (Louis S6, MSPro, Idiomas y Filtros) con oro radiante #FEDF99 y sombra sutil para legibilidad absoluta sobre texturas nativas.\n• VISIBILIDAD DE CONTRASEÑAS: Corrección del control del ojo para revelar contraseñas reales en edición de cuentas, creación de nuevas cuentas y configuración de conexión SQL.\n• NAVEGACIÓN INFERIOR MEJORADA: Nuevos iconos vectoriales nítidos y transparentes en la barra principal, erradicando recuadros blancos y fondos oscuros en el botón de Ajustes.\n• OPTIMIZACIÓN Y LIMPIEZA: Eliminación de atajos clásicos de teclado de escritorio y retiro de leyendas de prueba local.\n• SEGURIDAD TOTAL: Compilación Hermes Bytecode, R8/ProGuard, defensas anti-debug y anti-hooking activas, y certificado pinning estricto.",
+  "updateChangelog": "MuManager PRO v2.2.9 (Build 131) - Cobertura 100% Texturas Nativas Ironforge, Zócalo Gótico Completo & Blindaje de Encabezados:\n• TEXTURAS NATIVAS MU AL 100%: Erradicación total de bordes lisos en chips de teletransporte rápido, selector de mapas, presets de premios, catálogo de sets rápidos, enlaces a módulos y gestión de clanes/GMs.\n• ZÓCALOS GÓTICOS BORDE A BORDE: Estiramiento completo al 100% de la base en modales de actualización, licencias, login y pantalla de PIN sin huecos laterales.\n• ENCABEZADOS BLINDADOS ANTI-APLASTAMIENTO: Corrección del header de personajes en móvil para evitar compresión de texto y solapamiento de badges.\n• MODAL DE NIVEL: Eliminación del bug de estiramiento en Yoga con alturas numéricas rígidas y textos en oro radiante #FEDF99.\n• SEGURIDAD Y ESTABILIDAD: Cero fugas de claves, Hermes Bytecode, R8/ProGuard y protección estricta anti-debug.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.2.8 (Build 130)",
+  "updateTitle": "MuManager PRO v2.2.9 (Build 131)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 130,
+  "versionCode": 131,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.2.8 (Build 130) - Rediseño Oficial Stitch Approved Ironforge, Nitidez Tipográfica & Seguridad:\n• PULIDO VISUAL Y CONTRASTE WCAG AAA: Corrección integral de textos en pestañas activas (Louis S6, MSPro, Idiomas y Filtros) con oro radiante #FEDF99 y sombra sutil para legibilidad absoluta sobre texturas nativas.\n• VISIBILIDAD DE CONTRASEÑAS: Corrección del control del ojo para revelar contraseñas reales en edición de cuentas, creación de nuevas cuentas y configuración de conexión SQL.\n• NAVEGACIÓN INFERIOR MEJORADA: Nuevos iconos vectoriales nítidos y transparentes en la barra principal, erradicando recuadros blancos y fondos oscuros en el botón de Ajustes.\n• OPTIMIZACIÓN Y LIMPIEZA: Eliminación de atajos clásicos de teclado de escritorio y retiro de leyendas de prueba local.\n• SEGURIDAD TOTAL: Compilación Hermes Bytecode, R8/ProGuard, defensas anti-debug y anti-hooking activas, y certificado pinning estricto.",
+  "releaseNotes": "MuManager PRO v2.2.9 (Build 131) - Cobertura 100% Texturas Nativas Ironforge, Zócalo Gótico Completo & Blindaje de Encabezados:\n• TEXTURAS NATIVAS MU AL 100%: Erradicación total de bordes lisos en chips de teletransporte rápido, selector de mapas, presets de premios, catálogo de sets rápidos, enlaces a módulos y gestión de clanes/GMs.\n• ZÓCALOS GÓTICOS BORDE A BORDE: Estiramiento completo al 100% de la base en modales de actualización, licencias, login y pantalla de PIN sin huecos laterales.\n• ENCABEZADOS BLINDADOS ANTI-APLASTAMIENTO: Corrección del header de personajes en móvil para evitar compresión de texto y solapamiento de badges.\n• MODAL DE NIVEL: Eliminación del bug de estiramiento en Yoga con alturas numéricas rígidas y textos en oro radiante #FEDF99.\n• SEGURIDAD Y ESTABILIDAD: Cero fugas de claves, Hermes Bytecode, R8/ProGuard y protección estricta anti-debug.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.2.8",
-  "buildNumber": 130,
+  "appVersion": "2.2.9",
+  "buildNumber": 131,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.2.8",
-  "build": 130
+  "version": "2.2.9",
+  "build": 131
 }

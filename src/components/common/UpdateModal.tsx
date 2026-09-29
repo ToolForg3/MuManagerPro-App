@@ -19,6 +19,7 @@ import { AppUpdateInfo } from '../../services/database/sqlClient';
 import { RemoteConfigService } from '../../services/security/remoteConfigService';
 import { Panel } from '../ui/Panel';
 import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
+import { MuButton } from '../ui/MuButton';
 
 interface UpdateModalProps {
   visible: boolean;
@@ -205,65 +206,38 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
               </View>
             )}
 
-            {updateInfo.forceUpdate && !isRollback ? (
-              <TouchableOpacity
-                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 48, marginBottom: 10 }}
-                activeOpacity={0.8}
-                onPress={handleDownload}
-                accessibilityRole="button"
-                accessibilityLabel="Descargar e Instalar Ahora"
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.buttons.big}
-                  style={styles.crimsonButtonWrap}
-                  resizeMode="stretch"
-                >
-                  <Text style={styles.crimsonButtonText}>DESCARGAR E INSTALAR</Text>
-                </ImageBackground>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 48, marginBottom: 10 }}
-                activeOpacity={0.8}
-                onPress={handleDownload}
-                accessibilityRole="button"
-                accessibilityLabel={isRollback ? 'Reinstalar Versión Anterior' : 'Descargar e Instalar Ahora'}
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.tabs.tabModeActive}
-                  style={styles.downloadButtonWrap}
-                  resizeMode="stretch"
-                >
-                  <Text style={[styles.downloadButtonText, { color: '#0D0E0D' }]}>
-                    {isRollback ? 'Reinstalar Versión Anterior (Rollback)' : isBeta ? 'Instalar Versión Beta' : 'Descargar e Instalar Ahora'}
-                  </Text>
-                </ImageBackground>
-              </TouchableOpacity>
-            )}
+            <MuButton
+              titulo={
+                isRollback
+                  ? 'Reinstalar Versión Anterior'
+                  : isBeta
+                  ? 'Instalar Versión Beta'
+                  : 'Descargar e Instalar Ahora'
+              }
+              icono="download"
+              variante={updateInfo.forceUpdate || isRollback ? 'danger' : 'primary'}
+              altura={48}
+              onPress={handleDownload}
+              style={{ width: '100%', marginBottom: 10 }}
+              accessibilityLabel={isRollback ? 'Reinstalar Versión Anterior' : 'Descargar e Instalar Ahora'}
+            />
 
             {!updateInfo.forceUpdate && !isRollback && (
-              <TouchableOpacity
-                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 44, marginTop: 4 }}
-                activeOpacity={0.7}
+              <MuButton
+                titulo="Recordarme más tarde"
+                variante="secondary"
+                altura={44}
                 onPress={handleDismiss}
-                accessibilityRole="button"
+                style={{ width: '100%', marginTop: 2 }}
                 accessibilityLabel="Recordarme más tarde"
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.tabs.tabModeInactive}
-                  style={styles.laterButtonWrap}
-                  resizeMode="stretch"
-                >
-                  <Text style={styles.laterButtonText}>Recordarme más tarde</Text>
-                </ImageBackground>
-              </TouchableOpacity>
+              />
             )}
 
-            {/* Faldón decorativo gótico */}
+            {/* Faldón decorativo gótico que cubre todo el espacio del borde */}
             <Image
               source={STITCH_ASSETS.decorations.gothicBottomFooter}
-              style={{ width: '100%', height: 32, marginTop: 14 }}
-              resizeMode="contain"
+              style={styles.gothicBottomFooter}
+              resizeMode="stretch"
             />
           </ScrollView>
         </Panel>
@@ -582,5 +556,10 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginBottom: 3,
     ...THEME.effects.textShadowSubtle,
+  },
+  gothicBottomFooter: {
+    width: '100%',
+    height: 24,
+    marginTop: 14,
   },
 });

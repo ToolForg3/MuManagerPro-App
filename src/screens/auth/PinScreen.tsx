@@ -265,7 +265,7 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
       <Image
         source={STITCH_ASSETS.decorations.gothicBottomFooter}
         style={{ width: '100%', maxWidth: 390, height: 42, alignSelf: 'center', marginTop: 12 }}
-        resizeMode="contain"
+        resizeMode="stretch"
       />
       </ScrollView>
     </ImageBackground>

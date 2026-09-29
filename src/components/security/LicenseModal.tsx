@@ -710,7 +710,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               <Image
                 source={STITCH_ASSETS.decorations.gothicBottomFooter}
                 style={styles.footerGothicWindow}
-                resizeMode="contain"
+                resizeMode="stretch"
               />
             </View>
           </ScrollView>

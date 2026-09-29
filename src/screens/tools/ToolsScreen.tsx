@@ -2724,36 +2724,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
           <View style={styles.tabContent}>
             {/* Botón Rápido: Inyectar Set Completo */}
-            <TouchableOpacity
-              style={[
-                styles.actionBtn,
-                {
-                  backgroundColor: '#292A29',
-                  borderColor: '#EFD28D',
-                  borderWidth: 1.5,
-                  borderRadius: 2,
-                  marginTop: 0,
-                  marginBottom: 12,
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 8,
-                  height: 48,
-                  minHeight: 48,
-                  shadowColor: '#000000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 4,
-                },
-              ]}
+            <MuButton
+              titulo="INYECTAR SET COMPLETO (EDICIÓN RÁPIDA)"
+              icono="lightning-bolt"
+              variante="primary"
+              altura={48}
+              style={{ marginBottom: 12 }}
               onPress={() => setQuickSetModalVisible(true)}
-              activeOpacity={0.8}
-            >
-              <MuIcon name="lightning-bolt" size={20} color="#EFD28D" />
-              <Text style={[styles.actionBtnText, { fontSize: 13, fontWeight: 'bold', color: '#E4E2E0', letterSpacing: 0.5 }]}>
-                INYECTAR SET COMPLETO (EDICIÓN RÁPIDA)
-              </Text>
-            </TouchableOpacity>
+            />
 
             {/* Header / Target Account Input */}
             <Panel variant="box" style={[styles.card, { zIndex: 10 }]}>
@@ -3030,15 +3008,19 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 6 }}>
                     {/* Normal */}
                     <TouchableOpacity
-                      style={[
-                        styles.ancientBtn,
-                        makerAncient === 0 && { borderColor: THEME.colors.textoSecundario, backgroundColor: 'rgba(255,255,255,0.1)' },
-                      ]}
+                      style={{ borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setMakerAncient(0)}
+                      activeOpacity={0.7}
                     >
-                      <Text style={[styles.ancientBtnText, makerAncient === 0 && { color: '#FFF', fontWeight: 'bold' }]}>
-                        Normal (Sin Ancient)
-                      </Text>
+                      <ImageBackground
+                        source={makerAncient === 0 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.ancientBtnText, makerAncient === 0 ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' }]}>
+                          Normal (Sin Ancient)
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     {/* Piece-specific options */}
@@ -3048,18 +3030,22 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       return (
                         <TouchableOpacity
                           key={'maker_anc_' + anc.tier + '_' + anc.setId}
-                          style={[
-                            styles.ancientBtn,
-                            isSel && { borderColor: THEME.colors.arcano, backgroundColor: 'rgba(91, 141, 239, 0.15)' },
-                          ]}
+                          style={{ borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => {
                             const curStam = currentDecoded.staminaBonus === 10 ? 10 : 5;
                             setMakerAncient(encodeAncientByte(anc.tier, curStam));
                           }}
+                          activeOpacity={0.7}
                         >
-                          <Text style={[styles.ancientBtnText, isSel && { color: THEME.colors.arcano, fontWeight: 'bold' }]}>
-                            {anc.name} (Tier {anc.tier})
-                          </Text>
+                          <ImageBackground
+                            source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={[styles.ancientBtnText, isSel ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' }]}>
+                              {anc.name} (Tier {anc.tier})
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -3074,24 +3060,21 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         return (
                           <TouchableOpacity
                             key={'maker_stam_' + bonus}
-                            style={[
-                              {
-                                flex: 1,
-                                paddingVertical: 5,
-                                alignItems: 'center',
-                                borderRadius: THEME.shapes.radioEsquina,
-                                borderWidth: 1,
-                                borderColor: isSelBonus ? THEME.colors.arcano : '#444',
-                                backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
-                              },
-                            ]}
+                            style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => {
                               setMakerAncient(encodeAncientByte(currentDecoded.tier || 1, bonus));
                             }}
+                            activeOpacity={0.7}
                           >
-                            <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.arcano : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
-                              +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
-                            </Text>
+                            <ImageBackground
+                              source={isSelBonus ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={{ fontSize: 11, color: isSelBonus ? '#FEDF99' : '#CDC6B9', fontWeight: isSelBonus ? '900' : '700' }}>
+                                +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
+                              </Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         );
                       })}
@@ -3800,17 +3783,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 ].map((dest) => (
                   <TouchableOpacity
                     key={`tele_fix_${dest.name}`}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: THEME.colors.casillaFondo,
-                      borderWidth: 1,
-                      borderColor: '#4C463A',
-                      borderRadius: 2,
-                      paddingHorizontal: 10,
-                      paddingVertical: 7,
-                      gap: 6,
-                    }}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={async () => {
                       if (!LicenseService.isPro()) {
                         LicenseService.alertProRequired('Teletransporte Directo', () => setLicenseModalVisible(true), 'El teletransporte en tiempo real requiere una licencia PRO activa.');
@@ -3837,11 +3810,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       }
                     }}
                   >
-                    <MuIcon name={dest.icon as any} size={18} color={dest.color} />
-                    <View>
-                      <Text style={{ color: THEME.colors.texto, fontSize: 12, fontWeight: 'bold' }}>{dest.name}</Text>
-                      <Text style={{ color: THEME.colors.textoSecundario, fontSize: 9 }}>{dest.x}, {dest.y}</Text>
-                    </View>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      resizeMode="stretch"
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 10,
+                        paddingVertical: 7,
+                        gap: 6,
+                      }}
+                    >
+                      <MuIcon name={dest.icon as any} size={18} color={dest.color} />
+                      <View>
+                        <Text style={{ color: '#FEDF99', fontSize: 12, fontWeight: 'bold' }}>{dest.name}</Text>
+                        <Text style={{ color: '#CDC6B9', fontSize: 9 }}>{dest.x}, {dest.y}</Text>
+                      </View>
+                    </ImageBackground>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -3886,19 +3871,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     return (
                       <TouchableOpacity
                         key={`custom_map_${m.id}`}
-                        style={{
-                          paddingHorizontal: 10,
-                          paddingVertical: 6,
-                          borderRadius: 2,
-                          backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.25)' : THEME.colors.casillaFondo,
-                          borderWidth: 1,
-                          borderColor: isSelected ? '#EFD28D' : '#4C463A',
-                        }}
+                        style={{ height: 32, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setCustomTeleportMap(m.id)}
                       >
-                        <Text style={{ color: isSelected ? '#EFD28D' : THEME.colors.texto, fontSize: 11, fontWeight: isSelected ? 'bold' : 'normal' }}>
-                          [{m.id}] {m.name}
-                        </Text>
+                        <ImageBackground
+                          source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          resizeMode="stretch"
+                          style={{
+                            height: '100%',
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: isSelected ? '#FEDF99' : '#CDC6B9',
+                              fontSize: 11,
+                              fontWeight: isSelected ? '900' : '700',
+                              ...(isSelected ? THEME.effects.textShadowSubtle : {}),
+                            }}
+                          >
+                            [{m.id}] {m.name}
+                          </Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     );
                   })}
@@ -4856,12 +4853,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       placeholder="Nombre del Botón (ej: Premio Guild War)"
                       placeholderTextColor={THEME.colors.textMuted}
                     />
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#2E7D32', width: 90, marginTop: 0 }]}
+                    <MuButton
+                      titulo="Crear"
+                      variante="success"
+                      altura={38}
                       onPress={handleCreateNewPrizePreset}
-                    >
-                      <Text style={styles.actionBtnText}>Crear</Text>
-                    </TouchableOpacity>
+                      style={{ width: 90 }}
+                    />
                   </View>
                 </View>
               )}
@@ -4873,26 +4871,41 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   return (
                     <TouchableOpacity
                       key={'prize_preset_btn_' + p.id}
-                      style={[
-                        styles.presetPill,
-                        { borderColor: p.badgeColor || THEME.colors.primaryOrange },
-                        isActive && { backgroundColor: (p.badgeColor || THEME.colors.primaryOrange) + '33', borderWidth: 2 }
-                      ]}
+                      style={{ height: 38, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => handleApplyPrizePreset(p.id)}
                       activeOpacity={0.7}
                     >
-                      <MuIcon
-                        name={(p.icon || 'trophy') as any}
-                        size={16}
-                        color={p.badgeColor || THEME.colors.primaryOrange}
-                      />
-                      <Text style={[styles.presetPillText, isActive && { fontWeight: 'bold', color: '#FFF' }]}>
-                        {p.name}
-                      </Text>
-                      {isActive && (
-                        <MuIcon name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
-                      )}
-                      <TouchableOpacity
+                      <ImageBackground
+                        source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        resizeMode="stretch"
+                        style={{
+                          height: '100%',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          gap: 6,
+                        }}
+                      >
+                        <MuIcon
+                          name={(p.icon || 'trophy') as any}
+                          size={16}
+                          color={isActive ? '#FEDF99' : (p.badgeColor || '#EFD28D')}
+                        />
+                        <Text
+                          style={{
+                            color: isActive ? '#FEDF99' : '#CDC6B9',
+                            fontWeight: isActive ? '900' : '700',
+                            fontSize: 12,
+                            ...(isActive ? THEME.effects.textShadowSubtle : {}),
+                          }}
+                        >
+                          {p.name}
+                        </Text>
+                        {isActive && (
+                          <MuIcon name="check-circle" size={14} color="#5DF5B0" style={{ marginLeft: 2 }} />
+                        )}
+                        <TouchableOpacity
                           onPress={() => {
                             Alert.alert('Eliminar Botón de Premio', `¿Deseas eliminar el botón '${p.name}'?`, [
                               { text: 'Cancelar', style: 'cancel' },
@@ -4903,6 +4916,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         >
                           <MuIcon name="close-circle" size={14} color="#FF5252" />
                         </TouchableOpacity>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
@@ -4938,14 +4952,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
-                <TouchableOpacity
-                  style={[styles.savePresetBtn, { height: 42, alignSelf: 'flex-end' }]}
+                <MuButton
+                  titulo="Guardar"
+                  icono="content-save-edit"
+                  variante="primary"
+                  altura={40}
                   onPress={handleSaveCurrentToActivePrizePreset}
-                  activeOpacity={0.8}
-                >
-                  <MuIcon name="content-save-edit" size={16} color="#FFF" />
-                  <Text style={styles.savePresetBtnText}>Guardar</Text>
-                </TouchableOpacity>
+                  style={{ alignSelf: 'flex-end' }}
+                />
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
@@ -5395,7 +5409,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             key={'prize_player_' + p.charName}
                             style={[
                               styles.dupeItemRow,
-                              { backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.2)' : THEME.colors.casillaFondo, borderWidth: 1, borderColor: isSelected ? THEME.colors.oro : THEME.colors.borde },
+                              {
+                                backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.15)' : THEME.colors.casillaFondo,
+                                borderWidth: 1,
+                                borderTopColor: isSelected ? '#EFD28D' : '#3A3C38',
+                                borderLeftColor: isSelected ? '#EFD28D' : '#3A3C38',
+                                borderRightColor: isSelected ? '#6B5826' : '#101110',
+                                borderBottomColor: isSelected ? '#6B5826' : '#101110',
+                              },
                             ]}
                             onPress={() => handleToggleSelectPlayer(p.charName)}
                           >
@@ -5877,46 +5898,28 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                           {/* Fila 2: Acciones Editar y Quitar */}
                           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-                            <TouchableOpacity
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 5,
-                                backgroundColor: '#211B14',
-                                borderWidth: 1,
-                                borderColor: '#EFD28D',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                borderRadius: 2,
-                              }}
+                            <MuButton
+                              titulo="Editar"
+                              icono="pencil"
+                              variante="primary"
+                              compacto
+                              altura={32}
                               onPress={() => {
                                 setGmCharNameInput(gm.charName);
                                 setGmAccountInput(gm.accountId);
                                 setSelectedGmLevel(gm.gmLevel);
                                 setGmModalVisible(true);
                               }}
-                            >
-                              <MuIcon name="pencil" size={13} color="#EFD28D" />
-                              <Text style={{ color: '#EFD28D', fontSize: 12, fontWeight: 'bold' }}>Editar</Text>
-                            </TouchableOpacity>
+                            />
 
-                            <TouchableOpacity
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 5,
-                                backgroundColor: '#23120F',
-                                borderWidth: 1,
-                                borderColor: '#E2703A',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                borderRadius: THEME.shapes.radioEsquina,
-                              }}
+                            <MuButton
+                              titulo="Quitar"
+                              icono="shield-off"
+                              variante="danger"
+                              compacto
+                              altura={32}
                               onPress={() => handleRemoveGm(gm.charName, gm.accountId)}
-                            >
-                              <MuIcon name="shield-off" size={13} color="#E2703A" />
-                              <Text style={{ color: '#E2703A', fontSize: 12, fontWeight: 'bold' }}>Quitar</Text>
-                            </TouchableOpacity>
+                            />
                           </View>
                         </View>
                       </Panel>
@@ -5993,21 +5996,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             )}
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: THEME.colors.superficie, borderColor: '#E2703A', borderWidth: 1 }]}
+              <MuButton
+                titulo="Disolver Clan"
+                icono="trash-can-outline"
+                variante="danger"
+                style={{ flex: 1 }}
+                altura={40}
                 onPress={() => {
                   if (selectedGuild) handleDeleteGuild(selectedGuild.G_Name);
                 }}
-              >
-                <MuIcon name="trash-can-outline" size={16} color="#E2703A" />
-                <Text style={[styles.actionBtnText, { color: '#E2703A' }]}>Disolver Clan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: THEME.colors.superficie, borderColor: THEME.colors.borde, borderWidth: 1 }]}
+              />
+              <MuButton
+                titulo="Cerrar"
+                variante="secondary"
+                style={{ flex: 1 }}
+                altura={40}
                 onPress={() => setGuildModalVisible(false)}
-              >
-                <Text style={[styles.actionBtnText, { color: '#EFD28D' }]}>Cerrar</Text>
-              </TouchableOpacity>
+              />
             </View>
           </View>
         </View>
@@ -6137,31 +6142,40 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       return (
                         <TouchableOpacity
                           key={`qs_${set.id}`}
-                          style={[
-                            styles.itemCard,
-                            isSelected && styles.itemCardSelected,
-                            { minWidth: 120, padding: 10, alignItems: 'center' },
-                          ]}
+                          style={{ minWidth: 120, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => setSelectedQuickSet(set)}
                         >
-                          <MuIcon
-                            name="shield-outline"
-                            size={24}
-                            color={isSelected ? THEME.colors.primaryOrange : THEME.colors.textMuted}
-                          />
-                          <Text
-                            style={[
-                              styles.itemName,
-                              isSelected && styles.itemNameSelected,
-                              { fontSize: 12, textAlign: 'center', marginTop: 4 },
-                            ]}
+                          <ImageBackground
+                            source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            resizeMode="stretch"
+                            style={{
+                              padding: 10,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
                           >
-                            {set.name}
-                          </Text>
-                          <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
-                          <Text style={{ color: '#4CAF50', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
-                            {set.pieces.length} piezas
-                          </Text>
+                            <MuIcon
+                              name="shield-outline"
+                              size={24}
+                              color={isSelected ? '#FEDF99' : THEME.colors.textMuted}
+                            />
+                            <Text
+                              style={{
+                                color: isSelected ? '#FEDF99' : '#CDC6B9',
+                                fontWeight: isSelected ? '900' : '700',
+                                fontSize: 12,
+                                textAlign: 'center',
+                                marginTop: 4,
+                                ...(isSelected ? THEME.effects.textShadowSubtle : {}),
+                              }}
+                            >
+                              {set.name}
+                            </Text>
+                            <Text style={{ color: isSelected ? '#FEDF99' : THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
+                            <Text style={{ color: '#4CAF50', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
+                              {set.pieces.length} piezas
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -6637,22 +6651,24 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     ].map((c) => (
                       <TouchableOpacity
                         key={'p_tele_' + c.name}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          backgroundColor: THEME.colors.superficie,
-                          borderWidth: 1,
-                          borderColor: THEME.colors.borde,
-                          borderRadius: THEME.shapes.radioEsquina,
-                          paddingHorizontal: 8,
-                          paddingVertical: 6,
-                          gap: 4,
-                        }}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => handleTeleportPlayerCity(selectedPlayerModal.charName, c.name, c.map, c.x, c.y)}
                       >
-                        <MuIcon name={c.icon as any} size={14} color={c.color} />
-                        <Text style={{ color: THEME.colors.texto, fontSize: 11, fontWeight: 'bold' }}>{c.name}</Text>
-                        <Text style={{ color: THEME.colors.textoSecundario, fontSize: 9 }}>({c.x},{c.y})</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeInactive}
+                          resizeMode="stretch"
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            paddingHorizontal: 8,
+                            paddingVertical: 6,
+                            gap: 4,
+                          }}
+                        >
+                          <MuIcon name={c.icon as any} size={14} color={c.color} />
+                          <Text style={{ color: '#FEDF99', fontSize: 11, fontWeight: 'bold' }}>{c.name}</Text>
+                          <Text style={{ color: '#CDC6B9', fontSize: 9 }}>({c.x},{c.y})</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -6705,17 +6721,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <Text style={[styles.label, { color: '#EFD28D', marginBottom: 6 }]}>Enviar a Otros Módulos:</Text>
                   <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
                     <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        backgroundColor: THEME.colors.superficie,
-                        borderWidth: 1,
-                        borderColor: THEME.colors.borde,
-                        borderRadius: THEME.shapes.radioEsquina,
-                        paddingVertical: 8,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 2,
-                      }}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => {
                         const acc = selectedPlayerModal.accountId;
                         setSelectedPlayerModal(null);
@@ -6723,22 +6729,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setActiveTab('maker');
                       }}
                     >
-                      <MuIcon name="anvil" size={16} color="#EFD28D" />
-                      <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Item Maker</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        resizeMode="stretch"
+                        style={{
+                          paddingVertical: 8,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 2,
+                        }}
+                      >
+                        <MuIcon name="anvil" size={16} color="#EFD28D" />
+                        <Text style={{ color: '#FEDF99', fontSize: 10, fontWeight: 'bold' }}>Item Maker</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        backgroundColor: THEME.colors.superficie,
-                        borderWidth: 1,
-                        borderColor: THEME.colors.borde,
-                        borderRadius: THEME.shapes.radioEsquina,
-                        paddingVertical: 8,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 2,
-                      }}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => {
                         const acc = selectedPlayerModal.accountId;
                         setSelectedPlayerModal(null);
@@ -6746,22 +6753,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setActiveTab('kit');
                       }}
                     >
-                      <MuIcon name="gift-outline" size={16} color="#3FCF8E" />
-                      <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Starter Kit</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        resizeMode="stretch"
+                        style={{
+                          paddingVertical: 8,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 2,
+                        }}
+                      >
+                        <MuIcon name="gift-outline" size={16} color="#3FCF8E" />
+                        <Text style={{ color: '#FEDF99', fontSize: 10, fontWeight: 'bold' }}>Starter Kit</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        backgroundColor: THEME.colors.superficie,
-                        borderWidth: 1,
-                        borderColor: THEME.colors.borde,
-                        borderRadius: THEME.shapes.radioEsquina,
-                        paddingVertical: 8,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 2,
-                      }}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => {
                         const name = selectedPlayerModal.charName;
                         setSelectedPlayerModal(null);
@@ -6769,8 +6777,19 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setActiveTab('fixes');
                       }}
                     >
-                      <MuIcon name="wrench-outline" size={16} color="#5B8DEF" />
-                      <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Desatascar</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        resizeMode="stretch"
+                        style={{
+                          paddingVertical: 8,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 2,
+                        }}
+                      >
+                        <MuIcon name="wrench-outline" size={16} color="#5B8DEF" />
+                        <Text style={{ color: '#FEDF99', fontSize: 10, fontWeight: 'bold' }}>Desatascar</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
 

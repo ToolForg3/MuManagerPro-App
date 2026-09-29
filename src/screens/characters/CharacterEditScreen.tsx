@@ -1338,43 +1338,34 @@ export const CharacterEditScreen = () => {
       {/* Header Gótico Táctico NewUI (Stitch 03/16R) */}
       <View style={[styles.stitchHeaderBar, { paddingTop: topInset + 4 }]}>
         <View style={styles.stitchHeaderContent}>
-          {/* Botón Volver NewUI Season 6 */}
+          {/* Botón Volver NewUI Season 6 con textura nativa */}
           <TouchableOpacity
             style={styles.stitchBackBtn}
             onPress={() => navigation.goBack()}
             activeOpacity={0.8}
             accessibilityLabel="Volver a lista de personajes"
           >
-            <MuIcon name="arrow-left" size={16} color={THEME.colors.oroClaro} />
-            <Text style={styles.stitchBackBtnText}>VOLVER</Text>
+            <ImageBackground
+              source={STITCH_ASSETS.buttons.small}
+              style={styles.stitchBackBtnBg}
+              resizeMode="stretch"
+            >
+              <MuIcon name="arrow-left" size={14} color="#FEDF99" />
+              <Text style={styles.stitchBackBtnText}>VOLVER</Text>
+            </ImageBackground>
           </TouchableOpacity>
 
           {/* Avatar de Clase MU */}
           <View style={styles.stitchHeaderAvatarWrap}>
-            <ClassAvatar classId={character?.Class || 0} size={34} />
+            <ClassAvatar classId={character?.Class || 0} size={32} />
           </View>
 
           {/* Avatar y Datos del Personaje */}
           <View style={styles.stitchHeaderCenter}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Text style={styles.stitchHeaderName} numberOfLines={1}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+              <Text style={styles.stitchHeaderName} numberOfLines={1} ellipsizeMode="tail">
                 {character?.Name}
               </Text>
-              <View
-                style={[
-                  styles.stitchHeaderStatusBadge,
-                  isCharacterOnline ? styles.stitchHeaderStatusOnline : styles.stitchHeaderStatusOffline,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.stitchHeaderStatusBadgeText,
-                    { color: isCharacterOnline ? THEME.colors.brasa : THEME.colors.jade },
-                  ]}
-                >
-                  {isCharacterOnline ? 'ONLINE' : 'OFFLINE'}
-                </Text>
-              </View>
               {/* Badge PK con sprite Stitch */}
               <View style={styles.stitchHeaderPkBadge}>
                 <Image
@@ -1397,7 +1388,8 @@ export const CharacterEditScreen = () => {
               icono="refresh"
               variante="primary"
               compacto={true}
-              altura={36}
+              altura={34}
+              style={{ width: 68 }}
               onPress={() => loadCharacter(true)}
               disabled={isRefreshing}
               cargando={isRefreshing}
@@ -1408,7 +1400,8 @@ export const CharacterEditScreen = () => {
               icono="close"
               variante="danger"
               compacto={true}
-              altura={36}
+              altura={34}
+              style={{ width: 68 }}
               onPress={promptDeleteCurrentCharacter}
               disabled={isDeletingChar}
               cargando={isDeletingChar}
@@ -1934,38 +1927,36 @@ export const CharacterEditScreen = () => {
                   <Text style={[styles.gridHeaderTitle, { marginBottom: 0 }]}>
                     {invGridMode === '32' ? 'INVENTARIO PRINCIPAL (32 CUADROS)' : 'INVENTARIO PRINCIPAL (64 CUADROS)'}
                   </Text>
-                  <View style={{ flexDirection: 'row', backgroundColor: '#111211', borderRadius: 2, padding: 2, borderWidth: 1, borderTopColor: '#141514', borderLeftColor: '#141514', borderRightColor: '#4A463F', borderBottomColor: '#4A463F' }}>
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
                     <TouchableOpacity
-                      style={{
-                        paddingVertical: 4,
-                        paddingHorizontal: 10,
-                        borderRadius: 2,
-                        backgroundColor: invGridMode === '32' ? '#26221A' : 'transparent',
-                        borderWidth: invGridMode === '32' ? 1 : 0,
-                        borderTopColor: '#EFD28D',
-                        borderLeftColor: '#EFD28D',
-                        borderRightColor: '#5C4A22',
-                        borderBottomColor: '#5C4A22',
-                      }}
+                      style={{ borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setInvGridMode('32')}
+                      activeOpacity={0.7}
                     >
-                      <Text style={{ fontSize: 11, fontWeight: '800', color: invGridMode === '32' ? '#EFD28D' : THEME.colors.textSecondary }}>32 Oficial</Text>
+                      <ImageBackground
+                        source={invGridMode === '32' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ paddingVertical: 4, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: invGridMode === '32' ? '#FEDF99' : '#CDC6B9' }}>
+                          32 Oficial
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={{
-                        paddingVertical: 4,
-                        paddingHorizontal: 10,
-                        borderRadius: 2,
-                        backgroundColor: invGridMode === '64' ? '#26221A' : 'transparent',
-                        borderWidth: invGridMode === '64' ? 1 : 0,
-                        borderTopColor: '#EFD28D',
-                        borderLeftColor: '#EFD28D',
-                        borderRightColor: '#5C4A22',
-                        borderBottomColor: '#5C4A22',
-                      }}
+                      style={{ borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setInvGridMode('64')}
+                      activeOpacity={0.7}
                     >
-                      <Text style={{ fontSize: 11, fontWeight: '800', color: invGridMode === '64' ? '#EFD28D' : THEME.colors.textSecondary }}>64 Exp.</Text>
+                      <ImageBackground
+                        source={invGridMode === '64' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ paddingVertical: 4, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: invGridMode === '64' ? '#FEDF99' : '#CDC6B9' }}>
+                          64 Exp.
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -2093,11 +2084,16 @@ export const CharacterEditScreen = () => {
               </View>
               <View style={{ flexDirection: 'row', gap: 6 }}>
                 <TouchableOpacity
-                  style={styles.muFooterBtn}
+                  style={{ width: 36, height: 36, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => navigation.goBack()}
                   activeOpacity={0.7}
+                  accessibilityLabel="Cerrar inventario"
                 >
-                  <Text style={styles.muFooterBtnGoldText}>X</Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.buttons.close}
+                    style={{ width: 36, height: 36 }}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -2762,10 +2758,7 @@ export const CharacterEditScreen = () => {
                         return (
                           <TouchableOpacity
                             key={race.baseClass}
-                            style={[
-                              styles.raceChip,
-                              isCurrentRace && [styles.raceChipActive, { borderColor: race.accentColor }],
-                            ]}
+                            style={styles.raceChipBtnTouchable}
                             onPress={() => {
                               const targetTier = currentInfo.tier;
                               const matchedTier = race.tiers.find((t) => t.tier === targetTier) || race.tiers[race.tiers.length - 1];
@@ -2783,31 +2776,38 @@ export const CharacterEditScreen = () => {
                                 setMarlonPoints(false);
                               }
                             }}
+                            activeOpacity={0.7}
                           >
-                            {portrait ? (
-                              <Image
-                                source={portrait}
-                                style={{ width: 22, height: 22, borderRadius: 11 /* círculo funcional: clip de portrait de raza */ }}
-                                resizeMode="cover"
-                              />
-                            ) : (
-                              <MuIcon
-                                name={race.avatarIcon as any}
-                                size={18}
-                                color={isCurrentRace ? race.accentColor : THEME.colors.textMuted}
-                              />
-                            )}
-                            <Text
-                              style={[
-                                styles.raceChipText,
-                                isCurrentRace && [styles.raceChipTextActive, { color: race.accentColor }],
-                              ]}
+                            <ImageBackground
+                              source={isCurrentRace ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={styles.raceChipBtnBg}
+                              resizeMode="stretch"
                             >
-                              {race.name}
-                            </Text>
-                            {isCurrentRace && (
-                              <MuIcon name="check" size={14} color={race.accentColor} />
-                            )}
+                              {portrait ? (
+                                <Image
+                                  source={portrait}
+                                  style={{ width: 22, height: 22, borderRadius: 11 /* círculo funcional: clip de portrait de raza */ }}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <MuIcon
+                                  name={race.avatarIcon as any}
+                                  size={18}
+                                  color={isCurrentRace ? '#FEDF99' : THEME.colors.textMuted}
+                                />
+                              )}
+                              <Text
+                                style={[
+                                  styles.raceChipText,
+                                  isCurrentRace ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' },
+                                ]}
+                              >
+                                {race.name}
+                              </Text>
+                              {isCurrentRace && (
+                                <MuIcon name="check" size={14} color="#FEDF99" />
+                              )}
+                            </ImageBackground>
                           </TouchableOpacity>
                         );
                       })}
@@ -3319,26 +3319,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stitchBackBtn: {
-    minHeight: 36,
-    paddingHorizontal: 8,
+    height: 34,
     borderRadius: 2,
-    borderWidth: 1,
-    borderColor: '#4C463A',
-    backgroundColor: '#292A29',
+    overflow: 'hidden',
+  },
+  stitchBackBtnBg: {
+    height: 34,
+    paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
   },
   stitchBackBtnText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: THEME.colors.oroClaro,
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#FEDF99',
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadowSubtle,
   },
   stitchHeaderAvatarWrap: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 2,
     backgroundColor: '#0D0E0D',
     borderWidth: 1,
@@ -3373,12 +3375,15 @@ const styles = StyleSheet.create({
   },
   stitchHeaderCenter: {
     flex: 1,
+    minWidth: 80,
+    overflow: 'hidden',
   },
   stitchHeaderName: {
     fontSize: 14,
     fontWeight: '800',
     color: THEME.colors.oroClaro,
     letterSpacing: 0.5,
+    flexShrink: 1,
     ...THEME.effects.textShadow,
   },
   stitchHeaderStatusBadge: {
@@ -3408,7 +3413,8 @@ const styles = StyleSheet.create({
   stitchHeaderRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
+    flexShrink: 0,
   },
   stitchSyncBtn: {
     flexDirection: 'row',
@@ -5157,9 +5163,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   levelModalQuickTextActive: {
-    color: '#EFD28D',
-    fontWeight: '800',
-    ...THEME.effects.textShadow,
+    color: '#FEDF99',
+    fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   levelModalStepperRow: {
     flexDirection: 'row',
@@ -5371,26 +5377,25 @@ const styles = StyleSheet.create({
   },
   levelModalQuickBtnTouchable: {
     flex: 1,
+    height: 36,
     borderRadius: 2,
     overflow: 'hidden',
-    minHeight: 34,
   },
   levelModalQuickBtnBg: {
     width: '100%',
-    height: '100%',
-    paddingVertical: 8,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
   levelModalStepBtnTouchable: {
+    width: 44,
+    height: 44,
     borderRadius: 2,
     overflow: 'hidden',
-    minWidth: 44,
-    minHeight: 44,
   },
   levelModalStepBtnBg: {
-    width: '100%',
-    height: '100%',
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

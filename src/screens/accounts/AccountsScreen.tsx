@@ -2334,14 +2334,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     return (
                       <TouchableOpacity
                         key={v.level}
-                        style={[styles.vipPillBtn, isActive && { borderColor: v.color, backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}
+                        style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setEditVipLevel(v.level)}
                         activeOpacity={0.7}
                       >
-                        <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: v.color, marginBottom: 2 }} />
-                        <Text style={[styles.vipPillBtnText, isActive && { color: v.color, fontWeight: 'bold' }]}>
-                          {v.label}
-                        </Text>
+                        <ImageBackground
+                          source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: v.color, marginBottom: 2 }} />
+                          <Text style={[styles.vipPillBtnText, isActive ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' }]}>
+                            {v.label}
+                          </Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     );
                   })}
@@ -3018,26 +3024,28 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               {/* Barra Superior con Botón Volver, Quick Sets y Colocar */}
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
-                  style={{
-                    paddingHorizontal: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    backgroundColor: THEME.colors.casillaFondo,
-                    borderColor: THEME.colors.borde,
-                    borderWidth: 1.2,
-                    borderRadius: THEME.shapes.radioEsquina,
-                    minHeight: 48,
-                  }}
+                  style={{ borderRadius: 2, overflow: 'hidden', minHeight: 44 }}
                   onPress={() => handleSelectWarehouseTab(vaultSubTab === 'ext' ? 'vault_ext' : 'warehouse')}
                   activeOpacity={0.7}
                   accessibilityLabel="Volver al Baúl"
                 >
-                  <MuIcon name="arrow-left" size={16} color={THEME.colors.oroClaro} />
-                  <Text style={{ color: THEME.colors.oroClaro, fontSize: 11, fontWeight: '800' }}>
-                    VOLVER
-                  </Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.buttons.small}
+                    style={{
+                      paddingHorizontal: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      height: 44,
+                    }}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon name="arrow-left" size={16} color="#FEDF99" />
+                    <Text style={{ color: '#FEDF99', fontSize: 11, fontWeight: '900', fontFamily: THEME.typography.fontTitle }}>
+                      VOLVER
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <MuButton
@@ -3310,15 +3318,19 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       return (
                         <TouchableOpacity
                           key={`fen_${fen.flags}`}
-                          style={[
-                            styles.whFenrirPill,
-                            isSel && { borderColor: fen.color, backgroundColor: `${fen.color}22` },
-                          ]}
+                          style={{ flex: 1, minWidth: 70, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => setVaultMakerExcFlags(fen.flags)}
+                          activeOpacity={0.7}
                         >
-                          <Text style={{ fontSize: 11, fontWeight: '700', color: isSel ? fen.color : THEME.colors.textoSecundario }}>
-                            {fen.label}
-                          </Text>
+                          <ImageBackground
+                            source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: isSel ? '900' : '700', color: isSel ? '#FEDF99' : '#CDC6B9' }}>
+                              {fen.label}
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -3347,15 +3359,19 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       {/* Normal Pill */}
                       <TouchableOpacity
                         key="wh_anc_none"
-                        style={[
-                          styles.whAncientPill,
-                          vaultMakerAncient === 0 && styles.whAncientPillActive,
-                        ]}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setVaultMakerAncient(0)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={[styles.whAncientPillText, vaultMakerAncient === 0 && styles.whAncientPillTextActive]}>
-                          Normal (Sin Ancient)
-                        </Text>
+                        <ImageBackground
+                          source={vaultMakerAncient === 0 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.whAncientPillText, vaultMakerAncient === 0 ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' }]}>
+                            Normal (Sin Ancient)
+                          </Text>
+                        </ImageBackground>
                       </TouchableOpacity>
 
                       {/* Piece-specific Ancient Sets */}
@@ -3365,18 +3381,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                         return (
                           <TouchableOpacity
                             key={`wh_anc_${anc.tier}_${anc.setId}`}
-                            style={[
-                              styles.whAncientPill,
-                              isSel && styles.whAncientPillActive,
-                            ]}
+                            style={{ borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => {
                               const curStam = currentDecoded.staminaBonus === 10 ? 10 : 5;
                               setVaultMakerAncient(encodeAncientByte(anc.tier, curStam));
                             }}
+                            activeOpacity={0.7}
                           >
-                            <Text style={[styles.whAncientPillText, isSel && styles.whAncientPillTextActive]}>
-                              {anc.name} (Tier {anc.tier})
-                            </Text>
+                            <ImageBackground
+                              source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={[styles.whAncientPillText, isSel ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' }]}>
+                                {anc.name} (Tier {anc.tier})
+                              </Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         );
                       })}
@@ -3391,24 +3411,21 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                           return (
                             <TouchableOpacity
                               key={`wh_stam_${bonus}`}
-                              style={[
-                                {
-                                  flex: 1,
-                                  paddingVertical: 5,
-                                  alignItems: 'center',
-                                  borderRadius: THEME.shapes.radioEsquina,
-                                  borderWidth: 1,
-                                  borderColor: isSelBonus ? THEME.colors.itemAncient : '#444',
-                                  backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
-                                },
-                              ]}
+                              style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                               onPress={() => {
                                 setVaultMakerAncient(encodeAncientByte(currentDecoded.tier || 1, bonus));
                               }}
+                              activeOpacity={0.7}
                             >
-                              <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.itemAncient : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
-                                +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
-                              </Text>
+                              <ImageBackground
+                                source={isSelBonus ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                                resizeMode="stretch"
+                              >
+                                <Text style={{ fontSize: 11, color: isSelBonus ? '#FEDF99' : '#CDC6B9', fontWeight: isSelBonus ? '900' : '700' }}>
+                                  +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
+                                </Text>
+                              </ImageBackground>
                             </TouchableOpacity>
                           );
                         })}
@@ -3718,21 +3735,27 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                  {[1, 5, 10, 20].map((q) => (
-                    <TouchableOpacity
-                      key={`vault_qty_chip_${q}`}
-                      style={[
-                        styles.whFenrirPill,
-                        vaultMakerQuantity === q && { backgroundColor: 'rgba(232, 200, 106, 0.15)', borderColor: THEME.colors.oroClaro },
-                        { flex: 1, alignItems: 'center', paddingVertical: 6 },
-                      ]}
-                      onPress={() => setVaultMakerQuantity(q)}
-                    >
-                      <Text style={{ color: vaultMakerQuantity === q ? THEME.colors.oroClaro : THEME.colors.textoSecundario, fontSize: 11, fontWeight: '700' }}>
-                        x{q}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {[1, 5, 10, 20].map((q) => {
+                    const isSel = vaultMakerQuantity === q;
+                    return (
+                      <TouchableOpacity
+                        key={`vault_qty_chip_${q}`}
+                        style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setVaultMakerQuantity(q)}
+                        activeOpacity={0.7}
+                      >
+                        <ImageBackground
+                          source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={{ color: isSel ? '#FEDF99' : '#CDC6B9', fontSize: 11, fontWeight: isSel ? '900' : '700' }}>
+                            x{q}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
@@ -3991,10 +4014,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   style={{
                     marginBottom: 12,
                     padding: 10,
-                    borderRadius: THEME.shapes.radioEsquina,
-                    backgroundColor: THEME.colors.casillaFondo,
+                    borderRadius: 2,
+                    backgroundColor: '#161716',
                     borderWidth: 1,
-                    borderColor: THEME.colors.borde,
+                    borderTopColor: '#3A3C38',
+                    borderLeftColor: '#3A3C38',
+                    borderRightColor: '#101110',
+                    borderBottomColor: '#101110',
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -4244,34 +4270,15 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     Esta es la <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold' }}>Bóveda de Expansión oficial del Baúl</Text> de Season 6 (Almacenado 1). En el cliente del juego se abre abriendo el baúl y presionando el botón <Text style={{ color: '#FFF', fontWeight: 'bold' }}>[+]</Text> ("Abriendo una Bóveda Expandida").
                   </Text>
 
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                      backgroundColor: vaultExtLevel >= 1 ? 'rgba(91, 141, 239, 0.12)' : THEME.colors.arcano,
-                      borderColor: THEME.colors.arcano,
-                      borderWidth: 1,
-                      paddingVertical: 10,
-                      borderRadius: THEME.shapes.radioEsquina,
-                      minHeight: 48,
-                    }}
-                    onPress={handleActivateVaultExpansion}
+                  <MuButton
+                    titulo={vaultExtLevel >= 1 ? 'Re-Sincronizar Bóveda en Juego' : 'Activar Bóveda Expandida en Juego'}
+                    icono="lightning-bolt"
+                    variante={vaultExtLevel >= 1 ? 'secondary' : 'primary'}
+                    altura={48}
+                    cargando={unlockingVaults}
                     disabled={unlockingVaults}
-                    activeOpacity={0.8}
-                  >
-                    {unlockingVaults ? (
-                      <ActivityIndicator size="small" color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
-                    ) : (
-                      <>
-                        <MuIcon name="lightning-bolt" size={16} color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
-                        <Text style={{ color: vaultExtLevel >= 1 ? THEME.colors.arcano : '#000', fontWeight: 'bold', fontSize: 12 }}>
-                          {vaultExtLevel >= 1 ? 'Re-Sincronizar Bóveda en Juego' : 'Activar Bóveda Expandida en Juego'}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                    onPress={handleActivateVaultExpansion}
+                  />
                 </View>
 
                 {/* Zen de la Bóveda Expandida con Botón MAX */}
@@ -4854,37 +4861,40 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       return (
                         <TouchableOpacity
                           key={`qs_set_${set.id}`}
-                          style={{
-                            minWidth: 110,
-                            padding: 10,
-                            alignItems: 'center',
-                            borderRadius: 2,
-                            borderWidth: 1.5,
-                            borderColor: isSelected ? '#EFD28D' : '#4C463A',
-                            backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.15)' : '#1F201F',
-                          }}
+                          style={{ minWidth: 110, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => setSelectedVaultQuickSet(set)}
                         >
-                          <MuIcon
-                            name="shield-outline"
-                            size={24}
-                            color={isSelected ? '#FF7A00' : THEME.colors.textMuted}
-                          />
-                          <Text
+                          <ImageBackground
+                            source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            resizeMode="stretch"
                             style={{
-                              color: isSelected ? '#FF7A00' : '#FFF',
-                              fontWeight: '700',
-                              fontSize: 12,
-                              textAlign: 'center',
-                              marginTop: 4,
+                              padding: 10,
+                              alignItems: 'center',
+                              justifyContent: 'center',
                             }}
                           >
-                            {set.name}
-                          </Text>
-                          <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
-                          <Text style={{ color: '#4CAF50', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
-                            {set.pieces.length} piezas
-                          </Text>
+                            <MuIcon
+                              name="shield-outline"
+                              size={24}
+                              color={isSelected ? '#FEDF99' : THEME.colors.textMuted}
+                            />
+                            <Text
+                              style={{
+                                color: isSelected ? '#FEDF99' : '#CDC6B9',
+                                fontWeight: isSelected ? '900' : '700',
+                                fontSize: 12,
+                                textAlign: 'center',
+                                marginTop: 4,
+                                ...(isSelected ? THEME.effects.textShadowSubtle : {}),
+                              }}
+                            >
+                              {set.name}
+                            </Text>
+                            <Text style={{ color: isSelected ? '#FEDF99' : THEME.colors.textoSecundario, fontSize: 10, marginTop: 2 }}>{set.catLabel}</Text>
+                            <Text style={{ color: '#4CAF50', fontSize: 9, marginTop: 2, fontWeight: 'bold' }}>
+                              {set.pieces.length} piezas
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -5018,39 +5028,67 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               {/* Toggles */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14, marginTop: 4 }}>
                 <TouchableOpacity
-                  style={[styles.whFenrirPill, quickSetVaultLuck && { backgroundColor: 'rgba(63, 207, 142, 0.2)', borderColor: '#3FCF8E' }]}
+                  style={{ flex: 1, minWidth: 70, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickSetVaultLuck(!quickSetVaultLuck)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={{ color: quickSetVaultLuck ? '#3FCF8E' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
-                    Luck
-                  </Text>
+                  <ImageBackground
+                    source={quickSetVaultLuck ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={{ color: quickSetVaultLuck ? '#FEDF99' : '#CDC6B9', fontSize: 11, fontWeight: quickSetVaultLuck ? '900' : '700' }}>
+                      Luck
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.whFenrirPill, quickSetVaultSkill && { backgroundColor: 'rgba(224, 195, 128, 0.2)', borderColor: '#EFD28D' }]}
+                  style={{ flex: 1, minWidth: 70, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickSetVaultSkill(!quickSetVaultSkill)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={{ color: quickSetVaultSkill ? '#E0C380' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
-                    Skill
-                  </Text>
+                  <ImageBackground
+                    source={quickSetVaultSkill ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={{ color: quickSetVaultSkill ? '#FEDF99' : '#CDC6B9', fontSize: 11, fontWeight: quickSetVaultSkill ? '900' : '700' }}>
+                      Skill
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.whFenrirPill, quickSetVaultFullExc && { backgroundColor: 'rgba(63, 207, 142, 0.2)', borderColor: '#3FCF8E' }]}
+                  style={{ flex: 1, minWidth: 70, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickSetVaultFullExc(!quickSetVaultFullExc)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={{ color: quickSetVaultFullExc ? '#3FCF8E' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
-                    Full Exc
-                  </Text>
+                  <ImageBackground
+                    source={quickSetVaultFullExc ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={{ color: quickSetVaultFullExc ? '#FEDF99' : '#CDC6B9', fontSize: 11, fontWeight: quickSetVaultFullExc ? '900' : '700' }}>
+                      Full Exc
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.whFenrirPill, quickSetVault380 && { backgroundColor: 'rgba(226, 112, 58, 0.2)', borderColor: '#E2703A' }]}
+                  style={{ flex: 1, minWidth: 70, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickSetVault380(!quickSetVault380)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={{ color: quickSetVault380 ? '#E2703A' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
-                    380 PvP
-                  </Text>
+                  <ImageBackground
+                    source={quickSetVault380 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={{ color: quickSetVault380 ? '#FEDF99' : '#CDC6B9', fontSize: 11, fontWeight: quickSetVault380 ? '900' : '700' }}>
+                      380 PvP
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
 
@@ -5176,18 +5214,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       return (
                         <TouchableOpacity
                           key={`v_harm_${h.id}`}
-                          style={[
-                            styles.whCategoryPill,
-                            isSel && { backgroundColor: '#FF6D00', borderColor: '#FF6D00' },
-                          ]}
+                          style={{ borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => {
                             setQuickSetVaultHarmonyType(h.id);
                             if (h.id > 0 && quickSetVaultHarmonyLevel === 0) setQuickSetVaultHarmonyLevel(13);
                           }}
+                          activeOpacity={0.7}
                         >
-                          <Text style={[styles.whCategoryPillText, isSel && { color: '#FFF', fontWeight: 'bold' }]}>
-                            {h.label}
-                          </Text>
+                          <ImageBackground
+                            source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={[styles.whCategoryPillText, isSel ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' }]}>
+                              {h.label}
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -5374,26 +5416,33 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     { level: 1, label: 'Bronce', color: '#CD7F32' },
                     { level: 2, label: 'Plata', color: '#B0BEC5' },
                     { level: 3, label: 'Oro', color: '#FFD700' },
-                  ].map((l) => (
-                    <TouchableOpacity
-                      key={l.level}
-                      style={[
-                        styles.vipSelectBtn,
-                        newLevel === l.level && { borderColor: l.color, backgroundColor: 'rgba(255, 255, 255, 0.08)' },
-                      ]}
-                      onPress={() => setNewLevel(l.level)}
-                    >
-                      <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: l.color, marginBottom: 2 }} />
-                      <Text
-                        style={[
-                          styles.vipSelectBtnText,
-                          newLevel === l.level && { color: l.color, fontWeight: 'bold' },
-                        ]}
+                  ].map((l) => {
+                    const isSel = newLevel === l.level;
+                    return (
+                      <TouchableOpacity
+                        key={l.level}
+                        style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setNewLevel(l.level)}
+                        activeOpacity={0.7}
                       >
-                        {l.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <ImageBackground
+                          source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: l.color, marginBottom: 2 }} />
+                          <Text
+                            style={[
+                              styles.vipSelectBtnText,
+                              isSel ? { color: '#FEDF99', fontWeight: '900' } : { color: '#CDC6B9' },
+                            ]}
+                          >
+                            {l.label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
