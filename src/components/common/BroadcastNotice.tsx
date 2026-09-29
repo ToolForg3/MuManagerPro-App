@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { BroadcastNoticeInfo } from '../../services/database/sqlClient';
 import { RemoteConfigService } from '../../services/security/remoteConfigService';
 import { THEME } from '../../constants/theme';
@@ -31,15 +31,15 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
           color: '#E2703A',
           bg: 'rgba(226, 112, 58, 0.15)',
           border: '#E2703A',
-          iconName: 'alert-decagram' as const,
+          iconName: 'shield-alert' as const,
           label: 'Aviso Urgente',
         };
       case 'WARNING':
         return {
-          color: '#E8C86A',
-          bg: 'rgba(232, 200, 106, 0.15)',
-          border: '#E8C86A',
-          iconName: 'alert-circle-outline' as const,
+          color: '#E0C380',
+          bg: 'rgba(224, 195, 128, 0.15)',
+          border: '#E0C380',
+          iconName: 'shield' as const,
           label: 'Advertencia',
         };
       case 'PROMO':
@@ -47,7 +47,7 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
           color: '#3FCF8E',
           bg: 'rgba(63, 207, 142, 0.15)',
           border: '#3FCF8E',
-          iconName: 'star-four-points' as const,
+          iconName: 'crown' as const,
           label: 'Novedades',
         };
       case 'INFO':
@@ -56,7 +56,7 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
           color: '#5B8DEF',
           bg: 'rgba(91, 141, 239, 0.15)',
           border: '#5B8DEF',
-          iconName: 'information-outline' as const,
+          iconName: 'tools' as const,
           label: 'Información',
         };
     }
@@ -71,7 +71,7 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
         <View style={styles.overlay}>
           <View style={[styles.modalCard, { borderColor: theme.border }]}>
             <View style={[styles.iconContainer, { backgroundColor: theme.bg, borderColor: theme.border }]}>
-              <MaterialCommunityIcons name={theme.iconName} size={30} color={theme.color} />
+              <MuIcon name={theme.iconName} size={30} />
             </View>
 
             <View style={[styles.badge, { backgroundColor: theme.bg, borderColor: theme.border }]}>
@@ -100,9 +100,9 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
   // Si el formato es BANNER (se muestra como un banner flotante superior)
   return (
     <View style={styles.bannerContainer}>
-      <View style={[styles.bannerCard, { backgroundColor: '#2B2521', borderColor: theme.border }]}>
+      <View style={[styles.bannerCard, { backgroundColor: '#1F201F', borderColor: theme.border }]}>
         <View style={styles.bannerIconWrap}>
-          <MaterialCommunityIcons name={theme.iconName} size={20} color={theme.color} />
+          <MuIcon name={theme.iconName} size={20} />
         </View>
         <View style={styles.bannerContent}>
           {!!broadcast.title && (
@@ -113,7 +113,7 @@ export const BroadcastNotice: React.FC<BroadcastNoticeProps> = ({ visible, broad
           </Text>
         </View>
         <TouchableOpacity style={styles.bannerCloseBtn} onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.bannerCloseText}>✕</Text>
+          <MuIcon name="close" size={14} />
         </TouchableOpacity>
       </View>
     </View>
@@ -129,9 +129,10 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalCard: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: '#1F201F',
+    borderRadius: 2,
     borderWidth: 1.5,
+    borderColor: '#4C463A',
     padding: 24,
     width: '100%',
     maxWidth: 400,
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: 2,
     marginBottom: 10,
   },
   badgeText: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#E8C86A',
+    color: '#E0C380',
     marginBottom: 10,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
   dismissButton: {
     width: '100%',
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
   dismissButtonText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#100D0B',
+    color: '#0D0E0D',
   },
   bannerContainer: {
     position: 'absolute',
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   bannerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1.5,
     padding: 12,
     shadowColor: '#000',

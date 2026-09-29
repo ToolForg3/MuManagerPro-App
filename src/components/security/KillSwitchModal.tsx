@@ -8,11 +8,14 @@ import {
   BackHandler,
   Linking,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../common/GothicAlert';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import * as Clipboard from 'expo-clipboard';
 import { THEME } from '../../constants/theme';
+import { Panel } from '../ui';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 interface KillSwitchModalProps {
   visible: boolean;
@@ -41,7 +44,7 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
   const handleOpenWhatsApp = () => {
     const hwidCode = hwid || 'N/A';
     const reasonText = reason || 'Acceso restringido';
-    const text = `Hola Soporte ToolForg3! Mi dispositivo está bloqueado en MuManager PRO.\n\n📱 HWID: ${hwidCode}\n⚠️ Motivo: ${reasonText}\n\nSolicito asistencia o adquisición de licencia oficial.`;
+    const text = `Hola Soporte ToolForg3! Mi dispositivo está bloqueado en MuManager PRO.\n\n[HWID]: ${hwidCode}\n[MOTIVO]: ${reasonText}\n\nSolicito asistencia o adquisición de licencia oficial.`;
     const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
     Linking.openURL(url).catch(() => {
       Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
@@ -70,7 +73,7 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.shieldCircle}>
-            <MaterialCommunityIcons name="shield-alert-outline" size={54} color="#FF3D00" />
+            <MuIcon name="shield-alert" size={54} />
           </View>
 
           <Text style={styles.title}>ACCESO DESACTIVADO</Text>
@@ -79,7 +82,7 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
           </Text>
 
           {/* Tarjeta de Código HWID */}
-          <View style={styles.card}>
+          <Panel style={styles.card}>
             <Text style={styles.cardLabel}>CÓDIGO ÚNICO DE ESTE CELULAR (HWID):</Text>
             <View style={styles.hwidBox}>
               <Text style={styles.hwidText} selectable>
@@ -87,14 +90,24 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
               </Text>
             </View>
 
-            <TouchableOpacity style={styles.copyButton} onPress={handleCopyHwid} activeOpacity={0.8}>
-              <MaterialCommunityIcons name="content-copy" size={18} color="#100D0B" />
-              <Text style={styles.copyButtonText}>Copiar Código de Dispositivo</Text>
+            <TouchableOpacity
+              style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
+              onPress={handleCopyHwid}
+              activeOpacity={0.8}
+            >
+              <ImageBackground
+                source={STITCH_ASSETS.tabs.tabModeActive}
+                style={styles.copyButton}
+                resizeMode="stretch"
+              >
+                <MuIcon name="save" size={18} color="#0D0E0D" />
+                <Text style={styles.copyButtonText}>Copiar Código de Dispositivo</Text>
+              </ImageBackground>
             </TouchableOpacity>
-          </View>
+          </Panel>
 
           {/* Botones de Comunicación con Soporte Oficial */}
-          <View style={styles.supportCard}>
+          <Panel style={styles.supportCard}>
             <Text style={styles.supportCardTitle}>COMUNICARSE CON SOPORTE OFICIAL</Text>
             <Text style={styles.supportCardSubtitle}>
               Contacta a nuestro equipo para desbloqueo, verificación o renovación de licencia:
@@ -102,35 +115,47 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
 
             <View style={styles.supportButtonsCol}>
               <TouchableOpacity
-                style={styles.btnWhatsApp}
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
                 onPress={handleOpenWhatsApp}
                 activeOpacity={0.85}
               >
-                <MaterialCommunityIcons name="whatsapp" size={24} color="#FFFFFF" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.btnSupportMainText}>WhatsApp Soporte Oficial</Text>
-                  <Text style={styles.btnSupportSubText}>Atención inmediata para activación y desbloqueo</Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={20} color="rgba(255,255,255,0.7)" />
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeInactive}
+                  style={styles.btnSupport}
+                  resizeMode="stretch"
+                >
+                  <MuIcon name="community" size={24} color="#3FCF8E" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.btnSupportMainText}>WhatsApp Soporte Oficial</Text>
+                    <Text style={styles.btnSupportSubText}>Atención inmediata para activación y desbloqueo</Text>
+                  </View>
+                  <MuIcon name="arrow-right" size={18} color="#E0C380" />
+                </ImageBackground>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.btnTelegram}
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
                 onPress={handleOpenTelegram}
                 activeOpacity={0.85}
               >
-                <MaterialCommunityIcons name="send" size={22} color="#FFFFFF" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.btnSupportMainText}>Telegram ToolForg3</Text>
-                  <Text style={styles.btnSupportSubText}>Canal oficial de soporte y novedades</Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={20} color="rgba(255,255,255,0.7)" />
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeInactive}
+                  style={styles.btnSupport}
+                  resizeMode="stretch"
+                >
+                  <MuIcon name="community" size={22} color="#5B8DEF" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.btnSupportMainText}>Telegram ToolForg3</Text>
+                    <Text style={styles.btnSupportSubText}>Canal oficial de soporte y novedades</Text>
+                  </View>
+                  <MuIcon name="arrow-right" size={18} color="#E0C380" />
+                </ImageBackground>
               </TouchableOpacity>
             </View>
-          </View>
+          </Panel>
 
           <View style={styles.infoBox}>
-            <MaterialCommunityIcons name="information-outline" size={20} color="#FF9800" />
+            <MuIcon name="tools" size={20} />
             <Text style={styles.infoText}>
               Para habilitar este dispositivo o adquirir una licencia oficial permanente de Mu Manager PRO, contacta al desarrollador y envíale tu código.
             </Text>
@@ -146,7 +171,7 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#191512',
+    backgroundColor: THEME.colors.fondo,
   },
   scrollContent: {
     paddingVertical: 36,
@@ -168,7 +193,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 1,
     textAlign: 'center',
     marginBottom: 8,
@@ -186,27 +211,23 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#6B5533',
     padding: 16,
     marginBottom: 16,
   },
   cardLabel: {
     fontSize: 11.5,
     fontWeight: '700',
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 0.5,
     marginBottom: 8,
     textAlign: 'center',
     ...THEME.effects.textShadowSubtle,
   },
   hwidBox: {
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: '#0D0E0D',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     paddingVertical: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
@@ -224,32 +245,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8C86A',
     paddingVertical: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0D27A',
     gap: 8,
     minHeight: 44,
   },
   copyButtonText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '900',
+    fontFamily: THEME.typography.fontTitle,
   },
   supportCard: {
     width: '100%',
-    backgroundColor: '#231D19',
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
     padding: 16,
     marginBottom: 16,
   },
   supportCardTitle: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 0.8,
     textAlign: 'center',
     marginBottom: 4,
@@ -266,49 +280,34 @@ const styles = StyleSheet.create({
   supportButtonsCol: {
     gap: 10,
   },
-  btnWhatsApp: {
+  btnSupport: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E7E34',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 6,
-    borderWidth: 1.2,
-    borderColor: '#3FCF8E',
-    gap: 12,
-    minHeight: 52,
-  },
-  btnTelegram: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0088CC',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    borderWidth: 1.2,
-    borderColor: '#5B8DEF',
     gap: 12,
     minHeight: 52,
   },
   btnSupportMainText: {
-    color: '#FFFFFF',
+    color: '#E0C380',
     fontSize: 13,
     fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.3,
     ...THEME.effects.textShadowSubtle,
   },
   btnSupportSubText: {
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: '#CDC6B9',
     fontSize: 10,
     fontWeight: '500',
     marginTop: 1,
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#1A1613',
+    backgroundColor: '#1B1C1B',
     borderWidth: 1,
-    borderColor: '#6B5533',
-    borderRadius: 6,
+    borderColor: '#4C463A',
+    borderRadius: 2,
     padding: 12,
     gap: 10,
     alignItems: 'center',

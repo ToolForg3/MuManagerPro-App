@@ -33,9 +33,9 @@ export const MU_CLASSES: Record<number, MuClassInfo> = {
   50: { id: 50, code: 'DM', name: 'Duel Master', baseClass: 'Magic Gladiator', tier: 3, avatarIcon: 'flash', accentColor: '#FFB74D' },
 
   // Dark Lord tree
-  64: { id: 64, code: 'DL', name: 'Dark Lord', baseClass: 'Dark Lord', tier: 1, avatarIcon: 'horse', accentColor: '#E8C86A' },
-  65: { id: 65, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#F0D27A' },
-  66: { id: 66, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#F0D27A' },
+  64: { id: 64, code: 'DL', name: 'Dark Lord', baseClass: 'Dark Lord', tier: 1, avatarIcon: 'horse', accentColor: '#E0C380' },
+  65: { id: 65, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#EFD28D' },
+  66: { id: 66, code: 'LE', name: 'Lord Emperor', baseClass: 'Dark Lord', tier: 3, avatarIcon: 'shield-crown', accentColor: '#EFD28D' },
 
   // Summoner tree
   80: { id: 80, code: 'SU', name: 'Summoner', baseClass: 'Summoner', tier: 1, avatarIcon: 'book-open-variant', accentColor: '#4DD0E1' },
@@ -124,7 +124,7 @@ export const MU_BASE_RACES: MuBaseRace[] = [
     code: 'DL',
     name: 'Dark Lord',
     avatarIcon: 'shield-crown',
-    accentColor: '#E8C86A',
+    accentColor: '#E0C380',
     defaultId: 66,
     tiers: [
       { tier: 1, classId: 64, name: 'Dark Lord', subtitle: '1ra Clase Inicial', icon: 'horse' },

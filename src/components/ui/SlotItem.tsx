@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { TouchableOpacity, StyleSheet, StyleProp, ViewStyle, ImageBackground } from 'react-native';
 import { THEME } from '../../constants/theme';
 
 export interface SlotItemProps {
@@ -40,7 +40,13 @@ export const SlotItem: React.FC<SlotItemProps> = ({
       disabled={!onPress}
       activeOpacity={0.7}
     >
-      {children}
+      <ImageBackground
+        source={require('../../../assets/ui/mu_slot_box.png')}
+        style={[styles.boxBackground, { width, height }]}
+        resizeMode="stretch"
+      >
+        {children}
+      </ImageBackground>
     </TouchableOpacity>
   );
 };
@@ -52,6 +58,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+  },
+  boxBackground: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
   },
   seleccionado: {
     borderColor: THEME.colors.oroClaro,

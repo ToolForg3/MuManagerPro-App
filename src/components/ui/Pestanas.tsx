@@ -1,6 +1,17 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
+import {
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  View,
+  StyleProp,
+  ViewStyle,
+  ImageBackground,
+} from 'react-native';
 import { THEME } from '../../constants/theme';
+
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 export interface PestanaItem {
   id: string;
@@ -33,26 +44,30 @@ export const Pestanas: React.FC<PestanasProps> = ({
           return (
             <TouchableOpacity
               key={p.id}
-              style={[
-                styles.tab,
-                isActiva && styles.tabActiva,
-              ]}
+              style={styles.tabTouchable}
               onPress={() => onSelect(p.id)}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <Text
-                style={[
-                  styles.tabTexto,
-                  isActiva ? styles.tabTextoActivo : styles.tabTextoInactivo,
-                ]}
+              <ImageBackground
+                source={isActiva ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={styles.tabBackground}
+                resizeMode="stretch"
               >
-                {p.titulo}
-              </Text>
-              {p.badge !== undefined && (
-                <View style={[styles.badge, isActiva && styles.badgeActivo]}>
-                  <Text style={styles.badgeTexto}>{p.badge}</Text>
-                </View>
-              )}
+                <Text
+                  style={[
+                    styles.tabTexto,
+                    isActiva ? styles.tabTextoActivo : styles.tabTextoInactivo,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {p.titulo}
+                </Text>
+                {p.badge !== undefined && (
+                  <View style={[styles.badge, isActiva && styles.badgeActivo]}>
+                    <Text style={styles.badgeTexto}>{p.badge}</Text>
+                  </View>
+                )}
+              </ImageBackground>
             </TouchableOpacity>
           );
         })}
@@ -63,66 +78,62 @@ export const Pestanas: React.FC<PestanasProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    height: 48,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.borde,
-    backgroundColor: THEME.colors.casillaFondo,
+    height: 54,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#4C463A',
+    backgroundColor: '#131413',
   },
   scrollContent: {
     paddingHorizontal: 8,
     alignItems: 'center',
   },
-  tab: {
-    minHeight: 40,
+  tabTouchable: {
+    marginHorizontal: 3,
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 44,
+  },
+  tabBackground: {
+    minHeight: 44,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: THEME.shapes.radioEsquina,
-    marginHorizontal: 4,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    backgroundColor: '#1E1915',
-    borderWidth: 1,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
-  },
-  tabActiva: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: THEME.colors.oroClaro,
-    borderWidth: 1.5,
-    shadowColor: THEME.colors.oroClaro,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
   tabTexto: {
     fontSize: 13,
-    fontWeight: THEME.typography.weightSemiBold,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+    letterSpacing: 0.4,
   },
   tabTextoActivo: {
-    color: THEME.colors.oroClaro,
-    fontWeight: '800',
-    ...THEME.effects.textShadow,
+    color: '#0D0E0D',
+    fontWeight: '900',
   },
   tabTextoInactivo: {
-    color: THEME.colors.textoSecundarioLuminoso,
-    fontWeight: '600',
-    ...THEME.effects.textShadowSubtle,
+    color: '#CDC6B9',
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   badge: {
     marginLeft: 6,
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: 'rgba(13, 14, 13, 0.85)',
     paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 1,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderColor: '#4C463A',
   },
   badgeActivo: {
-    borderColor: THEME.colors.oroClaro,
+    borderColor: '#E0C380',
   },
   badgeTexto: {
-    color: THEME.colors.texto,
+    color: '#E4E2E0',
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

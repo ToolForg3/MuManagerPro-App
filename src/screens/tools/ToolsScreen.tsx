@@ -11,15 +11,17 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { THEME } from '../../constants/theme';
-import { Panel, BotonBrasa, Chip, TituloSeccion, BotonPiedra } from '../../components/ui';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { Panel, BotonBrasa, Chip, TituloSeccion, BotonPiedra, MuCornerOrnaments, MuSideMoldings, BotonOro, MuButton } from '../../components/ui';
 import { Header } from '../../components/common/Header';
 import { MuFileParser } from '../../services/parser/fileParser';
 import { ItemDatabase, DEFAULT_ITEM_CATALOG, ItemDefinition } from '../../services/parser/itemDatabase';
@@ -70,6 +72,20 @@ import { JewelsTab, AntiDupeTab, RankingsTab, ParsersTab, GuildsTab, PkTab } fro
 
 export type ToolTab = 'maker' | 'jewels' | 'antidupe' | 'rankings' | 'fixes' | 'parsers' | 'kit' | 'prizes' | 'players' | 'guilds' | 'pk';
 const ALL_TABS: ToolTab[] = ['maker', 'jewels', 'antidupe', 'rankings', 'fixes', 'parsers', 'kit', 'prizes', 'players', 'guilds', 'pk'];
+
+const TOOL_TABS_CONFIG: { id: ToolTab; label: string; icon: string }[] = [
+  { id: 'maker', label: 'ITEM MAKER', icon: 'cube-send' },
+  { id: 'kit', label: 'STARTER KIT', icon: 'package-variant-closed' },
+  { id: 'jewels', label: 'JOYAS', icon: 'diamond-stone' },
+  { id: 'prizes', label: 'PREMIOS', icon: 'gift-outline' },
+  { id: 'antidupe', label: 'ANTI-DUPE', icon: 'shield-search' },
+  { id: 'fixes', label: 'CORRECCIONES', icon: 'wrench' },
+  { id: 'rankings', label: 'RANKINGS', icon: 'trophy' },
+  { id: 'parsers', label: 'PARSERS', icon: 'file-cog-outline' },
+  { id: 'players', label: 'JUGADORES & GM', icon: 'account-group' },
+  { id: 'guilds', label: 'CLANES', icon: 'shield-account' },
+  { id: 'pk', label: 'PK / ASESINOS', icon: 'skull' },
+];
 
 // =========================================================================
 // 1. QUICK SETS CATALOG & INTERFACES DEFINITION
@@ -1260,7 +1276,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = (props) => {
   const handleResetDefaults = () => {
     ItemDatabase.initialize();
     setItemsCount(ItemDatabase.getCount());
-    Alert.alert('Restaurado', 'Se ha restablecido el catálogo estándar de MU Online Season 6.');
+    Alert.alert('Restaurado', 'Se ha restablecido el catálogo estándar de MU Online.');
   };
 
   // ==========================================
@@ -1333,7 +1349,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = (props) => {
       {
         id: 'pvp',
         name: 'PvP +13 Exc',
-        badgeColor: '#B58F3C',
+        badgeColor: '#E0C380',
         icon: 'sword-cross',
         zen: '50000000',
         includeZen: true,
@@ -2104,9 +2120,9 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
       case 6:
         return { label: 'Phonomania (Asesino Lv2)', color: '#E2703A', bg: 'rgba(226, 112, 58, 0.2)' };
       case 5:
-        return { label: 'Asesino Lv1', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.2)' };
+        return { label: 'Asesino Lv1', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.2)' };
       case 4:
-        return { label: 'Advertencia PK', color: '#B58F3C', bg: 'rgba(181, 143, 60, 0.2)' };
+        return { label: 'Advertencia PK', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.2)' };
       default:
         return { label: 'PK Leve', color: THEME.colors.textoSecundario, bg: 'rgba(200, 190, 175, 0.2)' };
     }
@@ -2605,26 +2621,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
   return (
     <ErrorBoundary tabName="Pantalla de Herramientas">
-      <View style={styles.container}>
+      <ImageBackground
+        source={STITCH_ASSETS.backgrounds.stone}
+        style={styles.container}
+        imageStyle={{ opacity: 0.50 }}
+        resizeMode="repeat"
+      >
       {!props?.hideHeader && (
         <Header
           title={
             currentMode === 'objects'
-              ? (t('tabObjects') || 'Objetos & Tesorería')
+              ? 'MU MANAGER PRO · OBJETOS'
               : currentMode === 'players'
-              ? (t('tabPlayers') || 'Jugadores & Clanes')
+              ? 'MU MANAGER PRO · JUGADORES'
               : currentMode === 'tools'
-              ? (t('tabTools') || 'Herramientas')
-              : (t('toolsTitle') || 'Herramientas')
+              ? 'MU MANAGER PRO · HERRAMIENTAS'
+              : (t('toolsTitle') || 'MU MANAGER PRO')
           }
           subtitle={
             currentMode === 'objects'
-              ? 'Editor de Ítems, Starter Kits, Joyas y Premios'
+              ? 'SEASON 6 ADMIN PANEL · TESORERÍA'
               : currentMode === 'players'
-              ? 'Monitoreo Online, Alianzas y PKs'
+              ? 'SEASON 6 • MONITOREO Y CLANES'
               : currentMode === 'tools'
-              ? 'Anti-Dupe, Fixes, Rankings y Parsers'
-              : 'Pack Completo de Super-Herramientas'
+              ? 'SEASON 6 REIGN TOOLS · MANTENIMIENTO'
+              : 'SEASON 6 ADMIN PANEL'
           }
           showConnectionBadge={true}
         />
@@ -2653,190 +2674,42 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             allowedTabs.length <= 4 && { flexGrow: 1, justifyContent: 'space-around' }
           ]}
         >
-          {allowedTabs.includes('maker') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'maker' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('maker')}
-            >
-              <MaterialCommunityIcons
-                name="cube-send"
-                size={18}
-                color={activeTab === 'maker' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'maker' && styles.tabButtonTextActive]}>
-                Item Maker
-              </Text>
-            </TouchableOpacity>
-          )}
+          {TOOL_TABS_CONFIG.map((t) => {
+            if (!allowedTabs.includes(t.id)) return null;
+            const isTabActive = activeTab === t.id;
+            return (
+              <React.Fragment key={t.id}>
+                {currentMode === 'all' && t.id === 'players' && (
+                  <View style={{ width: 1, height: 24, backgroundColor: '#4C463A', alignSelf: 'center', marginHorizontal: 4 }} />
+                )}
+                <TouchableOpacity
+                  onPress={() => setActiveTab(t.id)}
+                  activeOpacity={0.8}
+                  style={styles.tabTouch}
+                >
+                  <ImageBackground
+                    source={isTabActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={[styles.tabButton, isTabActive && styles.tabButtonActive]}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon
+                      name={t.icon as any}
+                      size={16}
+                      color={isTabActive ? '#EFD28D' : '#CDC6B9'}
+                    />
+                    <Text style={[styles.tabButtonText, isTabActive && styles.tabButtonTextActive]}>
+                      {t.label}
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              </React.Fragment>
+            );
+          })}
 
-          {allowedTabs.includes('kit') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'kit' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('kit')}
-            >
-              <MaterialCommunityIcons
-                name="package-variant-closed"
-                size={18}
-                color={activeTab === 'kit' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'kit' && styles.tabButtonTextActive]}>
-                Starter Kit
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('jewels') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'jewels' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('jewels')}
-            >
-              <MaterialCommunityIcons
-                name="diamond-stone"
-                size={18}
-                color={activeTab === 'jewels' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'jewels' && styles.tabButtonTextActive]}>
-                Joyas
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('prizes') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'prizes' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('prizes')}
-            >
-              <MaterialCommunityIcons
-                name="gift-outline"
-                size={18}
-                color={activeTab === 'prizes' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'prizes' && styles.tabButtonTextActive]}>
-                Premios
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('antidupe') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'antidupe' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('antidupe')}
-            >
-              <MaterialCommunityIcons
-                name="shield-search"
-                size={18}
-                color={activeTab === 'antidupe' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'antidupe' && styles.tabButtonTextActive]}>
-                Anti-Dupe
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('fixes') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'fixes' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('fixes')}
-            >
-              <MaterialCommunityIcons
-                name="wrench"
-                size={18}
-                color={activeTab === 'fixes' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'fixes' && styles.tabButtonTextActive]}>
-                Fixes
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('rankings') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'rankings' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('rankings')}
-            >
-              <MaterialCommunityIcons
-                name="trophy"
-                size={18}
-                color={activeTab === 'rankings' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'rankings' && styles.tabButtonTextActive]}>
-                Rankings
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('parsers') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'parsers' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('parsers')}
-            >
-              <MaterialCommunityIcons
-                name="file-cog-outline"
-                size={18}
-                color={activeTab === 'parsers' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'parsers' && styles.tabButtonTextActive]}>
-                Parsers
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Visual Divider between Original 5 and New 4 Tabs en modo completo */}
-          {currentMode === 'all' && (
-            <View style={{ width: 1, height: 24, backgroundColor: '#6B5533', alignSelf: 'center', marginHorizontal: 4 }} />
-          )}
-
-          {allowedTabs.includes('players') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'players' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('players')}
-            >
-              <MaterialCommunityIcons
-                name="account-group"
-                size={18}
-                color={activeTab === 'players' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'players' && styles.tabButtonTextActive]}>
-                Jugadores & GM
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('guilds') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'guilds' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('guilds')}
-            >
-              <MaterialCommunityIcons
-                name="shield-account"
-                size={18}
-                color={activeTab === 'guilds' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'guilds' && styles.tabButtonTextActive]}>
-                Clanes
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {allowedTabs.includes('pk') && (
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'pk' && styles.tabButtonActive]}
-              onPress={() => setActiveTab('pk')}
-            >
-              <MaterialCommunityIcons
-                name="skull"
-                size={18}
-                color={activeTab === 'pk' ? '#E8C86A' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.tabButtonText, activeTab === 'pk' && styles.tabButtonTextActive]}>
-                PK / Asesinos
-              </Text>
-            </TouchableOpacity>
-          )}
         </ScrollView>
         {showScrollHint && currentMode === 'all' && activeTab !== 'pk' && (
           <View style={styles.scrollHintOverlay} pointerEvents="none">
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#E8C86A" />
+            <MuIcon name="chevron-right" size={20} color="#E0C380" />
           </View>
         )}
       </View>
@@ -2852,18 +2725,46 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           <View style={styles.tabContent}>
             {/* Botón Rápido: Inyectar Set Completo */}
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: '#FF6D00', marginTop: 0, marginBottom: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, height: 46 }]}
+              style={[
+                styles.actionBtn,
+                {
+                  backgroundColor: '#292A29',
+                  borderColor: '#EFD28D',
+                  borderWidth: 1.5,
+                  borderRadius: 2,
+                  marginTop: 0,
+                  marginBottom: 12,
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 8,
+                  height: 48,
+                  minHeight: 48,
+                  shadowColor: '#000000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                },
+              ]}
               onPress={() => setQuickSetModalVisible(true)}
               activeOpacity={0.8}
             >
-              <MaterialCommunityIcons name="lightning-bolt" size={22} color="#FFF" />
-              <Text style={[styles.actionBtnText, { fontSize: 14, fontWeight: 'bold' }]}>
+              <MuIcon name="lightning-bolt" size={20} color="#EFD28D" />
+              <Text style={[styles.actionBtnText, { fontSize: 13, fontWeight: 'bold', color: '#E4E2E0', letterSpacing: 0.5 }]}>
                 INYECTAR SET COMPLETO (EDICIÓN RÁPIDA)
               </Text>
             </TouchableOpacity>
+
             {/* Header / Target Account Input */}
-            <View style={[styles.card, { zIndex: 10 }]}>
-              <Text style={styles.cardTitle}>Destino de Inyección</Text>
+            <Panel variant="box" style={[styles.card, { zIndex: 10 }]}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.cardHeaderGothic}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.goldDot} />
+                  <Text style={styles.gothicCardTitle}>DESTINO DE INYECCIÓN</Text>
+                </View>
+                <Text style={styles.gothicCardBadge}>Baúl #{makerWarehouseIndex}</Text>
+              </View>
               <Text style={styles.cardDesc}>
                 Ingresa la cuenta donde se inyectará el ítem en su primer slot libre del Baúl:
               </Text>
@@ -2880,7 +2781,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, marginBottom: 6, fontWeight: '700' }}>
                   Baúl de Destino:
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingRight: 24 }}
+                >
                   <View style={{ flexDirection: 'row', gap: 6 }}>
                     {[
                       { idx: 0, label: 'Baúl Principal' },
@@ -2889,28 +2794,41 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       { idx: 3, label: 'Baúl #3' },
                       { idx: 4, label: 'Baúl #4' },
                       { idx: 5, label: 'Baúl #5' },
-                    ].map((v) => (
-                      <TouchableOpacity
-                        key={'maker_ware_' + v.idx}
-                        style={[
-                          styles.filterPill,
-                          makerWarehouseIndex === v.idx && styles.filterPillActive,
-                        ]}
-                        onPress={() => setMakerWarehouseIndex(v.idx)}
-                      >
-                        <Text style={[styles.filterPillText, makerWarehouseIndex === v.idx && styles.filterPillTextActive]}>
-                          {v.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                    ].map((v) => {
+                      const isWareActive = makerWarehouseIndex === v.idx;
+                      return (
+                        <TouchableOpacity
+                          key={'maker_ware_' + v.idx}
+                          style={{ borderRadius: 2, overflow: 'hidden' }}
+                          onPress={() => setMakerWarehouseIndex(v.idx)}
+                        >
+                          <ImageBackground
+                            source={isWareActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={[styles.filterPillText, isWareActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                              {v.label}
+                            </Text>
+                          </ImageBackground>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </ScrollView>
               </View>
-            </View>
+            </Panel>
 
             {/* Buscador Rápido de Ítems */}
-            <View style={[styles.card, { zIndex: 30, marginBottom: 10 }]}>
-              <Text style={styles.cardTitle}>Buscar Ítem por Nombre</Text>
+            <Panel variant="box" style={[styles.card, { zIndex: 30, marginBottom: 10 }]}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.cardHeaderGothic}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.goldDot} />
+                  <Text style={styles.gothicCardTitle}>CATÁLOGO DE OBJETOS</Text>
+                </View>
+                <Text style={styles.gothicCardBadge}>Catálogo</Text>
+              </View>
               <Text style={styles.cardDesc}>
                 Escribe cualquier nombre (ej: Fenrir, Dragon, Hades, Pad, Wing, Seed...) y tócalo para seleccionarlo al instante:
               </Text>
@@ -2924,10 +2842,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 autoCapitalize="none"
                 maxSuggestions={8}
               />
-            </View>
+            </Panel>
 
             {/* Categorías Reorganizadas y Limpias con Chip */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <Text style={styles.cardTitle}>Categoría del Ítem</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -2940,10 +2859,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         activo={isSel}
                         onPress={() => handleSelectMakerCategory(cat.id)}
                         icono={
-                          <MaterialCommunityIcons
+                          <MuIcon
                             name={cat.icon as any}
                             size={16}
-                            color={isSel ? '#191512' : THEME.colors.oroClaro}
+                            color={isSel ? THEME.colors.textoOscuro : THEME.colors.oroClaro}
                           />
                         }
                       />
@@ -2979,7 +2898,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               itemName={item.name}
                               size={20}
                               fallbackIcon={item.icon as any}
-                              fallbackColor={isItemSel ? '#191512' : THEME.colors.oroClaro}
+                              fallbackColor={isItemSel ? THEME.colors.textoOscuro : THEME.colors.oroClaro}
                             />
                           }
                         />
@@ -2988,10 +2907,18 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   })()}
                 </View>
               </ScrollView>
-            </View>
+            </Panel>
 
             {/* Item Live Preview & 32-Hex Display dentro de un Panel */}
-            <Panel style={styles.previewCard}>
+            <Panel variant="box" style={styles.previewCard}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.cardHeaderGothic}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.goldDot} />
+                  <Text style={styles.gothicCardTitle}>MATRIZ DE ESPACIO Y RANURAS</Text>
+                </View>
+                <Text style={styles.gothicCardBadge}>Dimensiones</Text>
+              </View>
               <View style={styles.previewHeader}>
                 <ItemImage
                   itemName={selectedItemDef.name}
@@ -3022,7 +2949,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <View style={styles.hexRow}>
                   <Text style={styles.hexText} selectable>{generatedHex}</Text>
                   <TouchableOpacity style={styles.copyBtn} onPress={handleCopyHex} activeOpacity={0.7}>
-                    <MaterialCommunityIcons name="content-copy" size={20} color={THEME.colors.oroClaro} />
+                    <MuIcon name="content-copy" size={20} color={THEME.colors.oroClaro} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -3031,7 +2958,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             
             {/* Selector Compacto de Color de Fenrir (Rojo, Negro, Azul, Dorado) */}
             {selectedItemDef.group === 13 && selectedItemDef.index === 37 && (
-              <View style={[styles.card, { borderColor: '#EAB308', borderWidth: 1, backgroundColor: '#141208', padding: 10 }]}>
+              <Panel style={[styles.card, { borderColor: '#EAB308', borderWidth: 1, backgroundColor: '#141208', padding: 10 }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FACC15' }}>COLOR DE FENRIR</Text>
                   <Text style={{ fontSize: 10, color: '#A1A1AA' }}>
@@ -3063,7 +2990,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           flex: 1,
                           paddingVertical: 7,
                           paddingHorizontal: 4,
-                          borderRadius: 6,
+                          borderRadius: THEME.shapes.radioEsquina,
                           borderWidth: 1.5,
                           borderColor: isSelected ? fen.color : '#333338',
                           backgroundColor: isSelected ? `${fen.color}25` : '#1C1C22',
@@ -3078,11 +3005,12 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     );
                   })}
                 </View>
-              </View>
+              </Panel>
             )}
 
             {/* Ancient Option Selector (Item Maker) */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.cardTitle}>Opción Ancient (Sets Acc)</Text>
                 {makerAncient > 0 && (
@@ -3151,7 +3079,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 flex: 1,
                                 paddingVertical: 5,
                                 alignItems: 'center',
-                                borderRadius: 6,
+                                borderRadius: THEME.shapes.radioEsquina,
                                 borderWidth: 1,
                                 borderColor: isSelBonus ? THEME.colors.arcano : '#444',
                                 backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
@@ -3171,33 +3099,62 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   )}
                 </View>
               )}
-            </View>
+            </Panel>
 
             {/* Attributes Controls */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.cardHeaderGothic}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.goldDot} />
+                  <Text style={styles.gothicCardTitle}>PARÁMETROS DE OBJETO</Text>
+                </View>
+                <Text style={styles.gothicCardBadge}>Atributos</Text>
+              </View>
               <Text style={styles.cardTitle}>Nivel y Opción</Text>
               {/* Level row */}
               <View style={styles.controlRow}>
                 <Text style={styles.controlLabel}>Nivel (+0 .. +15):</Text>
                 <View style={styles.counterWrap}>
                   <TouchableOpacity
-                    style={styles.counterBtn}
+                    style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setMakerLevel((prev) => Math.max(0, prev - 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.counterBtnText}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.counterBtnText}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={styles.counterValue}>+{makerLevel}</Text>
                   <TouchableOpacity
-                    style={styles.counterBtn}
+                    style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setMakerLevel((prev) => Math.min(15, prev + 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.counterBtnText}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.counterBtnText}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.counterBtn, { backgroundColor: '#E65100', width: 44 }]}
+                    style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                     onPress={() => setMakerLevel(15)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.counterBtnText}>MAX</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.counterBtnText, { color: THEME.colors.textoOscuro, fontWeight: '900' }]}>MAX</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -3207,23 +3164,44 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Text style={styles.controlLabel}>Opción (+0 .. +28):</Text>
                 <View style={styles.counterWrap}>
                   <TouchableOpacity
-                    style={styles.counterBtn}
+                    style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setMakerOption((prev) => Math.max(0, prev - 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.counterBtnText}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.counterBtnText}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={styles.counterValue}>+{makerOption * 4}</Text>
                   <TouchableOpacity
-                    style={styles.counterBtn}
+                    style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setMakerOption((prev) => Math.min(7, prev + 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.counterBtnText}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.counterBtnText}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.counterBtn, { backgroundColor: '#E65100', width: 44 }]}
+                    style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                     onPress={() => setMakerOption(7)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.counterBtnText}>MAX</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.counterBtnText, { color: THEME.colors.textoOscuro, fontWeight: '900' }]}>MAX</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -3255,10 +3233,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   thumbColor={maker380 ? '#FF9800' : THEME.colors.textMuted}
                 />
               </View>
-            </View>
+            </Panel>
 
             {/* Excellent Options con soporte nativo de Ítems Normales */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={[styles.cardTitle, { marginBottom: 0 }]}>Opciones Excelentes</Text>
@@ -3266,7 +3245,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     backgroundColor: makerExcFlags === 0 ? 'rgba(255, 255, 255, 0.1)' : 'rgba(63, 207, 142, 0.15)',
                     paddingHorizontal: 7,
                     paddingVertical: 2,
-                    borderRadius: 6,
+                    borderRadius: THEME.shapes.radioEsquina,
                     borderWidth: 1,
                     borderColor: makerExcFlags === 0 ? THEME.colors.borde : THEME.colors.jade,
                   }}>
@@ -3281,13 +3260,28 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   <TouchableOpacity
-                    style={[styles.excQuickBtn, makerExcFlags === 0 && { borderColor: THEME.colors.textoSecundario, backgroundColor: '#33333E' }]}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={handleClearExc}
                   >
-                    <Text style={[styles.excQuickBtnText, makerExcFlags === 0 && { color: '#FFF' }]}>Normal (Sin Exc)</Text>
+                    <ImageBackground
+                      source={makerExcFlags === 0 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ paddingHorizontal: 10, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.excQuickBtnText, makerExcFlags === 0 && { color: '#0D0E0D', fontWeight: 'bold' }]}>Normal (Sin Exc)</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.excQuickBtn} onPress={handleSetFullExc}>
-                    <Text style={styles.excQuickBtnText}>Full Exc</Text>
+                  <TouchableOpacity
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
+                    onPress={handleSetFullExc}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ paddingHorizontal: 10, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.excQuickBtnText}>Full Exc</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -3304,31 +3298,50 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   return (
                     <TouchableOpacity
                       key={`exc_${opt.bit}`}
-                      style={[styles.excChip, isActive && styles.excChipActive]}
+                      style={{ width: '48%', borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => toggleExcOption(opt.bit)}
                     >
-                      <MaterialCommunityIcons
-                        name={isActive ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                        size={18}
-                        color={isActive ? THEME.colors.jade : THEME.colors.textMuted}
-                      />
-                      <Text style={[styles.excChipText, isActive && styles.excChipTextActive]}>
-                        {opt.short}
-                      </Text>
+                      <ImageBackground
+                        source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingHorizontal: 8,
+                          paddingVertical: 7,
+                          gap: 6,
+                        }}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon
+                          name={isActive ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                          size={16}
+                          color={isActive ? '#0D0E0D' : THEME.colors.jade}
+                        />
+                        <Text
+                          style={[
+                            styles.excChipText,
+                            isActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {opt.short}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-            </View>
+            </Panel>
 
             {/* Sockets Section */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={styles.switchRow}>
                 <Text style={styles.cardTitle}>Ranuras de Sockets (1 al 5)</Text>
                 <Switch
                   value={enableSockets}
                   onValueChange={setEnableSockets}
-                  trackColor={{ false: '#332B24', true: '#6B5533' }}
+                  trackColor={{ false: THEME.colors.casillaFondo, true: THEME.colors.borde }}
                   thumbColor={enableSockets ? THEME.colors.oroClaro : THEME.colors.textMuted}
                 />
               </View>
@@ -3342,10 +3355,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     const currentOptions = getQuickSocketOptions(currentLvl);
 
                     return (
-                      <View key={`socket_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(0,0,0,0.25)', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#332B24' }}>
+                      <View key={`socket_${sIdx}`} style={{ gap: 6, backgroundColor: '#121312', padding: 8, borderRadius: 2, borderWidth: 1, borderColor: '#4C463A' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>Slot #{sIdx + 1}:</Text>
-                          <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>
+                          <Text style={{ color: '#E0C380', fontSize: 11, fontWeight: '700' }}>Slot #{sIdx + 1}:</Text>
+                          <Text style={{ color: '#EFD28D', fontSize: 11, fontWeight: '700' }}>
                             {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                           </Text>
                         </View>
@@ -3358,14 +3371,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             return (
                               <TouchableOpacity
                                 key={`tools_lvl_${sIdx}_${sl.level}`}
-                                style={{
-                                  paddingHorizontal: 7,
-                                  paddingVertical: 2,
-                                  borderRadius: 4,
-                                  backgroundColor: isLvlActive ? '#E8C86A' : '#1E1A16',
-                                  borderWidth: 1,
-                                  borderColor: isLvlActive ? '#E8C86A' : '#3E342B',
-                                }}
+                                style={{ borderRadius: 2, overflow: 'hidden' }}
                                 onPress={() => {
                                   const updatedLevels = [...makerSocketLevels];
                                   updatedLevels[sIdx] = sl.level;
@@ -3379,13 +3385,19 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                   }
                                 }}
                               >
-                                <Text style={{
-                                  fontSize: 10,
-                                  fontWeight: 'bold',
-                                  color: isLvlActive ? '#120F0D' : '#C5B5A5',
-                                }}>
-                                  {sl.badge}
-                                </Text>
+                                <ImageBackground
+                                  source={isLvlActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                  style={{ paddingHorizontal: 8, paddingVertical: 3, alignItems: 'center', justifyContent: 'center' }}
+                                  resizeMode="stretch"
+                                >
+                                  <Text style={{
+                                    fontSize: 10,
+                                    fontWeight: 'bold',
+                                    color: isLvlActive ? '#0D0E0D' : '#C5B5A5',
+                                  }}>
+                                    {sl.badge}
+                                  </Text>
+                                </ImageBackground>
                               </TouchableOpacity>
                             );
                           })}
@@ -3393,34 +3405,40 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                           <View style={{ flexDirection: 'row', gap: 4 }}>
-                            {currentOptions.map((so) => (
-                              <TouchableOpacity
-                                key={`s_${sIdx}_${so.val}`}
-                                style={[
-                                  styles.socketOptionBtn,
-                                  currentVal === so.val && styles.socketOptionBtnActive,
-                                ]}
-                                onPress={() => {
-                                  const newSockets = [...makerSockets];
-                                  newSockets[sIdx] = so.val;
-                                  setMakerSockets(newSockets);
-                                  if (so.optionId >= 0) {
-                                    const updatedLevels = [...makerSocketLevels];
-                                    updatedLevels[sIdx] = currentLvl;
-                                    setMakerSocketLevels(updatedLevels);
-                                  }
-                                }}
-                              >
-                                <Text
-                                  style={[
-                                    styles.socketOptionText,
-                                    currentVal === so.val && styles.socketOptionTextActive,
-                                  ]}
+                            {currentOptions.map((so) => {
+                              const isCurActive = currentVal === so.val;
+                              return (
+                                <TouchableOpacity
+                                  key={`s_${sIdx}_${so.val}`}
+                                  style={{ borderRadius: 2, overflow: 'hidden' }}
+                                  onPress={() => {
+                                    const newSockets = [...makerSockets];
+                                    newSockets[sIdx] = so.val;
+                                    setMakerSockets(newSockets);
+                                    if (so.optionId >= 0) {
+                                      const updatedLevels = [...makerSocketLevels];
+                                      updatedLevels[sIdx] = currentLvl;
+                                      setMakerSocketLevels(updatedLevels);
+                                    }
+                                  }}
                                 >
-                                  {so.label}
-                                </Text>
-                              </TouchableOpacity>
-                            ))}
+                                  <ImageBackground
+                                    source={isCurActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                    style={{ paddingHorizontal: 9, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                                    resizeMode="stretch"
+                                  >
+                                    <Text
+                                      style={[
+                                        styles.socketOptionText,
+                                        isCurActive && { color: '#0D0E0D', fontWeight: 'bold' },
+                                      ]}
+                                    >
+                                      {so.label}
+                                    </Text>
+                                  </ImageBackground>
+                                </TouchableOpacity>
+                              );
+                            })}
                           </View>
                         </ScrollView>
                       </View>
@@ -3428,7 +3446,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   })}
                 </View>
               )}
-            </View>
+            </Panel>
 
             {/* Jewel of Harmony Section */}
             {(() => {
@@ -3439,7 +3457,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               const effectiveHarmType = isHarmEligible ? (isHarmA && makerHarmonyType > 8 ? 7 : makerHarmonyType) : 0;
 
               return (
-                <View style={styles.card}>
+                <Panel variant="box" style={styles.card}>
+                  <MuCornerOrnaments size={12} />
                   <View style={styles.switchRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={[styles.cardTitle, { color: '#FFD700', marginBottom: 0 }]}>JEWEL OF HARMONY</Text>
@@ -3457,7 +3476,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setMakerHarmonyType(val ? 1 : 0);
                         setMakerHarmonyLevel(val ? 13 : 0);
                       }}
-                      trackColor={{ false: '#332B24', true: '#6B5533' }}
+                      trackColor={{ false: THEME.colors.casillaFondo, true: THEME.colors.borde }}
                       thumbColor={isHarmEligible && effectiveHarmType > 0 ? '#FFD700' : THEME.colors.textMuted}
                     />
                   </View>
@@ -3479,18 +3498,21 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             return (
                               <TouchableOpacity
                                 key={`tools_harm_${h.id}`}
-                                style={[
-                                  styles.harmonyBtn,
-                                  isSel && styles.harmonyBtnActive,
-                                ]}
+                                style={{ borderRadius: 2, overflow: 'hidden' }}
                                 onPress={() => {
                                   setMakerHarmonyType(h.id);
                                   if (makerHarmonyLevel === 0) setMakerHarmonyLevel(13);
                                 }}
                               >
-                                <Text style={[styles.harmonyBtnText, isSel && styles.harmonyBtnTextActive]}>
-                                  {h.name}
-                                </Text>
+                                <ImageBackground
+                                  source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                  style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                                  resizeMode="stretch"
+                                >
+                                  <Text style={[styles.harmonyBtnText, isSel && { color: '#0D0E0D', fontWeight: 'bold' }]}>
+                                    {h.name}
+                                  </Text>
+                                </ImageBackground>
                               </TouchableOpacity>
                             );
                           })}
@@ -3501,34 +3523,53 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         <Text style={styles.controlLabel}>Nivel de Harmony (+0 a +13):</Text>
                         <View style={styles.counterWrap}>
                           <TouchableOpacity
-                            style={styles.counterBtn}
+                            style={{ borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => setMakerHarmonyLevel((prev) => Math.max(0, prev - 1))}
                           >
-                            <Text style={styles.counterBtnText}>-</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.buttons.small}
+                              style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={styles.counterBtnText}>-</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                           <Text style={styles.counterValue}>+{makerHarmonyLevel}</Text>
                           <TouchableOpacity
-                            style={styles.counterBtn}
+                            style={{ borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => setMakerHarmonyLevel((prev) => Math.min(13, prev + 1))}
                           >
-                            <Text style={styles.counterBtnText}>+</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.buttons.small}
+                              style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={styles.counterBtnText}>+</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={[styles.counterBtn, { backgroundColor: '#B58F3C', width: 44 }]}
+                            style={{ borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => setMakerHarmonyLevel(13)}
                           >
-                            <Text style={[styles.counterBtnText, { color: '#100D0B' }]}>MAX</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.tabs.tabModeActive}
+                              style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={[styles.counterBtnText, { color: '#0D0E0D' }]}>MAX</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         </View>
                       </View>
                     </View>
                   )}
-                </View>
+                </Panel>
               );
             })()}
 
             {/* Cantidad de Ítems a Generar */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View>
                   <Text style={styles.cardTitle}>Cantidad a Inyectar</Text>
@@ -3536,40 +3577,57 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setMakerQuantity((prev) => Math.max(1, prev - 1))}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={{ color: '#EFD28D', fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={{ color: THEME.colors.oroClaro, fontSize: 16, fontWeight: 'bold', minWidth: 28, textAlign: 'center' }}>
                     x{makerQuantity}
                   </Text>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setMakerQuantity((prev) => Math.min(20, prev + 1))}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={{ color: '#EFD28D', fontSize: 16, fontWeight: 'bold' }}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
-                {[1, 5, 10, 20].map((q) => (
-                  <TouchableOpacity
-                    key={`maker_qty_chip_${q}`}
-                    style={[
-                      styles.filterPill,
-                      makerQuantity === q && styles.filterPillActive,
-                      { flex: 1, alignItems: 'center', paddingVertical: 6 },
-                    ]}
-                    onPress={() => setMakerQuantity(q)}
-                  >
-                    <Text style={[styles.filterPillText, makerQuantity === q && styles.filterPillTextActive]}>
-                      x{q}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {[1, 5, 10, 20].map((q) => {
+                  const isQtySel = makerQuantity === q;
+                  return (
+                    <TouchableOpacity
+                      key={`maker_qty_chip_${q}`}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => setMakerQuantity(q)}
+                    >
+                      <ImageBackground
+                        source={isQtySel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.filterPillText, isQtySel ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                          x{q}
+                        </Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            </View>
+            </Panel>
 
             {/* Big Injection Button */}
             {/* Botón de Inyección en Brasa 56dp */}
@@ -3587,8 +3645,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               deshabilitado={injecting || !makerAccount.trim()}
               cargando={injecting}
               altura={56}
-              icono={<MaterialCommunityIcons name={!makerAccount.trim() ? "lock-outline" : "lightning-bolt"} size={22} color="#FFFFFF" />}
-              style={{ marginTop: 14, marginBottom: 20 }}
+              icono={!makerAccount.trim() ? "lock-outline" : "lightning-bolt"}
+              style={{ marginTop: 14, marginBottom: 10 }}
+            />
+
+            {/* Botón Secundario: Inyectar Set Completo NewUI 48dp */}
+            <BotonPiedra
+              titulo="INYECTAR SET COMPLETO"
+              onPress={() => setQuickSetModalVisible(true)}
+              altura={48}
+              icono="package-variant-closed"
+              style={{ marginBottom: 20 }}
             />
           </View>
           </ErrorBoundary>
@@ -3646,12 +3713,26 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           <ErrorBoundary tabName="Fixes y Reparación">
 
           <View style={styles.tabContent}>
+            {/* Hero Banner Stitch 14R */}
+            <View style={styles.heroBanner}>
+              <View style={styles.heroBannerHeader}>
+                <View style={styles.goldDiamond} />
+                <Text style={styles.heroBannerTitle}>MANTENIMIENTO GENERAL</Text>
+              </View>
+              <Text style={styles.heroBannerSubtitle}>
+                Protocolos de intervención directa del servidor MU Online
+              </Text>
+            </View>
+
             {/* Fix 1: Unstick Account */}
-            <View style={[styles.card, { zIndex: 30 }]}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="lock-open-variant" size={24} color={THEME.colors.jade} />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>1. Destrabar Cuenta o Personaje</Text>
+            <Panel variant="box" style={[styles.card, { zIndex: 30 }]}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>01</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Destrabar Cuenta o Personaje</Text>
                   <Text style={styles.cardDesc}>
                     Desconecta sesión (ConnectStat = 0), libera GameIDC en AccountCharacter y rescata si estaba atrapado en eventos:
                   </Text>
@@ -3666,28 +3747,27 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 autoCapitalize="none"
                 maxSuggestions={5}
               />
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#265431', borderColor: '#3FCF8E', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Destrabar Cuenta y Liberar GameIDC"
+                icono="check-decagram"
                 onPress={handleUnstick}
+                variante="success"
                 disabled={fixingAction === 'unstick'}
-              >
-                {fixingAction === 'unstick' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="check-decagram" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Destrabar Cuenta y Liberar GameIDC</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'unstick'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 2: Teleport / Rescue Character */}
-            <View style={[styles.card, { zIndex: 20 }]}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="crosshairs-gps" size={24} color="#E8C86A" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>2. Mover / Rescatar Personaje</Text>
+            <Panel variant="box" style={[styles.card, { zIndex: 20 }]}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>02</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Mover a Ciudad Segura</Text>
                   <Text style={styles.cardDesc}>
                     Teletransporta de inmediato a zonas seguras de ciudades principales o coordenadas personalizadas:
                   </Text>
@@ -3703,19 +3783,19 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               />
 
               {/* Quick Teleport City Buttons (Iconos Claros y Legibles) */}
-              <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: 'bold', marginTop: 8, marginBottom: 6 }}>
+              <Text style={{ color: '#EFD28D', fontSize: 11, fontWeight: 'bold', marginTop: 8, marginBottom: 6 }}>
                 DESTINOS RÁPIDOS 1-CLIC:
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                 {[
-                  { name: 'Lorencia', map: 0, x: 125, y: 125, icon: 'castle', color: '#E8C86A' },
+                  { name: 'Lorencia', map: 0, x: 125, y: 125, icon: 'castle', color: '#EFD28D' },
                   { name: 'Devias', map: 2, x: 220, y: 220, icon: 'snowflake', color: '#5B8DEF' },
                   { name: 'Noria', map: 3, x: 175, y: 110, icon: 'forest', color: '#3FCF8E' },
                   { name: 'Elbeland', map: 51, x: 50, y: 220, icon: 'tree', color: '#A8894D' },
                   { name: 'Stadium', map: 6, x: 60, y: 60, icon: 'stadium', color: '#E2703A' },
                   { name: 'Losttower', map: 4, x: 208, y: 75, icon: 'fire', color: '#E2703A' },
                   { name: 'Atlans', map: 7, x: 24, y: 35, icon: 'water', color: '#5B8DEF' },
-                  { name: 'Tarkan', map: 8, x: 187, y: 58, icon: 'weather-dust', color: '#E8C86A' },
+                  { name: 'Tarkan', map: 8, x: 187, y: 58, icon: 'weather-dust', color: '#EFD28D' },
                   { name: 'Icarus', map: 10, x: 15, y: 13, icon: 'weather-windy', color: '#5B8DEF' },
                 ].map((dest) => (
                   <TouchableOpacity
@@ -3723,10 +3803,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: '#100D0B',
+                      backgroundColor: THEME.colors.casillaFondo,
                       borderWidth: 1,
-                      borderColor: '#6B5533',
-                      borderRadius: 6,
+                      borderColor: '#4C463A',
+                      borderRadius: 2,
                       paddingHorizontal: 10,
                       paddingVertical: 7,
                       gap: 6,
@@ -3757,7 +3837,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       }
                     }}
                   >
-                    <MaterialCommunityIcons name={dest.icon as any} size={18} color={dest.color} />
+                    <MuIcon name={dest.icon as any} size={18} color={dest.color} />
                     <View>
                       <Text style={{ color: THEME.colors.texto, fontSize: 12, fontWeight: 'bold' }}>{dest.name}</Text>
                       <Text style={{ color: THEME.colors.textoSecundario, fontSize: 9 }}>{dest.x}, {dest.y}</Text>
@@ -3767,8 +3847,8 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               </View>
 
               {/* Teletransporte Personalizado (Cualquier Mapa + Coordenadas X/Y) */}
-              <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#6B5533' }}>
-                <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: 'bold', marginBottom: 6 }}>
+              <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#4C463A' }}>
+                <Text style={{ color: '#EFD28D', fontSize: 11, fontWeight: 'bold', marginBottom: 6 }}>
                   TELETRANSPORTE PERSONALIZADO (MAPA Y COORDENADAS):
                 </Text>
 
@@ -3809,14 +3889,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         style={{
                           paddingHorizontal: 10,
                           paddingVertical: 6,
-                          borderRadius: 6,
-                          backgroundColor: isSelected ? 'rgba(181, 143, 60, 0.25)' : '#100D0B',
+                          borderRadius: 2,
+                          backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.25)' : THEME.colors.casillaFondo,
                           borderWidth: 1,
-                          borderColor: isSelected ? '#E8C86A' : '#6B5533',
+                          borderColor: isSelected ? '#EFD28D' : '#4C463A',
                         }}
                         onPress={() => setCustomTeleportMap(m.id)}
                       >
-                        <Text style={{ color: isSelected ? '#E8C86A' : THEME.colors.texto, fontSize: 11, fontWeight: isSelected ? 'bold' : 'normal' }}>
+                        <Text style={{ color: isSelected ? '#EFD28D' : THEME.colors.texto, fontSize: 11, fontWeight: isSelected ? 'bold' : 'normal' }}>
                           [{m.id}] {m.name}
                         </Text>
                       </TouchableOpacity>
@@ -3829,10 +3909,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginBottom: 4 }}>Coordenada X (0-255):</Text>
                     <TextInput
                       style={{
-                        backgroundColor: '#100D0B',
+                        backgroundColor: THEME.colors.casillaFondo,
                         borderWidth: 1,
-                        borderColor: '#6B5533',
-                        borderRadius: 6,
+                        borderColor: THEME.colors.borde,
+                        borderRadius: THEME.shapes.radioEsquina,
                         color: THEME.colors.texto,
                         paddingHorizontal: 10,
                         paddingVertical: 6,
@@ -3850,10 +3930,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginBottom: 4 }}>Coordenada Y (0-255):</Text>
                     <TextInput
                       style={{
-                        backgroundColor: '#100D0B',
+                        backgroundColor: THEME.colors.casillaFondo,
                         borderWidth: 1,
-                        borderColor: '#6B5533',
-                        borderRadius: 6,
+                        borderColor: THEME.colors.borde,
+                        borderRadius: THEME.shapes.radioEsquina,
                         color: THEME.colors.texto,
                         paddingHorizontal: 10,
                         paddingVertical: 6,
@@ -3869,46 +3949,39 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   </View>
                 </View>
 
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#7A5E22', borderColor: '#B58F3C', borderWidth: 1, marginTop: 2, marginBottom: 6 }]}
+                <MuButton
+                  titulo={`Mover a ${MU_MAPS[customTeleportMap] || `Mapa ${customTeleportMap}`} (${customTeleportX}, ${customTeleportY})`}
+                  icono="crosshairs-gps"
                   onPress={handleCustomTeleport}
+                  variante="primary"
                   disabled={fixingAction === 'custom_teleport'}
-                >
-                  {fixingAction === 'custom_teleport' ? (
-                    <ActivityIndicator color="#FFF" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#FFF" />
-                      <Text style={styles.actionBtnText}>
-                        Mover a {MU_MAPS[customTeleportMap] || `Mapa ${customTeleportMap}`} ({customTeleportX}, {customTeleportY})
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                  cargando={fixingAction === 'custom_teleport'}
+                  altura={46}
+                  style={{ marginTop: 2, marginBottom: 6 }}
+                />
               </View>
 
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#241E1A', borderColor: '#B58F3C', borderWidth: 1.5, marginTop: 6 }]}
+              <MuButton
+                titulo="Rescatar a Lorencia Centro (125, 125)"
+                icono="map-marker-path"
                 onPress={handleRescue}
+                variante="secondary"
                 disabled={fixingAction === 'rescue'}
-              >
-                {fixingAction === 'rescue' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="map-marker-path" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Rescatar a Lorencia Centro (125, 125)</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'rescue'}
+                altura={48}
+                style={{ marginTop: 6 }}
+              />
+            </Panel>
 
             {/* Fix 3: Clean Corrupt Hex */}
-            <View style={[styles.card, { zIndex: 10 }]}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="broom" size={24} color="#E2703A" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>3. Vaciado Completo de Inventario / Baúl</Text>
+            <Panel variant="box" style={[styles.card, { zIndex: 10, borderColor: '#93000A' }]}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={[styles.fixBadgeNumber, { borderColor: '#93000A' }]}>
+                  <Text style={[styles.fixBadgeNumberText, { color: '#FFB4AB' }]}>03</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.fixTitleGothic, { color: '#FFB4AB' }]}>Vaciado de Inventario y Baúl</Text>
                   <Text style={styles.cardDesc}>
                     ADVERTENCIA: Vacía todos los slots rellenándolos con 0xFF. Se guardará copia de respaldo en logs. Requiere jugador desconectado:
                   </Text>
@@ -3916,26 +3989,32 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               </View>
               <View style={{ flexDirection: 'row', gap: 10, marginVertical: 8 }}>
                 <TouchableOpacity
-                  style={[
-                    styles.filterPill,
-                    cleanHexType === 'warehouse' && styles.filterPillActive,
-                  ]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setCleanHexType('warehouse')}
                 >
-                  <Text style={[styles.filterPillText, cleanHexType === 'warehouse' && styles.filterPillTextActive]}>
-                    Baúl de Cuenta
-                  </Text>
+                  <ImageBackground
+                    source={cleanHexType === 'warehouse' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillText, cleanHexType === 'warehouse' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Baúl de Cuenta
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.filterPill,
-                    cleanHexType === 'inventory' && styles.filterPillActive,
-                  ]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setCleanHexType('inventory')}
                 >
-                  <Text style={[styles.filterPillText, cleanHexType === 'inventory' && styles.filterPillTextActive]}>
-                    Inventario de PJ
-                  </Text>
+                  <ImageBackground
+                    source={cleanHexType === 'inventory' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillText, cleanHexType === 'inventory' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Inventario de PJ
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
               <AutocompleteInput
@@ -3947,35 +4026,34 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 autoCapitalize="none"
                 maxSuggestions={5}
               />
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#8C2B1D', borderColor: '#E2703A', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Vaciar Completamente"
+                icono="alert-octagon"
                 onPress={handleCleanHex}
+                variante="danger"
                 disabled={fixingAction === 'cleanHex'}
-              >
-                {fixingAction === 'cleanHex' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Vaciar Completamente</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'cleanHex'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 4: Emergency Database Backup */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="database-arrow-down" size={24} color="#5B8DEF" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>4. Backup de Emergencia SQL</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>04</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Copia de Seguridad de Emergencia</Text>
                   <Text style={styles.cardDesc}>
                     Ejecuta un backup completo nativo de la base de datos SQL Server antes de aplicar cambios:
                   </Text>
                 </View>
               </View>
               <View style={styles.inputWrap}>
-                <MaterialCommunityIcons name="database" size={20} color={THEME.colors.oroClaro} />
+                <MuIcon name="database" size={20} color={THEME.colors.oroClaro} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Base de datos (Default: MuOnline)"
@@ -3984,28 +4062,27 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onChangeText={setBackupDbName}
                 />
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#223B63', borderColor: '#5B8DEF', borderWidth: 1, marginTop: 8 }]}
+              <MuButton
+                titulo="Generar Copia de Seguridad .BAK"
+                icono="content-save"
                 onPress={handleBackup}
+                variante="secondary"
                 disabled={fixingAction === 'backup'}
-              >
-                {fixingAction === 'backup' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="content-save" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Generar Copia de Seguridad .BAK</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'backup'}
+                altura={48}
+                style={{ marginTop: 8 }}
+              />
+            </Panel>
 
             {/* Fix 5: Control y Escáner de Abuso de IP */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="ip-network-outline" size={24} color="#3FCF8E" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>5. Detección de Multicuentas por IP</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>05</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Detección de Multicuentas por IP</Text>
                   <Text style={styles.cardDesc}>
                     Escanea las conexiones activas en GameServer e identifica IPs que superen el límite configurado:
                   </Text>
@@ -4014,34 +4091,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 8 }}>
                 <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Límite Máximo:</Text>
                 <TextInput
-                  style={[styles.textInput, { maxWidth: 60, height: 36, textAlign: 'center', backgroundColor: '#100D0B', borderRadius: 6, borderWidth: 1, borderColor: '#6B5533', color: THEME.colors.texto }]}
+                  style={[styles.textInput, { maxWidth: 60, height: 36, textAlign: 'center', backgroundColor: THEME.colors.casillaFondo, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.borde, color: THEME.colors.texto }]}
                   value={ipAbuseMaxLimit}
                   onChangeText={setIpAbuseMaxLimit}
                   keyboardType="numeric"
                 />
-                <TouchableOpacity
-                  style={[styles.actionBtn, { flex: 1, backgroundColor: '#265431', borderColor: '#3FCF8E', borderWidth: 1, marginTop: 0 }]}
+                <MuButton
+                  titulo="Escanear IPs"
+                  icono="magnify"
                   onPress={handleScanIpAbuse}
+                  variante="success"
                   disabled={isScanningIpAbuse}
-                >
-                  {isScanningIpAbuse ? (
-                    <ActivityIndicator color="#FFF" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="magnify" size={16} color="#FFF" />
-                      <Text style={styles.actionBtnText}>Escanear IPs</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                  cargando={isScanningIpAbuse}
+                  altura={44}
+                  compacto
+                  style={{ flex: 1 }}
+                />
               </View>
 
               {ipAbuseResults.length > 0 && (
                 <View style={{ marginTop: 8 }}>
-                  <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: 'bold', marginBottom: 6 }}>
+                  <Text style={{ color: '#EFD28D', fontSize: 12, fontWeight: 'bold', marginBottom: 6 }}>
                     IPs en Exceso ({ipAbuseResults.length}):
                   </Text>
                   {ipAbuseResults.map((item, idx) => (
-                    <View key={`ip_abuse_${idx}`} style={[styles.dupeItemRow, { backgroundColor: '#100D0B', borderWidth: 1, borderColor: '#6B5533', padding: 8, borderRadius: 6, marginBottom: 4 }]}>
+                    <View key={`ip_abuse_${idx}`} style={[styles.dupeItemRow, { backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: '#4C463A', padding: 8, borderRadius: 2, marginBottom: 4 }]}>
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: THEME.colors.texto, fontWeight: 'bold', fontSize: 12 }}>
                           {item.ip} ({item.count} conexiones)
@@ -4052,165 +4126,156 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       </View>
                     </View>
                   ))}
-                  <TouchableOpacity
-                    style={[styles.actionBtn, { backgroundColor: '#8C2B1D', borderColor: '#E2703A', borderWidth: 1, marginTop: 8 }]}
+                  <MuButton
+                    titulo="Desconectar Cuentas Excedentes"
+                    icono="account-off"
                     onPress={handleDisconnectIpAbusers}
+                    variante="danger"
                     disabled={isDisconnectingIps}
-                  >
-                    {isDisconnectingIps ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <>
-                        <MaterialCommunityIcons name="account-off" size={16} color="#FFF" />
-                        <Text style={styles.actionBtnText}>Desconectar Cuentas Excedentes</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                    cargando={isDisconnectingIps}
+                    altura={48}
+                    style={{ marginTop: 8 }}
+                  />
                 </View>
               )}
-            </View>
+            </Panel>
 
             {/* Fix 6: Reparar Huérfanos */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="account-search-outline" size={24} color="#E8C86A" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>6. Reparar Registros Huérfanos (sp_MuManager_FixOrphans)</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>06</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Reparar Registros Huérfanos</Text>
                   <Text style={styles.cardDesc}>
                     Detecta personajes sin cuenta padre en MEMB_INFO, limpia ranuras corruptas en AccountCharacter y elimina registros desvinculados en GuildMember.
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#241E1A', borderColor: '#6B5533', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Escanear y Reparar Huérfanos"
+                icono="broom"
                 onPress={handleFixOrphans}
+                variante="secondary"
                 disabled={fixingAction === 'fixOrphans'}
-              >
-                {fixingAction === 'fixOrphans' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="broom" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Escanear y Reparar Huérfanos</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'fixOrphans'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 7: Rescate Masivo de Coordenadas */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="map-marker-distance" size={24} color="#3FCF8E" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>7. Rescate Masivo de Coordenadas (sp_MuManager_RescueInvalidCoords)</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>07</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Rescate Masivo de Coordenadas</Text>
                   <Text style={styles.cardDesc}>
                     Devuelve a Lorencia (125, 125) a todos los personajes con coordenadas o mapas fuera de rango (&lt;0 o &gt;255). Solo actúa en personajes desconectados.
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#225B54', borderColor: '#3FCF8E', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Normalizar Coordenadas a Lorencia"
+                icono="crosshairs-gps"
                 onPress={handleRescueCoords}
+                variante="success"
                 disabled={fixingAction === 'rescueCoords'}
-              >
-                {fixingAction === 'rescueCoords' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Normalizar Coordenadas a Lorencia</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'rescueCoords'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 8: Fix Integer Overflows */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="cash-multiple" size={24} color="#E8C86A" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>8. Desbordamientos de Enteros 32-bit (sp_MuManager_FixIntegerOverflows)</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>08</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Corrección de Desbordamientos Numéricos</Text>
                   <Text style={styles.cardDesc}>
-                    Limita el Zen de personajes y baúles a 2,000,000,000 y corrige valores negativos producidos por integer overflow en Zen, Puntos y Resets.
+                    Limita el Zen de personajes y baúles a 2.000.000.000 y corrige valores negativos producidos por integer overflow en Zen, Puntos y Resets.
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#7A5E22', borderColor: '#B58F3C', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Normalizar Zen y Puntos (Cap 2.000.000.000)"
+                icono="numeric"
                 onPress={handleFixOverflows}
+                variante="primary"
                 disabled={fixingAction === 'fixOverflows'}
-              >
-                {fixingAction === 'fixOverflows' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="numeric" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Normalizar Zen y Puntos (Cap 2.000.000.000)</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'fixOverflows'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 9: Limpiar Conexiones Fantasma */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="ghost" size={24} color={THEME.colors.textoSecundario} />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>9. Purgar Conexiones Fantasma (sp_MuManager_CleanGhostConnections)</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>09</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Purgar Conexiones Inactivas / Fantasma</Text>
                   <Text style={styles.cardDesc}>
                     Restablece ConnectStat = 0 en cuentas desconectadas de forma abrupta o con más de 24 horas y libera ranuras GameIDC zombis.
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#2B2521', borderColor: '#6B5533', borderWidth: 1.5, marginTop: 10 }]}
+              <MuButton
+                titulo="Purgar Sesiones Fantasma"
+                icono="ghost-off"
                 onPress={handleCleanGhosts}
+                variante="secondary"
                 disabled={fixingAction === 'cleanGhosts'}
-              >
-                {fixingAction === 'cleanGhosts' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="ghost-off" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Purgar Sesiones Fantasma</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'cleanGhosts'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 10: Escaneo de Nombres Ilegales */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="account-alert-outline" size={24} color="#E2703A" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>10. Escanear Nombres Ilegales (sp_MuManager_ScanIllegalNames)</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={[styles.fixBadgeNumber, { borderColor: '#E2703A' }]}>
+                  <Text style={[styles.fixBadgeNumberText, { color: '#FFA87D' }]}>10</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Validar Nombres y Caracteres Ilegales</Text>
                   <Text style={styles.cardDesc}>
                     Audita la tabla Character buscando nombres con espacios al inicio/final, tabulaciones, saltos de línea o caracteres ASCII no imprimibles.
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#7A2424', borderColor: '#E2703A', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Escanear Nombres Irregulares"
+                icono="text-search"
                 onPress={handleScanIllegalNames}
+                variante="danger"
                 disabled={fixingAction === 'scanIllegalNames'}
-              >
-                {fixingAction === 'scanIllegalNames' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="text-search" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Escanear Nombres Irregulares</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                cargando={fixingAction === 'scanIllegalNames'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
 
               {illegalNamesResults.length > 0 && (
-                <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#6B5533' }}>
-                  <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: 'bold', marginBottom: 6 }}>
+                <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#4C463A' }}>
+                  <Text style={{ color: '#EFD28D', fontSize: 12, fontWeight: 'bold', marginBottom: 6 }}>
                     Personajes Detectados ({illegalNamesResults.length}):
                   </Text>
                   {illegalNamesResults.map((pj, pIdx) => (
-                    <View key={`illegal_pj_${pIdx}`} style={[styles.dupeItemRow, { backgroundColor: '#100D0B', borderWidth: 1, borderColor: '#6B5533', padding: 8, borderRadius: 6, marginBottom: 4 }]}>
+                    <View key={`illegal_pj_${pIdx}`} style={[styles.dupeItemRow, { backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: '#4C463A', padding: 8, borderRadius: 2, marginBottom: 4 }]}>
                       <View style={{ flex: 1 }}>
                         <Text style={{ color: THEME.colors.texto, fontWeight: 'bold', fontSize: 12 }}>
                           "{pj.Name}" (Cuenta: {pj.AccountID})
@@ -4223,61 +4288,59 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   ))}
                 </View>
               )}
-            </View>
+            </Panel>
 
             {/* Fix 11: Normalizar Estados PK */}
-            <View style={styles.card}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="sword-cross" size={24} color="#E8C86A" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>11. Normalizar Estados PK (sp_MuManager_FixPkStatus)</Text>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={styles.fixBadgeNumber}>
+                  <Text style={styles.fixBadgeNumberText}>11</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fixTitleGothic}>Normalizar Estado PK y Tiempos</Text>
                   <Text style={styles.cardDesc}>
                     Normaliza personajes con PkLevel inválido (&lt; 1 o &gt; 6) o tiempos/conteo PK negativos restableciéndolos a Ciudadano común (PkLevel = 3).
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#704217', borderColor: '#B58F3C', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Normalizar Estados PK Corruptos"
+                icono="scale-balance"
                 onPress={handleFixPkStatus}
+                variante="primary"
                 disabled={fixingAction === 'fixPkStatus'}
-              >
-                {fixingAction === 'fixPkStatus' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="scale-balance" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Normalizar Estados PK Corruptos</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'fixPkStatus'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
             {/* Fix 12: Instalar Procedimientos y Triggers en SQL Server */}
-            <View style={[styles.card, { borderColor: '#3FCF8E', borderWidth: 1.5 }]}>
-              <View style={styles.fixHeader}>
-                <MaterialCommunityIcons name="lightning-bolt" size={24} color="#3FCF8E" />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={[styles.cardTitle, { color: '#3FCF8E' }]}>12. Instalar Stored Procedures & Triggers</Text>
+            <Panel variant="box" style={[styles.card, { borderColor: '#3FCF8E', borderWidth: 1.5 }]}>
+              <MuCornerOrnaments size={12} />
+              <View style={styles.fixHeaderGothic}>
+                <View style={[styles.fixBadgeNumber, { borderColor: '#3FCF8E' }]}>
+                  <Text style={[styles.fixBadgeNumberText, { color: '#3FCF8E' }]}>12</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.fixTitleGothic, { color: '#3FCF8E' }]}>Instalar Stored Procedures & Triggers</Text>
                   <Text style={styles.cardDesc}>
                     Compila en SQL Server todos los procedimientos almacenados, el trigger de auditoría trg_MuManager_CharacterAudit y la tabla MuManager_AuditLog.
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#265431', borderColor: '#3FCF8E', borderWidth: 1, marginTop: 10 }]}
+              <MuButton
+                titulo="Instalar Procedimientos en SQL Server"
+                icono="database-sync"
                 onPress={handleInstallStoredProcedures}
+                variante="success"
                 disabled={fixingAction === 'installProcedures'}
-              >
-                {fixingAction === 'installProcedures' ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="database-sync" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Instalar Procedimientos en SQL Server</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={fixingAction === 'installProcedures'}
+                altura={48}
+                style={{ marginTop: 10 }}
+              />
+            </Panel>
 
           </View>
           </ErrorBoundary>
@@ -4303,7 +4366,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
           <View style={styles.tabContent}>
             {/* Target Account Input */}
-            <View style={[styles.card, { zIndex: 10 }]}>
+            <Panel style={[styles.card, { zIndex: 10 }]}>
               <Text style={styles.cardTitle}>Destino del Starter Kit</Text>
               <Text style={styles.cardDesc}>
                 Ingresa el AccountID donde se inyectarán los ítems en su Baúl y las monedas:
@@ -4317,17 +4380,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 autoCapitalize="none"
                 maxSuggestions={6}
               />
-            </View>
+            </Panel>
 
             {/* Presets Card: Botones Configurables y Modificables */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <Text style={styles.cardTitle}>Botones de Presets de Kit</Text>
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                   onPress={() => setShowSaveKitInput(!showSaveKitInput)}
                 >
-                  <MaterialCommunityIcons name={showSaveKitInput ? 'close' : 'plus-circle'} size={15} color={THEME.colors.primaryOrange} />
+                  <MuIcon name={showSaveKitInput ? 'close' : 'plus-circle'} size={15} color={THEME.colors.primaryOrange} />
                   <Text style={{ color: THEME.colors.primaryOrange, fontSize: 12, fontWeight: 'bold' }}>
                     {showSaveKitInput ? 'Cancelar' : 'Nuevo Botón'}
                   </Text>
@@ -4350,12 +4413,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       placeholder="Nombre del Botón (ej: Kit VIP Oro)"
                       placeholderTextColor={THEME.colors.textMuted}
                     />
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#2E7D32', width: 90, marginTop: 0 }]}
+                    <MuButton
+                      titulo="Crear"
                       onPress={handleCreateNewKitPreset}
-                    >
-                      <Text style={styles.actionBtnText}>Crear</Text>
-                    </TouchableOpacity>
+                      variante="success"
+                      compacto
+                      altura={38}
+                      style={{ width: 90 }}
+                    />
                   </View>
                 </View>
               )}
@@ -4375,7 +4440,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onPress={() => handleApplyPresetKit(p.id)}
                       activeOpacity={0.7}
                     >
-                      <MaterialCommunityIcons
+                      <MuIcon
                         name={(p.icon || 'star-circle') as any}
                         size={16}
                         color={p.badgeColor || THEME.colors.primaryOrange}
@@ -4384,7 +4449,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         {p.name}
                       </Text>
                       {isActive && (
-                        <MaterialCommunityIcons name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
+                        <MuIcon name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
                       )}
                       <TouchableOpacity
                           onPress={() => {
@@ -4395,7 +4460,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           }}
                           style={{ marginLeft: 4 }}
                         >
-                          <MaterialCommunityIcons name="close-circle" size={14} color="#FF5252" />
+                          <MuIcon name="close-circle" size={14} color="#FF5252" />
                         </TouchableOpacity>
                     </TouchableOpacity>
                   );
@@ -4407,21 +4472,22 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <View style={{ flex: 1 }}>
                   <Text style={styles.presetModifyLabel}>Botón Seleccionado:</Text>
                   <TextInput
-                    style={[styles.textInput, { height: 38, fontSize: 13, fontWeight: '700', color: THEME.colors.texto, paddingHorizontal: 8, paddingVertical: 2, marginTop: 4, backgroundColor: '#100D0B', borderColor: '#6B5533', borderWidth: 1, borderRadius: 6 }]}
+                    style={[styles.textInput, { height: 38, fontSize: 13, fontWeight: '700', color: THEME.colors.texto, paddingHorizontal: 8, paddingVertical: 2, marginTop: 4, backgroundColor: THEME.colors.casillaFondo, borderColor: THEME.colors.borde, borderWidth: 1, borderRadius: THEME.shapes.radioEsquina }]}
                     value={activeKitPresetName}
                     onChangeText={setActiveKitPresetName}
                     placeholder="Nombre del Botón de Kit..."
                     placeholderTextColor={THEME.colors.textMuted}
                   />
                 </View>
-                <TouchableOpacity
-                  style={styles.savePresetBtn}
+                <MuButton
+                  titulo="Guardar en este Botón"
+                  icono="content-save-edit"
                   onPress={handleSaveCurrentToActiveKitPreset}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="content-save-edit" size={16} color="#FFF" />
-                  <Text style={styles.savePresetBtnText}>Guardar en este Botón</Text>
-                </TouchableOpacity>
+                  variante="primary"
+                  compacto
+                  altura={38}
+                  style={{ minWidth: 150 }}
+                />
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
@@ -4432,17 +4498,18 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#2E7D32', marginTop: 12 }]}
+              <MuButton
+                titulo="Agregar Ítem Actual del Maker al Kit"
+                icono="plus-box"
                 onPress={handleAddMakerItemToKit}
-              >
-                <MaterialCommunityIcons name="plus-box" size={18} color="#FFF" />
-                <Text style={styles.actionBtnText}>Agregar Ítem Actual del Maker al Kit</Text>
-              </TouchableOpacity>
-            </View>
+                variante="success"
+                altura={46}
+                style={{ marginTop: 12 }}
+              />
+            </Panel>
 
             {/* Monedas y Puntos Separados por Tarjetas Individuales */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <Text style={styles.cardTitle}>Monedas y Puntos Incluidos</Text>
               <Text style={styles.cardDesc}>
                 Marca cada casilla individualmente para incluir solo las monedas que desees:
@@ -4455,13 +4522,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setKitIncludeZen(!kitIncludeZen)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={kitIncludeZen ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={kitIncludeZen ? '#FFD700' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#FFD70022', borderColor: '#FFD700' }]}>
-                    <MaterialCommunityIcons name="cash-multiple" size={15} color="#FFD700" />
+                    <MuIcon name="cash-multiple" size={15} color="#FFD700" />
                     <Text style={[styles.currencyBadgeText, { color: '#FFD700' }]}>Zen</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeZen ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -4502,13 +4569,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setKitIncludeGCoins(!kitIncludeGCoins)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={kitIncludeGCoins ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={kitIncludeGCoins ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
-                    <MaterialCommunityIcons name="hand-coin" size={15} color={THEME.colors.arcano} />
+                    <MuIcon name="hand-coin" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGCoins ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -4547,13 +4614,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setKitIncludeWCoinP(!kitIncludeWCoinP)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={kitIncludeWCoinP ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={kitIncludeWCoinP ? '#B0BEC5' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#B0BEC522', borderColor: '#B0BEC5' }]}>
-                    <MaterialCommunityIcons name="circle-multiple" size={15} color="#B0BEC5" />
+                    <MuIcon name="circle-multiple" size={15} color="#B0BEC5" />
                     <Text style={[styles.currencyBadgeText, { color: '#B0BEC5' }]}>WCoinP</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeWCoinP ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -4592,13 +4659,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setKitIncludeGoblinPoints(!kitIncludeGoblinPoints)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={kitIncludeGoblinPoints ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={kitIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}>
-                    <MaterialCommunityIcons name="hexagon-multiple" size={15} color={THEME.colors.jade} />
+                    <MuIcon name="hexagon-multiple" size={15} color={THEME.colors.jade} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.jade }]}>Goblin Points (GP)</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -4637,13 +4704,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setKitIncludeRuud(!kitIncludeRuud)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={kitIncludeRuud ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={kitIncludeRuud ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
-                    <MaterialCommunityIcons name="diamond-stone" size={15} color={THEME.colors.arcano} />
+                    <MuIcon name="diamond-stone" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>Ruud</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeRuud ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -4674,17 +4741,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   </View>
                 )}
               </View>
-            </View>
+            </Panel>
 
             {/* Current Kit Items List */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
                   onPress={() => setKitIncludeItems(!kitIncludeItems)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={kitIncludeItems ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={kitIncludeItems ? THEME.colors.primaryOrange : THEME.colors.textMuted}
@@ -4730,27 +4797,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onPress={() => setKitList((prev) => prev.filter((_, i) => i !== idx))}
                       style={{ padding: 6 }}
                     >
-                      <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
+                      <MuIcon name="trash-can-outline" size={18} color="#FF5252" />
                     </TouchableOpacity>
                   </View>
                 ))
               )}
 
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: THEME.colors.primaryOrange, marginTop: 12 }]}
+              <MuButton
+                titulo="Entregar Starter Kit al Baúl"
+                icono="cube-send"
                 onPress={handleDeliverKit}
+                variante="primary"
                 disabled={deliveringKit || (!kitIncludeItems && !kitIncludeZen && !kitIncludeGCoins && !kitIncludeWCoinP && !kitIncludeGoblinPoints && !kitIncludeRuud)}
-              >
-                {deliveringKit ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="cube-send" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>Entregar Starter Kit al Baúl</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={deliveringKit}
+                altura={48}
+                style={{ marginTop: 12 }}
+              />
+            </Panel>
           </View>
           </ErrorBoundary>
         )}
@@ -4763,14 +4826,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
           <View style={styles.tabContent}>
             {/* Presets Card: Botones Configurables y Modificables */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <Text style={styles.cardTitle}>Botones de Presets de Premios</Text>
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                   onPress={() => setShowSavePrizeInput(!showSavePrizeInput)}
                 >
-                  <MaterialCommunityIcons name={showSavePrizeInput ? 'close' : 'plus-circle'} size={15} color={THEME.colors.primaryOrange} />
+                  <MuIcon name={showSavePrizeInput ? 'close' : 'plus-circle'} size={15} color={THEME.colors.primaryOrange} />
                   <Text style={{ color: THEME.colors.primaryOrange, fontSize: 12, fontWeight: 'bold' }}>
                     {showSavePrizeInput ? 'Cancelar' : 'Nuevo Botón'}
                   </Text>
@@ -4818,7 +4881,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       onPress={() => handleApplyPrizePreset(p.id)}
                       activeOpacity={0.7}
                     >
-                      <MaterialCommunityIcons
+                      <MuIcon
                         name={(p.icon || 'trophy') as any}
                         size={16}
                         color={p.badgeColor || THEME.colors.primaryOrange}
@@ -4827,7 +4890,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         {p.name}
                       </Text>
                       {isActive && (
-                        <MaterialCommunityIcons name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
+                        <MuIcon name="check-circle" size={14} color={THEME.colors.jade} style={{ marginLeft: 2 }} />
                       )}
                       <TouchableOpacity
                           onPress={() => {
@@ -4838,7 +4901,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           }}
                           style={{ marginLeft: 4 }}
                         >
-                          <MaterialCommunityIcons name="close-circle" size={14} color="#FF5252" />
+                          <MuIcon name="close-circle" size={14} color="#FF5252" />
                         </TouchableOpacity>
                     </TouchableOpacity>
                   );
@@ -4849,7 +4912,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               <View style={[styles.presetModifyBar, { alignItems: 'center' }]}>
                 <View style={{ flex: 1, marginRight: 10 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <MaterialCommunityIcons name="pencil-outline" size={13} color={THEME.colors.primaryOrange} />
+                    <MuIcon name="pencil-outline" size={13} color={THEME.colors.primaryOrange} />
                     <Text style={styles.presetModifyLabel}>Nombre del Botón:</Text>
                   </View>
                   <TextInput
@@ -4863,10 +4926,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         paddingHorizontal: 8,
                         paddingVertical: 2,
                         marginTop: 4,
-                        backgroundColor: '#100D0B',
-                        borderColor: '#6B5533',
+                        backgroundColor: THEME.colors.casillaFondo,
+                        borderColor: THEME.colors.borde,
                         borderWidth: 1,
-                        borderRadius: 6,
+                        borderRadius: THEME.shapes.radioEsquina,
                       },
                     ]}
                     value={activePrizePresetName}
@@ -4880,7 +4943,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={handleSaveCurrentToActivePrizePreset}
                   activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons name="content-save-edit" size={16} color="#FFF" />
+                  <MuIcon name="content-save-edit" size={16} color="#FFF" />
                   <Text style={styles.savePresetBtnText}>Guardar</Text>
                 </TouchableOpacity>
               </View>
@@ -4892,10 +4955,10 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Panel>
 
             {/* Monedas y Puntos Separados por Tarjetas Individuales */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <Text style={styles.cardTitle}>Monedas y Puntos a Entregar</Text>
               <Text style={styles.cardDesc}>
                 Marca cada casilla individualmente para entregar solo las recompensas deseadas:
@@ -4908,13 +4971,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setPrizeIncludeZen(!prizeIncludeZen)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={prizeIncludeZen ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={prizeIncludeZen ? '#FFD700' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#FFD70022', borderColor: '#FFD700' }]}>
-                    <MaterialCommunityIcons name="cash-multiple" size={15} color="#FFD700" />
+                    <MuIcon name="cash-multiple" size={15} color="#FFD700" />
                     <Text style={[styles.currencyBadgeText, { color: '#FFD700' }]}>Zen por Jugador</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeZen ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -4955,13 +5018,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setPrizeIncludeGCoins(!prizeIncludeGCoins)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={prizeIncludeGCoins ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={prizeIncludeGCoins ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
-                    <MaterialCommunityIcons name="hand-coin" size={15} color={THEME.colors.arcano} />
+                    <MuIcon name="hand-coin" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGCoins ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -5000,13 +5063,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setPrizeIncludeWCoinP(!prizeIncludeWCoinP)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={prizeIncludeWCoinP ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={prizeIncludeWCoinP ? '#B0BEC5' : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: '#B0BEC522', borderColor: '#B0BEC5' }]}>
-                    <MaterialCommunityIcons name="circle-multiple" size={15} color="#B0BEC5" />
+                    <MuIcon name="circle-multiple" size={15} color="#B0BEC5" />
                     <Text style={[styles.currencyBadgeText, { color: '#B0BEC5' }]}>WCoinP</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeWCoinP ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -5045,13 +5108,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setPrizeIncludeGoblinPoints(!prizeIncludeGoblinPoints)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={prizeIncludeGoblinPoints ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={prizeIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}>
-                    <MaterialCommunityIcons name="hexagon-multiple" size={15} color={THEME.colors.jade} />
+                    <MuIcon name="hexagon-multiple" size={15} color={THEME.colors.jade} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.jade }]}>Goblin Points (GP)</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGoblinPoints ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -5090,13 +5153,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setPrizeIncludeRuud(!prizeIncludeRuud)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={prizeIncludeRuud ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={prizeIncludeRuud ? THEME.colors.arcano : THEME.colors.textMuted}
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
-                    <MaterialCommunityIcons name="diamond-stone" size={15} color={THEME.colors.arcano} />
+                    <MuIcon name="diamond-stone" size={15} color={THEME.colors.arcano} />
                     <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>Ruud</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeRuud ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
@@ -5135,7 +5198,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   onPress={() => setPrizeIncludeHex(!prizeIncludeHex)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={prizeIncludeHex ? 'checkbox-marked' : 'checkbox-blank-outline'}
                     size={22}
                     color={prizeIncludeHex ? THEME.colors.primaryOrange : THEME.colors.textMuted}
@@ -5163,41 +5226,47 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           { idx: 3, label: 'Baúl #3' },
                           { idx: 4, label: 'Baúl #4' },
                           { idx: 5, label: 'Baúl #5' },
-                        ].map((v) => (
-                          <TouchableOpacity
-                            key={'prize_ware_' + v.idx}
-                            style={[
-                              styles.filterPill,
-                              prizeWarehouseIndex === v.idx && styles.filterPillActive,
-                            ]}
-                            onPress={() => setPrizeWarehouseIndex(v.idx)}
-                          >
-                            <Text style={[styles.filterPillText, prizeWarehouseIndex === v.idx && styles.filterPillTextActive]}>
-                              {v.label}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
+                        ].map((v) => {
+                          const isWareActive = prizeWarehouseIndex === v.idx;
+                          return (
+                            <TouchableOpacity
+                              key={'prize_ware_' + v.idx}
+                              style={{ borderRadius: 2, overflow: 'hidden' }}
+                              onPress={() => setPrizeWarehouseIndex(v.idx)}
+                            >
+                              <ImageBackground
+                                source={isWareActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                                resizeMode="stretch"
+                              >
+                                <Text style={[styles.filterPillText, isWareActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                                  {v.label}
+                                </Text>
+                              </ImageBackground>
+                            </TouchableOpacity>
+                          );
+                        })}
                       </View>
                     </ScrollView>
                   </View>
                 )}
               </View>
-            </View>
+            </Panel>
 
             {/* Online Players Selection Card */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Text style={styles.cardTitle}>
                     Jugadores Online ({prizeOnlinePlayers.length})
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1B5E20', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 }}>
-                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#4CAF50', marginRight: 4 }} />
-                    <Text style={{ fontSize: 10, color: '#A5D6A7', fontWeight: 'bold' }}>En Vivo (5s)</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(63, 207, 142, 0.15)', borderWidth: 1, borderColor: 'rgba(63, 207, 142, 0.35)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: THEME.shapes.radioEsquina }}>
+                    <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: THEME.colors.jade, marginRight: 4 }} />
+                    <Text style={{ fontSize: 10, color: THEME.colors.jade, fontWeight: 'bold' }}>En Vivo (5s)</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={() => loadPrizePlayers(false)} disabled={loadingPrizePlayers}>
-                  <MaterialCommunityIcons name="reload" size={18} color={THEME.colors.primaryOrange} />
+                  <MuIcon name="reload" size={18} color={THEME.colors.primaryOrange} />
                 </TouchableOpacity>
               </View>
 
@@ -5213,20 +5282,26 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     { id: 64, label: 'DL' },
                     { id: 80, label: 'SUM' },
                     { id: 96, label: 'RF' },
-                  ].map((cf) => (
-                    <TouchableOpacity
-                      key={'prize_filter_' + cf.id}
-                      style={[
-                        styles.filterPill,
-                        prizeClassFilter === cf.id && styles.filterPillActive,
-                      ]}
-                      onPress={() => setPrizeClassFilter(cf.id as any)}
-                    >
-                      <Text style={[styles.filterPillText, prizeClassFilter === cf.id && styles.filterPillTextActive]}>
-                        {cf.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  ].map((cf) => {
+                    const isCfActive = prizeClassFilter === cf.id;
+                    return (
+                      <TouchableOpacity
+                        key={'prize_filter_' + cf.id}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setPrizeClassFilter(cf.id as any)}
+                      >
+                        <ImageBackground
+                          source={isCfActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.filterPillText, isCfActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                            {cf.label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </ScrollView>
 
@@ -5245,16 +5320,22 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               {/* Selection helper buttons */}
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                 <TouchableOpacity
-                  style={[styles.filterPill, { backgroundColor: '#FF9800' }]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => handleSelectAllPlayers(prizeOnlinePlayers)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.filterPillTextActive, { color: '#000000', fontWeight: '800' }]}>
-                    Seleccionar Todos ({prizeOnlinePlayers.length})
-                  </Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeActive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillTextActive, { color: '#0D0E0D', fontWeight: '800' }]}>
+                      Seleccionar Todos ({prizeOnlinePlayers.length})
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.filterPill, { backgroundColor: '#2A2A32' }]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => {
                     const filtered = prizeOnlinePlayers
                       .filter((p) => prizeClassFilter === 'ALL' || (p.class & ~7) === prizeClassFilter)
@@ -5267,14 +5348,26 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.filterPillTextActive}>Seleccionar Visibles</Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={styles.filterPillTextActive}>Seleccionar Visibles</Text>
+                  </ImageBackground>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.filterPill, { backgroundColor: '#2A2A32' }]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={handleDeselectAllPlayers}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.filterPillTextActive}>Deseleccionar ({selectedPlayerNames.length})</Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={styles.filterPillTextActive}>Deseleccionar ({selectedPlayerNames.length})</Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
 
@@ -5302,11 +5395,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             key={'prize_player_' + p.charName}
                             style={[
                               styles.dupeItemRow,
-                              { backgroundColor: isSelected ? 'rgba(181, 143, 60, 0.2)' : '#100D0B', borderWidth: 1, borderColor: isSelected ? THEME.colors.oro : '#6B5533' },
+                              { backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.2)' : THEME.colors.casillaFondo, borderWidth: 1, borderColor: isSelected ? THEME.colors.oro : THEME.colors.borde },
                             ]}
                             onPress={() => handleToggleSelectPlayer(p.charName)}
                           >
-                            <MaterialCommunityIcons
+                            <MuIcon
                               name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
                               size={20}
                               color={isSelected ? THEME.colors.primaryOrange : THEME.colors.textMuted}
@@ -5326,27 +5419,21 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
               )}
 
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#2E7D32', marginTop: 12 }]}
+              <MuButton
+                titulo={`Entregar Premio a ${selectedPlayerNames.length} Jugadores`}
+                icono="gift"
                 onPress={handleDeliverBatchPrizes}
+                variante="success"
                 disabled={deliveringPrize || selectedPlayerNames.length === 0}
-              >
-                {deliveringPrize ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="gift" size={18} color="#FFF" />
-                    <Text style={styles.actionBtnText}>
-                      Entregar Premio a {selectedPlayerNames.length} Jugadores
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                cargando={deliveringPrize}
+                altura={48}
+                style={{ marginTop: 12 }}
+              />
+            </Panel>
 
             {/* History Card */}
             {prizeHistory.length > 0 && (
-              <View style={styles.card}>
+              <Panel style={styles.card}>
                 <Text style={styles.cardTitle}>Historial de Entregas</Text>
                 {prizeHistory.slice(0, 5).map((h) => (
                   <View key={'hist_' + h.id} style={{ paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#2C2C35' }}>
@@ -5356,7 +5443,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <Text style={{ color: THEME.colors.primaryOrange, fontSize: 11 }}>{h.detail}</Text>
                   </View>
                 ))}
-              </View>
+              </Panel>
             )}
           </View>
           </ErrorBoundary>
@@ -5400,36 +5487,59 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           <ErrorBoundary tabName="Staff GM y Jugadores">
 
           <View style={styles.tabContent}>
-            {/* Sub-tabs */}
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-              <TouchableOpacity
-                style={[styles.filterPill, playerSubTab === 'online' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
-                onPress={() => setPlayerSubTab('online')}
-              >
-                <MaterialCommunityIcons name="account-multiple" size={16} color={playerSubTab === 'online' ? '#FFF' : THEME.colors.textoSecundario} />
-                <Text style={[styles.filterPillText, playerSubTab === 'online' && styles.filterPillTextActive]}>
-                  Online
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.filterPill, playerSubTab === 'bans' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
-                onPress={() => setPlayerSubTab('bans')}
-              >
-                <MaterialCommunityIcons name="gavel" size={16} color={playerSubTab === 'bans' ? '#FFF' : THEME.colors.textoSecundario} />
-                <Text style={[styles.filterPillText, playerSubTab === 'bans' && styles.filterPillTextActive]}>
-                  Baneados
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.filterPill, playerSubTab === 'gm' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
-                onPress={() => setPlayerSubTab('gm')}
-              >
-                <MaterialCommunityIcons name="shield-crown" size={16} color={playerSubTab === 'gm' ? '#FFF' : THEME.colors.textoSecundario} />
-                <Text style={[styles.filterPillText, playerSubTab === 'gm' && styles.filterPillTextActive]}>
-                  Staff GM
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {/* Sub-tabs: solo visibles cuando ToolsScreen se usa standalone, no cuando está embebido en PlayersHubScreen */}
+            {!props?.hideTabBar && props?.mode !== 'players' && (
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  onPress={() => setPlayerSubTab('online')}
+                  activeOpacity={0.8}
+                >
+                  <ImageBackground
+                    source={playerSubTab === 'online' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={[styles.subTabBtn, playerSubTab === 'online' && styles.subTabBtnActive]}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon name="account-multiple" size={16} color={playerSubTab === 'online' ? '#EFD28D' : '#CDC6B9'} />
+                    <Text style={[styles.subTabBtnText, playerSubTab === 'online' && styles.subTabBtnTextActive]}>
+                      Online
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  onPress={() => setPlayerSubTab('bans')}
+                  activeOpacity={0.8}
+                >
+                  <ImageBackground
+                    source={playerSubTab === 'bans' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={[styles.subTabBtn, playerSubTab === 'bans' && styles.subTabBtnActive]}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon name="gavel" size={16} color={playerSubTab === 'bans' ? '#EFD28D' : '#CDC6B9'} />
+                    <Text style={[styles.subTabBtnText, playerSubTab === 'bans' && styles.subTabBtnTextActive]}>
+                      Baneados
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  onPress={() => setPlayerSubTab('gm')}
+                  activeOpacity={0.8}
+                >
+                  <ImageBackground
+                    source={playerSubTab === 'gm' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={[styles.subTabBtn, playerSubTab === 'gm' && styles.subTabBtnActive]}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon name="shield-crown" size={16} color={playerSubTab === 'gm' ? '#EFD28D' : '#CDC6B9'} />
+                    <Text style={[styles.subTabBtnText, playerSubTab === 'gm' && styles.subTabBtnTextActive]}>
+                      Staff GM
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* SUBTAB 1: ONLINE (Formato idéntico a referencia: Índice, Nombre, Cuenta, Nivel, Mapa, Servidor, IP) */}
             {playerSubTab === 'online' && (
@@ -5439,7 +5549,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     Jugadores Conectados ({playersList.length})
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(63, 207, 142, 0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.jade }}>
-                    <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: THEME.colors.jade }} />
+                    <View style={{ width: 7, height: 7, borderRadius: 3.5, /* círculo funcional (width/2) */ backgroundColor: THEME.colors.jade }} />
                     <Text style={{ fontSize: 11, color: THEME.colors.jade, fontWeight: 'bold' }}>Auto-sync (5s)</Text>
                   </View>
                 </View>
@@ -5459,7 +5569,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 20 }} />
                 ) : playersList.length === 0 ? (
                   <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                    <MaterialCommunityIcons name="account-off" size={40} color={THEME.colors.textMuted} />
+                    <MuIcon name="account-off" size={40} color={THEME.colors.textMuted} />
                     <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginTop: 8 }}>
                       No hay jugadores online conectados en este momento.
                     </Text>
@@ -5517,22 +5627,22 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             {/* Row 2: Pills (Ubicación, Servidor, IP) */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                               <View style={styles.onlinePlayerPill}>
-                                <MaterialCommunityIcons name="map-marker" size={12} color="#4FC3F7" />
+                                <MuIcon name="map-marker" size={12} color="#4FC3F7" />
                                 <Text style={styles.onlinePlayerPillText}>{mapName} ({posX},{posY})</Text>
                               </View>
                               <View style={styles.onlinePlayerPill}>
-                                <MaterialCommunityIcons name="server" size={12} color="#81C784" />
+                                <MuIcon name="server" size={12} color="#81C784" />
                                 <Text style={styles.onlinePlayerPillText}>{serverLabel}</Text>
                               </View>
                               <View style={styles.onlinePlayerPill}>
-                                <MaterialCommunityIcons name="ip-network" size={12} color="#FFB74D" />
+                                <MuIcon name="ip-network" size={12} color="#FFB74D" />
                                 <Text style={styles.onlinePlayerPillText}>{ipLabel}</Text>
                               </View>
                             </View>
                           </View>
 
                           {/* Chevron indicador táctil */}
-                          <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.textoSecundario} style={{ marginLeft: 4 }} />
+                          <MuIcon name="chevron-right" size={20} color={THEME.colors.textoSecundario} style={{ marginLeft: 4 }} />
                         </TouchableOpacity>
                       );
                     })
@@ -5545,53 +5655,73 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               <View style={{ gap: 10 }}>
                 {/* Botones de Acción: Banear Personaje vs Bloquear Cuenta */}
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderColor: '#E8C86A', borderWidth: 1 }]}
+                  <MuButton
+                    titulo="Banear Personaje"
+                    icono="account-cancel"
                     onPress={() => setCharBanModalVisible(true)}
-                  >
-                    <MaterialCommunityIcons name="account-cancel" size={16} color="#E8C86A" />
-                    <Text style={[styles.actionBtnText, { fontSize: 12, color: '#E8C86A' }]}>Banear Personaje</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderColor: '#E2703A', borderWidth: 1 }]}
+                    variante="primary"
+                    altura={44}
+                    style={{ flex: 1 }}
+                  />
+                  <MuButton
+                    titulo="Bloquear Cuenta"
+                    icono="shield-lock"
                     onPress={() => setBanModalVisible(true)}
-                  >
-                    <MaterialCommunityIcons name="shield-lock" size={16} color="#E2703A" />
-                    <Text style={[styles.actionBtnText, { fontSize: 12, color: '#E2703A' }]}>Bloquear Cuenta</Text>
-                  </TouchableOpacity>
+                    variante="danger"
+                    altura={44}
+                    style={{ flex: 1 }}
+                  />
                 </View>
 
                 {/* Filtros de Pestaña */}
                 <View style={{ flexDirection: 'row', gap: 6, marginVertical: 4 }}>
                   <TouchableOpacity
-                    style={[styles.filterPill, bansFilter === 'all' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setBansFilter('all')}
                   >
-                    <Text style={[styles.filterPillText, bansFilter === 'all' && styles.filterPillTextActive]}>
-                      Todos ({bansList.length})
-                    </Text>
+                    <ImageBackground
+                      source={bansFilter === 'all' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.filterPillText, bansFilter === 'all' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                        Todos ({bansList.length})
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterPill, bansFilter === 'characters' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setBansFilter('characters')}
                   >
-                    <Text style={[styles.filterPillText, bansFilter === 'characters' && styles.filterPillTextActive]}>
-                      Personajes ({bansList.filter(b => b.type === 'character' || !!b.charName).length})
-                    </Text>
+                    <ImageBackground
+                      source={bansFilter === 'characters' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.filterPillText, bansFilter === 'characters' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                        Personajes ({bansList.filter(b => b.type === 'character' || !!b.charName).length})
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.filterPill, bansFilter === 'accounts' && styles.filterPillActive, { flex: 1, justifyContent: 'center' }]}
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setBansFilter('accounts')}
                   >
-                    <Text style={[styles.filterPillText, bansFilter === 'accounts' && styles.filterPillTextActive]}>
-                      Cuentas ({bansList.filter(b => b.type === 'account' && !b.charName).length})
-                    </Text>
+                    <ImageBackground
+                      source={bansFilter === 'accounts' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.filterPillText, bansFilter === 'accounts' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                        Cuentas ({bansList.filter(b => b.type === 'account' && !b.charName).length})
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
 
                 {/* Buscador de Baneados */}
                 <View style={styles.inputWrap}>
-                  <MaterialCommunityIcons name="magnify" size={18} color={THEME.colors.textoSecundario} />
+                  <MuIcon name="magnify" size={18} color={THEME.colors.textoSecundario} />
                   <TextInput
                     style={styles.textInput}
                     placeholder="Buscar baneado por cuenta, PJ o motivo..."
@@ -5601,7 +5731,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   />
                   {bansSearch ? (
                     <TouchableOpacity onPress={() => setBansSearch('')}>
-                      <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
+                      <MuIcon name="close-circle" size={18} color={THEME.colors.textoSecundario} />
                     </TouchableOpacity>
                   ) : null}
                 </View>
@@ -5635,15 +5765,15 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       const classInfo = b.class !== undefined ? getMuClassInfo(b.class) : null;
 
                       return (
-                        <View key={`ban_item_${b.accountId}_${b.charName || ''}_${idx}`} style={styles.card}>
+                        <Panel key={`ban_item_${b.accountId}_${b.charName || ''}_${idx}`} style={styles.card}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                             <View style={{ flex: 1, marginRight: 8 }}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 <View style={[
                                   styles.onlinePlayerLevelBadge,
-                                  { backgroundColor: isCharacterBan ? '#4A3525' : '#4A1510', borderColor: isCharacterBan ? '#E8C86A' : '#E2703A', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 }
+                                  { backgroundColor: isCharacterBan ? '#2E2619' : '#4A1510', borderColor: isCharacterBan ? '#EFD28D' : '#E2703A', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 }
                                 ]}>
-                                  <Text style={[styles.onlinePlayerLevelText, { fontSize: 9, color: isCharacterBan ? '#E8C86A' : '#E2703A' }]}>
+                                  <Text style={[styles.onlinePlayerLevelText, { fontSize: 9, color: isCharacterBan ? '#EFD28D' : '#E2703A' }]}>
                                     {isCharacterBan ? 'PERSONAJE BANEADO' : 'CUENTA BLOQUEADA'}
                                   </Text>
                                 </View>
@@ -5664,7 +5794,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
                             {/* Botón de Desbaneo según tipo */}
                             <TouchableOpacity
-                              style={[styles.filterPill, { backgroundColor: '#241E1A', borderColor: '#3FCF8E', borderWidth: 1 }]}
+                              style={{ borderRadius: 2, overflow: 'hidden' }}
                               onPress={() => {
                                 if (isCharacterBan && b.charName) {
                                   handleUnbanCharacter(b.charName);
@@ -5673,11 +5803,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 }
                               }}
                             >
-                              <MaterialCommunityIcons name="lock-open" size={14} color="#3FCF8E" />
-                              <Text style={[styles.filterPillTextActive, { color: '#3FCF8E' }]}>Desbanear</Text>
+                              <ImageBackground
+                                source={STITCH_ASSETS.tabs.tabModeInactive}
+                                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6 }}
+                                resizeMode="stretch"
+                              >
+                                <MuIcon name="lock-open" size={14} color="#3FCF8E" />
+                                <Text style={[styles.filterPillTextActive, { color: '#3FCF8E', fontWeight: 'bold' }]}>Desbanear</Text>
+                              </ImageBackground>
                             </TouchableOpacity>
                           </View>
-                        </View>
+                        </Panel>
                       );
                     });
                   })()
@@ -5688,13 +5824,12 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             {/* SUBTAB 3: STAFF GM */}
             {playerSubTab === 'gm' && (
               <View style={{ gap: 10 }}>
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: THEME.colors.primaryOrange }]}
+                <BotonOro
+                  titulo="ASIGNAR / CAMBIAR NIVEL GM"
+                  icono="shield"
+                  altura={44}
                   onPress={() => setGmModalVisible(true)}
-                >
-                  <MaterialCommunityIcons name="shield-plus" size={18} color="#FFF" />
-                  <Text style={styles.actionBtnText}>Asignar / Cambiar Nivel GM</Text>
-                </TouchableOpacity>
+                />
 
                 {loadingGmsList ? (
                   <ActivityIndicator color={THEME.colors.primaryOrange} style={{ marginVertical: 20 }} />
@@ -5711,26 +5846,49 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       { text: 'Normal (0)', color: THEME.colors.textoSecundario };
 
                     return (
-                      <View key={`gm_${gm.charName}`} style={styles.card}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <View style={{ flex: 1 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-                                {gm.charName}
-                              </Text>
-                              <View style={[styles.filterPill, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}>
-                                <Text style={{ color: levelBadge.color, fontSize: 10, fontWeight: 'bold' }}>
-                                  {levelBadge.text}
+                      <Panel key={`gm_${gm.charName}`} style={styles.card}>
+                        <View style={{ gap: 8 }}>
+                          {/* Fila 1: Datos del GM y Badge de Rango */}
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, marginRight: 8 }}>
+                              <MuIcon name="shield-crown" size={18} color="#FFD700" />
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#E4E2E0', fontWeight: 'bold', fontSize: 14 }} numberOfLines={1}>
+                                  {gm.charName}
+                                </Text>
+                                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
+                                  Cuenta: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{gm.accountId}</Text>
                                 </Text>
                               </View>
                             </View>
-                            <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 2 }}>
-                              Cuenta: {gm.accountId}
-                            </Text>
+                            <View style={{
+                              backgroundColor: THEME.colors.deepForge,
+                              borderColor: THEME.colors.borde,
+                              borderWidth: 1,
+                              paddingHorizontal: 8,
+                              paddingVertical: 3,
+                              borderRadius: THEME.shapes.radioEsquina,
+                            }}>
+                              <Text style={{ color: levelBadge.color, fontSize: 11, fontWeight: 'bold' }}>
+                                {levelBadge.text}
+                              </Text>
+                            </View>
                           </View>
-                          <View style={{ flexDirection: 'row', gap: 6 }}>
+
+                          {/* Fila 2: Acciones Editar y Quitar */}
+                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
                             <TouchableOpacity
-                              style={[styles.filterPill, { backgroundColor: '#241E1A', borderColor: '#E8C86A', borderWidth: 1 }]}
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 5,
+                                backgroundColor: '#211B14',
+                                borderWidth: 1,
+                                borderColor: '#EFD28D',
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: 2,
+                              }}
                               onPress={() => {
                                 setGmCharNameInput(gm.charName);
                                 setGmAccountInput(gm.accountId);
@@ -5738,19 +5896,30 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 setGmModalVisible(true);
                               }}
                             >
-                              <MaterialCommunityIcons name="pencil" size={14} color="#E8C86A" />
-                              <Text style={[styles.filterPillTextActive, { color: '#E8C86A' }]}>Editar</Text>
+                              <MuIcon name="pencil" size={13} color="#EFD28D" />
+                              <Text style={{ color: '#EFD28D', fontSize: 12, fontWeight: 'bold' }}>Editar</Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
-                              style={[styles.filterPill, { backgroundColor: '#241E1A', borderColor: '#E2703A', borderWidth: 1 }]}
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 5,
+                                backgroundColor: '#23120F',
+                                borderWidth: 1,
+                                borderColor: '#E2703A',
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                borderRadius: THEME.shapes.radioEsquina,
+                              }}
                               onPress={() => handleRemoveGm(gm.charName, gm.accountId)}
                             >
-                              <MaterialCommunityIcons name="shield-off" size={14} color="#E2703A" />
-                              <Text style={[styles.filterPillTextActive, { color: '#E2703A' }]}>Quitar</Text>
+                              <MuIcon name="shield-off" size={13} color="#E2703A" />
+                              <Text style={{ color: '#E2703A', fontSize: 12, fontWeight: 'bold' }}>Quitar</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
-                      </View>
+                      </Panel>
                     );
                   })
                 )}
@@ -5759,6 +5928,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           </View>
           </ErrorBoundary>
         )}
+
       </ScrollView>
 
       {/* Modal Miembros del Clan */}
@@ -5767,7 +5937,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
           <View style={[styles.modalContent, { maxHeight: '90%', maxWidth: 400 }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="shield-crown" size={24} color="#E8C86A" />
+                <MuIcon name="shield-crown" size={24} color="#EFD28D" />
                 <View>
                   <Text style={styles.modalTitle}>Clan: {selectedGuild?.G_Name || selectedGuild?.name || 'Clan'}</Text>
                   <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>
@@ -5776,7 +5946,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 </View>
               </View>
               <TouchableOpacity onPress={() => setGuildModalVisible(false)}>
-                <MaterialCommunityIcons name="close" size={24} color="#FFF" />
+                <MuIcon name="close" size={24} color="#FFF" />
               </TouchableOpacity>
             </View>
 
@@ -5799,11 +5969,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           flexDirection: 'row',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          backgroundColor: '#191512',
+                          backgroundColor: THEME.colors.superficie,
                           padding: 10,
-                          borderRadius: 6,
+                          borderRadius: THEME.shapes.radioEsquina,
                           borderWidth: 1,
-                          borderColor: '#3D312A',
+                          borderColor: THEME.colors.borde,
                         }}
                       >
                         <View>
@@ -5812,7 +5982,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             {classInfo.name} • Lv {m.cLevel ?? '?'}
                           </Text>
                         </View>
-                        <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                        <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: THEME.shapes.radioEsquina }}>
                           <Text style={{ color: role.color, fontSize: 11, fontWeight: 'bold' }}>{role.label}</Text>
                         </View>
                       </View>
@@ -5824,19 +5994,19 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderColor: '#E2703A', borderWidth: 1 }]}
+                style={[styles.actionBtn, { flex: 1, backgroundColor: THEME.colors.superficie, borderColor: '#E2703A', borderWidth: 1 }]}
                 onPress={() => {
                   if (selectedGuild) handleDeleteGuild(selectedGuild.G_Name);
                 }}
               >
-                <MaterialCommunityIcons name="trash-can-outline" size={16} color="#E2703A" />
+                <MuIcon name="trash-can-outline" size={16} color="#E2703A" />
                 <Text style={[styles.actionBtnText, { color: '#E2703A' }]}>Disolver Clan</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#191512', borderColor: '#6B5533', borderWidth: 1 }]}
+                style={[styles.actionBtn, { flex: 1, backgroundColor: THEME.colors.superficie, borderColor: THEME.colors.borde, borderWidth: 1 }]}
                 onPress={() => setGuildModalVisible(false)}
               >
-                <Text style={[styles.actionBtnText, { color: '#E8C86A' }]}>Cerrar</Text>
+                <Text style={[styles.actionBtnText, { color: '#EFD28D' }]}>Cerrar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -5850,23 +6020,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             {/* Header */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="lightning-bolt" size={24} color="#E2703A" />
-                <Text style={[styles.modalTitle, { marginBottom: 0, color: '#E8C86A' }]}>
+                <MuIcon name="lightning-bolt" size={24} color="#E2703A" />
+                <Text style={[styles.modalTitle, { marginBottom: 0, color: '#EFD28D' }]}>
                   Edición Rápida: Set Completo
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setQuickSetModalVisible(false)} style={{ padding: 4 }}>
-                <MaterialCommunityIcons name="close" size={24} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={24} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Target Account Notice with Autocomplete and Quick Chips */}
-              <View style={{ backgroundColor: '#191512', padding: 10, borderRadius: 6, marginBottom: 12, borderWidth: 1, borderColor: makerAccount.trim() ? '#3FCF8E' : '#E2703A', zIndex: 100 }}>
+              <View style={{ backgroundColor: THEME.colors.superficie, padding: 10, borderRadius: THEME.shapes.radioEsquina, marginBottom: 12, borderWidth: 1, borderColor: makerAccount.trim() ? '#3FCF8E' : '#E2703A', zIndex: 100 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontWeight: 'bold' }}>CUENTA DE DESTINO (OBLIGATORIO):</Text>
-                  <View style={{ backgroundColor: '#241E1A', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#3D312A' }}>
-                    <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: 'bold' }}>
+                  <View style={{ backgroundColor: THEME.colors.casillaFondo, paddingHorizontal: 8, paddingVertical: 4, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.borde }}>
+                    <Text style={{ color: '#EFD28D', fontSize: 11, fontWeight: 'bold' }}>
                       {makerWarehouseIndex === 0 ? 'Baúl Principal' : makerWarehouseIndex === 1 ? 'Bóveda Expandida' : `Baúl #${makerWarehouseIndex}`}
                     </Text>
                   </View>
@@ -5891,19 +6061,18 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         return (
                           <TouchableOpacity
                             key={`quick_acc_chip_${acc}`}
-                            style={{
-                              backgroundColor: isMatch ? '#E2703A' : '#191512',
-                              paddingHorizontal: 8,
-                              paddingVertical: 4,
-                              borderRadius: 6,
-                              borderWidth: 1,
-                              borderColor: isMatch ? '#E8C86A' : '#3D312A',
-                            }}
+                            style={{ borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => setMakerAccount(acc)}
                           >
-                            <Text style={{ color: isMatch ? '#FFF' : THEME.colors.textoSecundario, fontSize: 11, fontWeight: '600' }}>
-                              {acc}
-                            </Text>
+                            <ImageBackground
+                              source={isMatch ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={{ paddingHorizontal: 9, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={{ color: isMatch ? '#0D0E0D' : THEME.colors.textoSecundarioLuminoso, fontSize: 11, fontWeight: 'bold' }}>
+                                {acc}
+                              </Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         );
                       })}
@@ -5929,25 +6098,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     { id: 'MG', label: 'Magocaballero' },
                     { id: 'DL', label: 'Dark Lord' },
                     { id: 'ACC', label: 'Ancient' },
-                  ].map((f) => (
-                    <TouchableOpacity
-                      key={`qsf_${f.id}`}
-                      style={[
-                        styles.filterPill,
-                        quickSetCategoryFilter === f.id && styles.filterPillActive,
-                      ]}
-                      onPress={() => setQuickSetCategoryFilter(f.id as any)}
-                    >
-                      <Text
-                        style={[
-                          styles.filterPillText,
-                          quickSetCategoryFilter === f.id && styles.filterPillTextActive,
-                        ]}
+                  ].map((f) => {
+                    const isFActive = quickSetCategoryFilter === f.id;
+                    return (
+                      <TouchableOpacity
+                        key={`qsf_${f.id}`}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setQuickSetCategoryFilter(f.id as any)}
                       >
-                        {f.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <ImageBackground
+                          source={isFActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text
+                            style={[
+                              styles.filterPillText,
+                              isFActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso },
+                            ]}
+                          >
+                            {f.label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </ScrollView>
 
@@ -5969,7 +6144,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           ]}
                           onPress={() => setSelectedQuickSet(set)}
                         >
-                          <MaterialCommunityIcons
+                          <MuIcon
                             name="shield-outline"
                             size={24}
                             color={isSelected ? THEME.colors.primaryOrange : THEME.colors.textMuted}
@@ -6003,15 +6178,15 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 4,
-                      backgroundColor: '#191512',
+                      backgroundColor: THEME.colors.superficie,
                       paddingHorizontal: 8,
                       paddingVertical: 4,
-                      borderRadius: 6,
+                      borderRadius: THEME.shapes.radioEsquina,
                       borderWidth: 1,
-                      borderColor: '#3D312A',
+                      borderColor: THEME.colors.borde,
                     }}
                   >
-                    <MaterialCommunityIcons name="check-circle" size={12} color="#3FCF8E" />
+                    <MuIcon name="check-circle" size={12} color="#3FCF8E" />
                     <Text style={{ color: THEME.colors.texto, fontSize: 11 }}>{p.name}</Text>
                   </View>
                 ))}
@@ -6025,19 +6200,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Text style={{ color: THEME.colors.texto, fontSize: 13 }}>Nivel:</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickLevel((prev) => Math.max(0, prev - 1))}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={{ color: '#EFD28D', fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={{ color: '#FFD54F', fontSize: 15, fontWeight: 'bold', minWidth: 36, textAlign: 'center' }}>
                     +{quickLevel}
                   </Text>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickLevel((prev) => Math.min(15, prev + 1))}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={{ color: '#EFD28D', fontSize: 16, fontWeight: 'bold' }}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -6047,19 +6234,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 <Text style={{ color: THEME.colors.texto, fontSize: 13 }}>Opción Adicional:</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickOption((prev) => Math.max(0, prev - 1))}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={{ color: '#EFD28D', fontSize: 16, fontWeight: 'bold' }}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={{ color: '#81C784', fontSize: 15, fontWeight: 'bold', minWidth: 36, textAlign: 'center' }}>
                     +{quickOption * 4}
                   </Text>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={{ borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickOption((prev) => Math.min(7, prev + 1))}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: 'bold' }}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: 36, height: 36, justifyContent: 'center', alignItems: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={{ color: '#EFD28D', fontSize: 16, fontWeight: 'bold' }}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -6067,31 +6266,63 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               {/* Toggles: Luck, Skill, Full Exc, 380 */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
-                  style={[styles.switchOption, quickLuck && styles.switchOptionActive]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickLuck(!quickLuck)}
                 >
-                  <Text style={[styles.switchText, quickLuck && styles.switchTextActive]}>Luck</Text>
+                  <ImageBackground
+                    source={quickLuck ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.switchText, quickLuck ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Luck
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.switchOption, quickSkill && styles.switchOptionActive]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickSkill(!quickSkill)}
                 >
-                  <Text style={[styles.switchText, quickSkill && styles.switchTextActive]}>Skill</Text>
+                  <ImageBackground
+                    source={quickSkill ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.switchText, quickSkill ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Skill
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.switchOption, quickFullExc && styles.switchOptionActive]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuickFullExc(!quickFullExc)}
                 >
-                  <Text style={[styles.switchText, quickFullExc && styles.switchTextActive]}>Full Excelente</Text>
+                  <ImageBackground
+                    source={quickFullExc ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.switchText, quickFullExc ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Full Excelente
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.switchOption, quick380 && styles.switchOptionActive]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setQuick380(!quick380)}
                 >
-                  <Text style={[styles.switchText, quick380 && styles.switchTextActive]}>Opción 380</Text>
+                  <ImageBackground
+                    source={quick380 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.switchText, quick380 ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Opción 380
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
 
@@ -6102,23 +6333,26 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     OPCIÓN ANCIENT:
                   </Text>
                   {quickSetAncientOptions.length === 0 ? (
-                    <View style={{ backgroundColor: '#1A1613', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#6B5533' }}>
+                    <View style={{ backgroundColor: THEME.colors.fondoRadialTop, padding: 8, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.borde }}>
                       <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontStyle: 'italic' }}>
-                        Este set no posee versiones Ancient en Season 6. Solo se inyectará en versión Normal / Excelente.
+                        Este set no posee versiones Ancient registradas. Solo se inyectará en versión Normal / Excelente.
                       </Text>
                     </View>
                   ) : (
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                       <TouchableOpacity
-                        style={[
-                          styles.filterPill,
-                          quickAncientTier === 0 && styles.filterPillActive,
-                        ]}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickAncientTier(0)}
                       >
-                        <Text style={[styles.filterPillText, quickAncientTier === 0 && styles.filterPillTextActive]}>
-                          Normal (Sin Ancient)
-                        </Text>
+                        <ImageBackground
+                          source={quickAncientTier === 0 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.filterPillText, quickAncientTier === 0 ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                            Normal (Sin Ancient)
+                          </Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       {quickSetAncientOptions.map((anc) => {
                         const val = anc.tier === 1 ? 5 : 10;
@@ -6126,15 +6360,18 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         return (
                           <TouchableOpacity
                             key={`q_anc_${anc.tier}`}
-                            style={[
-                              styles.filterPill,
-                              isSelected && { backgroundColor: '#B58F3C', borderColor: '#E8C86A' },
-                            ]}
+                            style={{ borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => setQuickAncientTier(val)}
                           >
-                            <Text style={[styles.filterPillText, isSelected && { color: '#100D0B', fontWeight: 'bold' }]}>
-                              {anc.name} (T{anc.tier})
-                            </Text>
+                            <ImageBackground
+                              source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={[styles.filterPillText, isSelected ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                                {anc.name} (T{anc.tier})
+                              </Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         );
                       })}
@@ -6151,22 +6388,40 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={{ color: '#FFD54F', fontSize: 12, fontWeight: 'bold' }}>Nivel +{quickHarmonyLevel}</Text>
                       <TouchableOpacity
-                        style={styles.stepperBtn}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickHarmonyLevel((prev) => Math.max(0, prev - 1))}
                       >
-                        <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold' }}>-</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: 34, height: 34, justifyContent: 'center', alignItems: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={{ color: '#EFD28D', fontSize: 14, fontWeight: 'bold' }}>-</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.stepperBtn}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickHarmonyLevel((prev) => Math.min(13, prev + 1))}
                       >
-                        <Text style={{ color: '#FFF', fontSize: 14, fontWeight: 'bold' }}>+</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: 34, height: 34, justifyContent: 'center', alignItems: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={{ color: '#EFD28D', fontSize: 14, fontWeight: 'bold' }}>+</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.stepperBtn, { backgroundColor: '#B58F3C', paddingHorizontal: 6 }]}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickHarmonyLevel(13)}
                       >
-                        <Text style={{ color: '#100D0B', fontSize: 10, fontWeight: 'bold' }}>MAX</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeActive}
+                          style={{ width: 44, height: 34, justifyContent: 'center', alignItems: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={{ color: '#0D0E0D', fontSize: 10, fontWeight: 'bold' }}>MAX</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -6186,18 +6441,21 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       return (
                         <TouchableOpacity
                           key={`q_harm_${h.id}`}
-                          style={[
-                            styles.filterPill,
-                            isSel && { backgroundColor: '#FF6D00', borderColor: '#FF6D00' },
-                          ]}
+                          style={{ borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => {
                             setQuickHarmonyType(h.id);
                             if (h.id > 0 && quickHarmonyLevel === 0) setQuickHarmonyLevel(13);
                           }}
                         >
-                          <Text style={[styles.filterPillText, isSel && { color: '#FFF', fontWeight: 'bold' }]}>
-                            {h.label}
-                          </Text>
+                          <ImageBackground
+                            source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={[styles.filterPillText, isSel ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                              {h.label}
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -6209,41 +6467,20 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               {(() => {
                 const canInject = !!makerAccount.trim() && !injectingQuickSet;
                 return (
-                  <TouchableOpacity
-                    style={[
-                      styles.actionBtn,
-                      {
-                        backgroundColor: canInject ? '#E2703A' : '#191512',
-                        marginTop: 10,
-                        marginBottom: 20,
-                        height: 48,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        opacity: canInject ? 1 : 0.6,
-                        borderWidth: 1,
-                        borderColor: canInject ? '#E8C86A' : '#3D312A',
-                      },
-                    ]}
+                  <MuButton
+                    titulo={
+                      canInject
+                        ? `INYECTAR ${selectedQuickSet.name.toUpperCase()} (${selectedQuickSet.pieces.length} PIEZAS)`
+                        : 'INGRESA CUENTA DE DESTINO PARA ACTIVAR'
+                    }
+                    icono={canInject ? "lightning-bolt" : "lock-outline"}
                     onPress={handleInjectQuickSet}
-                    disabled={!canInject}
-                  >
-                    {injectingQuickSet ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <MaterialCommunityIcons
-                          name={canInject ? "lightning-bolt" : "lock-outline"}
-                          size={22}
-                          color={canInject ? "#FFF" : THEME.colors.textoSecundario}
-                        />
-                        <Text style={[styles.actionBtnText, { fontSize: 13, fontWeight: 'bold', color: canInject ? '#FFF' : THEME.colors.textoSecundario }]}>
-                          {canInject
-                            ? `INYECTAR ${selectedQuickSet.name.toUpperCase()} (${selectedQuickSet.pieces.length} PIEZAS)`
-                            : 'INGRESA CUENTA DE DESTINO PARA ACTIVAR'}
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                    variante="primary"
+                    disabled={!canInject || injectingQuickSet}
+                    cargando={injectingQuickSet}
+                    altura={48}
+                    style={{ marginTop: 10, marginBottom: 20 }}
+                  />
                 );
               })()}
             </ScrollView>
@@ -6253,59 +6490,65 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 
 
       {/* Modal Nivel GM */}
-      <Modal visible={gmModalVisible} transparent animationType="fade">
+      <Modal visible={gmModalVisible} transparent animationType="fade" onRequestClose={() => setGmModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
-            <Text style={styles.modalTitle}>Asignar Rango GM</Text>
-            <Text style={styles.label}>Nombre del Personaje:</Text>
-            <View style={{ zIndex: 10 }}>
-              <AutocompleteInput
-                value={gmCharNameInput}
-                onChangeText={setGmCharNameInput}
-                suggestions={fixesCharSuggestions}
-                placeholder="Nombre exacto del PJ"
-                icon="account"
-                maxSuggestions={5}
-              />
+          <Panel variant="box" style={{ width: '92%', maxWidth: 420, maxHeight: '90%', padding: 0, overflow: 'hidden' }}>
+            <MuCornerOrnaments size={12} />
+            <View style={{ padding: 18 }}>
+              <TituloSeccion titulo="ASIGNAR RANGO GM" subtitulo="Control de privilegios Season 6" />
+
+              <Text style={[styles.label, { marginTop: 12 }]}>Nombre del Personaje:</Text>
+              <View style={{ zIndex: 10 }}>
+                <AutocompleteInput
+                  value={gmCharNameInput}
+                  onChangeText={setGmCharNameInput}
+                  suggestions={fixesCharSuggestions}
+                  placeholder="Nombre exacto del PJ"
+                  icon="account"
+                  maxSuggestions={5}
+                />
+              </View>
+
+              <Text style={[styles.label, { marginTop: 14 }]}>Rango Administrativo:</Text>
+              <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
+                {([0, 1, 2, 3] as const).map((lvl) => (
+                  <TouchableOpacity
+                    key={`gm_level_opt_${lvl}`}
+                    style={[
+                      styles.subTabBtn,
+                      selectedGmLevel === lvl && styles.subTabBtnActive,
+                      { flex: 1, paddingVertical: 8 },
+                    ]}
+                    onPress={() => setSelectedGmLevel(lvl)}
+                  >
+                    <Text style={[styles.subTabBtnText, selectedGmLevel === lvl && styles.subTabBtnTextActive]}>
+                      {lvl === 0 ? 'Normal' : lvl === 1 ? 'Helper' : lvl === 2 ? 'GM' : 'Admin'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+                <View style={{ flex: 1 }}>
+                  <BotonPiedra
+                    titulo="CANCELAR"
+                    altura={42}
+                    onPress={() => setGmModalVisible(false)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <BotonOro
+                    titulo="APLICAR"
+                    icono="shield"
+                    altura={42}
+                    cargando={savingGmLevel}
+                    disabled={savingGmLevel}
+                    onPress={handleSaveGmLevelSubmit}
+                  />
+                </View>
+              </View>
             </View>
-            <Text style={[styles.label, { marginTop: 10 }]}>Rango Administrativo:</Text>
-            <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
-              {([0, 1, 2, 3] as const).map((lvl) => (
-                <TouchableOpacity
-                  key={`gm_level_opt_${lvl}`}
-                  style={[
-                    styles.filterPill,
-                    selectedGmLevel === lvl && styles.filterPillActive,
-                    { flex: 1, justifyContent: 'center' },
-                  ]}
-                  onPress={() => setSelectedGmLevel(lvl)}
-                >
-                  <Text style={[styles.filterPillText, selectedGmLevel === lvl && styles.filterPillTextActive]}>
-                    {lvl === 0 ? 'Normal' : lvl === 1 ? 'Helper' : lvl === 2 ? 'GM' : 'Admin'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#191512', borderColor: '#6B5533', borderWidth: 1 }]}
-                onPress={() => setGmModalVisible(false)}
-              >
-                <Text style={[styles.actionBtnText, { color: '#E8C86A' }]}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderColor: '#E8C86A', borderWidth: 1 }]}
-                onPress={handleSaveGmLevelSubmit}
-                disabled={savingGmLevel}
-              >
-                {savingGmLevel ? (
-                  <ActivityIndicator color="#E8C86A" />
-                ) : (
-                  <Text style={[styles.actionBtnText, { color: '#E8C86A' }]}>Aplicar Rango</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
+          </Panel>
         </View>
       </Modal>
 
@@ -6323,25 +6566,25 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               return (
                 <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ paddingBottom: 28 }}>
                   {/* Encabezado del Personaje */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#3A2E22', paddingBottom: 10, marginBottom: 12 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: THEME.colors.borde, paddingBottom: 10, marginBottom: 12 }}>
                     <View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={[styles.modalTitle, { marginBottom: 0, color: '#E8C86A' }]}>{selectedPlayerModal.charName}</Text>
-                        <View style={[styles.onlinePlayerLevelBadge, { backgroundColor: '#B58F3C' }]}>
-                          <Text style={[styles.onlinePlayerLevelText, { color: '#100D0B' }]}>Lv.{selectedPlayerModal.level}</Text>
+                        <Text style={[styles.modalTitle, { marginBottom: 0, color: '#EFD28D' }]}>{selectedPlayerModal.charName}</Text>
+                        <View style={[styles.onlinePlayerLevelBadge, { backgroundColor: '#EFD28D' }]}>
+                          <Text style={[styles.onlinePlayerLevelText, { color: '#0D0E0D' }]}>Lv.{selectedPlayerModal.level}</Text>
                         </View>
                       </View>
-                      <Text style={{ color: classInfo.accentColor || '#E8C86A', fontSize: 12, marginTop: 2, fontWeight: '600' }}>
+                      <Text style={{ color: classInfo.accentColor || '#EFD28D', fontSize: 12, marginTop: 2, fontWeight: '600' }}>
                         {classInfo.name}
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => setSelectedPlayerModal(null)} style={{ padding: 4 }}>
-                      <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
+                      <MuIcon name="close" size={22} color={THEME.colors.textoSecundario} />
                     </TouchableOpacity>
                   </View>
 
                   {/* Tarjetas de Información Detallada */}
-                  <View style={{ backgroundColor: '#14100D', borderRadius: 6, borderWidth: 1, borderColor: '#3A2E22', padding: 12, gap: 6, marginBottom: 14 }}>
+                  <View style={{ backgroundColor: THEME.colors.deepForge, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.borde, padding: 12, gap: 6, marginBottom: 14 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                       <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Cuenta Asociada:</Text>
                       <Text style={{ color: THEME.colors.texto, fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.accountId}</Text>
@@ -6356,7 +6599,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                       <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Dirección IP:</Text>
-                      <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.ip || '127.0.0.1'}</Text>
+                      <Text style={{ color: '#EFD28D', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.ip || '127.0.0.1'}</Text>
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                       <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Hora de Conexión:</Text>
@@ -6365,7 +6608,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     {selectedPlayerModal.resets !== undefined && (
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Resets Acumulados:</Text>
-                        <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.resets}</Text>
+                        <Text style={{ color: '#EFD28D', fontSize: 12, fontWeight: 'bold' }}>{selectedPlayerModal.resets}</Text>
                       </View>
                     )}
                     {selectedPlayerModal.money !== undefined && selectedPlayerModal.money > 0 && (
@@ -6379,15 +6622,15 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   {/* ACCIONES DIRECTAS SIN SALIR DEL MODAL */}
 
                   {/* 1. TELETRANSPORTE RÁPIDO A CIUDADES */}
-                  <Text style={[styles.label, { color: '#E8C86A', marginTop: 4, marginBottom: 6 }]}>
+                  <Text style={[styles.label, { color: '#EFD28D', marginTop: 4, marginBottom: 6 }]}>
                     Teletransporte Rápido:
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                     {[
-                      { name: 'Lorencia', map: 0, x: 125, y: 125, icon: 'castle', color: '#E8C86A' },
+                      { name: 'Lorencia', map: 0, x: 125, y: 125, icon: 'castle', color: '#EFD28D' },
                       { name: 'Devias', map: 2, x: 220, y: 220, icon: 'snowflake', color: '#5B8DEF' },
                       { name: 'Noria', map: 3, x: 175, y: 110, icon: 'forest', color: '#3FCF8E' },
-                      { name: 'Elbeland', map: 51, x: 50, y: 220, icon: 'tree', color: '#E8C86A' },
+                      { name: 'Elbeland', map: 51, x: 50, y: 220, icon: 'tree', color: '#EFD28D' },
                       { name: 'Stadium', map: 6, x: 60, y: 60, icon: 'stadium', color: '#E2703A' },
                       { name: 'Losttower', map: 4, x: 208, y: 75, icon: 'fire', color: '#E2703A' },
                       { name: 'Atlans', map: 7, x: 24, y: 35, icon: 'water', color: '#5B8DEF' },
@@ -6397,17 +6640,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
-                          backgroundColor: '#241E1A',
+                          backgroundColor: THEME.colors.superficie,
                           borderWidth: 1,
-                          borderColor: '#6B5533',
-                          borderRadius: 6,
+                          borderColor: THEME.colors.borde,
+                          borderRadius: THEME.shapes.radioEsquina,
                           paddingHorizontal: 8,
                           paddingVertical: 6,
                           gap: 4,
                         }}
                         onPress={() => handleTeleportPlayerCity(selectedPlayerModal.charName, c.name, c.map, c.x, c.y)}
                       >
-                        <MaterialCommunityIcons name={c.icon as any} size={14} color={c.color} />
+                        <MuIcon name={c.icon as any} size={14} color={c.color} />
                         <Text style={{ color: THEME.colors.texto, fontSize: 11, fontWeight: 'bold' }}>{c.name}</Text>
                         <Text style={{ color: THEME.colors.textoSecundario, fontSize: 9 }}>({c.x},{c.y})</Text>
                       </TouchableOpacity>
@@ -6415,53 +6658,59 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   </View>
 
                   {/* 2. FUNCIONES DE GESTIÓN Y LIMPIEZA */}
-                  <Text style={[styles.label, { color: '#E8C86A', marginBottom: 6 }]}>Funciones Rápidas:</Text>
+                  <Text style={[styles.label, { color: '#EFD28D', marginBottom: 6 }]}>Funciones Rápidas:</Text>
                   <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                     {/* Limpiar PK */}
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderWidth: 1, borderColor: '#5B8DEF', marginTop: 0, paddingVertical: 8 }]}
+                    <MuButton
+                      titulo="Limpiar PK"
+                      icono="sword-cross"
                       onPress={() => handleClearPkForPlayer(selectedPlayerModal.charName)}
-                    >
-                      <MaterialCommunityIcons name="sword-cross" size={16} color="#5B8DEF" />
-                      <Text style={[styles.actionBtnText, { fontSize: 11, color: THEME.colors.texto }]}>Limpiar PK</Text>
-                    </TouchableOpacity>
+                      variante="secondary"
+                      compacto
+                      altura={38}
+                      style={{ flex: 1 }}
+                    />
 
                     {/* Asignar Rango GM */}
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderWidth: 1, borderColor: '#B58F3C', marginTop: 0, paddingVertical: 8 }]}
+                    <MuButton
+                      titulo="Rango GM"
+                      icono="crown"
                       onPress={() => {
                         setGmCharNameInput(selectedPlayerModal.charName);
                         setSelectedPlayerModal(null);
                         setGmModalVisible(true);
                       }}
-                    >
-                      <MaterialCommunityIcons name="crown" size={16} color="#E8C86A" />
-                      <Text style={[styles.actionBtnText, { fontSize: 11, color: '#E8C86A' }]}>Rango GM</Text>
-                    </TouchableOpacity>
+                      variante="primary"
+                      compacto
+                      altura={38}
+                      style={{ flex: 1 }}
+                    />
 
                     {/* Desconectar (DC) */}
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { flex: 1, backgroundColor: '#E2703A', marginTop: 0, paddingVertical: 8 }]}
+                    <MuButton
+                      titulo="Desconectar"
+                      icono="account-off"
                       onPress={() => {
                         handleDisconnectPlayer(selectedPlayerModal.accountId);
                         setSelectedPlayerModal(null);
                       }}
-                    >
-                      <MaterialCommunityIcons name="account-off" size={16} color="#FFF" />
-                      <Text style={[styles.actionBtnText, { fontSize: 11 }]}>Desconectar</Text>
-                    </TouchableOpacity>
+                      variante="danger"
+                      compacto
+                      altura={38}
+                      style={{ flex: 1 }}
+                    />
                   </View>
 
                   {/* 3. ATRIBUTOS & ACCESO DIRECTO A MÓDULOS */}
-                  <Text style={[styles.label, { color: '#E8C86A', marginBottom: 6 }]}>Enviar a Otros Módulos:</Text>
+                  <Text style={[styles.label, { color: '#EFD28D', marginBottom: 6 }]}>Enviar a Otros Módulos:</Text>
                   <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
                     <TouchableOpacity
                       style={{
                         flex: 1,
-                        backgroundColor: '#241E1A',
+                        backgroundColor: THEME.colors.superficie,
                         borderWidth: 1,
-                        borderColor: '#6B5533',
-                        borderRadius: 6,
+                        borderColor: THEME.colors.borde,
+                        borderRadius: THEME.shapes.radioEsquina,
                         paddingVertical: 8,
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -6474,17 +6723,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setActiveTab('maker');
                       }}
                     >
-                      <MaterialCommunityIcons name="anvil" size={16} color="#E8C86A" />
+                      <MuIcon name="anvil" size={16} color="#EFD28D" />
                       <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Item Maker</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       style={{
                         flex: 1,
-                        backgroundColor: '#241E1A',
+                        backgroundColor: THEME.colors.superficie,
                         borderWidth: 1,
-                        borderColor: '#6B5533',
-                        borderRadius: 6,
+                        borderColor: THEME.colors.borde,
+                        borderRadius: THEME.shapes.radioEsquina,
                         paddingVertical: 8,
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -6497,17 +6746,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setActiveTab('kit');
                       }}
                     >
-                      <MaterialCommunityIcons name="gift-outline" size={16} color="#3FCF8E" />
+                      <MuIcon name="gift-outline" size={16} color="#3FCF8E" />
                       <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Starter Kit</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       style={{
                         flex: 1,
-                        backgroundColor: '#241E1A',
+                        backgroundColor: THEME.colors.superficie,
                         borderWidth: 1,
-                        borderColor: '#6B5533',
-                        borderRadius: 6,
+                        borderColor: THEME.colors.borde,
+                        borderRadius: THEME.shapes.radioEsquina,
                         paddingVertical: 8,
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -6520,17 +6769,18 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         setActiveTab('fixes');
                       }}
                     >
-                      <MaterialCommunityIcons name="wrench-outline" size={16} color="#5B8DEF" />
+                      <MuIcon name="wrench-outline" size={16} color="#5B8DEF" />
                       <Text style={{ color: THEME.colors.texto, fontSize: 10, fontWeight: 'bold' }}>Desatascar</Text>
                     </TouchableOpacity>
                   </View>
 
                   {/* 4. BLOQUEOS ADMINISTRATIVOS Y EDICIÓN COMPLETA */}
-                  <Text style={[styles.label, { color: '#E8C86A', marginBottom: 6 }]}>Bloqueos y Edición:</Text>
+                  <Text style={[styles.label, { color: '#EFD28D', marginBottom: 6 }]}>Bloqueos y Edición:</Text>
                   <View style={{ gap: 8 }}>
                     {/* Banear Solo Personaje */}
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#241E1A', borderWidth: 1, borderColor: '#E2703A', marginTop: 0 }]}
+                    <MuButton
+                      titulo="Banear Solo Este Personaje"
+                      icono="account-cancel"
                       onPress={() => {
                         if (!LicenseService.isPro()) {
                           LicenseService.alertProRequired('Bloquear Personaje', () => setLicenseModalVisible(true), 'El bloqueo administrativo de personajes requiere una licencia PRO activa.');
@@ -6561,14 +6811,14 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           ]
                         );
                       }}
-                    >
-                      <MaterialCommunityIcons name="account-cancel" size={16} color="#E2703A" />
-                      <Text style={[styles.actionBtnText, { color: THEME.colors.texto }]}>Banear Solo Este Personaje</Text>
-                    </TouchableOpacity>
+                      variante="danger"
+                      altura={44}
+                    />
 
                     {/* Banear Cuenta Completa */}
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#E2703A', marginTop: 0 }]}
+                    <MuButton
+                      titulo="Bloquear Cuenta Completa"
+                      icono="shield-lock"
                       onPress={() => {
                         if (!LicenseService.isPro()) {
                           LicenseService.alertProRequired('Bloquear Cuenta', () => setLicenseModalVisible(true), 'El bloqueo administrativo de cuentas requiere una licencia PRO activa.');
@@ -6599,23 +6849,23 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           ]
                         );
                       }}
-                    >
-                      <MaterialCommunityIcons name="shield-lock" size={16} color="#FFF" />
-                      <Text style={styles.actionBtnText}>Bloquear Cuenta Completa</Text>
-                    </TouchableOpacity>
+                      variante="danger"
+                      altura={44}
+                    />
 
                     {/* Abrir en Editor de Personajes */}
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: '#B58F3C', borderWidth: 1, borderColor: '#E8C86A', marginTop: 2 }]}
+                    <MuButton
+                      titulo="Abrir en Editor de Personajes"
+                      icono="square-edit-outline"
                       onPress={() => {
                         const targetChar = selectedPlayerModal.charName;
                         setSelectedPlayerModal(null);
                         navigation.navigate('CharacterEdit', { characterName: targetChar });
                       }}
-                    >
-                      <MaterialCommunityIcons name="square-edit-outline" size={16} color="#100D0B" />
-                      <Text style={[styles.actionBtnText, { color: '#100D0B' }]}>Abrir en Editor de Personajes</Text>
-                    </TouchableOpacity>
+                      variante="primary"
+                      altura={44}
+                      style={{ marginTop: 2 }}
+                    />
                   </View>
                 </ScrollView>
               );
@@ -6627,10 +6877,13 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
       {/* Modal Banear Únicamente Personaje */}
       <Modal visible={charBanModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
-            <Text style={[styles.modalTitle, { color: '#E8C86A' }]}>Banear Personaje</Text>
+          <Panel variant="box" style={[styles.modalContent, { maxHeight: '90%', padding: 18 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <MuIcon name="gavel" size={20} color="#EFD28D" />
+              <Text style={[styles.modalTitle, { color: '#EFD28D', marginBottom: 0 }]}>Banear Personaje</Text>
+            </View>
             <Text style={styles.label}>Nombre del Personaje:</Text>
-            <View style={{ zIndex: 10 }}>
+            <View style={{ zIndex: 10, marginTop: 4 }}>
               <AutocompleteInput
                 value={banCharNameInput}
                 onChangeText={setBanCharNameInput}
@@ -6641,44 +6894,57 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 maxSuggestions={5}
               />
             </View>
-            <Text style={[styles.label, { marginTop: 10 }]}>Motivo del Baneo:</Text>
+            <Text style={[styles.label, { marginTop: 12 }]}>Motivo del Baneo:</Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: '#14100D', borderColor: '#6B5533', color: THEME.colors.texto }]}
+              style={{
+                height: 44,
+                backgroundColor: THEME.colors.deepForge,
+                borderColor: THEME.colors.borde,
+                borderWidth: 1,
+                borderRadius: THEME.shapes.radioEsquina,
+                paddingHorizontal: 12,
+                color: THEME.colors.texto,
+                fontSize: 13,
+                marginTop: 6,
+              }}
               value={banCharReasonInput}
               onChangeText={setBanCharReasonInput}
               placeholder="Ej: Infracción de reglas de personaje"
               placeholderTextColor={THEME.colors.textMuted}
             />
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderWidth: 1, borderColor: '#6B5533' }]}
-                onPress={() => setCharBanModalVisible(false)}
-              >
-                <Text style={styles.actionBtnText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#E2703A' }]}
-                onPress={handleSaveCharBanSubmit}
-                disabled={savingCharBan}
-              >
-                {savingCharBan ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.actionBtnText}>Banear Personaje</Text>
-                )}
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+              <View style={{ flex: 1 }}>
+                <BotonPiedra
+                  titulo="CANCELAR"
+                  altura={42}
+                  onPress={() => setCharBanModalVisible(false)}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <BotonBrasa
+                  titulo="BANEAR PJ"
+                  icono="gavel"
+                  altura={42}
+                  cargando={savingCharBan}
+                  disabled={savingCharBan}
+                  onPress={handleSaveCharBanSubmit}
+                />
+              </View>
             </View>
-          </View>
+          </Panel>
         </View>
       </Modal>
 
       {/* Modal Bloquear Cuenta */}
       <Modal visible={banModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
-            <Text style={[styles.modalTitle, { color: '#E2703A' }]}>Bloquear Cuenta</Text>
+          <Panel variant="box" style={[styles.modalContent, { maxHeight: '90%', padding: 18 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <MuIcon name="lock" size={20} color="#E2703A" />
+              <Text style={[styles.modalTitle, { color: '#E2703A', marginBottom: 0 }]}>Bloquear Cuenta</Text>
+            </View>
             <Text style={styles.label}>AccountID a Bloquear:</Text>
-            <View style={{ zIndex: 10 }}>
+            <View style={{ zIndex: 10, marginTop: 4 }}>
               <AutocompleteInput
                 value={banAccountInput}
                 onChangeText={setBanAccountInput}
@@ -6689,34 +6955,44 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                 maxSuggestions={5}
               />
             </View>
-            <Text style={[styles.label, { marginTop: 10 }]}>Motivo del Bloqueo:</Text>
+            <Text style={[styles.label, { marginTop: 12 }]}>Motivo del Bloqueo:</Text>
             <TextInput
-              style={[styles.textInput, { backgroundColor: '#14100D', borderColor: '#6B5533', color: THEME.colors.texto }]}
+              style={{
+                height: 44,
+                backgroundColor: THEME.colors.deepForge,
+                borderColor: THEME.colors.borde,
+                borderWidth: 1,
+                borderRadius: THEME.shapes.radioEsquina,
+                paddingHorizontal: 12,
+                color: THEME.colors.texto,
+                fontSize: 13,
+                marginTop: 6,
+              }}
               value={banReasonInput}
               onChangeText={setBanReasonInput}
               placeholder="Ej: Uso de programas ilegales"
               placeholderTextColor={THEME.colors.textMuted}
             />
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#241E1A', borderWidth: 1, borderColor: '#6B5533' }]}
-                onPress={() => setBanModalVisible(false)}
-              >
-                <Text style={styles.actionBtnText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { flex: 1, backgroundColor: '#E2703A' }]}
-                onPress={handleSaveBanSubmit}
-                disabled={savingBan}
-              >
-                {savingBan ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.actionBtnText}>Confirmar Ban</Text>
-                )}
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+              <View style={{ flex: 1 }}>
+                <BotonPiedra
+                  titulo="CANCELAR"
+                  altura={42}
+                  onPress={() => setBanModalVisible(false)}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <BotonBrasa
+                  titulo="BLOQUEAR"
+                  icono="lock"
+                  altura={42}
+                  cargando={savingBan}
+                  disabled={savingBan}
+                  onPress={handleSaveBanSubmit}
+                />
+              </View>
             </View>
-          </View>
+          </Panel>
         </View>
       </Modal>
 
@@ -6725,7 +7001,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
         visible={licenseModalVisible}
         onClose={() => setLicenseModalVisible(false)}
       />
-      </View>
+      </ImageBackground>
     </ErrorBoundary>
   );
 };
@@ -6733,15 +7009,21 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#191512',
+    backgroundColor: THEME.colors.fondo,
   },
   tabBarContainer: {
-    backgroundColor: '#191512',
-    borderBottomWidth: 1,
-    borderBottomColor: '#6B5533',
+    backgroundColor: '#0D0E0D',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#4C463A',
+    paddingVertical: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   tabBarScroll: {
-    paddingHorizontal: 8,
+    paddingLeft: 8,
+    paddingRight: 28,
     paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
@@ -6753,35 +7035,181 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 24,
-    backgroundColor: 'rgba(25, 21, 18, 0.85)',
+    backgroundColor: 'rgba(13, 14, 13, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  tabTouch: {
+    marginRight: 6,
   },
   tabButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: '#241E1A',
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+    minHeight: 40,
+    borderRadius: 2,
+    overflow: 'hidden',
     gap: 6,
   },
   tabButtonActive: {
-    backgroundColor: 'rgba(181, 143, 60, 0.2)',
-    borderWidth: 1.5,
-    borderColor: '#E8C86A',
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
   },
   tabButtonText: {
-    color: THEME.colors.textoSecundario,
+    color: '#CDC6B9',
+    fontFamily: THEME.typography.fontTitle,
     fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    ...THEME.effects.textShadowSubtle,
   },
   tabButtonTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 11,
     fontWeight: '900',
+    letterSpacing: 1,
+    ...THEME.effects.textShadow,
+  },
+  subTabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 2,
+    overflow: 'hidden',
+    gap: 6,
+    elevation: 3,
+  },
+  subTabBtnActive: {
+    elevation: 6,
+  },
+  subTabBtnText: {
+    color: '#CDC6B9',
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    ...THEME.effects.textShadowSubtle,
+  },
+  subTabBtnTextActive: {
+    color: '#EFD28D',
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    ...THEME.effects.textShadow,
+  },
+  cardHeaderGothic: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0D0E0D',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3A301E',
+    marginBottom: 10,
+    borderRadius: 2,
+  },
+  goldDot: {
+    width: 6,
+    height: 6,
+    backgroundColor: '#EFD28D',
+    borderRadius: 3, /* círculo funcional (width/2) */
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+  gothicCardTitle: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#EFD28D',
+    letterSpacing: 0.8,
+  },
+  gothicCardBadge: {
+    fontFamily: THEME.typography.fontBody,
+    fontSize: 10,
+    color: '#989081',
+    fontWeight: '600',
+  },
+  heroBanner: {
+    width: '100%',
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+  },
+  heroBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  goldDiamond: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#EFD28D',
+    transform: [{ rotate: '45deg' }],
+  },
+  heroBannerTitle: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#EFD28D',
+    letterSpacing: 1,
+  },
+  heroBannerSubtitle: {
+    fontFamily: THEME.typography.fontBody,
+    fontSize: 11,
+    color: '#BBB4A8',
+    marginTop: 2,
+  },
+  fixHeaderGothic: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 10,
+  },
+  fixBadgeNumber: {
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 2,
+  },
+  fixBadgeNumberText: {
+    fontFamily: THEME.typography.fontBody,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#D2B674',
+  },
+  fixTitleGothic: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#E4E2E0',
     letterSpacing: 0.5,
   },
   scroll: {
@@ -6795,17 +7223,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: '#241E1A',
-    borderRadius: 6,
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
-    elevation: 3,
+    marginBottom: 12,
   },
   cardTitle: {
     fontSize: 13.5,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#EFD28D',
     marginBottom: 4,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
@@ -6822,11 +7245,14 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: '#0D0E0D',
+    borderRadius: 2,
     paddingHorizontal: 12,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#4C463A',
+    borderBottomColor: '#4C463A',
     height: 44,
   },
   textInput: {
@@ -6840,16 +7266,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1E1915',
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderRadius: 2,
+    backgroundColor: '#141614',
+    borderWidth: 1,
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
     gap: 5,
   },
   catPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderWidth: 1.5,
-    borderColor: '#E8C86A',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   catPillText: {
     fontSize: 11.5,
@@ -6858,7 +7290,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   catPillTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: '900',
     ...THEME.effects.textShadow,
   },
@@ -6867,15 +7299,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: '#1E1915',
+    borderRadius: 2,
+    backgroundColor: '#141614',
     borderWidth: 1,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
     gap: 6,
   },
   itemPillActive: {
-    borderColor: '#E8C86A',
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   itemPillText: {
     fontSize: 12,
@@ -6931,12 +7370,15 @@ const styles = StyleSheet.create({
   hexRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#000000',
+    borderLeftColor: '#000000',
+    borderRightColor: '#2C302C',
+    borderBottomColor: '#2C302C',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     gap: 8,
   },
   hexText: {
@@ -6950,10 +7392,13 @@ const styles = StyleSheet.create({
   copyBtn: {
     width: 44,
     height: 44,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.superficie,
+    borderRadius: 2,
+    backgroundColor: '#181A18',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -6973,25 +7418,28 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   counterBtn: {
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#181A18',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    width: 32,
-    height: 32,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
+    width: 44,
+    height: 44,
+    borderRadius: 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
   counterBtnText: {
-    color: THEME.colors.oroClaro,
-    fontSize: 14,
+    color: '#EFD28D',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   counterValue: {
-    color: THEME.colors.texto,
-    fontSize: 14,
+    color: '#EFD28D',
+    fontSize: 15,
     fontWeight: 'bold',
-    minWidth: 34,
+    minWidth: 40,
     textAlign: 'center',
   },
   switchRow: {
@@ -7001,12 +7449,15 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   excQuickBtn: {
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#181A18',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#4C463A',
+    borderLeftColor: '#4C463A',
+    borderRightColor: '#1A1814',
+    borderBottomColor: '#1A1814',
   },
   excQuickBtnText: {
     color: THEME.colors.oroClaro,
@@ -7022,17 +7473,17 @@ const styles = StyleSheet.create({
   excChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#090A09',
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderColor: '#1E211E',
     gap: 6,
     width: '48%',
   },
   excChipActive: {
-    borderColor: THEME.colors.jade,
+    borderColor: '#3FCF8E',
     backgroundColor: 'rgba(63, 207, 142, 0.12)',
   },
   excChipText: {
@@ -7051,21 +7502,28 @@ const styles = StyleSheet.create({
   },
   socketLabel: {
     fontSize: 11,
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: '700',
     width: 60,
   },
   socketOptionBtn: {
-    backgroundColor: '#1E1A16',
+    backgroundColor: '#141614',
     paddingHorizontal: 8,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
   },
   socketOptionBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
-    borderColor: '#E8C86A',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   socketOptionText: {
     fontSize: 10,
@@ -7073,20 +7531,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   socketOptionTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: '800',
   },
   harmonyBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1E1A16',
+    borderRadius: 2,
+    backgroundColor: '#141614',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
   },
   harmonyBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
-    borderColor: '#E8C86A',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   harmonyBtnText: {
     color: THEME.colors.textoSecundario,
@@ -7094,18 +7559,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   harmonyBtnTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: '800',
   },
   injectBtn: {
-    backgroundColor: '#241E1A',
-    borderWidth: 1.2,
-    borderColor: '#3FCF8E',
+    backgroundColor: '#0D2418',
+    borderWidth: 1,
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#124B2C',
+    borderBottomColor: '#124B2C',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
-    borderRadius: 6,
+    borderRadius: 2,
     minHeight: 44,
     gap: 8,
     marginTop: 4,
@@ -7119,14 +7587,21 @@ const styles = StyleSheet.create({
   filterPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1E1915',
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderRadius: 2,
+    backgroundColor: '#141614',
+    borderWidth: 1,
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
   },
   filterPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: '#E8C86A',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   filterPillText: {
     fontSize: 11.5,
@@ -7135,36 +7610,42 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   filterPillTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: 'bold',
     ...THEME.effects.textShadow,
   },
   searchBtn: {
-    backgroundColor: '#241E1A',
-    borderColor: '#E8C86A',
+    backgroundColor: '#1A1812',
     borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     minHeight: 44,
     gap: 6,
   },
   searchBtnText: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 13,
     fontWeight: 'bold',
   },
   scanDupesBtn: {
-    backgroundColor: '#241E1A',
-    borderColor: '#E2703A',
+    backgroundColor: '#1F1410',
     borderWidth: 1,
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5C220E',
+    borderBottomColor: '#5C220E',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     minHeight: 44,
     gap: 6,
   },
@@ -7177,16 +7658,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
   },
   dupeBannerRed: {
-    backgroundColor: 'rgba(226, 112, 58, 0.12)',
-    borderColor: '#E2703A',
+    backgroundColor: '#2A1314',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
   },
   dupeBannerGreen: {
-    backgroundColor: 'rgba(63, 207, 142, 0.12)',
-    borderColor: '#3FCF8E',
+    backgroundColor: '#10241A',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1A4D33',
+    borderBottomColor: '#1A4D33',
   },
   dupeBannerTitle: {
     fontSize: 13,
@@ -7199,11 +7686,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   dupeGroupCard: {
-    backgroundColor: '#241E1A',
-    borderRadius: 6,
+    backgroundColor: '#121412',
+    borderRadius: 2,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#2C302C',
+    borderLeftColor: '#2C302C',
+    borderRightColor: '#090A09',
+    borderBottomColor: '#090A09',
   },
   dupeGroupHeader: {
     flexDirection: 'row',
@@ -7246,7 +7736,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingHorizontal: 5,
     paddingVertical: 2,
-    borderRadius: 3,
+    borderRadius: 2,
   },
   rankPillsContainer: {
     flexDirection: 'row',
@@ -7257,17 +7747,24 @@ const styles = StyleSheet.create({
   rankPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1915',
+    backgroundColor: '#141614',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 2,
     gap: 5,
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderWidth: 1,
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
   },
   rankPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: '#E8C86A',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   rankPillText: {
     color: THEME.colors.textoSecundarioLuminoso,
@@ -7276,8 +7773,9 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   rankPillTextActive: {
-    color: '#FFF',
+    color: '#EFD28D',
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   refreshRankBtn: {
     flexDirection: 'row',
@@ -7285,25 +7783,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 6,
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: '#141614',
+    borderRadius: 2,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#3A3F3A',
+    borderLeftColor: '#3A3F3A',
+    borderRightColor: '#0A0B0A',
+    borderBottomColor: '#0A0B0A',
   },
   refreshRankBtnText: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 11,
     fontWeight: 'bold',
   },
   rankCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.card,
+    backgroundColor: '#101210',
     padding: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#2C302C',
+    borderLeftColor: '#2C302C',
+    borderRightColor: '#090A09',
+    borderBottomColor: '#090A09',
   },
   rankMedal: {
     width: 26,
@@ -7330,7 +7834,7 @@ const styles = StyleSheet.create({
   onlineDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 3, /* círculo funcional (width/2) */
     backgroundColor: THEME.colors.jade,
   },
   rankScoreWrap: {
@@ -7346,14 +7850,17 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   pkClearBtn: {
-    backgroundColor: '#241E1A',
-    borderColor: '#E2703A',
+    backgroundColor: '#1F1410',
     borderWidth: 1,
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5C220E',
+    borderBottomColor: '#5C220E',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 2,
     gap: 4,
     minHeight: 44,
   },
@@ -7372,7 +7879,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     gap: 6,
     marginTop: 8,
     minHeight: 44,
@@ -7385,18 +7897,26 @@ const styles = StyleSheet.create({
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.card,
-    borderRadius: 6,
+    backgroundColor: '#1E1F1E',
+    borderRadius: 2,
     padding: 16,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     marginBottom: 16,
   },
   statsIconWrap: {
     width: 48,
     height: 48,
-    borderRadius: 6,
-    backgroundColor: 'rgba(226, 112, 58, 0.15)',
+    borderRadius: 2,
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#4C463A',
+    borderBottomColor: '#4C463A',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -7415,11 +7935,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   section: {
-    backgroundColor: THEME.colors.card,
-    borderRadius: 6,
+    backgroundColor: '#1E1F1E',
+    borderRadius: 2,
     padding: 16,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   sectionTitle: {
     fontSize: 16,
@@ -7437,11 +7960,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: THEME.colors.background,
-    borderRadius: 6,
+    backgroundColor: '#1E1F1E',
+    borderRadius: 2,
     padding: 12,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     marginBottom: 10,
     minHeight: 44,
   },
@@ -7470,9 +7996,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     marginTop: 6,
     gap: 8,
     minHeight: 44,
@@ -7498,23 +8027,38 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 380,
     maxHeight: '90%',
-    backgroundColor: '#241E1A',
-    borderRadius: 6,
+    backgroundColor: '#101210',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
     padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    elevation: 10,
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: THEME.colors.textPrimary,
+    fontFamily: THEME.typography.fontTitle,
+    fontWeight: '900',
+    color: '#EFD28D',
     marginBottom: 12,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
   },
   onlinePlayerCard: {
-    backgroundColor: THEME.colors.card,
-    borderRadius: 6,
+    backgroundColor: '#121412',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#2C302C',
+    borderLeftColor: '#2C302C',
+    borderRightColor: '#090A09',
+    borderBottomColor: '#090A09',
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -7524,14 +8068,14 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14, // círculo funcional (width/2): badge numerado de jugador online
-    backgroundColor: '#1A1613',
+    backgroundColor: THEME.colors.deepForge,
     borderWidth: 1,
-    borderColor: '#B58F3C',
+    borderColor: THEME.colors.oroClaro,
     justifyContent: 'center',
     alignItems: 'center',
   },
   onlinePlayerIndexText: {
-    color: '#B58F3C',
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -7541,12 +8085,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   onlinePlayerAccountPill: {
-    backgroundColor: '#1A1613',
-    borderRadius: 4,
+    backgroundColor: '#090A09',
+    borderRadius: 2,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#2C302C',
+    borderLeftColor: '#2C302C',
+    borderRightColor: '#090A09',
+    borderBottomColor: '#090A09',
   },
   onlinePlayerAccountText: {
     color: '#A0A0B0',
@@ -7554,42 +8101,54 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   onlinePlayerLevelBadge: {
-    backgroundColor: '#E65100',
-    borderRadius: 4,
+    backgroundColor: THEME.colors.oroClaro,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: THEME.colors.bordeBrillante,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   onlinePlayerLevelText: {
-    color: '#FFFFFF',
+    color: '#0D0E0D',
     fontSize: 11,
     fontWeight: 'bold',
   },
   onlinePlayerPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1613',
-    borderRadius: 4,
+    backgroundColor: '#090A09',
+    borderRadius: 2,
     paddingHorizontal: 6,
     paddingVertical: 3,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#2C302C',
+    borderLeftColor: '#2C302C',
+    borderRightColor: '#090A09',
+    borderBottomColor: '#090A09',
   },
   onlinePlayerPillText: {
     color: THEME.colors.textoSecundario,
     fontSize: 10,
   },
   currencyCard: {
-    backgroundColor: THEME.colors.card,
-    borderRadius: 6,
+    backgroundColor: '#121412',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderTopColor: '#2C302C',
+    borderLeftColor: '#2C302C',
+    borderRightColor: '#090A09',
+    borderBottomColor: '#090A09',
     padding: 12,
     marginBottom: 10,
   },
   currencyCardActive: {
-    borderColor: '#B58F3C',
-    backgroundColor: '#352D27',
+    backgroundColor: '#262014',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#6B5826',
+    borderBottomColor: '#6B5826',
   },
   currencyCardHeader: {
     flexDirection: 'row',
@@ -7602,7 +8161,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
   },
   currencyBadgeText: {
@@ -7616,10 +8175,10 @@ const styles = StyleSheet.create({
     borderTopColor: '#3E352B',
   },
   currencyInput: {
-    backgroundColor: '#100D0B',
+    backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     color: '#FFF',
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -7634,12 +8193,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   currencyQuickBtn: {
-    backgroundColor: '#1A1613',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.fondoRadialTop,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderColor: THEME.colors.borde,
     minHeight: 36,
     justifyContent: 'center',
   },
@@ -7652,12 +8211,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#1A1613',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.fondoRadialTop,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderColor: THEME.colors.borde,
     minHeight: 38,
   },
   presetPillText: {
@@ -7667,7 +8226,7 @@ const styles = StyleSheet.create({
   },
   presetModifyBar: {
     backgroundColor: THEME.colors.card,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: THEME.colors.border,
     padding: 10,
@@ -7691,21 +8250,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E65100',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.oroClaro,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: THEME.colors.bordeBrillante,
     paddingHorizontal: 12,
     paddingVertical: 8,
     minHeight: 44,
   },
   savePresetBtnText: {
-    color: '#FFF',
+    color: THEME.colors.textoOscuro,
     fontSize: 12,
     fontWeight: 'bold',
   },
   newPresetContainer: {
     backgroundColor: THEME.colors.card,
     padding: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: THEME.colors.border,
@@ -7713,10 +8274,10 @@ const styles = StyleSheet.create({
   ancientBtn: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
-    backgroundColor: '#1A1613',
+    borderColor: THEME.colors.borde,
+    backgroundColor: THEME.colors.fondoRadialTop,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
@@ -7728,26 +8289,26 @@ const styles = StyleSheet.create({
   stepperBtn: {
     width: 36,
     height: 36,
-    borderRadius: 6,
-    backgroundColor: '#1A1613',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.fondoRadialTop,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderColor: THEME.colors.borde,
   },
   switchOption: {
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
-    backgroundColor: '#1A1613',
+    borderColor: THEME.colors.borde,
+    backgroundColor: THEME.colors.fondoRadialTop,
     minHeight: 38,
     justifyContent: 'center',
   },
   switchOptionActive: {
-    borderColor: '#B58F3C',
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    borderColor: '#EFD28D',
+    backgroundColor: 'rgba(224, 195, 128, 0.15)',
   },
   switchText: {
     color: THEME.colors.textoSecundario,
@@ -7755,7 +8316,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   switchTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: 'bold',
   },
   optionRow: {
@@ -7766,13 +8327,13 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.card,
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 10,
     minHeight: 44,
   },
   itemCardSelected: {
-    borderColor: '#B58F3C',
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    borderColor: '#EFD28D',
+    backgroundColor: 'rgba(224, 195, 128, 0.15)',
   },
   itemName: {
     color: THEME.colors.texto,
@@ -7780,7 +8341,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   itemNameSelected: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: 'bold',
   },
 });

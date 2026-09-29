@@ -4,12 +4,22 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
+  ImageBackground,
+  ScrollView,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../../constants/theme';
 import { SecurityService } from '../../services/security/securityService';
+import {
+  MuIcon,
+  MuSideMoldings,
+  MuHeaderBanner,
+  MuCornerOrnaments,
+  Panel,
+} from '../../components/ui';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 interface PinScreenProps {
   onSuccess: () => void;
@@ -97,89 +107,168 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Encabezado */}
-      <View style={styles.header}>
-        <View style={styles.iconCircle}>
-          <MaterialCommunityIcons
-            name={lockoutTimer > 0 ? 'lock-alert' : 'shield-crown'}
-            size={44}
-            color={lockoutTimer > 0 ? THEME.colors.brasa : THEME.colors.oro}
-          />
-        </View>
-        <Text style={styles.title}>MU MANAGER PRO</Text>
-        <Text style={styles.subtitle}>
-          {lockoutTimer > 0
-            ? `Bloqueado temporalmente (${lockoutTimer}s)`
-            : 'Ingresa tu PIN de seguridad de 4 dígitos'}
-        </Text>
-      </View>
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={styles.container}
+      imageStyle={styles.bgStoneImage}
+      resizeMode="repeat"
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        {/* Cabecera Clásica Season 6 */}
+        <MuHeaderBanner
+          titulo="MU MANAGER PRO"
+          subtitulo="PIN Y TÉRMINOS"
+        />
 
-      {/* Indicadores de 4 círculos */}
-      <View style={styles.dotsContainer}>
-        {[0, 1, 2, 3].map((index) => {
-          const filled = pin.length > index;
-          return (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                filled && styles.dotFilled,
-                lockoutTimer > 0 && styles.dotLocked,
-              ]}
+      {/* Panel de Seguridad NewUI */}
+      <Panel variant="box" style={styles.pinPanel}>
+        <MuCornerOrnaments size={12} />
+
+        <View style={styles.header}>
+          <View style={styles.padlockIconBox}>
+            <Image
+              source={STITCH_ASSETS.sprites.security}
+              style={styles.padlockImg}
+              resizeMode="contain"
             />
-          );
-        })}
-      </View>
+          </View>
+          <Text style={styles.title}>PIN DE SEGURIDAD</Text>
+          <Text style={styles.subtitle}>
+            {lockoutTimer > 0
+              ? `Bloqueado temporalmente (${lockoutTimer}s)`
+              : 'Introduce el código maestro de 4 cifras'}
+          </Text>
+        </View>
 
-      {/* Teclado visual numérico */}
-      <View style={styles.keypad}>
-        {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']].map((row, rIdx) => (
-          <View key={rIdx} style={styles.keyRow}>
-            {row.map((digit) => (
-              <TouchableOpacity
-                key={digit}
-                style={[styles.keyButton, lockoutTimer > 0 && styles.keyButtonDisabled]}
-                disabled={lockoutTimer > 0}
-                onPress={() => handleKeyPress(digit)}
-                activeOpacity={0.7}
+        {/* Indicadores de 4 círculos dorados NewUI */}
+        <View style={styles.dotsContainer}>
+          {[0, 1, 2, 3].map((index) => {
+            const filled = pin.length > index;
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.dotOuter,
+                  filled && styles.dotOuterFilled,
+                  lockoutTimer > 0 && styles.dotOuterLocked,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.dotInner,
+                    filled && styles.dotInnerFilled,
+                    lockoutTimer > 0 && styles.dotInnerLocked,
+                  ]}
+                />
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Notificaciones de seguridad dinámica */}
+        <View style={styles.securityBox}>
+          {lockoutTimer > 0 ? (
+            <View style={styles.warningLocked}>
+              <Text style={styles.warningLockedText}>
+                Restricción temporal activa: [bloqueo: {lockoutTimer}s]
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.warningNotice}>
+              <Text style={styles.warningNoticeText}>
+                Bloqueo tras {MAX_ATTEMPTS} intentos fallidos · Intento {attempts}/{MAX_ATTEMPTS}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Teclado visual numérico NewUI */}
+        <View style={styles.keypad}>
+          {[['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']].map((row, rIdx) => (
+            <View key={rIdx} style={styles.keyRow}>
+              {row.map((digit) => (
+                <TouchableOpacity
+                  key={digit}
+                  style={[{ flex: 1, marginHorizontal: 4, borderRadius: 2, overflow: 'hidden' }, lockoutTimer > 0 && styles.keyButtonDisabled]}
+                  disabled={lockoutTimer > 0}
+                  onPress={() => handleKeyPress(digit)}
+                  activeOpacity={0.7}
+                  accessibilityLabel={`Dígito ${digit}`}
+                >
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.keyButtonWrap}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.keyText, lockoutTimer > 0 && styles.keyTextDisabled]}>
+                      {digit}
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+
+          {/* Fila inferior: slot decorativo, 0, borrar */}
+          <View style={styles.keyRow}>
+            <View style={{ flex: 1, marginHorizontal: 4, borderRadius: 2, overflow: 'hidden' }}>
+              <ImageBackground
+                source={STITCH_ASSETS.items.slotBox}
+                style={styles.keyButtonEmpty}
+                resizeMode="stretch"
+              >
+                <Text style={{ color: '#D2B674', fontSize: 16 }}>◆</Text>
+              </ImageBackground>
+            </View>
+            <TouchableOpacity
+              style={[{ flex: 1, marginHorizontal: 4, borderRadius: 2, overflow: 'hidden' }, lockoutTimer > 0 && styles.keyButtonDisabled]}
+              disabled={lockoutTimer > 0}
+              onPress={() => handleKeyPress('0')}
+              activeOpacity={0.7}
+              accessibilityLabel="Dígito 0"
+            >
+              <ImageBackground
+                source={STITCH_ASSETS.tabs.tabModeInactive}
+                style={styles.keyButtonWrap}
+                resizeMode="stretch"
               >
                 <Text style={[styles.keyText, lockoutTimer > 0 && styles.keyTextDisabled]}>
-                  {digit}
+                  0
                 </Text>
-              </TouchableOpacity>
-            ))}
+              </ImageBackground>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[{ flex: 1, marginHorizontal: 4, borderRadius: 2, overflow: 'hidden' }, lockoutTimer > 0 && styles.keyButtonDisabled]}
+              disabled={lockoutTimer > 0}
+              onPress={handleDelete}
+              activeOpacity={0.7}
+              accessibilityLabel="Borrar dígito"
+            >
+              <ImageBackground
+                source={STITCH_ASSETS.buttons.small}
+                style={[styles.keyButtonWrap, styles.keyButtonDelete]}
+                resizeMode="stretch"
+              >
+                <Text style={styles.deleteText}>BORRAR</Text>
+              </ImageBackground>
+            </TouchableOpacity>
           </View>
-        ))}
-
-        {/* Fila inferior: espacio, 0, borrar */}
-        <View style={styles.keyRow}>
-          <View style={styles.keyButtonEmpty} />
-          <TouchableOpacity
-            style={[styles.keyButton, lockoutTimer > 0 && styles.keyButtonDisabled]}
-            disabled={lockoutTimer > 0}
-            onPress={() => handleKeyPress('0')}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.keyText, lockoutTimer > 0 && styles.keyTextDisabled]}>
-              0
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.keyButton, lockoutTimer > 0 && styles.keyButtonDisabled]}
-            disabled={lockoutTimer > 0}
-            onPress={handleDelete}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons
-              name="backspace-outline"
-              size={24}
-              color={lockoutTimer > 0 ? THEME.colors.textMuted : THEME.colors.oro}
-            />
-          </TouchableOpacity>
         </View>
-      </View>
-    </View>
+      </Panel>
+
+      {/* Zócalo Inferior Gótico NewUI */}
+      <Image
+        source={STITCH_ASSETS.decorations.gothicBottomFooter}
+        style={{ width: '100%', maxWidth: 390, height: 42, alignSelf: 'center', marginTop: 12 }}
+        resizeMode="contain"
+      />
+      </ScrollView>
+    </ImageBackground>
   );
 };
 
@@ -187,39 +276,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.colors.fondo,
-    justifyContent: 'space-between',
-    paddingVertical: THEME.spacing.xl,
-    paddingHorizontal: THEME.spacing.lg,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+  },
+  bgStoneImage: {
+    opacity: 0.50,
+  },
+  pinPanel: {
+    width: '100%',
+    maxWidth: 390,
+    alignSelf: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 16,
   },
   header: {
     alignItems: 'center',
-    marginTop: THEME.spacing.xl,
+    marginBottom: 12,
   },
-  iconCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 6,
-    backgroundColor: '#2B2521',
+  padlockIconBox: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderColor: 'rgba(210, 182, 116, 0.7)',
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: THEME.spacing.md,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    marginBottom: 8,
+  },
+  padlockImg: {
+    width: 28,
+    height: 28,
   },
   title: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     fontFamily: THEME.typography.fontTitle,
     color: THEME.colors.oroClaro,
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
     ...THEME.effects.textShadow,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '500',
-    marginTop: THEME.spacing.xs,
+    marginTop: 4,
     textAlign: 'center',
     ...THEME.effects.textShadowSubtle,
   },
@@ -227,55 +334,120 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
-    marginVertical: THEME.spacing.lg,
+    gap: 16,
+    marginVertical: 12,
   },
-  dot: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
+  dotOuter: {
+    width: 28,
+    height: 28,
+    borderRadius: 14 /* círculo funcional (width/2): indicador exterior pin */,
+    backgroundColor: '#0C0D0C',
     borderWidth: 1.5,
-    borderColor: THEME.colors.borde,
-    backgroundColor: THEME.colors.casillaFondo,
+    borderColor: '#383D38',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dotFilled: {
-    backgroundColor: THEME.colors.oroClaro,
-    borderColor: '#FFE866',
+  dotOuterFilled: {
+    borderColor: '#8C7138',
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  dotLocked: {
+  dotOuterLocked: {
     borderColor: THEME.colors.brasa,
+  },
+  dotInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5 /* círculo funcional (width/2): núcleo indicador pin */,
+    backgroundColor: '#161716',
+  },
+  dotInnerFilled: {
+    backgroundColor: '#EFD28D',
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dotInnerLocked: {
+    backgroundColor: THEME.colors.brasa,
+  },
+  securityBox: {
+    width: '100%',
+    marginBottom: 14,
+  },
+  warningNotice: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: '#141514',
+    borderWidth: 1,
+    borderColor: '#323632',
+    borderRadius: THEME.shapes.radioEsquina,
+    alignItems: 'center',
+  },
+  warningNoticeText: {
+    fontSize: 11,
+    color: THEME.colors.oroClaro,
+    fontWeight: '500',
+  },
+  warningLocked: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: '#1A0E0E',
+    borderWidth: 1,
+    borderColor: '#4D1F1F',
+    borderRadius: THEME.shapes.radioEsquina,
+    alignItems: 'center',
+  },
+  warningLockedText: {
+    fontSize: 11,
+    color: '#FFB4AB',
+    fontWeight: '600',
   },
   keypad: {
     width: '100%',
     maxWidth: 320,
     alignSelf: 'center',
-    marginBottom: THEME.spacing.lg,
   },
   keyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 10,
   },
-  keyButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 6,
-    backgroundColor: '#2B2521',
+  keyButtonWrap: {
+    minHeight: 48,
+    height: 48,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+  },
+  keyButtonDelete: {
+    paddingHorizontal: 4,
+  },
+  deleteText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: '#FF6B6B',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  keyButtonEmpty: {
+    minHeight: 48,
+    height: 48,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.6,
   },
   keyButtonDisabled: {
     opacity: 0.4,
-    borderColor: '#3A2E22',
-  },
-  keyButtonEmpty: {
-    width: 72,
-    height: 72,
+    borderColor: THEME.colors.borde,
   },
   keyText: {
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: 'bold',
     fontFamily: THEME.typography.fontTitle,
     color: THEME.colors.texto,

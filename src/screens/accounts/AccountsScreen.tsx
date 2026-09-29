@@ -15,17 +15,20 @@ import {
   KeyboardAvoidingView,
   Switch,
   Image,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
 import { AccountSummary, AccountUpdateData, CharacterSummary } from '../../types/character';
 import { JewelBankData } from '../../types/admin';
 import { JEWEL_ASSET_IMAGES } from '../../constants/jewelAssets';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { SqlClient } from '../../services/database/sqlClient';
 import { useLanguage } from '../../context/LanguageContext';
+import { maskHost } from '../../services/maskUtils';
 import { ClassAvatar } from '../../components/common/ClassAvatar';
 import {
   getMuClassInfo,
@@ -61,7 +64,7 @@ import { DEFAULT_ITEM_CATALOG, ItemDefinition } from '../../services/parser/item
 import { AutocompleteInput } from '../../components/common/AutocompleteInput';
 import { MAKER_CATEGORIES } from '../../constants/makerCategories';
 import { QuickSetDef, QUICK_SETS_CATALOG } from '../../constants/quickSetsCatalog';
-import { Panel, Pestanas, TituloSeccion, BotonPiedra } from '../../components/ui';
+import { Panel, Pestanas, TituloSeccion, BotonPiedra, MuCornerOrnaments, MuSideMoldings, MuButton, BotonOro, BotonBrasa } from '../../components/ui';
 
 export const ITEM_CATEGORIES = [
   { group: 0, name: 'Swords / Claws', icon: 'sword' },
@@ -85,19 +88,19 @@ export const ITEM_CATEGORIES = [
 const JEWEL_CONFIG: { key: keyof JewelBankData; label: string; icon: string; color: string; bg: string }[] = [
   { key: 'Bless', label: 'Jewel of Bless', icon: 'diamond', color: '#5B8DEF', bg: 'rgba(91, 141, 239, 0.15)' },
   { key: 'Soul', label: 'Jewel of Soul', icon: 'fire', color: '#E2703A', bg: 'rgba(226, 112, 58, 0.15)' },
-  { key: 'Chaos', label: 'Jewel of Chaos', icon: 'star-four-points', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Chaos', label: 'Jewel of Chaos', icon: 'star-four-points', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
   { key: 'Life', label: 'Jewel of Life', icon: 'heart', color: '#3FCF8E', bg: 'rgba(63, 207, 142, 0.15)' },
   { key: 'Creation', label: 'Jewel of Creation', icon: 'feather', color: '#5B8DEF', bg: 'rgba(91, 141, 239, 0.15)' },
-  { key: 'Guardian', label: 'Jewel of Guardian', icon: 'shield', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
-  { key: 'Harmony', label: 'Jewel of Harmony', icon: 'auto-fix', color: '#F0D27A', bg: 'rgba(240, 210, 122, 0.15)' },
-  { key: 'GemStone', label: 'GemStone', icon: 'rhombus', color: '#C8BEAF', bg: 'rgba(200, 190, 175, 0.15)' },
-  { key: 'LowStone', label: 'Lower Refining Stone', icon: 'octagram', color: '#B8AEA0', bg: 'rgba(184, 174, 160, 0.15)' },
-  { key: 'HighStone', label: 'Higher Refining Stone', icon: 'octagram-outline', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
-  { key: 'Kundun1', label: 'Box of Kundun +1', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
-  { key: 'Kundun2', label: 'Box of Kundun +2', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
-  { key: 'Kundun3', label: 'Box of Kundun +3', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
-  { key: 'Kundun4', label: 'Box of Kundun +4', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
-  { key: 'Kundun5', label: 'Box of Kundun +5', icon: 'package-variant', color: '#E8C86A', bg: 'rgba(232, 200, 106, 0.15)' },
+  { key: 'Guardian', label: 'Jewel of Guardian', icon: 'shield', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
+  { key: 'Harmony', label: 'Jewel of Harmony', icon: 'auto-fix', color: '#EFD28D', bg: 'rgba(239, 210, 141, 0.15)' },
+  { key: 'GemStone', label: 'GemStone', icon: 'rhombus', color: '#CDC6B9', bg: 'rgba(205, 198, 185, 0.15)' },
+  { key: 'LowStone', label: 'Lower Refining Stone', icon: 'octagram', color: '#CDC6B9', bg: 'rgba(205, 198, 185, 0.15)' },
+  { key: 'HighStone', label: 'Higher Refining Stone', icon: 'octagram-outline', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
+  { key: 'Kundun1', label: 'Box of Kundun +1', icon: 'package-variant', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
+  { key: 'Kundun2', label: 'Box of Kundun +2', icon: 'package-variant', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
+  { key: 'Kundun3', label: 'Box of Kundun +3', icon: 'package-variant', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
+  { key: 'Kundun4', label: 'Box of Kundun +4', icon: 'package-variant', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
+  { key: 'Kundun5', label: 'Box of Kundun +5', icon: 'package-variant', color: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)' },
 ];
 
 export interface AccountsScreenProps {
@@ -123,6 +126,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [filtered, setFiltered] = useState<AccountSummary[]>([]);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'activas' | 'bloqueadas' | 'vip'>('todos');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -142,6 +146,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       setSearch(route.params.searchAccount);
     }
     if (route.params?.filter === 'vip' && accounts.length > 0) {
+      setStatusFilter('vip');
       const vipOnly = accounts.filter((a) => (a.AccountLevel || 0) > 0);
       setFiltered(vipOnly);
     }
@@ -210,7 +215,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
   const [warehouseLockWarning, setWarehouseLockWarning] = useState<string | null>(null);
 
   // Vista y Pestañas del Warehouse (Capturas 1 a 5)
-  const [warehouseViewTab, setWarehouseViewTab] = useState<'items' | 'warehouse' | 'vault_ext'>('warehouse');
+  const [warehouseViewTab, setWarehouseViewTab] = useState<'items' | 'warehouse' | 'vault_ext' | 'jewels'>('warehouse');
   const [vaultSubTab, setVaultSubTab] = useState<'main' | 'ext'>('main');
   const [premiumModalVisible, setPremiumModalVisible] = useState<boolean>(false);
   const [licenseModalVisible, setLicenseModalVisible] = useState<boolean>(false);
@@ -324,23 +329,39 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     }, [])
   );
 
-  const applyFilter = (q: string, list = accounts) => {
-    if (!q.trim()) {
-      setFiltered(list);
-      return;
+  const applyFilter = (
+    q: string,
+    list = accounts,
+    mode: 'todos' | 'activas' | 'bloqueadas' | 'vip' = (typeof statusFilter !== 'undefined' ? statusFilter : 'todos')
+  ) => {
+    let result = list;
+    if (mode === 'activas') {
+      result = result.filter((a) => String(a.bloc_code) !== '1');
+    } else if (mode === 'bloqueadas') {
+      result = result.filter((a) => String(a.bloc_code) === '1');
+    } else if (mode === 'vip') {
+      result = result.filter((a) => (a.AccountLevel || 0) > 0);
     }
-    const lower = q.toLowerCase();
-    const filteredList = list.filter((a) =>
-      a.memb___id.toLowerCase().includes(lower) ||
-      (a.mail_addr && a.mail_addr.toLowerCase().includes(lower)) ||
-      (a.memb_name && a.memb_name.toLowerCase().includes(lower))
-    );
-    setFiltered(filteredList);
+
+    if (q.trim()) {
+      const lower = q.toLowerCase();
+      result = result.filter((a) =>
+        a.memb___id.toLowerCase().includes(lower) ||
+        (a.mail_addr && a.mail_addr.toLowerCase().includes(lower)) ||
+        (a.memb_name && a.memb_name.toLowerCase().includes(lower))
+      );
+    }
+    setFiltered(result);
   };
 
   const handleSearch = (text: string) => {
     setSearch(text);
-    applyFilter(text);
+    applyFilter(text, accounts, statusFilter);
+  };
+
+  const handleStatusFilterChange = (mode: 'todos' | 'activas' | 'bloqueadas' | 'vip') => {
+    setStatusFilter(mode);
+    applyFilter(search, accounts, mode);
   };
 
   const handleCreateAccount = async () => {
@@ -631,7 +652,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     }
     const charCountText = accountChars.length > 0 ? `${accountChars.length} personajes asociados` : 'personajes asociados';
     Alert.alert(
-      '⚠️ Eliminar Cuenta Completa',
+      '[AVISO] Eliminar Cuenta Completa',
       `¿Estás absolutamente seguro de eliminar la cuenta "${selectedAccount.memb___id}" de SQL Server?\n\n` +
       `Se eliminarán de forma irreversible:\n` +
       `• ${charCountText}\n` +
@@ -658,7 +679,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       if (!res.success) {
         if (res.message && res.message.includes('ONLINE_WARNING')) {
           Alert.alert(
-            '⚠️ Cuenta Conectada',
+            '[AVISO] Cuenta Conectada',
             `La cuenta "${username}" se encuentra actualmente ONLINE en el servidor de juego.\n\nEliminarla mientras el jugador está conectado puede causar desincronización en el GameServer.\n\n¿Deseas forzar la eliminación de todos modos?`,
             [
               { text: 'Cancelar', style: 'cancel' },
@@ -710,9 +731,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     }
   };
 
-  const openJewelBankForAccount = async (accId: string) => {
+  const loadJewelBankData = async (accId: string) => {
     setJewelBankAcc(accId);
-    setJewelBankModalVisible(true);
     setJewelBankLoading(true);
     try {
       const res = await SqlClient.getJewelBank(accId);
@@ -781,8 +801,13 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     }
   };
 
+  const openJewelBankForAccount = async (accId: string) => {
+    openWarehouseForAccount(accId, 'jewels');
+  };
+
   const handleSaveJewelBank = async () => {
-    if (!jewelBankAcc) return;
+    const accToSave = jewelBankAcc || warehouseAccount;
+    if (!accToSave) return;
     if (!LicenseService.isPro()) {
       LicenseService.alertProRequired(
         'Banco de Joyas',
@@ -793,9 +818,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     }
     setJewelBankSaving(true);
     try {
-      const res = await SqlClient.updateJewelBank(jewelBankAcc, jewelBankData);
+      const res = await SqlClient.updateJewelBank(accToSave, jewelBankData);
       if (res.success) {
-        Alert.alert('¡Banco de Joyas Guardado!', `Las joyas de la cuenta '${jewelBankAcc}' se guardaron exitosamente en SQL Server.`);
+        Alert.alert('¡Banco de Joyas Guardado!', `Las joyas de la cuenta '${accToSave}' se guardaron exitosamente en SQL Server.`);
       } else {
         if (LicenseService.isLicenseError(res.message)) {
           LicenseService.alertProRequired('Banco de Joyas', () => setLicenseModalVisible(true), res.message);
@@ -857,7 +882,31 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     setWarehouseModalVisible(false);
   };
 
-  const openWarehouseForAccount = async (accountId: string, initialTab: 'items' | 'warehouse' | 'vault_ext' = 'warehouse') => {
+  const handleReleaseWarehouseLock = async () => {
+    if (!warehouseAccount) return;
+    try {
+      await SqlClient.releaseEditorLock(`Warehouse:${warehouseAccount}`);
+      setWarehouseLockWarning(null);
+      Alert.alert('Candado Liberado', `Se ha liberado exitosamente el candado de edición del baúl de la cuenta "${warehouseAccount}".`);
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'No se pudo liberar el candado.');
+    }
+  };
+
+  const handleSelectWarehouseTab = (tab: 'items' | 'warehouse' | 'vault_ext' | 'jewels') => {
+    setWarehouseViewTab(tab);
+    if (tab === 'vault_ext') {
+      setVaultSubTab('ext');
+    } else if (tab === 'warehouse') {
+      setVaultSubTab('main');
+    } else if (tab === 'jewels') {
+      if (warehouseAccount) {
+        loadJewelBankData(warehouseAccount);
+      }
+    }
+  };
+
+  const openWarehouseForAccount = async (accountId: string, initialTab: 'items' | 'warehouse' | 'vault_ext' | 'jewels' = 'warehouse') => {
     setWarehouseAccount(accountId);
     setWarehouseViewTab(initialTab);
     setVaultSubTab(initialTab === 'vault_ext' ? 'ext' : 'main');
@@ -865,12 +914,15 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     // Adquirir candado suave multi-admin para este baúl
     SqlClient.acquireEditorLock(`Warehouse:${accountId}`).then((res) => {
       if (res && res.locked && res.holder) {
-        setWarehouseLockWarning(`⚠️ El baúl de "${accountId}" está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s`);
+        setWarehouseLockWarning(`[AVISO] El baúl de "${accountId}" está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s`);
         Alert.alert('Aviso de Concurrencia', `El baúl de "${accountId}" está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s.`);
       } else {
         setWarehouseLockWarning(null);
       }
     }).catch(() => {});
+    if (initialTab === 'jewels') {
+      loadJewelBankData(accountId);
+    }
     await loadVaultData(accountId, 0);
   };
 
@@ -1764,7 +1816,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         setSavingWarehouse(false);
         Alert.alert(
           'Jugador en Línea en el Juego',
-          'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?\n\n⚠️ AVISO TÉCNICO: Desde la conexión SQL directa no es posible cerrar el cliente de juego (la sesión activa vive en la memoria RAM del GameServer).',
+          'El jugador está CONECTADO al juego. Para evitar que el GameServer sobreescriba los datos en memoria al salir, debe desconectarse. ¿Deseas desconectarlo automáticamente y proceder?\n\n[AVISO TÉCNICO]: Desde la conexión SQL directa no es posible cerrar el cliente de juego (la sesión activa vive en la memoria RAM del GameServer).',
           [
             { text: 'Esperar a que salga', style: 'cancel' },
             {
@@ -1796,45 +1848,145 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
   const getPlanBadge = (level: number = 0) => {
     switch (level) {
       case 3:
-        return { label: 'Oro', color: '#FFD700', dot: '#FFD700' };
+        return { label: 'Oro', color: '#E0C380', dot: '#E0C380', bg: 'rgba(224, 195, 128, 0.15)', border: 'rgba(224, 195, 128, 0.55)' };
       case 2:
-        return { label: 'Plata', color: '#B0BEC5', dot: '#B0BEC5' };
+        return { label: 'Plata', color: '#E4E2E0', dot: '#E4E2E0', bg: 'rgba(228, 226, 224, 0.12)', border: 'rgba(228, 226, 224, 0.45)' };
       case 1:
-        return { label: 'Bronce', color: '#CD7F32', dot: '#CD7F32' };
+        return { label: 'Bronce', color: '#FFA87D', dot: '#FFA87D', bg: 'rgba(255, 168, 125, 0.15)', border: 'rgba(255, 168, 125, 0.55)' };
       default:
-        return { label: 'Free', color: THEME.colors.textoSecundario, dot: THEME.colors.textoSecundario };
+        return { label: 'Free', color: '#E4E2E0', dot: '#CDC6B9', bg: '#1B1C1B', border: '#4C463A' };
     }
   };
 
   return (
-    <View style={[styles.container, { paddingTop: props?.hideTopPadding ? 6 : (topInset + 10) }]}>
-      {/* Header Principal estilo Captura 1 */}
-      <View style={styles.headerRow}>
-        <Text style={styles.mainTitle}>{t('tabAccounts') || 'Cuentas'}</Text>
-        <TouchableOpacity
-          style={styles.floatingAddBtn}
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={[styles.container, { paddingTop: props?.hideTopPadding ? 4 : (topInset + 6) }]}
+      imageStyle={{ opacity: 0.50 }}
+      resizeMode="repeat"
+    >
+      {/* Buscador Metálico y Botón Táctil de Nueva Cuenta (Stitch 02) */}
+      <View style={styles.stitchSearchRow}>
+        <View style={styles.stitchSearchBox}>
+          <MuIcon name="search" size={17} color={THEME.colors.textMuted} style={{ marginRight: 6 }} />
+          <TextInput
+            value={search}
+            onChangeText={handleSearch}
+            placeholder="Buscar cuenta o [MEMB_INFO]..."
+            placeholderTextColor={THEME.colors.textMuted}
+            style={styles.stitchSearchInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => handleSearch('')} style={styles.stitchClearBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <MuIcon name="close" size={14} color={THEME.colors.textoSecundarioLuminoso} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <MuButton
+          titulo="NUEVA CUENTA"
+          icono="plus"
+          variante="primary"
+          compacto={true}
+          altura={44}
           onPress={() => setCreateModalVisible(true)}
+          style={{ minWidth: 124 }}
+          accessibilityLabel="Crear Nueva Cuenta"
+        />
+      </View>
+
+      {/* Chips de Filtros Rápidos (Stitch 02) */}
+      <View style={styles.stitchFilterChipsRow}>
+        <Text style={styles.stitchFilterLabel}>FILTROS:</Text>
+        <TouchableOpacity
+          style={styles.stitchFilterChipTouchable}
+          onPress={() => handleStatusFilterChange('todos')}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="plus" size={24} color="#E8C86A" />
+          <ImageBackground
+            source={statusFilter === 'todos' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+            style={styles.stitchFilterChipBg}
+            resizeMode="stretch"
+            imageStyle={{ borderRadius: 2 }}
+          >
+            <Text style={[styles.stitchFilterChipText, statusFilter === 'todos' && styles.stitchFilterChipTextActive]}>
+              Todos
+            </Text>
+          </ImageBackground>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.stitchFilterChipTouchable}
+          onPress={() => handleStatusFilterChange('activas')}
+          activeOpacity={0.8}
+        >
+          <ImageBackground
+            source={statusFilter === 'activas' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+            style={styles.stitchFilterChipBg}
+            resizeMode="stretch"
+            imageStyle={{ borderRadius: 2 }}
+          >
+            <Text style={[styles.stitchFilterChipText, statusFilter === 'activas' ? styles.stitchFilterChipTextActive : { color: THEME.colors.jade }]}>
+              Activas
+            </Text>
+          </ImageBackground>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.stitchFilterChipTouchable}
+          onPress={() => handleStatusFilterChange('bloqueadas')}
+          activeOpacity={0.8}
+        >
+          <ImageBackground
+            source={statusFilter === 'bloqueadas' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+            style={styles.stitchFilterChipBg}
+            resizeMode="stretch"
+            imageStyle={{ borderRadius: 2 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <MuIcon name="lock" size={11} color={statusFilter === 'bloqueadas' ? '#EFD28D' : '#FFB4AB'} />
+              <Text style={[styles.stitchFilterChipText, statusFilter === 'bloqueadas' ? styles.stitchFilterChipTextActive : { color: '#FFB4AB' }]}>
+                Bloqueadas
+              </Text>
+            </View>
+          </ImageBackground>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.stitchFilterChipTouchable}
+          onPress={() => handleStatusFilterChange('vip')}
+          activeOpacity={0.8}
+        >
+          <ImageBackground
+            source={statusFilter === 'vip' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+            style={styles.stitchFilterChipBg}
+            resizeMode="stretch"
+            imageStyle={{ borderRadius: 2 }}
+          >
+            <Text style={[styles.stitchFilterChipText, statusFilter === 'vip' ? styles.stitchFilterChipTextActive : { color: THEME.colors.oroClaro }]}>
+              VIP
+            </Text>
+          </ImageBackground>
         </TouchableOpacity>
       </View>
 
-      {/* Barra de Búsqueda con Autocomplete */}
-      <AutocompleteInput
-        value={search}
-        onChangeText={handleSearch}
-        suggestions={accounts.map((a) => a.memb___id)}
-        placeholder="Buscar cuenta..."
-        icon="magnify"
-        clearable={true}
-        containerStyle={{ marginBottom: 16 }}
-      />
+      {/* Subtítulo de Tabla MEMB_INFO con Esquineros Metálicos NewUI (Stitch 02) */}
+      <View style={styles.stitchTableHeaderBanner}>
+        <MuCornerOrnaments size={10} />
+        <View style={styles.stitchTableHeaderLeft}>
+          <MuIcon name="database" size={16} color={THEME.colors.oroClaro} />
+          <Text style={styles.stitchTableHeaderTitle}>TABLA DE CUENTAS (MEMB_INFO)</Text>
+        </View>
+        <View style={styles.stitchTableHeaderCountBadge}>
+          <Text style={styles.stitchTableHeaderCountText}>Total: {filtered.length}</Text>
+        </View>
+      </View>
 
       {/* Error Banner si no hay conexión real */}
       {errorMessage && (
         <View style={styles.errorCard}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF5252" />
+          <MuIcon name="alert-circle-outline" size={20} color="#FF5252" />
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.errorTitle}>Sin conexión a SQL Server</Text>
             <Text style={styles.errorSub}>{errorMessage}</Text>
@@ -1844,7 +1996,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               onPress={() => LicenseService.triggerSessionInvalidated('Tu sesión requiere reautenticación.')}
               style={[styles.retryBtn, { backgroundColor: THEME.colors.primaryOrange }]}
             >
-              <Text style={[styles.retryText, { color: '#100D0B', fontWeight: 'bold' }]}>Iniciar Sesión</Text>
+              <Text style={[styles.retryText, { color: THEME.colors.textoOscuro, fontWeight: 'bold' }]}>Iniciar Sesión</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={fetchAccounts} style={styles.retryBtn}>
@@ -1858,7 +2010,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       <FlatList
         data={filtered}
         keyExtractor={(item, index) => `${item.memb___id || 'account'}_${index}`}
-        contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(32, insets.bottom + 24) }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 120 + insets.bottom }]}
         initialNumToRender={15}
         maxToRenderPerBatch={15}
         windowSize={7}
@@ -1873,7 +2025,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="account-search" size={48} color={THEME.colors.textMuted} />
+              <MuIcon name="account-search" size={48} color={THEME.colors.textMuted} />
               <Text style={styles.emptyText}>
                 {errorMessage
                   ? 'No se cargaron cuentas debido a un error de conexión.'
@@ -1888,94 +2040,149 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
           const badge = getPlanBadge(item.AccountLevel);
           const isBlocked = String(item.bloc_code) === '1';
           const isOnline = item.ConnectStat === 1;
-          const initial = (item.memb___id || 'M').charAt(0).toUpperCase();
 
           return (
-            <TouchableOpacity
-              style={[styles.accountCard, isBlocked && styles.accountCardBlocked]}
-              activeOpacity={0.8}
-              onPress={() => openAccountDetails(item)}
-              onLongPress={() => openAccountDetails(item)}
-              {...(Platform.OS === 'web' ? { onContextMenu: (e: any) => { e.preventDefault(); openAccountDetails(item); } } : {})}
-            >
-              {/* Círculo con Inicial Naranja */}
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarLetter}>{initial}</Text>
-                {isOnline && (
-                  <View style={styles.onlineStatusDot} />
+            <View style={[styles.stitchAccountCard, isBlocked && styles.stitchAccountCardBlocked]}>
+              <MuCornerOrnaments size={12} />
+
+              {/* Fila Superior de Identidad */}
+              <View style={styles.stitchCardHeaderRow}>
+                <View style={styles.stitchCardHeaderLeft}>
+                  <View style={[styles.stitchAvatarBox, isBlocked && styles.stitchAvatarBoxBlocked]}>
+                    <MuIcon
+                      name={isBlocked ? "lock" : "account"}
+                      size={20}
+                      color={isBlocked ? THEME.colors.brasa : THEME.colors.oroClaro}
+                    />
+                    {isOnline && <View style={styles.stitchOnlineDot} />}
+                  </View>
+                  <View style={styles.stitchHeaderInfoCol}>
+                    <View style={styles.stitchTitleRow}>
+                      <Text style={styles.stitchAccountIdText} numberOfLines={1}>
+                        {item.memb___id}
+                      </Text>
+                      {item.AccountLevel > 0 && (
+                        <View style={[styles.stitchVipBadge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
+                          <Text style={[styles.stitchVipBadgeText, { color: badge.color }]}>{badge.label}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.stitchAccountEmailText} numberOfLines={1}>
+                      {item.mail_addr || `${item.memb___id}@muonline.com`}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Badge de Estado Activa/Baneada/Online */}
+                <View
+                  style={[
+                    styles.stitchStatusBadge,
+                    isBlocked
+                      ? styles.stitchStatusBlocked
+                      : isOnline
+                      ? styles.stitchStatusOnline
+                      : styles.stitchStatusActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.stitchStatusText,
+                      isBlocked
+                        ? { color: '#FFB4AB' }
+                        : isOnline
+                        ? { color: THEME.colors.jade }
+                        : { color: THEME.colors.jade },
+                    ]}
+                  >
+                    {isBlocked ? 'Bloqueada' : isOnline ? 'Online' : 'Activa'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Cuadrícula de Datos de la Cuenta */}
+              <View style={styles.stitchDataGrid}>
+                <View style={styles.stitchDataItem}>
+                  <MuIcon name="character" size={13} color={THEME.colors.oroClaro} />
+                  <Text style={styles.stitchDataText}>PJs: {item.CharCount ?? 0} / 5</Text>
+                </View>
+                <View style={styles.stitchDataItem}>
+                  <MuIcon
+                    name={isBlocked ? "lock" : "check"}
+                    size={13}
+                    color={isBlocked ? THEME.colors.brasa : THEME.colors.jade}
+                  />
+                  <Text
+                    style={[
+                      styles.stitchDataText,
+                      { color: isBlocked ? THEME.colors.brasa : THEME.colors.jade },
+                    ]}
+                  >
+                    Bloqueo: {isBlocked ? 'Sí' : 'No'}
+                  </Text>
+                </View>
+                {!!item.IP && (
+                  <View style={styles.stitchDataItem}>
+                    <MuIcon name="server" size={13} color={THEME.colors.arcano} />
+                    <Text style={[styles.stitchDataText, { color: THEME.colors.arcano }]}>
+                      IP: {maskHost(item.IP)}
+                    </Text>
+                  </View>
                 )}
               </View>
 
-              {/* Información de Cuenta */}
-              <View style={styles.accountTextCol}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <Text style={styles.accountIdText} numberOfLines={1}>
-                    {item.memb___id}
-                  </Text>
-                  {isOnline && (
-                    <View style={styles.onlineBadgePill}>
-                      <Text style={styles.onlineBadgeText}>ONLINE</Text>
-                    </View>
-                  )}
-                  {isBlocked && (
-                    <View style={[styles.onlineBadgePill, { backgroundColor: '#D32F2F20', borderColor: '#D32F2F' }]}>
-                      <Text style={[styles.onlineBadgeText, { color: '#FF5252' }]}>BANEADA</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
-                  <Text style={styles.accountEmailText} numberOfLines={1}>
-                    {item.mail_addr || `${item.memb___id}@muonline.com`}
-                  </Text>
-                  {item.CharCount !== undefined && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#241E1A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#3D312A' }}>
-                      <MaterialCommunityIcons name="account-group" size={11} color="#E8C86A" />
-                      <Text style={{ color: '#E8C86A', fontSize: 10, fontWeight: 'bold' }}>{item.CharCount} PJs</Text>
-                    </View>
-                  )}
-                  {!!item.IP && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#241E1A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#3D312A' }}>
-                      <MaterialCommunityIcons name="ip-network" size={11} color="#FFB300" />
-                      <Text style={{ color: '#FFB300', fontSize: 10, fontWeight: 'bold' }}>{item.IP}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
+              {/* Barra de Acciones Táctiles Stitch Ironforge (Compacta y Jerárquica) */}
+              <View style={styles.stitchActionContainer}>
+                <View style={styles.stitchActionRow}>
+                  {/* 1. Detalle: Botón Primario Forjado */}
+                  <MuButton
+                    titulo="Detalle"
+                    icono="eye"
+                    variante="primary"
+                    compacto={true}
+                    altura={36}
+                    onPress={() => openAccountDetails(item)}
+                    style={{ flex: 1.2 }}
+                    accessibilityLabel="Ver Detalle y Editar Cuenta"
+                  />
 
-              {/* Acciones Rápidas: Botón Editar, Botón Baúl y Badge VIP */}
-              <View style={styles.cardRightGroup}>
-                <TouchableOpacity
-                  style={styles.editAccountQuickBtn}
-                  onPress={() => openAccountDetails(item)}
-                  activeOpacity={0.7}
-                  accessibilityLabel="Editar Cuenta"
-                >
-                  <MaterialCommunityIcons name="account-edit-outline" size={20} color="#E8C86A" />
-                </TouchableOpacity>
+                  {/* 2. Baúl: Botón Secundario Forjado */}
+                  <MuButton
+                    titulo="Baúl"
+                    icono="treasure-chest"
+                    variante="secondary"
+                    compacto={true}
+                    altura={36}
+                    onPress={() => openWarehouseForAccount(item.memb___id)}
+                    style={{ flex: 1 }}
+                    accessibilityLabel="Ver Baúl y Almacén"
+                  />
 
-                <TouchableOpacity
-                  style={styles.warehouseBoxBtn}
-                  onPress={() => openWarehouseForAccount(item.memb___id)}
-                  activeOpacity={0.7}
-                  accessibilityLabel="Ver Baúl"
-                >
-                  <MaterialCommunityIcons name="package-variant-closed" size={20} color="#E8C86A" />
-                </TouchableOpacity>
+                  {/* 3. Bloquear/Activar: Toggle Compacto */}
+                  <MuButton
+                    titulo={isBlocked ? 'Activar' : 'Bloquear'}
+                    icono={isBlocked ? 'lock-open' : 'lock'}
+                    variante={isBlocked ? 'success' : 'danger'}
+                    compacto={true}
+                    altura={36}
+                    onPress={() => handleToggleBlock(item)}
+                    style={{ flex: 1.1 }}
+                    accessibilityLabel={isBlocked ? "Desbloquear Cuenta" : "Bloquear Cuenta"}
+                  />
 
-                <TouchableOpacity
-                  style={styles.deleteAccountQuickBtn}
-                  onPress={() => promptDeleteAccountDirect(item)}
-                  activeOpacity={0.7}
-                  accessibilityLabel="Eliminar Cuenta"
-                >
-                  <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
-                </TouchableOpacity>
-
-                <View style={styles.vipPillBadge}>
-                  <Text style={styles.vipPillText}>{badge.label}</Text>
+                  {/* 4. Eliminar: Acción Peligro Compacta */}
+                  <MuButton
+                    titulo=""
+                    icono="trash"
+                    variante="danger"
+                    compacto={true}
+                    altura={36}
+                    onPress={() => promptDeleteAccountDirect(item)}
+                    style={{ width: 38 }}
+                    accessibilityLabel="Eliminar Cuenta"
+                  />
                 </View>
               </View>
-            </TouchableOpacity>
+            </View>
           );
         }}
       />
@@ -1990,7 +2197,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         onRequestClose={() => setAccountDetailVisible(false)}
       >
         <View style={styles.detailModalOverlay}>
-          <View style={styles.detailModalCard}>
+          <Panel style={styles.detailModalCard}>
             {/* Header del Modal */}
             <View style={styles.detailHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -2010,14 +2217,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                         backgroundColor: selectedAccount?.ConnectStat === 1 ? 'rgba(63, 207, 142, 0.15)' : 'rgba(150, 150, 150, 0.15)',
                         paddingHorizontal: 6,
                         paddingVertical: 2,
-                        borderRadius: 6,
+                        borderRadius: THEME.shapes.radioEsquina,
                       }}
                     >
                       <View
                         style={{
                           width: 6,
                           height: 6,
-                          borderRadius: 3,
+                          borderRadius: 3, /* círculo funcional (width/2) */
                           backgroundColor: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : THEME.colors.textoSecundario,
                         }}
                       />
@@ -2036,11 +2243,16 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 </View>
               </View>
               <TouchableOpacity onPress={() => setAccountDetailVisible(false)} style={styles.closeModalBtn}>
-                <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={22} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Math.max(30, insets.bottom + 16) }}>
+            <ScrollView
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+              style={{ flexShrink: 1 }}
+              contentContainerStyle={{ paddingBottom: Math.max(120, insets.bottom + 90) }}
+            >
               {/* Campo Usuario (ID de Cuenta) */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Usuario (Account ID)</Text>
@@ -2072,7 +2284,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     maxLength={10}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 6 }}>
-                    <MaterialCommunityIcons name={showPassword ? "eye-off" : "eye"} size={20} color={THEME.colors.textoSecundario} />
+                    <MuIcon name={showPassword ? "eye-off" : "eye"} size={20} color={THEME.colors.textoSecundario} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2125,7 +2337,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                         onPress={() => setEditVipLevel(v.level)}
                         activeOpacity={0.7}
                       >
-                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: v.color, marginBottom: 2 }} />
+                        <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: v.color, marginBottom: 2 }} />
                         <Text style={[styles.vipPillBtnText, isActive && { color: v.color, fontWeight: 'bold' }]}>
                           {v.label}
                         </Text>
@@ -2230,7 +2442,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       setEditWarehouseCount(String(c));
                     }}
                   >
-                    <MaterialCommunityIcons name="minus" size={20} color="#FFF" />
+                    <MuIcon name="minus" size={20} color="#E0C380" />
                   </TouchableOpacity>
                   <View style={[styles.modalInputBox, { flex: 1, justifyContent: 'center' }]}>
                     <TextInput
@@ -2249,7 +2461,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       setEditWarehouseCount(String(c));
                     }}
                   >
-                    <MaterialCommunityIcons name="plus" size={20} color="#FFF" />
+                    <MuIcon name="plus" size={20} color="#E0C380" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2265,7 +2477,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   onPress={() => selectedAccount && handleToggleBlock(selectedAccount)}
                   activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={String(selectedAccount?.bloc_code) === '1' ? 'lock' : 'lock-open-outline'}
                     size={20}
                     color={String(selectedAccount?.bloc_code) === '1' ? '#FF5252' : THEME.colors.jade}
@@ -2282,55 +2494,37 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               </View>
 
               {/* Botón Guardar Cambios en SQL Server */}
-              <TouchableOpacity
-                style={styles.saveAccountBtn}
-                onPress={handleSaveAccount}
+              <BotonOro
+                titulo="GUARDAR CAMBIOS EN SQL SERVER"
+                icono="content-save-check"
+                cargando={savingAccount}
                 disabled={savingAccount}
-                activeOpacity={0.8}
-              >
-                {savingAccount ? (
-                  <ActivityIndicator size="small" color="#0D0D0D" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="content-save-check" size={20} color="#0D0D0D" />
-                    <Text style={styles.saveAccountBtnText}>Guardar Cambios en SQL Server</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                onPress={handleSaveAccount}
+                altura={44}
+                style={{ marginTop: 14 }}
+              />
 
               {/* Botón Desconectar Cuenta Trabada (Unstick) */}
-              <TouchableOpacity
-                style={styles.disconnectBtn}
-                onPress={handleDisconnectAccount}
+              <BotonPiedra
+                titulo="DESCONECTAR CUENTA TRABADA (UNSTICK)"
+                icono="power-plug-off"
+                cargando={disconnectingAccount}
                 disabled={disconnectingAccount}
-                activeOpacity={0.8}
-              >
-                {disconnectingAccount ? (
-                  <ActivityIndicator size="small" color="#FF5252" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="power-plug-off" size={18} color="#FF5252" />
-                    <Text style={styles.disconnectBtnText}>Desconectar Cuenta Trabada (Unstick)</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                onPress={handleDisconnectAccount}
+                altura={40}
+                style={{ marginTop: 10 }}
+              />
 
               {/* Botón Eliminar Cuenta Completa de SQL */}
-              <TouchableOpacity
-                style={styles.deleteAccountBtn}
-                onPress={promptDeleteSelectedAccount}
+              <BotonBrasa
+                titulo="ELIMINAR CUENTA COMPLETA DE SQL"
+                icono="trash-can-outline"
+                cargando={deletingAccount}
                 disabled={deletingAccount}
-                activeOpacity={0.8}
-              >
-                {deletingAccount ? (
-                  <ActivityIndicator size="small" color="#FF5252" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
-                    <Text style={styles.deleteAccountBtnText}>Eliminar Cuenta Completa de SQL</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                onPress={promptDeleteSelectedAccount}
+                altura={40}
+                style={{ marginTop: 10 }}
+              />
 
               {/* Sección Personajes de la Cuenta */}
               <View style={styles.charSectionBox}>
@@ -2349,7 +2543,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   </View>
                 ) : accountChars.length === 0 ? (
                   <View style={styles.noCharsCard}>
-                    <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF9800" />
+                    <MuIcon name="alert-circle-outline" size={20} color="#FF9800" />
                     <View style={{ flex: 1, marginLeft: 6 }}>
                       <Text style={styles.noCharsText}>Esta cuenta no posee personajes creados.</Text>
                     </View>
@@ -2381,7 +2575,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                             <Text style={styles.charChipName} numberOfLines={1}>{c.Name}</Text>
                             <Text style={styles.charChipSub}>{classInfo.name} • Lv {c.cLevel} ({c.ResetCount || 0}R)</Text>
                           </View>
-                          <MaterialCommunityIcons name="chevron-right" size={16} color={THEME.colors.textoSecundario} />
+                          <MuIcon name="chevron-right" size={16} color={THEME.colors.textoSecundario} />
                         </TouchableOpacity>
                       );
                     })}
@@ -2393,65 +2587,69 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               <View style={styles.detailActionButtonsGrid}>
                 {/* Fila 1: Ver Personajes y Baúl */}
                 <View style={styles.detailActionButtonsRow}>
-                  <TouchableOpacity
-                    style={styles.detailBtnPjs}
-                    onPress={() => {
-                      setAccountDetailVisible(false);
-                      if (selectedAccount?.memb___id) {
-                        navigation.navigate('PJs', { filterAccount: selectedAccount.memb___id });
-                      }
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <MaterialCommunityIcons name="sword-cross" size={18} color="#29B6F6" />
-                    <Text style={styles.detailBtnPjsText}>Ver Personajes</Text>
-                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="VER PERSONAJES"
+                      icono="sword-cross"
+                      variante="secondary"
+                      altura={42}
+                      onPress={() => {
+                        setAccountDetailVisible(false);
+                        if (selectedAccount?.memb___id) {
+                          navigation.navigate('PJs', { filterAccount: selectedAccount.memb___id });
+                        }
+                      }}
+                    />
+                  </View>
 
-                  <TouchableOpacity
-                    style={styles.detailBtnWarehouse}
-                    onPress={() => {
-                      if (selectedAccount?.memb___id) {
-                        openWarehouseForAccount(selectedAccount.memb___id, 'warehouse');
-                      }
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <MaterialCommunityIcons name="package-variant-closed" size={18} color="#FF9800" />
-                    <Text style={styles.detailBtnWarehouseText}>Baúl (/ware)</Text>
-                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="BAÚL (/WARE)"
+                      icono="package-variant-closed"
+                      variante="primary"
+                      altura={42}
+                      onPress={() => {
+                        if (selectedAccount?.memb___id) {
+                          openWarehouseForAccount(selectedAccount.memb___id, 'warehouse');
+                        }
+                      }}
+                    />
+                  </View>
                 </View>
 
                 {/* Fila 2: Bóveda Expandida y Banco Joyas */}
                 <View style={styles.detailActionButtonsRow}>
-                  <TouchableOpacity
-                    style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(91, 141, 239, 0.12)', borderColor: THEME.colors.arcano }]}
-                    onPress={() => {
-                      if (selectedAccount?.memb___id) {
-                        openWarehouseForAccount(selectedAccount.memb___id, 'vault_ext');
-                      }
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <MaterialCommunityIcons name="safe" size={18} color={THEME.colors.arcano} />
-                    <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.arcano }]}>Bóveda Expandida</Text>
-                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="BÓVEDA EXTRA"
+                      icono="safe"
+                      variante="secondary"
+                      altura={42}
+                      onPress={() => {
+                        if (selectedAccount?.memb___id) {
+                          openWarehouseForAccount(selectedAccount.memb___id, 'vault_ext');
+                        }
+                      }}
+                    />
+                  </View>
 
-                  <TouchableOpacity
-                    style={[styles.detailBtnWarehouse, { backgroundColor: 'rgba(232, 200, 106, 0.12)', borderColor: THEME.colors.oroClaro }]}
-                    onPress={() => {
-                      if (selectedAccount?.memb___id) {
-                        openJewelBankForAccount(selectedAccount.memb___id);
-                      }
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <MaterialCommunityIcons name="diamond-stone" size={18} color={THEME.colors.oroClaro} />
-                    <Text style={[styles.detailBtnWarehouseText, { color: THEME.colors.oroClaro }]}>Banco Joyas</Text>
-                  </TouchableOpacity>
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="BANCO JOYAS"
+                      icono="diamond-stone"
+                      variante="primary"
+                      altura={42}
+                      onPress={() => {
+                        if (selectedAccount?.memb___id) {
+                          openJewelBankForAccount(selectedAccount.memb___id);
+                        }
+                      }}
+                    />
+                  </View>
                 </View>
               </View>
             </ScrollView>
-          </View>
+          </Panel>
         </View>
       </Modal>
 
@@ -2465,11 +2663,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         onRequestClose={() => setJewelBankModalVisible(false)}
       >
         <View style={styles.jbModalOverlay}>
-          <View style={styles.jbModalContent}>
+          <Panel tipo="gold" conEsquineros={true} style={styles.jbModalContent}>
             {/* Header */}
             <View style={styles.jbModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
+                <MuIcon name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
                 <View>
                   <Text style={styles.jbModalTitle}>BANCO DE JOYAS</Text>
                   <Text style={styles.jbModalSubtitle}>Cuenta: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{jewelBankAcc}</Text> ({jewelBankTableName})</Text>
@@ -2479,8 +2677,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 onPress={() => setJewelBankModalVisible(false)}
                 style={styles.jbCloseBtn}
                 activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -2491,37 +2690,48 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               </View>
             ) : !jewelBankHasTable ? (
               <View style={{ padding: 24, alignItems: 'center' }}>
-                <MaterialCommunityIcons name="alert-circle-outline" size={48} color={THEME.colors.brasa} />
+                <MuIcon name="alert-circle-outline" size={48} color={THEME.colors.brasa} />
                 <Text style={{ color: THEME.colors.texto, fontSize: 16, fontWeight: 'bold', marginTop: 12, textAlign: 'center' }}>
                   Tabla de Joyas no detectada
                 </Text>
                 <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginTop: 8, textAlign: 'center', lineHeight: 18 }}>
                   Esta base de datos no cuenta con tabla de Banco de Joyas (CustomJewelBank o JewelBank). Requiere emulador Louis Season 6 Update 40 o MSPro compatible.
                 </Text>
-                <TouchableOpacity
-                  style={[styles.jbSaveBtn, { backgroundColor: THEME.colors.cardElevated, marginTop: 20 }]}
-                  onPress={() => setJewelBankModalVisible(false)}
-                >
-                  <Text style={{ color: THEME.colors.texto }}>Entendido</Text>
-                </TouchableOpacity>
+                <View style={{ width: 180, marginTop: 20 }}>
+                  <MuButton
+                    titulo="Entendido"
+                    variante="primary"
+                    altura={42}
+                    onPress={() => setJewelBankModalVisible(false)}
+                  />
+                </View>
               </View>
             ) : (
               <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={true}>
                 {/* Presets rápidos */}
                 <View style={styles.jbQuickRow}>
                   <Text style={styles.jbQuickLabel}>Llenado Rápido:</Text>
-                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(0)} activeOpacity={0.7}>
-                    <Text style={styles.jbQuickPillText}>Vaciar (0)</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(100)} activeOpacity={0.7}>
-                    <Text style={styles.jbQuickPillText}>100 c/u</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(250)} activeOpacity={0.7}>
-                    <Text style={[styles.jbQuickPillText, { color: THEME.colors.oroClaro }]}>250 (Max)</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.jbQuickPill} onPress={() => handleQuickFillAll(1000)} activeOpacity={0.7}>
-                    <Text style={[styles.jbQuickPillText, { color: THEME.colors.jade }]}>1000</Text>
-                  </TouchableOpacity>
+                  {[
+                    { label: 'Vaciar (0)', val: 0, color: THEME.colors.textoSecundario },
+                    { label: '100 c/u', val: 100, color: THEME.colors.textoSecundario },
+                    { label: '250 (Max)', val: 250, color: THEME.colors.oroClaro },
+                    { label: '1000', val: 1000, color: THEME.colors.jade },
+                  ].map((p) => (
+                    <TouchableOpacity
+                      key={p.label}
+                      style={{ borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => handleQuickFillAll(p.val)}
+                      activeOpacity={0.7}
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ paddingHorizontal: 10, paddingVertical: 5, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.jbQuickPillText, { color: p.color }]}>{p.label}</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  ))}
                 </View>
 
                 {/* Lista de Joyas */}
@@ -2539,7 +2749,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                                 resizeMode="contain"
                               />
                             ) : (
-                              <MaterialCommunityIcons name={jewel.icon as any} size={18} color={jewel.color} />
+                              <MuIcon name={jewel.icon as any} size={18} color={jewel.color} />
                             )}
                           </View>
                           <Text style={styles.jbItemName} numberOfLines={1}>{jewel.label}</Text>
@@ -2547,18 +2757,30 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
                         <View style={styles.jbStepperRow}>
                           <TouchableOpacity
-                            style={styles.jbStepBtn}
+                            style={{ borderRadius: 2, overflow: 'hidden', width: 34, height: 36 }}
                             onPress={() => handleJewelChange(jewel.key, -10)}
                             activeOpacity={0.7}
                           >
-                            <Text style={styles.jbStepBtnText}>-10</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.buttons.small}
+                              style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={styles.jbStepBtnText}>-10</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={styles.jbStepBtn}
+                            style={{ borderRadius: 2, overflow: 'hidden', width: 34, height: 36 }}
                             onPress={() => handleJewelChange(jewel.key, -1)}
                             activeOpacity={0.7}
                           >
-                            <Text style={styles.jbStepBtnText}>-1</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.buttons.small}
+                              style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={styles.jbStepBtnText}>-1</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
 
                           <TextInput
@@ -2570,18 +2792,30 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                           />
 
                           <TouchableOpacity
-                            style={styles.jbStepBtn}
+                            style={{ borderRadius: 2, overflow: 'hidden', width: 34, height: 36 }}
                             onPress={() => handleJewelChange(jewel.key, 1)}
                             activeOpacity={0.7}
                           >
-                            <Text style={styles.jbStepBtnText}>+1</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.buttons.small}
+                              style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={styles.jbStepBtnText}>+1</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={styles.jbStepBtn}
+                            style={{ borderRadius: 2, overflow: 'hidden', width: 34, height: 36 }}
                             onPress={() => handleJewelChange(jewel.key, 10)}
                             activeOpacity={0.7}
                           >
-                            <Text style={styles.jbStepBtnText}>+10</Text>
+                            <ImageBackground
+                              source={STITCH_ASSETS.buttons.small}
+                              style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={styles.jbStepBtnText}>+10</Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -2593,33 +2827,29 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
             {/* Footer con Botón Guardar */}
             {jewelBankHasTable && !jewelBankLoading && (
-              <View style={styles.jbFooterRow}>
-                <TouchableOpacity
-                  style={styles.jbCancelBtn}
-                  onPress={() => setJewelBankModalVisible(false)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.jbCancelText}>Cancelar</Text>
-                </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Cancelar"
+                    variante="secondary"
+                    altura={42}
+                    onPress={() => setJewelBankModalVisible(false)}
+                  />
+                </View>
 
-                <TouchableOpacity
-                  style={styles.jbSaveBtn}
-                  onPress={handleSaveJewelBank}
-                  disabled={jewelBankSaving}
-                  activeOpacity={0.8}
-                >
-                  {jewelBankSaving ? (
-                    <ActivityIndicator size="small" color="#1A1612" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="content-save" size={18} color="#1A1612" />
-                      <Text style={styles.jbSaveBtnText}>Guardar en SQL</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Guardar en SQL"
+                    icono="content-save"
+                    variante="primary"
+                    altura={42}
+                    cargando={jewelBankSaving}
+                    onPress={handleSaveJewelBank}
+                  />
+                </View>
               </View>
             )}
-          </View>
+          </Panel>
         </View>
       </Modal>
 
@@ -2633,46 +2863,148 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         onRequestClose={handleCloseWarehouseModal}
       >
         <View style={[styles.whScreenContainer, { paddingTop: topInset }]}>
-          {/* Header Superior (Capturas 1, 2, 3) */}
+          {/* Header Superior Stitch 17R */}
           <View style={styles.whHeader}>
             <TouchableOpacity
               onPress={handleCloseWarehouseModal}
               style={styles.whBackBtn}
               activeOpacity={0.7}
+              accessibilityLabel="Volver a Cuentas"
             >
-              <Text style={styles.whBackBtnText}>← Volver</Text>
+              <MuIcon name="arrow-left" size={18} color={THEME.colors.oroClaro} />
+              <Text style={styles.whBackBtnText}>Volver</Text>
             </TouchableOpacity>
 
-            <View style={styles.whHeaderTitleRow}>
-              <Text style={styles.whHeaderTitle}>
-                {warehouseViewTab === 'vault_ext'
-                  ? 'Bóveda Expandida del Baúl'
-                  : warehouseViewTab === 'items'
-                  ? 'Item Maker para Baúl'
-                  : `${activeVaultIndex === 0 ? 'Baúl Principal' : 'Baúl #' + activeVaultIndex}`}
+            <View style={styles.whHeaderTitleCol}>
+              <View style={styles.whHeaderTitleRow}>
+                <Text style={styles.whHeaderTitle}>MU MANAGER PRO</Text>
+                <View style={styles.whS6Badge}>
+                  <Text style={styles.whS6BadgeText}>S6</Text>
+                </View>
+              </View>
+              <Text style={styles.whHeaderSubtitle}>
+                {warehouseViewTab === 'items'
+                  ? 'ITEM MAKER DEL BAÚL'
+                  : 'BAÚL Y BANCO DE JOYAS'}
               </Text>
             </View>
 
-            <TouchableOpacity
-              onPress={() => loadVaultData(warehouseAccount, activeVaultIndex)}
-              style={styles.whRefreshBtn}
-              activeOpacity={0.7}
-              disabled={loadingWarehouse}
-            >
-              <MaterialCommunityIcons name="sync" size={20} color="#78909C" />
-            </TouchableOpacity>
+            <View style={styles.whHeaderActions}>
+              <View style={styles.whSyncBadge}>
+                <View style={styles.whSyncDot} />
+                <Text style={styles.whSyncText}>SYNC</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  if (warehouseViewTab === 'jewels') {
+                    loadJewelBankData(warehouseAccount);
+                  } else {
+                    loadVaultData(warehouseAccount, activeVaultIndex);
+                  }
+                }}
+                style={styles.whRefreshBtn}
+                activeOpacity={0.7}
+                disabled={loadingWarehouse || jewelBankLoading}
+                accessibilityLabel="Refrescar Baúl"
+              >
+                <MuIcon name="sync" size={18} color={THEME.colors.oroClaro} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Banner de Aviso de Soft-Lock Colaborativo Multi-Admin */}
           {warehouseLockWarning ? (
             <View style={styles.whLockWarningBanner}>
-              <MaterialCommunityIcons name="shield-alert" size={18} color="#FFD54F" />
+              <MuIcon name="shield-alert" size={18} color="#FFD54F" />
               <Text style={styles.whLockWarningText}>{warehouseLockWarning}</Text>
               <TouchableOpacity onPress={() => setWarehouseLockWarning(null)}>
-                <MaterialCommunityIcons name="close" size={16} color="#FFE082" />
+                <MuIcon name="close" size={16} color="#FFE082" />
               </TouchableOpacity>
             </View>
           ) : null}
+
+          {/* Barra de Resumen de Cuenta Maestra y Zen en Bóveda (Stitch 17R) */}
+          <View style={styles.whSummaryCard}>
+            <View style={styles.whSummaryColLeft}>
+              <Text style={styles.whSummaryLabel}>CUENTA MAESTRA</Text>
+              <Text style={styles.whSummaryAccount} numberOfLines={1}>{warehouseAccount}</Text>
+            </View>
+            <View style={styles.whSummaryColRight}>
+              <Text style={styles.whSummaryLabel}>ZEN EN BÓVEDA</Text>
+              <Text style={styles.whSummaryZen} numberOfLines={1}>
+                {vaultMoney !== undefined && vaultMoney !== null ? Number(vaultMoney).toLocaleString() : '0'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Subpestañas NewUI Season 6: [BAUL BASE] | [EXPANDIDO] | [BANCO JOYAS] */}
+          <View style={styles.whTopTabsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.whTopTabBtn,
+                warehouseViewTab === 'warehouse' && styles.whTopTabBtnActive,
+              ]}
+              onPress={() => handleSelectWarehouseTab('warehouse')}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.whTopTabText,
+                  warehouseViewTab === 'warehouse' && styles.whTopTabTextActive,
+                ]}
+              >
+                BAÚL BASE
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.whTopTabBtn,
+                warehouseViewTab === 'vault_ext' && styles.whTopTabBtnActive,
+              ]}
+              onPress={() => handleSelectWarehouseTab('vault_ext')}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.whTopTabText,
+                  warehouseViewTab === 'vault_ext' && styles.whTopTabTextActive,
+                ]}
+              >
+                EXPANDIDO
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.whTopTabBtn,
+                warehouseViewTab === 'jewels' && styles.whTopTabBtnActive,
+              ]}
+              onPress={() => handleSelectWarehouseTab('jewels')}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.whTopTabText,
+                  warehouseViewTab === 'jewels' && styles.whTopTabTextActive,
+                ]}
+              >
+                BANCO JOYAS
+              </Text>
+            </TouchableOpacity>
+
+            {warehouseViewTab === 'items' && (
+              <TouchableOpacity
+                style={[styles.whTopTabBtn, styles.whTopTabBtnActive]}
+                onPress={() => handleSelectWarehouseTab('items')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.whTopTabText, styles.whTopTabTextActive]}>
+                  ITEM MAKER
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* VISTA 1: TAB ITEMS - EDITOR COMPLETO (ITEM MAKER PARA WAREHOUSE) */}
           {warehouseViewTab === 'items' && (
@@ -2682,61 +3014,60 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               showsVerticalScrollIndicator={true}
               nestedScrollEnabled={true}
             >
-              {/* Barra Superior con Botón Quick Sets y Colocar */}
+              {/* Barra Superior con Botón Volver, Quick Sets y Colocar */}
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                 <TouchableOpacity
                   style={{
-                    flex: 1,
+                    paddingHorizontal: 12,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 6,
-                    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-                    borderColor: '#B58F3C',
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                    paddingVertical: 11,
-                    minHeight: 44,
+                    backgroundColor: THEME.colors.casillaFondo,
+                    borderColor: THEME.colors.borde,
+                    borderWidth: 1.2,
+                    borderRadius: THEME.shapes.radioEsquina,
+                    minHeight: 48,
                   }}
-                  onPress={() => setShowQuickSetsVaultModal(true)}
+                  onPress={() => handleSelectWarehouseTab(vaultSubTab === 'ext' ? 'vault_ext' : 'warehouse')}
                   activeOpacity={0.7}
+                  accessibilityLabel="Volver al Baúl"
                 >
-                  <MaterialCommunityIcons name="flash" size={18} color="#E8C86A" />
-                  <Text style={{ color: '#E8C86A', fontSize: 12, fontWeight: '800' }}>
-                    INYECTAR SET
+                  <MuIcon name="arrow-left" size={16} color={THEME.colors.oroClaro} />
+                  <Text style={{ color: THEME.colors.oroClaro, fontSize: 11, fontWeight: '800' }}>
+                    VOLVER
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={{
-                    flex: 1.2,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    backgroundColor: '#3FCF8E',
-                    borderRadius: 6,
-                    paddingVertical: 11,
-                    minHeight: 44,
-                  }}
+                <MuButton
+                  titulo="INYECTAR SET"
+                  icono="flash"
+                  onPress={() => setShowQuickSetsVaultModal(true)}
+                  variante="secondary"
+                  altura={44}
+                  compacto
+                  style={{ flex: 1 }}
+                />
+
+                <MuButton
+                  titulo={vaultSubTab === 'ext' ? 'COLOCAR EN BÓVEDA' : 'COLOCAR EN BAÚL'}
+                  icono="plus-box"
                   onPress={handlePlaceMakerItemInVault}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="plus-box" size={18} color="#100D0B" />
-                  <Text style={{ color: '#100D0B', fontSize: 12, fontWeight: '800' }}>
-                    {vaultSubTab === 'ext' ? 'COLOCAR EN BÓVEDA' : 'COLOCAR EN BAÚL'}
-                  </Text>
-                </TouchableOpacity>
+                  variante="success"
+                  altura={44}
+                  compacto
+                  style={{ flex: 1.2 }}
+                />
               </View>
 
               {/* Tarjeta Informativa / Destino */}
               <View style={styles.whBannerCard}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <MaterialCommunityIcons name="tools" size={16} color="#E8C86A" />
+                    <MuIcon name="tools" size={16} color="#E0C380" />
                     <Text style={styles.whBannerTitle}>Item Maker del Baúl</Text>
                   </View>
-                  <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#3FCF8E' }}>
+                  <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 2, borderWidth: 1, borderColor: '#3FCF8E' }}>
                     <Text style={{ color: '#3FCF8E', fontSize: 11, fontWeight: 'bold' }}>
                       {selectedVaultSlot !== null && selectedVaultSlot >= 0 ? `Cuadro #${(selectedVaultSlot >= 120 ? selectedVaultSlot - 120 : selectedVaultSlot) + 1}` : 'Slot Auto'}
                     </Text>
@@ -2750,10 +3081,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               {/* Tarjeta de Previsualización del Ítem Configurado */}
               {selectedVaultMakerDef && (
                 <View style={{
-                  backgroundColor: '#2B2521',
-                  borderRadius: 6,
+                  backgroundColor: '#1F201F',
+                  borderRadius: 2,
                   borderWidth: 1.5,
-                  borderColor: vaultMakerExcFlags > 0 ? '#3FCF8E' : (vaultMakerAncient > 0 ? '#5B8DEF' : '#B58F3C'),
+                  borderColor: vaultMakerExcFlags > 0 ? '#3FCF8E' : (vaultMakerAncient > 0 ? '#5B8DEF' : '#E0C380'),
                   padding: 12,
                   marginBottom: 14,
                 }}>
@@ -2761,10 +3092,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     <View style={{
                       width: 60,
                       height: 60,
-                      borderRadius: 6,
-                      backgroundColor: '#100D0B',
+                      borderRadius: 2,
+                      backgroundColor: '#0D0E0D',
                       borderWidth: 1,
-                      borderColor: '#6B5533',
+                      borderColor: '#4C463A',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}>
@@ -2817,33 +3148,33 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       {/* Badges Fila */}
                       <View style={{ flexDirection: 'row', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
                         {vaultMakerLuck && (
-                          <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: THEME.colors.jade }}>
+                          <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: THEME.colors.jade }}>
                             <Text style={{ color: THEME.colors.jade, fontSize: 10, fontWeight: '700' }}>Luck</Text>
                           </View>
                         )}
                         {vaultMakerSkill && (
-                          <View style={{ backgroundColor: 'rgba(255, 152, 0, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#FF9800' }}>
+                          <View style={{ backgroundColor: 'rgba(255, 152, 0, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: '#FF9800' }}>
                             <Text style={{ color: '#FF9800', fontSize: 10, fontWeight: '700' }}>Skill</Text>
                           </View>
                         )}
                         {vaultMaker380 && (
-                          <View style={{ backgroundColor: 'rgba(255, 64, 129, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#FF4081' }}>
+                          <View style={{ backgroundColor: 'rgba(255, 64, 129, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: '#FF4081' }}>
                             <Text style={{ color: '#FF4081', fontSize: 10, fontWeight: '700' }}>380</Text>
                           </View>
                         )}
                         {vaultMakerAncient > 0 && (
-                          <View style={{ backgroundColor: 'rgba(91, 141, 239, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#5B8DEF' }}>
+                          <View style={{ backgroundColor: 'rgba(91, 141, 239, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: '#5B8DEF' }}>
                             <Text style={{ color: '#5B8DEF', fontSize: 10, fontWeight: '700' }}>Ancient</Text>
                           </View>
                         )}
                         {vaultMakerHarmonyType > 0 && (
-                          <View style={{ backgroundColor: 'rgba(232, 200, 106, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#E8C86A' }}>
-                            <Text style={{ color: '#E8C86A', fontSize: 10, fontWeight: '700' }}>Harmony</Text>
+                          <View style={{ backgroundColor: 'rgba(224, 195, 128, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: '#E0C380' }}>
+                            <Text style={{ color: '#E0C380', fontSize: 10, fontWeight: '700' }}>Harmony</Text>
                           </View>
                         )}
                         {vaultMakerEnableSockets && (
-                          <View style={{ backgroundColor: 'rgba(232, 200, 106, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#E8C86A' }}>
-                            <Text style={{ color: '#E8C86A', fontSize: 10, fontWeight: '700' }}>Sockets</Text>
+                          <View style={{ backgroundColor: 'rgba(224, 195, 128, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: '#E0C380' }}>
+                            <Text style={{ color: '#E0C380', fontSize: 10, fontWeight: '700' }}>Sockets</Text>
                           </View>
                         )}
                       </View>
@@ -3064,7 +3395,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                                   flex: 1,
                                   paddingVertical: 5,
                                   alignItems: 'center',
-                                  borderRadius: 6,
+                                  borderRadius: THEME.shapes.radioEsquina,
                                   borderWidth: 1,
                                   borderColor: isSelBonus ? THEME.colors.itemAncient : '#444',
                                   backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
@@ -3120,7 +3451,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                             setVaultMakerExcFlags(prev => (prev & opt.bit) ? (prev & ~opt.bit) : (prev | opt.bit));
                           }}
                         >
-                          <MaterialCommunityIcons
+                          <MuIcon
                             name={isChecked ? 'checkbox-marked' : 'checkbox-blank-outline'}
                             size={16}
                             color={isChecked ? THEME.colors.jade : THEME.colors.textMuted}
@@ -3196,23 +3527,44 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       <Text style={styles.whOptionLabel}>Nivel de Harmony (+0 a +13):</Text>
                       <View style={styles.whStepper}>
                         <TouchableOpacity
-                          style={styles.whStepBtnSmall}
+                          style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => setVaultMakerHarmonyLevel(prev => Math.max(0, prev - 1))}
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.whStepBtnTextSmall}>-</Text>
+                          <ImageBackground
+                            source={STITCH_ASSETS.buttons.small}
+                            style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={styles.whStepBtnTextSmall}>-</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                         <Text style={styles.whStepperVal}>+{vaultMakerHarmonyLevel}</Text>
                         <TouchableOpacity
-                          style={styles.whStepBtnSmall}
+                          style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => setVaultMakerHarmonyLevel(prev => Math.min(13, prev + 1))}
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.whStepBtnTextSmall}>+</Text>
+                          <ImageBackground
+                            source={STITCH_ASSETS.buttons.small}
+                            style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={styles.whStepBtnTextSmall}>+</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={styles.whMaxBtnSmall}
+                          style={{ width: 44, height: 34, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                           onPress={() => setVaultMakerHarmonyLevel(13)}
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                          <ImageBackground
+                            source={STITCH_ASSETS.tabs.tabModeActive}
+                            style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -3223,14 +3575,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               {/* SOCKETS (1 AL 5) */}
               <View style={styles.whControlCardBox}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[styles.whSectionHeader, { color: '#E8C86A' }]}>RANURAS DE SOCKETS (1 AL 5)</Text>
+                  <Text style={[styles.whSectionHeader, { color: '#EFD28D' }]}>RANURAS DE SOCKETS (1 AL 5)</Text>
                   <Switch
                     value={vaultMakerEnableSockets}
                     onValueChange={(val: boolean) => {
                       setVaultMakerEnableSockets(val);
                       setVaultMakerSockets(val ? [0xFE, 0xFE, 0xFE, 0xFE, 0xFE] : [0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
                     }}
-                    trackColor={{ false: '#332B24', true: '#6B5533' }}
+                    trackColor={{ false: '#292A29', true: '#4C463A' }}
                     thumbColor={vaultMakerEnableSockets ? THEME.colors.oroClaro : THEME.colors.textMuted}
                   />
                 </View>
@@ -3244,10 +3596,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       const currentOptions = getQuickSocketOptions(currentLvl);
 
                       return (
-                        <View key={`wh_sock_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(0,0,0,0.25)', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#332B24' }}>
+                        <View key={`wh_sock_${sIdx}`} style={{ gap: 6, backgroundColor: '#121312', padding: 8, borderRadius: 2, borderWidth: 1, borderColor: '#4C463A' }}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>Slot #{sIdx + 1}:</Text>
-                            <Text style={{ color: '#E8C86A', fontSize: 11, fontWeight: '700' }}>
+                            <Text style={{ color: '#E0C380', fontSize: 11, fontWeight: '700' }}>Slot #{sIdx + 1}:</Text>
+                            <Text style={{ color: '#EFD28D', fontSize: 11, fontWeight: '700' }}>
                               {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                             </Text>
                           </View>
@@ -3263,10 +3615,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                                   style={{
                                     paddingHorizontal: 7,
                                     paddingVertical: 2,
-                                    borderRadius: 4,
-                                    backgroundColor: isLvlActive ? '#E8C86A' : '#1E1A16',
+                                    borderRadius: 2,
+                                    backgroundColor: isLvlActive ? '#E0C380' : '#1B1C1B',
                                     borderWidth: 1,
-                                    borderColor: isLvlActive ? '#E8C86A' : '#3E342B',
+                                    borderColor: isLvlActive ? '#EFD28D' : '#4C463A',
                                   }}
                                   onPress={() => {
                                     const updatedLevels = [...vaultMakerSocketLevels];
@@ -3284,7 +3636,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                                   <Text style={{
                                     fontSize: 10,
                                     fontWeight: 'bold',
-                                    color: isLvlActive ? '#120F0D' : '#C5B5A5',
+                                    color: isLvlActive ? '#0D0E0D' : '#C5B5A5',
                                   }}>
                                     {sl.badge}
                                   </Text>
@@ -3337,17 +3689,31 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   </View>
                   <View style={styles.whStepper}>
                     <TouchableOpacity
-                      style={styles.whStepBtnSmall}
+                      style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setVaultMakerQuantity(prev => Math.max(1, prev - 1))}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.whStepBtnTextSmall}>-</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.whStepBtnTextSmall}>-</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <Text style={[styles.whStepperVal, { color: THEME.colors.oroClaro }]}>x{vaultMakerQuantity}</Text>
                     <TouchableOpacity
-                      style={styles.whStepBtnSmall}
+                      style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setVaultMakerQuantity(prev => Math.min(20, prev + 1))}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.whStepBtnTextSmall}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.whStepBtnTextSmall}>+</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -3371,36 +3737,23 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               </View>
 
               {/* BOTÓN COLOCAR ÍTEM CONFIGURADO EN BAÚL */}
-              <TouchableOpacity
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  backgroundColor: '#3FCF8E',
-                  borderRadius: 6,
-                  paddingVertical: 14,
-                  minHeight: 48,
-                  marginTop: 6,
-                  marginBottom: 16,
-                  borderWidth: 1,
-                  borderColor: '#3FCF8E',
-                }}
-                onPress={handlePlaceMakerItemInVault}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="arrow-down-bold-box" size={20} color="#100D0B" />
-                <Text style={{ color: '#100D0B', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 }}>
-                  {vaultSubTab === 'ext'
+              <MuButton
+                titulo={
+                  vaultSubTab === 'ext'
                     ? (vaultMakerQuantity > 1 ? `COLOCAR ${vaultMakerQuantity}x EN BÓVEDA EXPANDIDA` : 'COLOCAR ÍTEM EN BÓVEDA EXPANDIDA')
-                    : (vaultMakerQuantity > 1 ? `COLOCAR ${vaultMakerQuantity}x EN BAÚL` : 'COLOCAR ÍTEM EN BAÚL')}
-                </Text>
-              </TouchableOpacity>
+                    : (vaultMakerQuantity > 1 ? `COLOCAR ${vaultMakerQuantity}x EN BAÚL` : 'COLOCAR ÍTEM EN BAÚL')
+                }
+                icono="arrow-down-bold-box"
+                onPress={handlePlaceMakerItemInVault}
+                variante="success"
+                altura={48}
+                style={{ marginTop: 6, marginBottom: 16 }}
+              />
 
               {/* SECCIÓN CATÁLOGO DE ÍTEMS */}
               <View style={{ marginTop: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <MaterialCommunityIcons name="book-open-page-variant" size={18} color="#FF9800" />
+                  <MuIcon name="book-open-page-variant" size={18} color="#FF9800" />
                   <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
                     Cambiar Ítem desde el Catálogo:
                   </Text>
@@ -3436,7 +3789,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                           onPress={() => setCatalogCategory(cat.id)}
                           activeOpacity={0.7}
                         >
-                          <MaterialCommunityIcons
+                          <MuIcon
                             name={cat.icon as any}
                             size={16}
                             color={isSelected ? '#000000' : '#FF9800'}
@@ -3470,7 +3823,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     if (filteredCatalog.length === 0) {
                       return (
                         <View style={styles.whCatalogEmptyState}>
-                          <MaterialCommunityIcons name="alert" size={28} color="#FFC107" />
+                          <MuIcon name="alert" size={28} color="#FFC107" />
                           <Text style={styles.whCatalogEmptyText}>
                             No se encontraron ítems en esta categoría o búsqueda.
                           </Text>
@@ -3537,14 +3890,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                           </View>
                           <View
                             style={{
-                              backgroundColor: isSelected ? '#FF9800' : '#2A2E3D',
-                              borderRadius: 6,
+                              backgroundColor: isSelected ? THEME.colors.oroClaro : THEME.colors.raisedIron,
+                              borderRadius: THEME.shapes.radioEsquina,
                               paddingHorizontal: 10,
                               paddingVertical: 6,
                             }}
                           >
-                            <Text style={{ color: isSelected ? '#000000' : '#E0E0E0', fontSize: 11, fontWeight: '700' }}>
-                              {isSelected ? '✓ Seleccionado' : 'Seleccionar'}
+                            <Text style={{ color: isSelected ? THEME.colors.textoOscuro : THEME.colors.texto, fontSize: 11, fontWeight: '700' }}>
+                              {isSelected ? '[OK] Seleccionado' : 'Seleccionar'}
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -3556,56 +3909,86 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             </ScrollView>
           )}
 
-          {/* VISTA 2: TAB WAREHOUSE (Capturas 2, 3) */}
+          {/* VISTA 2: TAB WAREHOUSE (Stitch 17R) */}
           {warehouseViewTab === 'warehouse' && (
             <View style={{ flex: 1 }}>
               <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ padding: 14, paddingBottom: 20 }}
+                contentContainerStyle={{ padding: 14, paddingBottom: 24 }}
                 showsVerticalScrollIndicator={true}
               >
-                {/* Header Clásico de Baúl MU Online Season 6 (Captura de Referencia) */}
+                {/* Selector de Bóvedas Stitch 17R */}
                 <View style={styles.muVaultHeaderBar}>
-                  <TouchableOpacity
-                    style={styles.muVaultArrowBtn}
-                    onPress={() => {
-                      if (activeVaultIndex > 0) {
-                        handleSwitchVault(activeVaultIndex - 1);
-                      }
-                    }}
-                    activeOpacity={0.7}
-                    disabled={loadingWarehouse || activeVaultIndex === 0}
-                  >
-                    <Text style={[styles.muVaultArrowText, activeVaultIndex === 0 && { opacity: 0.3 }]}>◄</Text>
-                  </TouchableOpacity>
-
                   <Text style={styles.muVaultHeaderTitle}>
-                    [Bault] [{activeVaultIndex}/{warehouseCount}]
+                    BÓVEDA ACTIVA: <Text style={{ color: THEME.colors.textoSecundario }}>#{activeVaultIndex === 0 ? '1 BASE' : `${activeVaultIndex + 1} EXTRA`}</Text>
                   </Text>
-
-                  <TouchableOpacity
-                    style={styles.muVaultArrowBtn}
-                    onPress={() => handleSwitchVault(activeVaultIndex + 1)}
-                    activeOpacity={0.7}
-                    disabled={loadingWarehouse}
-                  >
-                    <Text style={styles.muVaultArrowText}>►</Text>
-                  </TouchableOpacity>
+                  <Text style={styles.muVaultHeaderSlots}>
+                    SLOTS: {warehouseItems.filter(i => i.slot < 120).length} / 120
+                  </Text>
                 </View>
 
-                {/* Selector de Baúles como Pestañas Horizontales Deslizables */}
-                <View style={{ marginVertical: 8, paddingHorizontal: 4 }}>
-                  <Pestanas
-                    pestanas={vaultTabs}
-                    activaId={String(activeVaultIndex)}
-                    onSelect={(id: string) => handleSwitchVault(Number(id))}
-                  />
+                {/* Fila de 5 Bóvedas Rápidas + Botón Expandir [+] */}
+                <View style={styles.muVaultQuickRow}>
+                  {[0, 1, 2, 3, 4].map((idx) => {
+                    const isActive = activeVaultIndex === idx;
+                    const isAvailable = idx < warehouseCount;
+                    const label = idx === 0 ? '#1 BASE' : `#${idx + 1} EXTRA`;
+                    return (
+                      <TouchableOpacity
+                        key={`vault_btn_${idx}`}
+                        style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => {
+                          if (isAvailable) {
+                            handleSwitchVault(idx);
+                          } else {
+                            setShowUnlockModal(true);
+                          }
+                        }}
+                        activeOpacity={0.7}
+                        disabled={loadingWarehouse}
+                      >
+                        <ImageBackground
+                          source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{
+                            paddingVertical: 8,
+                            paddingHorizontal: 4,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            opacity: isAvailable ? 1 : 0.5,
+                          }}
+                          resizeMode="stretch"
+                        >
+                          <Text
+                            style={[
+                              styles.muVaultQuickText,
+                              isActive && styles.muVaultQuickTextActive,
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  <TouchableOpacity
+                    style={{ width: 36, height: 32, borderRadius: 2, overflow: 'hidden' }}
+                    onPress={() => setShowUnlockModal(true)}
+                    activeOpacity={0.7}
+                    accessibilityLabel="Desbloquear más baúles"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.muVaultPlusQuickText}>+</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Banner de Acceso al Módulo Dedicado de Bóveda de Expansión */}
                 <TouchableOpacity
                   style={{
-                    marginHorizontal: 4,
                     marginBottom: 12,
                     padding: 10,
                     borderRadius: THEME.shapes.radioEsquina,
@@ -3623,7 +4006,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                    <MaterialCommunityIcons name="safe" size={22} color={THEME.colors.arcano} />
+                    <MuIcon name="safe" size={22} color={THEME.colors.arcano} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
                         Bóveda Expandida del Baúl
@@ -3633,15 +4016,17 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       </Text>
                     </View>
                   </View>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.oroClaro} />
+                  <MuIcon name="chevron-right" size={20} color={THEME.colors.oroClaro} />
                 </TouchableOpacity>
 
-                {/* Rejilla de 8 columnas dentro de un Panel con remaches */}
-                <Panel style={styles.vaultPanelContainer}>
-                  <View style={styles.vaultCounterHeader}>
-                    <Text style={styles.vaultCounterOfficialText}>
-                      {warehouseItems.filter(i => i.slot < 120).length} / 120 ítems
-                    </Text>
+                {/* Rejilla 8x15 dentro de un Panel con Esquineros Góticos */}
+                <Panel tipo="gold" conEsquineros={true} style={styles.vaultPanelContainer}>
+                  <View style={styles.muVaultGothicBar}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <MuIcon name="shield-outline" size={16} color={THEME.colors.oroClaro} />
+                      <Text style={styles.muVaultGothicTitle}>SLOTS DE BAÚL (8x15)</Text>
+                    </View>
+                    <Text style={styles.muVaultGothicBadge}>MU CANON S6</Text>
                   </View>
 
                   {loadingWarehouse ? (
@@ -3666,7 +4051,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                             onPress={() => setMovingVaultItem(null)}
                             activeOpacity={0.7}
                           >
-                            <Text style={styles.movingBannerCancelText}>✕ Cancelar</Text>
+                            <Text style={styles.movingBannerCancelText}>Cancelar</Text>
                           </TouchableOpacity>
                         </View>
                       )}
@@ -3682,7 +4067,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   )}
                 </Panel>
 
-                {/* Footer Clásico de Baúl MU Online Season 6: ZEN en Jade, Almacenado en Brasa y Botones de Piedra */}
+                {/* Footer Clásico de Baúl MU Online Season 6: ZEN en Jade, Almacenado en Brasa y Botonera Táctica */}
                 <View style={styles.muVaultFooterContainer}>
                   <View style={styles.muVaultMoneyRow}>
                     <Text style={styles.muVaultZenLabel}>ZEN</Text>
@@ -3707,58 +4092,132 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     </View>
                   </View>
 
-                  {/* Fila de 4 Botones de Piedra Clásicos de MU Online */}
+                  {/* Fila de Botones Táctiles de 48dp */}
                   <View style={styles.muVaultBtnRow}>
                     <TouchableOpacity
-                      style={styles.muVaultActionBtn}
+                      style={{ width: 48, height: 44, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setVaultMoney(Math.min(2000000000, (vaultMoney || 0) + 10000000))}
                       activeOpacity={0.7}
+                      accessibilityLabel="Sumar 10 Millones Zen"
                     >
-                      <MaterialCommunityIcons name="sack" size={20} color={THEME.colors.oroClaro} />
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon name="sack" size={20} color={THEME.colors.oroClaro} />
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.muVaultActionBtn}
+                      style={{ width: 48, height: 44, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setVaultMoney(Math.max(0, (vaultMoney || 0) - 10000000))}
                       activeOpacity={0.7}
+                      accessibilityLabel="Restar 10 Millones Zen"
                     >
-                      <MaterialCommunityIcons name="arrow-down-circle" size={20} color={THEME.colors.brasa} />
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon name="arrow-down-circle" size={20} color={THEME.colors.brasa} />
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.muVaultActionBtn}
-                      onPress={() => Alert.alert('Seguridad de Baúl', 'El baúl se encuentra protegido.')}
+                      style={{ width: 48, height: 44, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={handleSetMaxZen}
                       activeOpacity={0.7}
+                      accessibilityLabel="Zen Máximo"
                     >
-                      <MaterialCommunityIcons name="lock" size={20} color={THEME.colors.oroClaro} />
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.muVaultMaxText}>MAX</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.muVaultActionBtn}
+                      style={{ width: 48, height: 44, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setShowUnlockModal(true)}
                       activeOpacity={0.7}
+                      accessibilityLabel="Desbloquear Baúles"
                     >
-                      <Text style={styles.muVaultPlusText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.muVaultPlusText}>+</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
+                </View>
+
+                {/* Botones Rápidos Stitch 17R: ITEM MAKER / SETS RÁPIDOS */}
+                <View style={{ flexDirection: 'row', gap: 10, marginVertical: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="ITEM MAKER"
+                      icono="tools"
+                      variante="primary"
+                      altura={42}
+                      onPress={() => {
+                        setWarehouseViewTab('items');
+                        setVaultSubTab('main');
+                      }}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="SETS RÁPIDOS"
+                      icono="flash"
+                      variante="primary"
+                      altura={42}
+                      onPress={() => setShowQuickSetsVaultModal(true)}
+                    />
+                  </View>
+                </View>
+
+                {/* Botones de Confirmación y Liberación de Candado */}
+                <View style={{ gap: 10, marginTop: 8 }}>
+                  <BotonOro
+                    titulo="GUARDAR CAMBIOS DE BAÚL"
+                    icono="content-save"
+                    onPress={handleSaveWarehouse}
+                    disabled={savingWarehouse || loadingWarehouse}
+                    cargando={savingWarehouse}
+                    altura={48}
+                  />
+
+                  <MuButton
+                    variante="secondary"
+                    titulo="LIBERAR CANDADO DE BAÚL TRANCADO"
+                    icono="lock-open-outline"
+                    onPress={handleReleaseWarehouseLock}
+                    altura={46}
+                  />
                 </View>
               </ScrollView>
             </View>
           )}
 
-          {/* VISTA 3: TAB BÓVEDA DE EXPANSIÓN SEASON 6 (MÓDULO DEDICADO) */}
+          {/* VISTA 3: TAB BÓVEDA DE EXPANSIÓN SEASON 6 (Stitch 17R) */}
           {warehouseViewTab === 'vault_ext' && (
             <View style={{ flex: 1 }}>
               <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ padding: 14, paddingBottom: 20 }}
+                contentContainerStyle={{ padding: 14, paddingBottom: 24 }}
                 showsVerticalScrollIndicator={true}
               >
                 {/* Tarjeta de Estado y Activación en Juego */}
                 <View style={styles.vaultExtHeroCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                      <MaterialCommunityIcons name="safe" size={20} color={THEME.colors.arcano} />
+                      <MuIcon name="safe" size={20} color={THEME.colors.arcano} />
                       <Text style={{ color: THEME.colors.arcano, fontWeight: '800', fontSize: 13 }}>
                         BÓVEDA EXPANDIDA DEL BAÚL (ALMACENADO 1)
                       </Text>
@@ -3766,7 +4225,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     <View style={{
                       paddingHorizontal: 8,
                       paddingVertical: 3,
-                      borderRadius: 6,
+                      borderRadius: THEME.shapes.radioEsquina,
                       backgroundColor: vaultExtLevel >= 1 ? 'rgba(63, 207, 142, 0.15)' : 'rgba(255, 152, 0, 0.15)',
                       borderWidth: 1,
                       borderColor: vaultExtLevel >= 1 ? THEME.colors.jade : '#FF9800',
@@ -3794,9 +4253,9 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       backgroundColor: vaultExtLevel >= 1 ? 'rgba(91, 141, 239, 0.12)' : THEME.colors.arcano,
                       borderColor: THEME.colors.arcano,
                       borderWidth: 1,
-                      paddingVertical: 9,
-                      borderRadius: 6,
-                      minHeight: 44,
+                      paddingVertical: 10,
+                      borderRadius: THEME.shapes.radioEsquina,
+                      minHeight: 48,
                     }}
                     onPress={handleActivateVaultExpansion}
                     disabled={unlockingVaults}
@@ -3806,7 +4265,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       <ActivityIndicator size="small" color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
                     ) : (
                       <>
-                        <MaterialCommunityIcons name="lightning-bolt" size={16} color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
+                        <MuIcon name="lightning-bolt" size={16} color={vaultExtLevel >= 1 ? THEME.colors.arcano : '#000'} />
                         <Text style={{ color: vaultExtLevel >= 1 ? THEME.colors.arcano : '#000', fontWeight: 'bold', fontSize: 12 }}>
                           {vaultExtLevel >= 1 ? 'Re-Sincronizar Bóveda en Juego' : 'Activar Bóveda Expandida en Juego'}
                         </Text>
@@ -3818,7 +4277,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 {/* Zen de la Bóveda Expandida con Botón MAX */}
                 <View style={styles.whControlCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                    <MaterialCommunityIcons name="circle-multiple" size={16} color="#E8C86A" />
+                    <MuIcon name="circle-multiple" size={16} color="#E0C380" />
                     <Text style={styles.whControlLabel}>Zen Bóveda Expandida:</Text>
                     <TextInput
                       style={styles.whZenInput}
@@ -3832,218 +4291,371 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     />
                   </View>
                   <TouchableOpacity
-                    style={styles.whMaxBtn}
+                    style={{ width: 52, height: 36, borderRadius: 2, overflow: 'hidden' }}
                     onPress={handleSetMaxZen}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.whMaxBtnText}>MAX</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whMaxBtnText}>MAX</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
 
                 {/* Fila de Acciones Rápidas (Inyectar Set, Colocar Ítem, Ir a Item Maker) */}
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      backgroundColor: 'rgba(255, 122, 0, 0.12)',
-                      borderColor: '#FF7A00',
-                      borderWidth: 1,
-                      borderRadius: 8,
-                      paddingVertical: 9,
-                    }}
+                  <MuButton
+                    variante="secondary"
+                    titulo="INYECTAR SET"
+                    icono="flash"
+                    compacto
+                    altura={42}
+                    style={{ flex: 1 }}
                     onPress={() => setShowQuickSetsVaultModal(true)}
-                    activeOpacity={0.7}
-                  >
-                    <MaterialCommunityIcons name="flash" size={16} color="#FF7A00" />
-                    <Text style={{ color: '#FF7A00', fontSize: 11, fontWeight: '800' }}>
-                      INYECTAR SET
-                    </Text>
-                  </TouchableOpacity>
+                  />
 
-                  <TouchableOpacity
-                    style={{
-                      flex: 1.1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      backgroundColor: 'rgba(63, 207, 142, 0.12)',
-                      borderColor: THEME.colors.jade,
-                      borderWidth: 1,
-                      borderRadius: 6,
-                      paddingVertical: 9,
-                    }}
+                  <MuButton
+                    variante="success"
+                    titulo="COLOCAR ÍTEM"
+                    icono="plus-box"
+                    compacto
+                    altura={42}
+                    style={{ flex: 1.1 }}
                     onPress={handlePlaceMakerItemInVault}
-                    activeOpacity={0.7}
-                  >
-                    <MaterialCommunityIcons name="plus-box" size={16} color={THEME.colors.jade} />
-                    <Text style={{ color: THEME.colors.jade, fontSize: 11, fontWeight: '800' }}>
-                      COLOCAR ÍTEM
-                    </Text>
-                  </TouchableOpacity>
+                  />
 
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      backgroundColor: 'rgba(91, 141, 239, 0.12)',
-                      borderColor: THEME.colors.arcano,
-                      borderWidth: 1,
-                      borderRadius: 6,
-                      paddingVertical: 9,
-                    }}
+                  <MuButton
+                    variante="primary"
+                    titulo="ITEM MAKER"
+                    icono="tools"
+                    compacto
+                    altura={42}
+                    style={{ flex: 1 }}
                     onPress={() => {
                       setWarehouseViewTab('items');
                       setVaultSubTab('ext');
                     }}
-                    activeOpacity={0.7}
-                  >
-                    <MaterialCommunityIcons name="tools" size={16} color={THEME.colors.arcano} />
-                    <Text style={{ color: THEME.colors.arcano, fontSize: 11, fontWeight: '800' }}>
-                      ITEM MAKER
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 </View>
 
                 {/* Grid 8x15 (120 Slots de la Bóveda Expandida) */}
-                {loadingWarehouse ? (
-                  <View style={{ padding: 40, alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color={THEME.colors.arcano} />
-                    <Text style={{ color: THEME.colors.textoSecundario, marginTop: 12 }}>Cargando Bóveda Expandida...</Text>
+                <Panel tipo="gold" conEsquineros={true} style={styles.vaultPanelContainer}>
+                  <View style={styles.muVaultGothicBar}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <MuIcon name="shield-outline" size={16} color={THEME.colors.arcano} />
+                      <Text style={[styles.muVaultGothicTitle, { color: THEME.colors.arcano }]}>SLOTS DE BÓVEDA EXPANDIDA (8x15)</Text>
+                    </View>
+                    <Text style={[styles.muVaultGothicBadge, { color: THEME.colors.jade }]}>ALMACENADO 1</Text>
                   </View>
-                ) : (
-                  <View style={{ alignItems: 'center' }}>
-                    {movingVaultItem && (
-                      <View style={[styles.movingBanner, { borderColor: THEME.colors.arcano }]}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.movingBannerTitle, { color: THEME.colors.arcano }]}>
-                            Moviendo: {movingVaultItem.item.name} ({movingVaultItem.item.width || 1}x{movingVaultItem.item.height || 1})
-                          </Text>
-                          <Text style={styles.movingBannerSubtitle}>
-                            Toca cualquier cuadro libre (+) en la bóveda expandida para reubicarlo
-                          </Text>
+
+                  {loadingWarehouse ? (
+                    <View style={{ padding: 40, alignItems: 'center' }}>
+                      <ActivityIndicator size="large" color={THEME.colors.arcano} />
+                      <Text style={{ color: THEME.colors.textoSecundario, marginTop: 12 }}>Cargando Bóveda Expandida...</Text>
+                    </View>
+                  ) : (
+                    <View style={{ alignItems: 'center', width: '100%' }}>
+                      {movingVaultItem && (
+                        <View style={[styles.movingBanner, { borderColor: THEME.colors.arcano }]}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.movingBannerTitle, { color: THEME.colors.arcano }]}>
+                              Moviendo: {movingVaultItem.item.name} ({movingVaultItem.item.width || 1}x{movingVaultItem.item.height || 1})
+                            </Text>
+                            <Text style={styles.movingBannerSubtitle}>
+                              Toca cualquier cuadro libre (+) en la bóveda expandida para reubicarlo
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.movingBannerCancelBtn}
+                            onPress={() => setMovingVaultItem(null)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.movingBannerCancelText}>Cancelar</Text>
+                          </TouchableOpacity>
                         </View>
-                        <TouchableOpacity
-                          style={styles.movingBannerCancelBtn}
-                          onPress={() => setMovingVaultItem(null)}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.movingBannerCancelText}>✕ Cancelar</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                    <InventoryGrid
-                      startSlot={120}
-                      rows={15}
-                      cols={8}
-                      items={warehouseItems}
-                      onSlotPress={handleVaultSlotPress}
-                      movingSlot={movingVaultItem?.slot}
-                    />
-                  </View>
-                )}
+                      )}
+                      <InventoryGrid
+                        startSlot={120}
+                        rows={15}
+                        cols={8}
+                        items={warehouseItems}
+                        onSlotPress={handleVaultSlotPress}
+                        movingSlot={movingVaultItem?.slot}
+                      />
+                    </View>
+                  )}
+                </Panel>
+
+                {/* Botón Guardar Bóveda Expandida */}
+                <View style={{ marginTop: 12 }}>
+                  <BotonOro
+                    titulo={`GUARDAR BÓVEDA EXPANDIDA #${activeVaultIndex}`}
+                    icono="content-save"
+                    onPress={handleSaveWarehouse}
+                    disabled={savingWarehouse || loadingWarehouse}
+                    cargando={savingWarehouse}
+                    altura={48}
+                  />
+                </View>
               </ScrollView>
             </View>
           )}
 
-          {/* Barra de Pestañas Inferior: [Baúl Normal], [Bóveda Expandida] y [Item Maker] */}
+          {/* VISTA 4: TAB BANCO DE JOYAS (Stitch 17R) */}
+          {warehouseViewTab === 'jewels' && (
+            <View style={{ flex: 1 }}>
+              <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ padding: 14, paddingBottom: 24 }}
+                showsVerticalScrollIndicator={true}
+              >
+                {/* Header Gótico de Banco de Joyas */}
+                <Panel tipo="gold" conEsquineros={true} style={{ padding: 14, marginBottom: 12 }}>
+                  <View style={styles.muVaultGothicBar}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <MuIcon name="diamond-stone" size={18} color={THEME.colors.oroClaro} />
+                      <Text style={styles.muVaultGothicTitle}>BANCO DE JOYAS CANÓNICO</Text>
+                    </View>
+                    <Text style={styles.muVaultGothicBadge}>SEASON 6</Text>
+                  </View>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginTop: 4 }}>
+                    Cuenta: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{warehouseAccount || jewelBankAcc}</Text> ({jewelBankTableName})
+                  </Text>
+
+                  {/* Acciones Rápidas */}
+                  <View style={styles.jbQuickRow}>
+                    <Text style={styles.jbQuickLabel}>Llenado Rápido:</Text>
+                    {[
+                      { label: '+10 a Todas', amt: 10, isMax: false },
+                      { label: '+30 a Todas', amt: 30, isMax: false },
+                      { label: 'Llenar a 250 (Max)', amt: 250, isMax: true },
+                    ].map((btn, idx) => (
+                      <TouchableOpacity
+                        key={`jb_quick_${idx}`}
+                        style={{ height: 32, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => handleQuickFillAll(btn.amt)}
+                        activeOpacity={0.7}
+                      >
+                        <ImageBackground
+                          source={btn.isMax ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ height: '100%', paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.jbQuickPillText, btn.isMax && { color: THEME.colors.oroClaro, fontWeight: '900' }]}>
+                            {btn.label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </Panel>
+
+                {jewelBankLoading ? (
+                  <View style={{ padding: 40, alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={THEME.colors.oroClaro} />
+                    <Text style={{ color: THEME.colors.textoSecundario, marginTop: 12 }}>
+                      Cargando Banco de Joyas...
+                    </Text>
+                  </View>
+                ) : !jewelBankHasTable ? (
+                  <View style={{ padding: 24, alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderRadius: THEME.shapes.radioEsquina, borderWidth: 1, borderColor: THEME.colors.brasa }}>
+                    <MuIcon name="alert-circle-outline" size={36} color={THEME.colors.brasa} />
+                    <Text style={{ color: THEME.colors.brasa, fontSize: 14, fontWeight: 'bold', marginTop: 8 }}>
+                      Tabla de Joyas no detectada
+                    </Text>
+                    <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, textAlign: 'center', marginTop: 6, lineHeight: 18 }}>
+                      Esta base de datos no cuenta con tabla de Banco de Joyas (CustomJewelBank o JewelBank). Requiere emulador Louis Season 6 Update 40 o MSPro compatible.
+                    </Text>
+                  </View>
+                ) : (
+                  <Panel tipo="gold" conEsquineros={true} style={{ padding: 12, marginBottom: 16 }}>
+                    <View style={styles.jbListContainer}>
+                      {JEWEL_CONFIG.map((jewel) => {
+                        const currentVal = jewelBankData[jewel.key] || 0;
+                        return (
+                          <View key={`wh_jb_${jewel.key}`} style={styles.whJewelItemRow}>
+                            <View style={styles.whJewelItemLeft}>
+                              <View style={[styles.whJewelIconWrap, { backgroundColor: jewel.bg }]}>
+                                {JEWEL_ASSET_IMAGES[jewel.key] ? (
+                                  <Image
+                                    source={JEWEL_ASSET_IMAGES[jewel.key]}
+                                    style={{ width: 32, height: 32 }}
+                                    resizeMode="contain"
+                                  />
+                                ) : (
+                                  <MuIcon name={jewel.icon as any} size={22} color={jewel.color} />
+                                )}
+                              </View>
+                              <View style={styles.whJewelNameCol}>
+                                <Text style={styles.whJewelNameText} numberOfLines={1}>{jewel.label}</Text>
+                                <Text style={styles.whJewelCountText}>CANTIDAD: {currentVal}</Text>
+                              </View>
+                            </View>
+
+                            <View style={styles.whJewelStepper}>
+                              <TouchableOpacity
+                                style={{ width: 44, height: 44, borderRadius: 2, overflow: 'hidden' }}
+                                onPress={() => handleJewelChange(jewel.key, -1)}
+                                activeOpacity={0.7}
+                              >
+                                <ImageBackground
+                                  source={STITCH_ASSETS.buttons.small}
+                                  style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                                  resizeMode="stretch"
+                                >
+                                  <Text style={styles.whJewelStepBtnText}>-</Text>
+                                </ImageBackground>
+                              </TouchableOpacity>
+
+                              <TextInput
+                                style={styles.whJewelInput}
+                                value={String(currentVal)}
+                                keyboardType="number-pad"
+                                maxLength={4}
+                                onChangeText={(txt) => handleJewelSetDirect(jewel.key, txt)}
+                              />
+
+                              <TouchableOpacity
+                                style={{ width: 44, height: 44, borderRadius: 2, overflow: 'hidden' }}
+                                onPress={() => handleJewelChange(jewel.key, 1)}
+                                activeOpacity={0.7}
+                              >
+                                <ImageBackground
+                                  source={STITCH_ASSETS.buttons.small}
+                                  style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                                  resizeMode="stretch"
+                                >
+                                  <Text style={[styles.whJewelStepBtnText, styles.whJewelStepBtnTextPlus]}>+</Text>
+                                </ImageBackground>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </Panel>
+                )}
+
+                {/* Botón Guardar Banco de Joyas */}
+                <BotonOro
+                  titulo="GUARDAR BANCO DE JOYAS"
+                  icono="content-save"
+                  onPress={handleSaveJewelBank}
+                  disabled={jewelBankSaving || jewelBankLoading || !jewelBankHasTable}
+                  cargando={jewelBankSaving}
+                  altura={48}
+                />
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Barra de Pestañas Inferior Ergonómica (48dp minHeight) */}
           <View style={styles.whBottomTabsBar}>
             <TouchableOpacity
-              style={styles.whBottomTabBtn}
-              onPress={() => {
-                setWarehouseViewTab('warehouse');
-                setVaultSubTab('main');
-              }}
+              style={{ flex: 1, height: 48, borderRadius: 2, overflow: 'hidden' }}
+              onPress={() => handleSelectWarehouseTab('warehouse')}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons
-                name="package-variant-closed"
-                size={22}
-                color={warehouseViewTab === 'warehouse' ? '#FF7A00' : '#8E8E93'}
-              />
-              <Text
-                style={[
-                  styles.whBottomTabText,
-                  warehouseViewTab === 'warehouse' && styles.whBottomTabTextActive,
-                ]}
+              <ImageBackground
+                source={warehouseViewTab === 'warehouse' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 2 }}
+                resizeMode="stretch"
               >
-                Baúl Normal
-              </Text>
+                <MuIcon
+                  name="package-variant-closed"
+                  size={18}
+                  color={warehouseViewTab === 'warehouse' ? THEME.colors.oroClaro : THEME.colors.textoSecundario}
+                />
+                <Text
+                  style={[
+                    styles.whBottomTabText,
+                    warehouseViewTab === 'warehouse' && styles.whBottomTabTextActive,
+                  ]}
+                >
+                  Baúl Base
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.whBottomTabBtn}
-              onPress={() => {
-                setWarehouseViewTab('vault_ext');
-                setVaultSubTab('ext');
-              }}
+              style={{ flex: 1, height: 48, borderRadius: 2, overflow: 'hidden' }}
+              onPress={() => handleSelectWarehouseTab('vault_ext')}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons
-                name="safe"
-                size={22}
-                color={warehouseViewTab === 'vault_ext' ? THEME.colors.arcano : '#8E8E93'}
-              />
-              <Text
-                style={[
-                  styles.whBottomTabText,
-                  warehouseViewTab === 'vault_ext' && { color: THEME.colors.arcano, fontWeight: 'bold' },
-                ]}
+              <ImageBackground
+                source={warehouseViewTab === 'vault_ext' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 2 }}
+                resizeMode="stretch"
               >
-                Bóveda Expandida
-              </Text>
+                <MuIcon
+                  name="safe"
+                  size={18}
+                  color={warehouseViewTab === 'vault_ext' ? THEME.colors.arcano : THEME.colors.textoSecundario}
+                />
+                <Text
+                  style={[
+                    styles.whBottomTabText,
+                    warehouseViewTab === 'vault_ext' && { color: THEME.colors.arcano, fontWeight: 'bold' },
+                  ]}
+                >
+                  Expandido
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.whBottomTabBtn}
-              onPress={() => setWarehouseViewTab('items')}
+              style={{ flex: 1, height: 48, borderRadius: 2, overflow: 'hidden' }}
+              onPress={() => handleSelectWarehouseTab('jewels')}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons
-                name="tools"
-                size={22}
-                color={warehouseViewTab === 'items' ? '#FF7A00' : '#8E8E93'}
-              />
-              <Text
-                style={[
-                  styles.whBottomTabText,
-                  warehouseViewTab === 'items' && styles.whBottomTabTextActive,
-                ]}
+              <ImageBackground
+                source={warehouseViewTab === 'jewels' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 2 }}
+                resizeMode="stretch"
               >
-                Item Maker
-              </Text>
+                <MuIcon
+                  name="diamond-stone"
+                  size={18}
+                  color={warehouseViewTab === 'jewels' ? THEME.colors.oroClaro : THEME.colors.textoSecundario}
+                />
+                <Text
+                  style={[
+                    styles.whBottomTabText,
+                    warehouseViewTab === 'jewels' && styles.whBottomTabTextActive,
+                  ]}
+                >
+                  Banco Joyas
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
-          </View>
 
-          {/* Botón Inferior de Ancho Completo: Guardar Cambios (Verde) */}
-          <View style={[styles.whSaveBtnContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
             <TouchableOpacity
-              style={styles.whGreenSaveBtn}
-              onPress={handleSaveWarehouse}
-              disabled={savingWarehouse || loadingWarehouse}
-              activeOpacity={0.8}
+              style={{ flex: 1, height: 48, borderRadius: 2, overflow: 'hidden' }}
+              onPress={() => handleSelectWarehouseTab('items')}
+              activeOpacity={0.7}
             >
-              {savingWarehouse ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="content-save" size={20} color="#FFFFFF" />
-                  <Text style={styles.whGreenSaveBtnText}>
-                    {warehouseViewTab === 'vault_ext'
-                      ? `Guardar Bóveda Expandida #${activeVaultIndex}`
-                      : activeVaultIndex === 0
-                      ? 'Guardar Baúl Principal'
-                      : `Guardar Baúl #${activeVaultIndex}`}
-                  </Text>
-                </>
-              )}
+              <ImageBackground
+                source={warehouseViewTab === 'items' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', gap: 2 }}
+                resizeMode="stretch"
+              >
+                <MuIcon
+                  name="tools"
+                  size={18}
+                  color={warehouseViewTab === 'items' ? THEME.colors.oroClaro : THEME.colors.textoSecundario}
+                />
+                <Text
+                  style={[
+                    styles.whBottomTabText,
+                    warehouseViewTab === 'items' && styles.whBottomTabTextActive,
+                  ]}
+                >
+                  Item Maker
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
           </View>
         </View>
@@ -4063,11 +4675,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
           <View style={[styles.detailModalCard, { width: '90%', maxWidth: 360 }]}>
             <View style={styles.detailHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="lock-open-outline" size={22} color="#FF9800" />
+                <MuIcon name="lock-open-outline" size={22} color="#FF9800" />
                 <Text style={styles.detailTitle}>Desbloquear Baúles</Text>
               </View>
               <TouchableOpacity onPress={() => setShowUnlockModal(false)} style={styles.closeModalBtn}>
-                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -4076,25 +4688,32 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             </Text>
 
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
-              {['5', '10', '20', '50'].map((preset) => (
-                <TouchableOpacity
-                  key={`preset_${preset}`}
-                  style={[
-                    styles.presetPill,
-                    unlockCountInput === preset && styles.presetPillActive,
-                  ]}
-                  onPress={() => setUnlockCountInput(preset)}
-                >
-                  <Text
-                    style={[
-                      styles.presetPillText,
-                      unlockCountInput === preset && styles.presetPillTextActive,
-                    ]}
+              {['5', '10', '20', '50'].map((preset) => {
+                const isAct = unlockCountInput === preset;
+                return (
+                  <TouchableOpacity
+                    key={`preset_${preset}`}
+                    style={{ flex: 1, height: 38, borderRadius: 2, overflow: 'hidden' }}
+                    onPress={() => setUnlockCountInput(preset)}
+                    activeOpacity={0.7}
                   >
-                    {preset} Baúles
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <ImageBackground
+                      source={isAct ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text
+                        style={[
+                          styles.presetPillText,
+                          isAct && styles.presetPillTextActive,
+                        ]}
+                      >
+                        {preset} Baúles
+                      </Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <View style={styles.fieldGroup}>
@@ -4114,7 +4733,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             <View
               style={{
                 backgroundColor: 'rgba(91, 141, 239, 0.06)',
-                borderRadius: 6,
+                borderRadius: THEME.shapes.radioEsquina,
                 padding: 10,
                 marginBottom: 10,
                 borderWidth: 1,
@@ -4122,56 +4741,42 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <MaterialCommunityIcons name="arrow-expand-all" size={16} color={THEME.colors.arcano} />
+                <MuIcon name="arrow-expand-all" size={16} color={THEME.colors.arcano} />
                 <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
-                  Expansión de Baúl Oficial Season 6
+                  Expansión de Baúl Oficial (ExtWarehouse)
                 </Text>
               </View>
               <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 8 }}>
                 Desbloquea las pestañas de Expansión 1 y 2 en el juego (<Text style={{ color: '#FFF' }}>AccountCharacter.ExtWarehouse = 2</Text>).
               </Text>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: 'rgba(91, 141, 239, 0.2)',
-                  borderWidth: 1,
-                  borderColor: THEME.colors.arcano,
-                  borderRadius: 6,
-                  paddingVertical: 7,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 6,
-                }}
+              <MuButton
+                variante="primary"
+                titulo="Activar Expansión 1 y 2 en Juego"
+                icono="lightning-bolt"
                 disabled={unlockingVaults}
                 onPress={handleActivateVaultExpansion}
-              >
-                <MaterialCommunityIcons name="lightning-bolt" size={15} color={THEME.colors.arcano} />
-                <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
-                  Activar Expansión 1 y 2 en Juego
-                </Text>
-              </TouchableOpacity>
+                compacto
+                altura={38}
+              />
             </View>
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
+              <BotonPiedra
+                titulo="Cancelar"
                 onPress={() => setShowUnlockModal(false)}
                 disabled={unlockingVaults}
-              >
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
-              </TouchableOpacity>
+                altura={42}
+                style={{ flex: 1 }}
+              />
 
-              <TouchableOpacity
-                style={styles.confirmBtn}
+              <BotonOro
+                titulo="Desbloquear"
                 onPress={handleUnlockWarehouses}
                 disabled={unlockingVaults}
-              >
-                {unlockingVaults ? (
-                  <ActivityIndicator size="small" color="#0D0D0D" />
-                ) : (
-                  <Text style={styles.confirmBtnText}>Desbloquear</Text>
-                )}
-              </TouchableOpacity>
+                cargando={unlockingVaults}
+                altura={42}
+                style={{ flex: 1 }}
+              />
             </View>
           </View>
         </View>
@@ -4191,11 +4796,11 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             {/* Header */}
             <View style={styles.detailHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="flash" size={22} color="#FF7A00" />
+                <MuIcon name="flash" size={22} color="#FF7A00" />
                 <Text style={styles.detailTitle}>Inyectar Set al Baúl #{activeVaultIndex}</Text>
               </View>
               <TouchableOpacity onPress={() => setShowQuickSetsVaultModal(false)} style={styles.closeModalBtn}>
-                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -4253,14 +4858,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                             minWidth: 110,
                             padding: 10,
                             alignItems: 'center',
-                            borderRadius: 6,
+                            borderRadius: 2,
                             borderWidth: 1.5,
-                            borderColor: isSelected ? '#B58F3C' : '#6B5533',
-                            backgroundColor: isSelected ? 'rgba(232, 200, 106, 0.15)' : '#2B2521',
+                            borderColor: isSelected ? '#EFD28D' : '#4C463A',
+                            backgroundColor: isSelected ? 'rgba(224, 195, 128, 0.15)' : '#1F201F',
                           }}
                           onPress={() => setSelectedVaultQuickSet(set)}
                         >
-                          <MaterialCommunityIcons
+                          <MuIcon
                             name="shield-outline"
                             size={24}
                             color={isSelected ? '#FF7A00' : THEME.colors.textMuted}
@@ -4298,15 +4903,15 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 4,
-                      backgroundColor: '#1A1D26',
+                      backgroundColor: '#1F201F',
                       paddingHorizontal: 8,
                       paddingVertical: 5,
-                      borderRadius: 6,
+                      borderRadius: 2,
                       borderWidth: 1,
-                      borderColor: '#2D3240',
+                      borderColor: '#4C463A',
                     }}
                   >
-                    <MaterialCommunityIcons name="check-circle" size={12} color="#4CAF50" />
+                    <MuIcon name="check-circle" size={12} color="#4CAF50" />
                     <Text style={{ color: '#EEE', fontSize: 11 }}>{p.name}</Text>
                   </View>
                 ))}
@@ -4322,23 +4927,44 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 <Text style={styles.whOptionLabel}>Nivel (+0 a +15):</Text>
                 <View style={styles.whStepper}>
                   <TouchableOpacity
-                    style={styles.whStepBtnSmall}
+                    style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickSetVaultLevel((prev) => Math.max(0, prev - 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.whStepBtnTextSmall}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whStepBtnTextSmall}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={styles.whStepperVal}>+{quickSetVaultLevel}</Text>
                   <TouchableOpacity
-                    style={styles.whStepBtnSmall}
+                    style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickSetVaultLevel((prev) => Math.min(15, prev + 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.whStepBtnTextSmall}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whStepBtnTextSmall}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.whMaxBtnSmall}
+                    style={{ width: 44, height: 34, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                     onPress={() => setQuickSetVaultLevel(15)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -4347,23 +4973,44 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 <Text style={styles.whOptionLabel}>Opción (+0 a +28):</Text>
                 <View style={styles.whStepper}>
                   <TouchableOpacity
-                    style={styles.whStepBtnSmall}
+                    style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickSetVaultOption((prev) => Math.max(0, prev - 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.whStepBtnTextSmall}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whStepBtnTextSmall}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <Text style={styles.whStepperVal}>+{quickSetVaultOption * 4}</Text>
                   <TouchableOpacity
-                    style={styles.whStepBtnSmall}
+                    style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => setQuickSetVaultOption((prev) => Math.min(7, prev + 1))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.whStepBtnTextSmall}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whStepBtnTextSmall}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.whMaxBtnSmall}
+                    style={{ width: 44, height: 34, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                     onPress={() => setQuickSetVaultOption(7)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -4380,10 +5027,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.whFenrirPill, quickSetVaultSkill && { backgroundColor: 'rgba(232, 200, 106, 0.2)', borderColor: '#E8C86A' }]}
+                  style={[styles.whFenrirPill, quickSetVaultSkill && { backgroundColor: 'rgba(224, 195, 128, 0.2)', borderColor: '#EFD28D' }]}
                   onPress={() => setQuickSetVaultSkill(!quickSetVaultSkill)}
                 >
-                  <Text style={{ color: quickSetVaultSkill ? '#E8C86A' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
+                  <Text style={{ color: quickSetVaultSkill ? '#E0C380' : THEME.colors.textMuted, fontSize: 11, fontWeight: '700' }}>
                     Skill
                   </Text>
                 </TouchableOpacity>
@@ -4414,23 +5061,27 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     ANCIENT OPTION:
                   </Text>
                   {vaultSetAncientOptions.length === 0 ? (
-                    <View style={{ padding: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 6 }}>
+                    <View style={{ padding: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: THEME.shapes.radioEsquina }}>
                       <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, fontStyle: 'italic' }}>
-                        Este set no posee versiones Ancient en Season 6.
+                        Este set no posee versiones Ancient registradas.
                       </Text>
                     </View>
                   ) : (
                     <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                       <TouchableOpacity
-                        style={[
-                          styles.whAncientPill,
-                          quickSetVaultAncientTier === 0 && styles.whAncientPillActive,
-                        ]}
+                        style={{ height: 34, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickSetVaultAncientTier(0)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={[styles.whAncientPillText, quickSetVaultAncientTier === 0 && styles.whAncientPillTextActive]}>
-                          Normal (Sin Ancient)
-                        </Text>
+                        <ImageBackground
+                          source={quickSetVaultAncientTier === 0 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ height: '100%', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.whAncientPillText, quickSetVaultAncientTier === 0 && styles.whAncientPillTextActive]}>
+                            Normal (Sin Ancient)
+                          </Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       {vaultSetAncientOptions.map((anc) => {
                         const tierVal = anc.tier === 1 ? 5 : 10;
@@ -4438,16 +5089,19 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                         return (
                           <TouchableOpacity
                             key={`vault_anc_${anc.tier}`}
-                            style={[
-                              styles.whAncientPill,
-                              isSelected && styles.whAncientPillActive,
-                              isSelected && { borderColor: '#5B8DEF', backgroundColor: 'rgba(91, 141, 239, 0.2)' }
-                            ]}
+                            style={{ height: 34, borderRadius: 2, overflow: 'hidden' }}
                             onPress={() => setQuickSetVaultAncientTier(tierVal)}
+                            activeOpacity={0.7}
                           >
-                            <Text style={[styles.whAncientPillText, isSelected && { color: '#5B8DEF', fontWeight: 'bold' }]}>
-                              Tier {anc.tier} ({anc.name})
-                            </Text>
+                            <ImageBackground
+                              source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={{ height: '100%', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text style={[styles.whAncientPillText, isSelected && { color: THEME.colors.oroClaro, fontWeight: 'bold' }]}>
+                                Tier {anc.tier} ({anc.name})
+                              </Text>
+                            </ImageBackground>
                           </TouchableOpacity>
                         );
                       })}
@@ -4466,22 +5120,43 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={{ color: '#FFD54F', fontSize: 11, fontWeight: 'bold' }}>Nivel +{quickSetVaultHarmonyLevel}</Text>
                       <TouchableOpacity
-                        style={styles.whStepBtnSmall}
+                        style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickSetVaultHarmonyLevel(prev => Math.max(0, prev - 1))}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.whStepBtnTextSmall}>-</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.whStepBtnTextSmall}>-</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.whStepBtnSmall}
+                        style={{ width: 34, height: 34, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => setQuickSetVaultHarmonyLevel(prev => Math.min(13, prev + 1))}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.whStepBtnTextSmall}>+</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.whStepBtnTextSmall}>+</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.whMaxBtnSmall}
+                        style={{ width: 44, height: 34, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                         onPress={() => setQuickSetVaultHarmonyLevel(13)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeActive}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.whMaxBtnTextSmall}>MAX</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -4526,8 +5201,8 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 return (
                   <TouchableOpacity
                     style={{
-                      backgroundColor: isVaultAccountValid ? '#B58F3C' : '#2B2521',
-                      borderRadius: 6,
+                      backgroundColor: isVaultAccountValid ? '#EFD28D' : '#1F201F',
+                      borderRadius: 2,
                       height: 48,
                       minHeight: 48,
                       justifyContent: 'center',
@@ -4536,7 +5211,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       gap: 8,
                       marginTop: 6,
                       borderWidth: 1,
-                      borderColor: isVaultAccountValid ? '#E8C86A' : '#6B5533',
+                      borderColor: isVaultAccountValid ? '#EFD28D' : '#4C463A',
                       opacity: isVaultAccountValid ? 1 : 0.6,
                     }}
                     onPress={handleInjectQuickSetToVault}
@@ -4546,12 +5221,12 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       <ActivityIndicator color="#FFF" />
                     ) : (
                       <>
-                        <MaterialCommunityIcons
+                        <MuIcon
                           name={isVaultAccountValid ? "lightning-bolt" : "lock-outline"}
                           size={20}
-                          color={isVaultAccountValid ? "#FFF" : THEME.colors.textMuted}
+                          color={isVaultAccountValid ? "#0D0E0D" : THEME.colors.textMuted}
                         />
-                        <Text style={{ color: isVaultAccountValid ? '#FFFFFF' : THEME.colors.textMuted, fontSize: 13, fontWeight: '800' }}>
+                        <Text style={{ color: isVaultAccountValid ? '#0D0E0D' : THEME.colors.textMuted, fontSize: 13, fontWeight: '800' }}>
                           {isVaultAccountValid
                             ? `INYECTAR ${selectedVaultQuickSet?.name.toUpperCase()} (${selectedVaultQuickSet?.pieces.length} PIEZAS)`
                             : `SELECCIONA UNA CUENTA PARA ACTIVAR`}
@@ -4612,7 +5287,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.detailModalOverlay}
         >
-          <View style={[styles.detailModalCard, { maxHeight: '90%' }]}>
+          <Panel style={[styles.detailModalCard, { maxHeight: '90%' }]}>
             <ScrollView
               contentContainerStyle={{ flexGrow: 1 }}
               keyboardShouldPersistTaps="handled"
@@ -4621,7 +5296,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               <View style={styles.detailHeader}>
                 <Text style={styles.detailTitle}>Nueva Cuenta (MEMB_INFO)</Text>
                 <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.closeModalBtn}>
-                  <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
+                  <MuIcon name="close" size={22} color={THEME.colors.textoSecundario} />
                 </TouchableOpacity>
               </View>
 
@@ -4682,7 +5357,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       ]}
                       onPress={() => setNewLevel(l.level)}
                     >
-                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: l.color, marginBottom: 2 }} />
+                      <View style={{ width: 6, height: 6, borderRadius: 3, /* círculo funcional (width/2) */ backgroundColor: l.color, marginBottom: 2 }} />
                       <Text
                         style={[
                           styles.vipSelectBtnText,
@@ -4698,43 +5373,454 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
                 <TouchableOpacity
-                  style={styles.cancelBtn}
+                  style={styles.detailModalBtnCancel}
                   onPress={() => setCreateModalVisible(false)}
                   disabled={isCreating}
+                  activeOpacity={0.75}
                 >
-                  <Text style={styles.cancelBtnText}>Cancelar</Text>
+                  <Text style={styles.detailBtnTextCancel}>Cancelar</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.confirmBtn}
+                  style={styles.detailModalBtnSave}
                   onPress={handleCreateAccount}
                   disabled={isCreating}
+                  activeOpacity={0.75}
                 >
                   {isCreating ? (
-                    <ActivityIndicator size="small" color="#0D0D0D" />
+                    <ActivityIndicator size="small" color="#0D0E0D" />
                   ) : (
-                    <Text style={styles.confirmBtnText}>Crear Cuenta</Text>
+                    <Text style={styles.detailBtnTextSave}>Crear Cuenta</Text>
                   )}
                 </TouchableOpacity>
               </View>
             </ScrollView>
-          </View>
+          </Panel>
         </KeyboardAvoidingView>
       </Modal>
       <LicenseModal
         visible={licenseModalVisible}
         onClose={() => setLicenseModalVisible(false)}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#05070A',
-    paddingHorizontal: 16,
+    backgroundColor: THEME.colors.fondo,
+    paddingHorizontal: 14,
   },
+  /* ================= STITCH 02 ESTILOS CUENTAS ================= */
+  stitchSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  stitchSearchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0C0D0C',
+    borderRadius: 2,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#28251E',
+    borderRightColor: '#28251E',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    minHeight: 48,
+  },
+  stitchSearchIconImg: {
+    width: 20,
+    height: 20,
+    marginRight: 4,
+  },
+  stitchFilterChipIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 4,
+  },
+  stitchSearchInput: {
+    flex: 1,
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontWeight: '500',
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+  },
+  stitchClearBtn: {
+    padding: 4,
+  },
+  stitchAddAccountBtn: {
+    height: 44,
+    paddingHorizontal: 12,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#252625',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#E0C380',
+    borderBottomColor: '#8C6F2D',
+    borderRightColor: '#8C6F2D',
+    borderWidth: 1.2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  stitchAddAccountBtnText: {
+    color: '#EFD28D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadow,
+  },
+  stitchFilterChipsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+    flexWrap: 'wrap',
+  },
+  stitchFilterLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.textMuted,
+    letterSpacing: 0.5,
+    marginRight: 2,
+  },
+  stitchFilterChipTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  stitchFilterChipBg: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stitchFilterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minHeight: 40,
+    justifyContent: 'center',
+    borderRadius: 2,
+  },
+  stitchFilterChipActive: {
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  stitchFilterChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+  },
+  stitchFilterChipTextActive: {
+    color: '#EFD28D',
+    fontWeight: '900',
+  },
+  stitchTableHeaderBanner: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#111211',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  stitchTableHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stitchTableHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E4E2E0',
+    letterSpacing: 0.5,
+  },
+  stitchTableHeaderCountBadge: {
+    backgroundColor: '#090A09',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  stitchTableHeaderCountText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+  },
+  stitchAccountCard: {
+    position: 'relative',
+    backgroundColor: '#171817',
+    borderRadius: 2,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#161716',
+    borderRightColor: '#161716',
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  stitchAccountCardBlocked: {
+    borderColor: THEME.colors.brasa,
+    backgroundColor: 'rgba(226, 112, 58, 0.08)',
+  },
+  stitchCardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  stitchCardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  stitchAvatarBox: {
+    position: 'relative',
+    width: 38,
+    height: 38,
+    borderRadius: 2,
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stitchAvatarBoxBlocked: {
+    backgroundColor: '#1E100D',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
+  },
+  stitchAvatarImg: {
+    width: 24,
+    height: 24,
+  },
+  stitchBtnIconImg: {
+    width: 16,
+    height: 16,
+  },
+  stitchOnlineDot: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5, /* círculo funcional (width/2): indicador de presencia online */
+    backgroundColor: THEME.colors.jade,
+    borderWidth: 1.5,
+    borderColor: '#0D0E0D',
+  },
+  stitchHeaderInfoCol: {
+    flex: 1,
+  },
+  stitchTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  stitchAccountIdText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.3,
+    ...THEME.effects.textShadow,
+  },
+  stitchVipBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
+    backgroundColor: '#26221A',
+  },
+  stitchVipBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#EFD28D',
+  },
+  stitchAccountEmailText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: THEME.colors.textMuted,
+    marginTop: 2,
+  },
+  stitchStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 2,
+    borderWidth: 1,
+  },
+  stitchStatusActive: {
+    backgroundColor: '#0F1F14',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1A4D33',
+    borderBottomColor: '#1A4D33',
+  },
+  stitchStatusOnline: {
+    backgroundColor: '#0F1F14',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1A4D33',
+    borderBottomColor: '#1A4D33',
+  },
+  stitchStatusBlocked: {
+    backgroundColor: '#2A1210',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
+  },
+  stitchStatusText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  stitchDataGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#0E0F0E',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#4C463A',
+    borderBottomColor: '#4C463A',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  stitchDataItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  stitchDataText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#E4E2E0',
+  },
+  stitchActionContainer: {
+    borderTopWidth: 1,
+    borderTopColor: '#2B2C2B',
+    paddingTop: 8,
+  },
+  stitchActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionBtnDetail: {
+    flex: 1.2,
+    height: 36,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#252625',
+    borderWidth: 1,
+    borderColor: '#E0C380',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 4,
+  },
+  actionBtnDetailText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#EFD28D',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  actionBtnWarehouse: {
+    flex: 1,
+    height: 36,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#1F201F',
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 4,
+  },
+  actionBtnWarehouseText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#E4E2E0',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  actionBtnBlock: {
+    flex: 1.1,
+    height: 36,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#2A1616',
+    borderWidth: 1,
+    borderColor: '#7A2E28',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 4,
+  },
+  actionBtnUnblock: {
+    backgroundColor: '#14281E',
+    borderColor: '#1E6B43',
+  },
+  actionBtnBlockText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFB4AB',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  actionBtnUnblockText: {
+    color: '#5DF5B0',
+  },
+  actionBtnDelete: {
+    width: 38,
+    height: 36,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#2A1616',
+    borderWidth: 1,
+    borderColor: '#7A2E28',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /* ================= FIN STITCH 02 ESTILOS ================= */
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -4754,24 +5840,24 @@ const styles = StyleSheet.create({
   floatingAddBtn: {
     width: 38,
     height: 38,
-    borderRadius: 6,
-    backgroundColor: '#241E1A',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#E8C86A',
+    borderWidth: 1,
+    borderColor: '#EFD28D',
     elevation: 4,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 14,
     height: 44,
     marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
   },
   searchInput: {
     flex: 1,
@@ -4788,12 +5874,12 @@ const styles = StyleSheet.create({
   accountCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#191512',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 12,
     marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: '#3D312A',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     elevation: 3,
   },
   accountCardBlocked: {
@@ -4803,17 +5889,17 @@ const styles = StyleSheet.create({
   avatarCircle: {
     width: 38,
     height: 38,
-    borderRadius: 6,
-    backgroundColor: '#241E1A',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.deepForge,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     position: 'relative',
   },
   avatarLetter: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 16,
     fontWeight: '900',
   },
@@ -4821,7 +5907,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   accountIdText: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.5,
@@ -4842,27 +5928,27 @@ const styles = StyleSheet.create({
   editAccountQuickBtn: {
     width: 36,
     height: 36,
-    borderRadius: 6,
-    backgroundColor: '#241E1A',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
   },
   warehouseBoxBtn: {
     width: 36,
     height: 36,
-    borderRadius: 6,
-    backgroundColor: '#241E1A',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
   },
   deleteAccountQuickBtn: {
     width: 36,
     height: 36,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     backgroundColor: 'rgba(255, 82, 82, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -4872,9 +5958,10 @@ const styles = StyleSheet.create({
   vipPillBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    backgroundColor: '#241E1A',
+    borderColor: THEME.colors.borde,
+    backgroundColor: THEME.colors.superficie,
   },
   vipPillText: {
     fontSize: 10,
@@ -4887,15 +5974,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
-    padding: 18,
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: 24,
   },
   detailModalCard: {
-    backgroundColor: '#241E1A',
-    borderRadius: 6,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#6B5533',
-    maxHeight: '90%',
+    padding: 16,
+    maxHeight: '92%',
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
@@ -4904,26 +5989,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 18,
+    marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#3D312A',
+    borderBottomColor: THEME.colors.borde,
   },
   avatarCircleSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 16, // círculo funcional (width/2): avatar inicial de usuario
-    backgroundColor: '#FF5722',
+    width: 34,
+    height: 34,
+    borderRadius: 17, // círculo funcional (width/2): avatar inicial de usuario
+    backgroundColor: THEME.colors.deepForge,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarLetterSmall: {
-    color: '#FFFFFF',
+    color: '#EFD28D',
     fontSize: 15,
     fontWeight: 'bold',
   },
   detailTitle: {
-    color: '#FFFFFF',
+    color: '#E4E2E0',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -4941,12 +6028,12 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   fieldBox: {
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
     minHeight: 44,
     justifyContent: 'center',
   },
@@ -4960,18 +6047,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1.5,
     minHeight: 44,
   },
   statusActive: {
-    backgroundColor: '#1A3324',
-    borderWidth: 1,
+    backgroundColor: '#122417',
     borderColor: '#3FCF8E',
+    borderTopColor: '#7DFCC2',
+    borderBottomColor: '#1F6B47',
   },
   statusBlocked: {
-    backgroundColor: '#3B1A1A',
-    borderWidth: 1,
+    backgroundColor: '#261010',
     borderColor: '#E2703A',
+    borderTopColor: '#FF9E79',
+    borderBottomColor: '#7A2411',
   },
   statusToggleText: {
     fontSize: 14,
@@ -4980,6 +6070,7 @@ const styles = StyleSheet.create({
   detailActionButtonsGrid: {
     gap: 10,
     marginTop: 18,
+    marginBottom: 16,
   },
   detailActionButtonsRow: {
     flexDirection: 'row',
@@ -4987,49 +6078,104 @@ const styles = StyleSheet.create({
   },
   detailBtnPjs: {
     flex: 1,
+    height: 46,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    backgroundColor: '#1F201F',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
     paddingHorizontal: 8,
-    borderRadius: 6,
-    backgroundColor: 'rgba(91, 141, 239, 0.15)',
-    borderWidth: 1,
-    borderColor: '#5B8DEF',
-    minHeight: 44,
-  },
-  detailBtnPjsText: {
-    color: '#5B8DEF',
-    fontSize: 13,
-    fontWeight: 'bold',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
   },
   detailBtnWarehouse: {
     flex: 1,
+    height: 46,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#E0C380',
+    backgroundColor: '#292A29',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
     paddingHorizontal: 8,
-    borderRadius: 6,
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  detailBtnExtWh: {
+    flex: 1,
+    height: 46,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#B58F3C',
-    minHeight: 44,
+    borderColor: '#3FCF8E',
+    backgroundColor: '#14281E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  detailBtnJewels: {
+    flex: 1,
+    height: 46,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#E0C380',
+    backgroundColor: '#292A29',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  detailBtnPjsText: {
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontFamily: THEME.typography.fontTitle,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textShadowColor: 'rgba(0,0,0,0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   detailBtnWarehouseText: {
-    color: '#E8C86A',
-    fontSize: 13,
-    fontWeight: 'bold',
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontFamily: THEME.typography.fontTitle,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textShadowColor: 'rgba(0,0,0,0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   // Estilos Editor de Cuenta
   modalInputBox: {
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#6B5533',
+    backgroundColor: THEME.colors.deepForge,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1.5,
+    borderColor: THEME.colors.borde,
+    borderTopColor: THEME.colors.brightSteel,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -5054,16 +6200,25 @@ const styles = StyleSheet.create({
   vipPillBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#161618',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.fondoRadialTop,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#2A2A2C',
+    borderColor: THEME.colors.borde,
+  },
+  vipPillBtnActive: {
+    backgroundColor: THEME.colors.raisedIron,
+    borderColor: THEME.colors.oroClaro,
+    borderWidth: 1.5,
   },
   vipPillBtnText: {
     color: THEME.colors.textoSecundario,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  vipPillBtnTextActive: {
+    color: '#E4E2E0',
+    fontWeight: '900',
   },
   daysRow: {
     flexDirection: 'row',
@@ -5073,15 +6228,15 @@ const styles = StyleSheet.create({
   quickDayBtn: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    backgroundColor: '#242426',
-    borderRadius: 8,
+    backgroundColor: THEME.colors.fondoRadialTop,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#3A3A3C',
+    borderColor: THEME.colors.borde,
   },
   quickDayText: {
-    color: '#FF9800',
+    color: '#E0C380',
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: '800',
   },
   coinsRow: {
     flexDirection: 'row',
@@ -5089,11 +6244,11 @@ const styles = StyleSheet.create({
   },
   coinCol: {
     flex: 1,
-    backgroundColor: '#121214',
-    borderRadius: 8,
+    backgroundColor: THEME.colors.fondoRadialTop,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#252528',
+    borderColor: THEME.colors.borde,
     alignItems: 'center',
   },
   coinLabel: {
@@ -5110,20 +6265,23 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 2,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: THEME.colors.borde,
   },
   stepBtn: {
-    backgroundColor: '#2C2C2E',
+    backgroundColor: THEME.colors.raisedIron,
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 3,
   },
   saveAccountBtn: {
     backgroundColor: '#3FCF8E',
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -5132,7 +6290,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   saveAccountBtnText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -5141,7 +6299,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2703A',
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -5159,7 +6317,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F44336',
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -5178,7 +6336,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 6, /* círculo funcional (width/2): indicador circular online */
     backgroundColor: THEME.colors.jade,
     borderWidth: 2,
     borderColor: '#1C1C1E',
@@ -5187,7 +6345,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(63, 207, 142, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: 'rgba(63, 207, 142, 0.4)',
   },
@@ -5199,46 +6357,46 @@ const styles = StyleSheet.create({
 
   // Estilos Crear Cuenta
   createInput: {
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 12,
     height: 44,
     minHeight: 44,
     color: '#FFF',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
   },
   vipSelectBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 6,
-    backgroundColor: '#100D0B',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
     minHeight: 44,
   },
   vipSelectBtnActive: {
-    borderColor: '#B58F3C',
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    borderColor: '#EFD28D',
+    backgroundColor: 'rgba(224, 195, 128, 0.15)',
   },
   vipSelectBtnText: {
     color: THEME.colors.textoSecundario,
     fontWeight: '600',
   },
   vipSelectBtnTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
   },
   cancelBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 6,
-    backgroundColor: '#1A1613',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
     minHeight: 44,
   },
   cancelBtnText: {
@@ -5248,16 +6406,16 @@ const styles = StyleSheet.create({
   confirmBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 6,
-    backgroundColor: '#B58F3C',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#EFD28D',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E8C86A',
+    borderColor: '#EFD28D',
     minHeight: 44,
   },
   confirmBtnText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontWeight: 'bold',
   },
 
@@ -5266,7 +6424,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(226, 112, 58, 0.15)',
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: '#E2703A',
     padding: 12,
@@ -5286,7 +6444,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 82, 82, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   retryText: {
     color: '#FF5252',
@@ -5309,13 +6467,13 @@ const styles = StyleSheet.create({
   warehouseModalCard: {
     maxHeight: '94%',
     padding: 14,
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: '#1F201F',
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
   },
   vaultSubtitle: {
-    color: '#B58F3C',
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
@@ -5330,33 +6488,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-    borderColor: '#B58F3C',
+    backgroundColor: 'rgba(224, 195, 128, 0.15)',
+    borderColor: '#EFD28D',
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     minHeight: 38,
   },
   unlockBtnText: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: 'bold',
   },
   vaultTab: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1A1613',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
     marginRight: 6,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    minHeight: 38,
+    borderColor: THEME.colors.borde,
+    minHeight: 48,
     justifyContent: 'center',
   },
   vaultTabActive: {
-    backgroundColor: '#B58F3C',
-    borderColor: '#E8C86A',
+    backgroundColor: '#292A29',
+    borderColor: '#EFD28D',
   },
   vaultTabText: {
     color: THEME.colors.textoSecundario,
@@ -5364,20 +6522,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   vaultTabTextActive: {
-    color: '#100D0B',
+    color: '#EFD28D',
     fontWeight: 'bold',
   },
   vaultStatsCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1A1613',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
     minHeight: 44,
   },
   zenInput: {
@@ -5393,7 +6551,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 152, 0, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   vaultHelpText: {
     color: THEME.colors.textoSecundario,
@@ -5414,7 +6572,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2A2A2C',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
   },
   vaultCloseBtnText: {
@@ -5424,31 +6582,33 @@ const styles = StyleSheet.create({
   },
   vaultSaveBtn: {
     flex: 2,
-    backgroundColor: '#FF5722',
+    backgroundColor: THEME.colors.oroClaro,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: THEME.colors.bordeBrillante,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 6,
   },
   vaultSaveBtnText: {
-    color: '#0D0D0D',
+    color: THEME.colors.textoOscuro,
     fontWeight: 'bold',
     fontSize: 13,
   },
   presetPill: {
     flex: 1,
     paddingVertical: 8,
-    backgroundColor: '#242426',
-    borderRadius: 8,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#3A3A3C',
+    borderColor: THEME.colors.borde,
   },
   presetPillActive: {
-    backgroundColor: 'rgba(255, 87, 34, 0.2)',
-    borderColor: '#FF5722',
+    backgroundColor: 'rgba(232, 200, 106, 0.2)',
+    borderColor: THEME.colors.oroClaro,
   },
   presetPillText: {
     color: THEME.colors.textMuted,
@@ -5456,7 +6616,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   presetPillTextActive: {
-    color: '#FF5722',
+    color: THEME.colors.oroClaro,
     fontWeight: 'bold',
   },
 
@@ -5469,20 +6629,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1.5,
     borderBottomColor: THEME.colors.borde,
     backgroundColor: THEME.colors.superficie,
   },
   whBackBtn: {
-    paddingVertical: 4,
-    paddingRight: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    minHeight: 44,
   },
   whBackBtnText: {
     color: THEME.colors.oroClaro,
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '800',
+  },
+  whHeaderTitleCol: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
   },
   whHeaderTitleRow: {
     flexDirection: 'row',
@@ -5490,19 +6663,146 @@ const styles = StyleSheet.create({
   },
   whHeaderTitle: {
     color: THEME.colors.oroClaro,
-    fontSize: 16,
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 14,
     fontWeight: '900',
-    letterSpacing: 0.4,
+    letterSpacing: 0.6,
+    ...THEME.effects.textShadow,
+  },
+  whS6Badge: {
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    marginLeft: 6,
+  },
+  whS6BadgeText: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  whHeaderSubtitle: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
+  },
+  whHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  whSyncBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  whSyncDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3, /* círculo funcional (width/2): indicador sync baúl */
+    backgroundColor: THEME.colors.jade,
+  },
+  whSyncText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 9,
+    fontWeight: '800',
   },
   whRefreshBtn: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: THEME.shapes.radioEsquina,
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  whSummaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: THEME.colors.superficie,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
+    marginHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  whSummaryColLeft: {
+    flex: 1,
+  },
+  whSummaryColRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  whSummaryLabel: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  whSummaryAccount: {
+    color: THEME.colors.oroClaro,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginTop: 2,
+    ...THEME.effects.textShadow,
+  },
+  whSummaryZen: {
+    color: THEME.colors.jade,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginTop: 2,
+    ...THEME.effects.textShadowSubtle,
+  },
+  whTopTabsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 12,
+    marginBottom: 10,
+    gap: 6,
+  },
+  whTopTabBtn: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    paddingHorizontal: 4,
+  },
+  whTopTabBtnActive: {
+    backgroundColor: '#292A29',
+    borderColor: THEME.colors.oroClaro,
+  },
+  whTopTabText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  whTopTabTextActive: {
+    color: THEME.colors.oroClaro,
+    fontWeight: '900',
   },
   // Items Tab (Captura 1)
   whBannerCard: {
@@ -5785,9 +7085,9 @@ const styles = StyleSheet.create({
   // Bottom Bar & Save Button (Capturas 1, 2)
   whBottomTabsBar: {
     flexDirection: 'row',
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#121312',
     borderTopWidth: 1.5,
-    borderTopColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
     height: 54,
   },
   whBottomTabBtn: {
@@ -5843,11 +7143,11 @@ const styles = StyleSheet.create({
   premiumModalCard: {
     width: '100%',
     maxWidth: 330,
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: '#1F201F',
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 22,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.6,
@@ -5855,7 +7155,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   premiumModalTitle: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 17,
     fontWeight: '800',
   },
@@ -5872,41 +7172,41 @@ const styles = StyleSheet.create({
   },
   // Character section in Account Detail Modal
   charSectionBox: {
-    backgroundColor: '#1A1613',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 12,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
   },
   noCharsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(232, 200, 106, 0.08)',
-    borderRadius: 6,
+    backgroundColor: 'rgba(224, 195, 128, 0.08)',
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
     paddingVertical: 10,
     paddingHorizontal: 12,
     gap: 8,
   },
   noCharsText: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: '500',
   },
   quickCreateCharBtn: {
-    backgroundColor: '#B58F3C',
+    backgroundColor: '#EFD28D',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#E8C86A',
+    borderColor: '#EFD28D',
     minHeight: 44,
     justifyContent: 'center',
   },
   quickCreateCharBtnText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontWeight: '800',
     fontSize: 12,
   },
@@ -5916,30 +7216,32 @@ const styles = StyleSheet.create({
   charChipItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    minHeight: 44,
+    borderColor: THEME.colors.borde,
+    minHeight: 46,
+    elevation: 2,
   },
   charChipName: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: '#E4E2E0',
+    fontWeight: '800',
     fontSize: 13,
   },
   charChipSub: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 11,
     marginTop: 2,
+    fontWeight: '600',
   },
   movingBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1613',
-    borderColor: '#B58F3C',
+    backgroundColor: THEME.colors.superficie,
+    borderColor: '#EFD28D',
     borderWidth: 1.5,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 10,
@@ -5948,7 +7250,7 @@ const styles = StyleSheet.create({
     maxWidth: 380,
   },
   movingBannerTitle: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -5964,7 +7266,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     minHeight: 36,
     justifyContent: 'center',
   },
@@ -5976,10 +7278,10 @@ const styles = StyleSheet.create({
 
   // Warehouse Item Maker Component Styles
   whControlCardBox: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: '#1F201F',
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     padding: 12,
     marginBottom: 12,
   },
@@ -6009,8 +7311,8 @@ const styles = StyleSheet.create({
   whStepBtnSmall: {
     backgroundColor: THEME.colors.superficie,
     borderRadius: THEME.shapes.radioEsquina,
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -6133,14 +7435,14 @@ const styles = StyleSheet.create({
   whHarmonyBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1E1A16',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
   },
   whHarmonyBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
-    borderColor: '#E8C86A',
+    backgroundColor: 'rgba(224, 195, 128, 0.2)',
+    borderColor: '#EFD28D',
   },
   whHarmonyBtnText: {
     color: THEME.colors.textoSecundario,
@@ -6148,20 +7450,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   whHarmonyBtnTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: '800',
   },
   whSocketBtn: {
     paddingHorizontal: 8,
     paddingVertical: 5,
-    borderRadius: 6,
-    backgroundColor: '#1E1A16',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: THEME.colors.borde,
   },
   whSocketBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
-    borderColor: '#E8C86A',
+    backgroundColor: 'rgba(224, 195, 128, 0.2)',
+    borderColor: '#EFD28D',
   },
   whSocketBtnText: {
     color: THEME.colors.textoSecundario,
@@ -6169,7 +7471,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   whSocketBtnTextActive: {
-    color: '#E8C86A',
+    color: '#EFD28D',
     fontWeight: '800',
   },
   vaultExtSubTabBtn: {
@@ -6179,14 +7481,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    borderRadius: 6,
-    backgroundColor: '#1E1A16',
-    borderWidth: 1.2,
-    borderColor: '#6B5533',
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.superficie,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
   },
   vaultExtSubTabBtnActive: {
-    backgroundColor: '#B58F3C',
-    borderColor: '#E8C86A',
+    backgroundColor: '#292A29',
+    borderColor: '#EFD28D',
   },
   vaultExtSubTabText: {
     color: THEME.colors.textoSecundario,
@@ -6194,15 +7496,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   vaultExtSubTabTextActive: {
-    color: '#FFFFFF',
+    color: '#EFD28D',
     fontWeight: '800',
   },
   vaultExtHeroCard: {
-    backgroundColor: '#241E1A',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 12,
-    borderWidth: 1.2,
-    borderColor: '#6B5533',
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     marginBottom: 12,
   },
 
@@ -6213,35 +7515,145 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1E1A16',
-    borderRadius: 6,
-    borderWidth: 1.2,
-    borderColor: '#6B5533',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 10,
-  },
-  muVaultArrowBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: '#241E1A',
-    borderWidth: 1.2,
-    borderColor: '#6B5533',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  muVaultArrowText: {
-    fontSize: 16,
-    color: '#E8C86A',
-    fontWeight: '900',
+    paddingVertical: 10,
+    marginBottom: 8,
   },
   muVaultHeaderTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
-    color: '#E8C86A',
-    letterSpacing: 1,
+    color: '#EFD28D',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
+  },
+  muVaultHeaderSlots: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.5,
+  },
+  muVaultQuickRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 10,
+  },
+  muVaultQuickBtn: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+  },
+  muVaultQuickBtnActive: {
+    backgroundColor: '#292A29',
+    borderColor: THEME.colors.oroClaro,
+  },
+  muVaultQuickText: {
+    color: THEME.colors.textoSecundario,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  muVaultQuickTextActive: {
+    color: THEME.colors.oroClaro,
+    fontWeight: '900',
+  },
+  muVaultPlusQuickBtn: {
+    width: 44,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+  },
+  muVaultPlusQuickText: {
+    color: THEME.colors.oroClaro,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  muVaultGothicBar: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.colors.borde,
+    marginBottom: 10,
+    borderRadius: THEME.shapes.radioEsquina,
+  },
+  muVaultGothicTitle: {
+    color: THEME.colors.oroClaro,
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
+  },
+  muVaultGothicBadge: {
+    color: THEME.colors.arcano,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  muVaultMaxText: {
+    color: THEME.colors.oroClaro,
+    fontSize: 12,
+    fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
+  },
+  muVaultActionGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  muVaultActionPill: {
+    flex: 1,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+  },
+  muVaultActionPillText: {
+    color: THEME.colors.oroClaro,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  muVaultUnlockLockBtn: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(226, 112, 58, 0.1)',
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1.2,
+    borderColor: THEME.colors.amber,
+    paddingHorizontal: 14,
+  },
+  muVaultUnlockLockBtnText: {
+    color: THEME.colors.amber,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   vaultPanelContainer: {
     marginVertical: THEME.shapes.espaciadoBase,
@@ -6323,8 +7735,8 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   muVaultActionBtn: {
-    width: 48,
-    height: 44,
+    width: 52,
+    height: 48,
     borderRadius: THEME.shapes.radioEsquina,
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
@@ -6339,11 +7751,111 @@ const styles = StyleSheet.create({
     color: THEME.colors.oroClaro,
     marginTop: -2,
   },
+  // Banco de Joyas dentro de Warehouse Modal (Stitch 17R)
+  whJewelItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#121312',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 6,
+  },
+  whJewelItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    marginRight: 8,
+  },
+  whJewelIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 2,
+    backgroundColor: '#090A09',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#3A3C38',
+    borderBottomColor: '#3A3C38',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whJewelNameCol: {
+    flex: 1,
+  },
+  whJewelNameText: {
+    color: THEME.colors.texto,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  whJewelCountText: {
+    color: THEME.colors.oroClaro,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  whJewelStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  whJewelStepBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 2,
+    backgroundColor: '#1C1D1C',
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whJewelStepBtnText: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  whJewelStepBtnPlus: {
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
+    backgroundColor: '#26221A',
+  },
+  whJewelStepBtnTextPlus: {
+    color: THEME.colors.oroClaro,
+  },
+  whJewelInput: {
+    width: 56,
+    height: 48,
+    borderRadius: 2,
+    backgroundColor: '#090A09',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    color: '#EFD28D',
+    fontSize: 14,
+    fontWeight: '900',
+    textAlign: 'center',
+    paddingHorizontal: 2,
+  },
   whLockWarningBanner: {
     backgroundColor: 'rgba(255, 179, 0, 0.16)',
     borderColor: '#FFB300',
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     marginHorizontal: 12,
     marginTop: 6,
     marginBottom: 6,
@@ -6361,7 +7873,7 @@ const styles = StyleSheet.create({
   },
 
   // ==========================================
-  // ESTILOS BANCO DE JOYAS (SEASON 6 PIEDRA & ORO)
+  // ESTILOS BANCO DE JOYAS (STITCH APPROVED IRONFORGE)
   // ==========================================
   jbModalOverlay: {
     flex: 1,
@@ -6373,12 +7885,7 @@ const styles = StyleSheet.create({
   jbModalContent: {
     width: '100%',
     maxWidth: 520,
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: THEME.colors.oroClaro,
     padding: 16,
-    elevation: 8,
   },
   jbModalHeader: {
     flexDirection: 'row',
@@ -6401,12 +7908,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   jbCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.casillaFondo,
+    width: 36,
+    height: 36,
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -6425,11 +7935,14 @@ const styles = StyleSheet.create({
   },
   jbQuickPill: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.casillaFondo,
+    paddingVertical: 5,
+    borderRadius: 2,
+    backgroundColor: '#1C1D1C',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   jbQuickPillText: {
     color: THEME.colors.texto,
@@ -6443,10 +7956,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: 6,
+    backgroundColor: '#121312',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
@@ -6460,7 +7976,13 @@ const styles = StyleSheet.create({
   jbIconWrap: {
     width: 28,
     height: 28,
-    borderRadius: 6,
+    borderRadius: 2,
+    backgroundColor: '#090A09',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#3A3C38',
+    borderBottomColor: '#3A3C38',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -6476,29 +7998,36 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   jbStepBtn: {
-    minWidth: 28,
-    height: 28,
+    minWidth: 32,
+    height: 32,
     paddingHorizontal: 4,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.cardElevated,
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     alignItems: 'center',
     justifyContent: 'center',
   },
   jbStepBtnText: {
-    color: THEME.colors.textoSecundario,
+    color: '#E4E2E0',
     fontSize: 11,
     fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
   },
   jbInput: {
     width: 52,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.fondo,
+    height: 30,
+    borderRadius: 2,
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.oroClaro,
-    color: THEME.colors.oroClaro,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    color: '#EFD28D',
     fontSize: 13,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -6518,7 +8047,7 @@ const styles = StyleSheet.create({
   jbCancelBtn: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
@@ -6534,12 +8063,81 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     backgroundColor: THEME.colors.oroClaro,
   },
   jbSaveBtnText: {
-    color: '#1A1612',
+    color: '#0D0E0D',
     fontSize: 13,
     fontWeight: 'bold',
   },
+  detailBtnWrap: {
+    flex: 1,
+    height: 42,
+    overflow: 'hidden',
+    borderRadius: THEME.shapes.radioEsquina,
+  },
+  detailBtnImgBg: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 6,
+  },
+  detailBtnText: {
+    color: '#E4E2E0',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  detailModalBtn: {
+    flex: 1,
+    height: 42,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#1F201F',
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 6,
+  },
+  detailModalBtnCancel: {
+    flex: 1,
+    height: 44,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#1F201F',
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailModalBtnSave: {
+    flex: 1,
+    height: 44,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#252625',
+    borderWidth: 1,
+    borderColor: '#E0C380',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  detailBtnTextCancel: {
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  detailBtnTextSave: {
+    color: '#EFD28D',
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
+  },
 });
+

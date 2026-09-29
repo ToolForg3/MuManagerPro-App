@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../../components/ui/MuIcon';
 import { THEME } from '../../../constants/theme';
+import { Panel, MuButton } from '../../../components/ui';
+import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { PkPlayerEntry } from '../../../types/admin';
 
@@ -30,39 +32,44 @@ export const PkTab: React.FC<PkTabProps> = ({
     <ErrorBoundary tabName="Limpieza de PK">
       <View style={styles.tabContent}>
         {/* Action Banner */}
-        <View style={styles.bannerCard}>
+        <Panel variant="box" style={styles.bannerCard}>
+          <MuCornerOrnaments size={12} />
           <View style={styles.bannerHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MaterialCommunityIcons name="skull" size={24} color={THEME.colors.brasa} />
+              <MuIcon name="sword" size={22} color={THEME.colors.brasa} />
               <Text style={styles.bannerTitle}>
                 Asesinos Activos ({pkList.length})
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.refreshBtn}
+            <MuButton
+              titulo="Actualizar"
+              icono="refresh"
+              variante="primary"
               onPress={loadPkList}
-            >
-              <MaterialCommunityIcons name="refresh" size={16} color={THEME.colors.oroClaro} />
-              <Text style={styles.refreshBtnText}>Actualizar</Text>
-            </TouchableOpacity>
+              cargando={loadingPk}
+              disabled={loadingPk}
+              compacto={true}
+              altura={36}
+            />
           </View>
           <Text style={styles.bannerDesc}>
             Limpia el estado PK de personajes individuales o ejecuta un perdón masivo para todo el servidor restableciendo PkLevel a 3 (Común).
           </Text>
 
-          <TouchableOpacity
-            style={styles.clearAllBtn}
+          <MuButton
+            titulo="Limpiar Todos los Asesinos (Server)"
+            icono="sword"
+            variante="danger"
             onPress={() => handleClearPkTab()}
             disabled={pkList.length === 0}
-          >
-            <MaterialCommunityIcons name="sword-cross" size={18} color={THEME.colors.brasa} />
-            <Text style={styles.clearAllBtnText}>Limpiar Todos los Asesinos (Server)</Text>
-          </TouchableOpacity>
-        </View>
+            altura={44}
+            style={{ marginTop: 8 }}
+          />
+        </Panel>
 
         {/* Search Input */}
         <View style={styles.inputWrap}>
-          <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textoSecundario} />
+          <MuIcon name="tools" size={18} />
           <TextInput
             style={styles.textInput}
             placeholder="Buscar por PJ o Cuenta..."
@@ -72,7 +79,7 @@ export const PkTab: React.FC<PkTabProps> = ({
           />
           {pkSearch.length > 0 && (
             <TouchableOpacity onPress={() => setPkSearch('')}>
-              <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
+              <MuIcon name="close" size={16} />
             </TouchableOpacity>
           )}
         </View>
@@ -81,7 +88,7 @@ export const PkTab: React.FC<PkTabProps> = ({
           <ActivityIndicator color={THEME.colors.oroClaro} style={{ marginVertical: 30 }} />
         ) : pkList.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <MaterialCommunityIcons name="shield-check" size={48} color={THEME.colors.jade} />
+            <MuIcon name="check" size={44} />
             <Text style={styles.emptyTitle}>
               ¡Servidor Libre de Asesinos!
             </Text>
@@ -112,7 +119,8 @@ export const PkTab: React.FC<PkTabProps> = ({
                 const className = classInfo?.name || 'Desconocido';
 
                 return (
-                  <View key={`pk_${charName}_${idx}`} style={styles.card}>
+                  <Panel variant="box" key={`pk_${charName}_${idx}`} style={styles.card}>
+                    <MuCornerOrnaments size={8} />
                     <View style={styles.cardRow}>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -134,15 +142,16 @@ export const PkTab: React.FC<PkTabProps> = ({
                         </View>
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.cleanSingleBtn}
+                      <MuButton
+                        titulo="Limpiar PK"
+                        icono="check"
+                        variante="success"
                         onPress={() => handleClearPkTab(charName)}
-                      >
-                        <MaterialCommunityIcons name="check-circle-outline" size={16} color={THEME.colors.jade} />
-                        <Text style={styles.cleanSingleBtnText}>Limpiar PK</Text>
-                      </TouchableOpacity>
+                        compacto={true}
+                        altura={32}
+                      />
                     </View>
-                  </View>
+                  </Panel>
                 );
               })}
           </View>
@@ -155,14 +164,10 @@ export const PkTab: React.FC<PkTabProps> = ({
 const styles = StyleSheet.create({
   tabContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   bannerCard: {
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.borde,
-    borderWidth: 1,
-    borderRadius: 6,
-    padding: 14,
+    marginBottom: 12,
   },
   bannerHeader: {
     flexDirection: 'row',
@@ -190,12 +195,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#191512',
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#1E1F1E',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   refreshBtnText: {
     color: THEME.colors.oroClaro,
@@ -207,24 +215,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.brasa,
+    backgroundColor: '#2A1314',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 10,
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
   },
   clearAllBtnText: {
-    color: THEME.colors.brasa,
+    color: '#FFB4AB',
     fontSize: 13,
     fontWeight: 'bold',
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#191512',
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     paddingHorizontal: 12,
     height: 44,
     marginVertical: 12,
@@ -253,11 +268,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   card: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 14,
+    marginBottom: 10,
   },
   cardRow: {
     flexDirection: 'row',
@@ -273,7 +284,7 @@ const styles = StyleSheet.create({
   badgeWrap: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   badgeText: {
     fontSize: 10,
@@ -300,10 +311,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.jade,
+    backgroundColor: '#15241C',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1E5A3E',
+    borderBottomColor: '#1E5A3E',
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },

@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { MuIcon } from '../../../components/ui/MuIcon';
 import { THEME } from '../../../constants/theme';
+import { STITCH_ASSETS } from '../../../constants/stitchAssets';
+import { Panel, MuButton } from '../../../components/ui';
+import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 interface ParsersTabProps {
@@ -21,18 +24,20 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
     <ErrorBoundary tabName="Parsers de Logs">
       <View style={styles.tabContent}>
         {/* Memory status card */}
-        <View style={styles.statsCard}>
+        <Panel variant="box" style={styles.statsCard}>
+          <MuCornerOrnaments size={10} />
           <View style={styles.statsIconWrap}>
-            <MaterialCommunityIcons name="database" size={28} color={THEME.colors.primaryOrange} />
+            <MuIcon name="database" size={28} color={THEME.colors.primaryOrange} />
           </View>
           <View style={styles.statsInfo}>
             <Text style={styles.statsNumber}>{itemsCount}</Text>
             <Text style={styles.statsLabel}>{t('itemsLoadedCount')}</Text>
           </View>
-        </View>
+        </Panel>
 
         {/* Configure Items Section */}
-        <View style={styles.section}>
+        <Panel variant="box" style={styles.section}>
+          <MuCornerOrnaments size={12} />
           <Text style={styles.sectionTitle}>{t('configureItems')}</Text>
           <Text style={styles.sectionDesc}>
             Carga los archivos .txt de la carpeta Data/Item de tu servidor de MU Online para sincronizar nombres, tamaños y atributos exactos:
@@ -40,73 +45,102 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
 
           {/* Item.txt */}
           <TouchableOpacity
-            style={styles.fileButton}
+            style={{ borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}
             onPress={() => onPickAndParseFile('item')}
+            activeOpacity={0.8}
           >
-            <View style={styles.fileBtnLeft}>
-              <MaterialCommunityIcons name="file-document-outline" size={24} color={THEME.colors.primaryOrange} />
-              <View style={styles.fileInfo}>
-                <Text style={styles.fileTitle}>Item.txt</Text>
-                <Text style={styles.fileSub}>Base de datos principal de armas, armaduras y joyas</Text>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.fileButton}
+              resizeMode="stretch"
+            >
+              <View style={styles.fileBtnLeft}>
+                <MuIcon name="file-document-outline" size={24} color={THEME.colors.primaryOrange} />
+                <View style={styles.fileInfo}>
+                  <Text style={styles.fileTitle}>Item.txt</Text>
+                  <Text style={styles.fileSub}>Base de datos principal de armas, armaduras y joyas</Text>
+                </View>
               </View>
-            </View>
-            <MaterialCommunityIcons name="upload" size={20} color={THEME.colors.textoSecundario} />
+              <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
+            </ImageBackground>
           </TouchableOpacity>
 
           {/* 380ItemType.txt */}
           <TouchableOpacity
-            style={styles.fileButton}
+            style={{ borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}
             onPress={() => onPickAndParseFile('380')}
+            activeOpacity={0.8}
           >
-            <View style={styles.fileBtnLeft}>
-              <MaterialCommunityIcons name="numeric-3-circle-outline" size={24} color={THEME.colors.item380} />
-              <View style={styles.fileInfo}>
-                <Text style={styles.fileTitle}>380ItemType.txt</Text>
-                <Text style={styles.fileSub}>Opciones adicionales de nivel 380 (PvP)</Text>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.fileButton}
+              resizeMode="stretch"
+            >
+              <View style={styles.fileBtnLeft}>
+                <MuIcon name="numeric-3-circle-outline" size={24} color={THEME.colors.item380} />
+                <View style={styles.fileInfo}>
+                  <Text style={styles.fileTitle}>380ItemType.txt</Text>
+                  <Text style={styles.fileSub}>Opciones adicionales de nivel 380 (PvP)</Text>
+                </View>
               </View>
-            </View>
-            <MaterialCommunityIcons name="upload" size={20} color={THEME.colors.textoSecundario} />
+              <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
+            </ImageBackground>
           </TouchableOpacity>
 
           {/* SocketItemType.txt */}
           <TouchableOpacity
-            style={styles.fileButton}
+            style={{ borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}
             onPress={() => onPickAndParseFile('socket')}
+            activeOpacity={0.8}
           >
-            <View style={styles.fileBtnLeft}>
-              <MaterialCommunityIcons name="hexagon-multiple-outline" size={24} color={THEME.colors.itemSocket} />
-              <View style={styles.fileInfo}>
-                <Text style={styles.fileTitle}>SocketItemType.txt</Text>
-                <Text style={styles.fileSub}>Ítems con ranuras para Seeds y Spheres</Text>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.fileButton}
+              resizeMode="stretch"
+            >
+              <View style={styles.fileBtnLeft}>
+                <MuIcon name="hexagon-multiple-outline" size={24} color={THEME.colors.itemSocket} />
+                <View style={styles.fileInfo}>
+                  <Text style={styles.fileTitle}>SocketItemType.txt</Text>
+                  <Text style={styles.fileSub}>Ítems con ranuras para Seeds y Spheres</Text>
+                </View>
               </View>
-            </View>
-            <MaterialCommunityIcons name="upload" size={20} color={THEME.colors.textoSecundario} />
+              <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
+            </ImageBackground>
           </TouchableOpacity>
 
           {/* SetItemType.txt */}
           <TouchableOpacity
-            style={styles.fileButton}
+            style={{ borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}
             onPress={() => onPickAndParseFile('set')}
+            activeOpacity={0.8}
           >
-            <View style={styles.fileBtnLeft}>
-              <MaterialCommunityIcons name="shield-star-outline" size={24} color={THEME.colors.itemAncient} />
-              <View style={styles.fileInfo}>
-                <Text style={styles.fileTitle}>SetItemType.txt</Text>
-                <Text style={styles.fileSub}>Ítems Ancient y sets de temporada</Text>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.fileButton}
+              resizeMode="stretch"
+            >
+              <View style={styles.fileBtnLeft}>
+                <MuIcon name="shield-star-outline" size={24} color={THEME.colors.itemAncient} />
+                <View style={styles.fileInfo}>
+                  <Text style={styles.fileTitle}>SetItemType.txt</Text>
+                  <Text style={styles.fileSub}>Ítems Ancient y sets de temporada</Text>
+                </View>
               </View>
-            </View>
-            <MaterialCommunityIcons name="upload" size={20} color={THEME.colors.textoSecundario} />
+              <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
+            </ImageBackground>
           </TouchableOpacity>
 
           {/* Reset to defaults button */}
-          <TouchableOpacity
-            style={styles.resetButton}
+          <MuButton
+            titulo="Restaurar Catálogo Predeterminado"
+            icono="refresh"
+            variante="secondary"
             onPress={onResetDefaults}
-          >
-            <MaterialCommunityIcons name="refresh" size={20} color={THEME.colors.textoSecundario} />
-            <Text style={styles.resetButtonText}>Restaurar Catálogo Predeterminado</Text>
-          </TouchableOpacity>
-        </View>
+            altura={44}
+            style={{ marginTop: 8 }}
+          />
+        </Panel>
       </View>
     </ErrorBoundary>
   );
@@ -115,23 +149,23 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
 const styles = StyleSheet.create({
   tabContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.superficie,
-    padding: 16,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     marginBottom: 16,
   },
   statsIconWrap: {
     width: 48,
     height: 48,
-    borderRadius: 6,
-    backgroundColor: 'rgba(226, 112, 58, 0.15)',
+    borderRadius: 2,
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#4C463A',
+    borderBottomColor: '#4C463A',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -151,11 +185,6 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   section: {
-    backgroundColor: THEME.colors.superficie,
-    padding: 16,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     marginBottom: 16,
   },
   sectionTitle: {
@@ -179,12 +208,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#191512',
     padding: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    marginBottom: 10,
+    minHeight: 52,
   },
   fileBtnLeft: {
     flexDirection: 'row',
@@ -213,11 +238,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#191512',
-    paddingVertical: 12,
-    borderRadius: 6,
+    backgroundColor: '#1E1F1E',
+    minHeight: 48,
+    height: 48,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     marginTop: 6,
     gap: 8,
   },

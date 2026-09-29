@@ -8,10 +8,11 @@ import {
   ScrollView,
   Switch,
   TextInput,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../common/GothicAlert';
 import * as Clipboard from 'expo-clipboard';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
 import { ParsedItem } from '../../types/item';
 import { MuItemParser } from '../../services/parser/muItemParser';
@@ -30,6 +31,9 @@ import {
 } from '../../constants/ancientCatalog';
 import { ItemDatabase } from '../../services/parser/itemDatabase';
 import { ItemImage } from '../common/ItemImage';
+import { Panel } from '../ui/Panel';
+import { MuButton } from '../ui/MuButton';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 import {
   decodeSocketByte,
@@ -191,7 +195,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   return (
     <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <Panel style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleContainer}>
@@ -203,7 +207,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-              <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
+              <MuIcon name="close" size={20} />
             </TouchableOpacity>
           </View>
 
@@ -243,8 +247,8 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                   </View>
                 )}
                 {enableSockets && (
-                  <View style={[styles.pill, { backgroundColor: 'rgba(232,200,106,0.2)' }]}>
-                    <Text style={[styles.pillText, { color: '#E8C86A' }]}>Sockets</Text>
+                  <View style={[styles.pill, { backgroundColor: 'rgba(224, 195, 128, 0.2)' }]}>
+                    <Text style={[styles.pillText, { color: '#E0C380' }]}>Sockets</Text>
                   </View>
                 )}
               </View>
@@ -260,27 +264,48 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 {isEditing ? (
                   <View style={styles.stepper}>
                     <TouchableOpacity
-                      style={styles.stepBtn}
+                      style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() =>
                         setEditedItem({ ...editedItem, level: Math.max(0, editedItem.level - 1), isModified: true })
                       }
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepBtnText}>-</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepBtnText}>-</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <Text style={styles.stepperVal}>+{editedItem.level}</Text>
                     <TouchableOpacity
-                      style={styles.stepBtn}
+                      style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() =>
                         setEditedItem({ ...editedItem, level: Math.min(15, editedItem.level + 1), isModified: true })
                       }
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepBtnText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepBtnText}>+</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.maxBtn}
+                      style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                       onPress={() => setEditedItem({ ...editedItem, level: 15, isModified: true })}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.maxBtnText}>MAX</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeActive}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.maxBtnText}>MAX</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -294,27 +319,48 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 {isEditing ? (
                   <View style={styles.stepper}>
                     <TouchableOpacity
-                      style={styles.stepBtn}
+                      style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() =>
                         setEditedItem({ ...editedItem, option: Math.max(0, editedItem.option - 1), isModified: true })
                       }
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepBtnText}>-</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepBtnText}>-</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <Text style={styles.stepperVal}>+{editedItem.option * 4}</Text>
                     <TouchableOpacity
-                      style={styles.stepBtn}
+                      style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() =>
                         setEditedItem({ ...editedItem, option: Math.min(7, editedItem.option + 1), isModified: true })
                       }
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepBtnText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepBtnText}>+</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.maxBtn}
+                      style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                       onPress={() => setEditedItem({ ...editedItem, option: 7, isModified: true })}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.maxBtnText}>MAX</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeActive}
+                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.maxBtnText}>MAX</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -329,7 +375,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                   {isEditing ? (
                     <View style={styles.stepper}>
                       <TouchableOpacity
-                        style={styles.stepBtn}
+                        style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() =>
                           setEditedItem({
                             ...editedItem,
@@ -337,8 +383,15 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                             isModified: true,
                           })
                         }
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.stepBtnText}>-</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.stepBtnText}>-</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       <TextInput
                         style={styles.numInput}
@@ -353,7 +406,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                         }
                       />
                       <TouchableOpacity
-                        style={styles.stepBtn}
+                        style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                         onPress={() =>
                           setEditedItem({
                             ...editedItem,
@@ -361,14 +414,28 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                             isModified: true,
                           })
                         }
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.stepBtnText}>+</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.stepBtnText}>+</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.maxBtn}
+                        style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                         onPress={() => setEditedItem({ ...editedItem, durability: 255, isModified: true })}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.maxBtnText}>MAX</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeActive}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.maxBtnText}>MAX</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -378,36 +445,39 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
                 {isEditing && (
                   <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'flex-end', marginTop: 4 }}>
-                    {[1, 10, 30, 50, 100, 255].map((qtyVal) => (
-                      <TouchableOpacity
-                        key={`dur_chip_${qtyVal}`}
-                        style={{
-                          backgroundColor: editedItem.durability === qtyVal ? THEME.colors.primaryOrange : '#202028',
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                          borderRadius: 4,
-                          borderWidth: 1,
-                          borderColor: editedItem.durability === qtyVal ? THEME.colors.primaryOrange : '#38384A',
-                        }}
-                        onPress={() =>
-                          setEditedItem({
-                            ...editedItem,
-                            durability: qtyVal,
-                            isModified: true,
-                          })
-                        }
-                      >
-                        <Text
-                          style={{
-                            color: editedItem.durability === qtyVal ? '#FFF' : THEME.colors.textoSecundario,
-                            fontSize: 10,
-                            fontWeight: 'bold',
-                          }}
+                    {[1, 10, 30, 50, 100, 255].map((qtyVal) => {
+                      const isAct = editedItem.durability === qtyVal;
+                      return (
+                        <TouchableOpacity
+                          key={`dur_chip_${qtyVal}`}
+                          style={{ height: 28, borderRadius: 2, overflow: 'hidden' }}
+                          onPress={() =>
+                            setEditedItem({
+                              ...editedItem,
+                              durability: qtyVal,
+                              isModified: true,
+                            })
+                          }
+                          activeOpacity={0.7}
                         >
-                          {qtyVal === 255 ? 'x255' : `x${qtyVal}`}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <ImageBackground
+                            source={isAct ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ height: '100%', paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text
+                              style={{
+                                color: isAct ? THEME.colors.oroClaro : THEME.colors.textoSecundarioLuminoso,
+                                fontSize: 10,
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {qtyVal === 255 ? 'x255' : `x${qtyVal}`}
+                            </Text>
+                          </ImageBackground>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 )}
               </View>
@@ -492,7 +562,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                           minWidth: '46%',
                           paddingVertical: 10,
                           paddingHorizontal: 8,
-                          borderRadius: 8,
+                          borderRadius: 2,
                           borderWidth: 1.5,
                           borderColor: isSelected ? fen.color : '#333338',
                           backgroundColor: isSelected ? `${fen.color}22` : '#18181B',
@@ -517,11 +587,31 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 <Text style={styles.sectionHeading}>OPCIONES EXCELENTES</Text>
                 {isEditing && (
                   <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <TouchableOpacity style={styles.quickActionBtn} onPress={handleSetFullExc}>
-                      <Text style={styles.quickActionBtnText}>Full Exc</Text>
+                    <TouchableOpacity
+                      style={{ height: 32, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={handleSetFullExc}
+                      activeOpacity={0.7}
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeActive}
+                        style={{ height: '100%', paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.quickActionBtnText, { color: THEME.colors.oroClaro, fontWeight: '900' }]}>Full Exc</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.quickActionBtn} onPress={handleClearExc}>
-                      <Text style={styles.quickActionBtnText}>Limpiar</Text>
+                    <TouchableOpacity
+                      style={{ height: 32, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={handleClearExc}
+                      activeOpacity={0.7}
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ height: '100%', paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.quickActionBtnText}>Limpiar</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -533,23 +623,30 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                   return (
                     <TouchableOpacity
                       key={opt.bit}
-                      style={[styles.excChip, isChecked && styles.excChipActive]}
+                      style={{ minHeight: 44, borderRadius: 2, overflow: 'hidden' }}
                       disabled={!isEditing}
                       onPress={() => toggleExcBit(opt.bit)}
+                      activeOpacity={0.7}
                     >
-                      <MaterialCommunityIcons
-                        name={isChecked ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                        size={18}
-                        color={isChecked ? THEME.colors.accentGreenBright : THEME.colors.textMuted}
-                      />
-                      <Text
-                        style={[
-                          styles.excChipText,
-                          isChecked && { color: THEME.colors.accentGreenBright, fontWeight: '600' },
-                        ]}
+                      <ImageBackground
+                        source={isChecked ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8 }}
+                        resizeMode="stretch"
                       >
-                        {opt.name}
-                      </Text>
+                        {isChecked ? (
+                          <MuIcon name="check" size={16} color={THEME.colors.oroClaro} />
+                        ) : (
+                          <View style={{ width: 16, height: 16, borderRadius: 2, borderWidth: 1, borderColor: '#5A5242', backgroundColor: '#090A09' }} />
+                        )}
+                        <Text
+                          style={[
+                            styles.excChipText,
+                            isChecked && { color: THEME.colors.oroClaro, fontWeight: '800' },
+                          ]}
+                        >
+                          {opt.name}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
@@ -574,7 +671,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                         isModified: true,
                       });
                     }}
-                    trackColor={{ false: '#332B24', true: '#6B5533' }}
+                    trackColor={{ false: THEME.colors.casillaFondo, true: THEME.colors.borde }}
                     thumbColor={enableSockets ? THEME.colors.oroClaro : THEME.colors.textMuted}
                   />
                 )}
@@ -591,7 +688,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     return (
                       <View key={`socket_view_${sIdx}`} style={styles.socketDisplayRow}>
                         <Text style={styles.socketDisplayIndex}>Entrada {sIdx + 1}:</Text>
-                        <Text style={[styles.socketDisplayText, sockInfo.hasSeed && { color: '#E8C86A' }]}>
+                        <Text style={[styles.socketDisplayText, sockInfo.hasSeed && { color: '#E0C380' }]}>
                           {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                         </Text>
                       </View>
@@ -611,10 +708,10 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     const currentOptions = getQuickSocketOptions(currentLvl);
 
                     return (
-                      <View key={`socket_modal_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(255,255,255,0.02)', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#2A241E' }}>
+                      <View key={`socket_modal_${sIdx}`} style={{ gap: 6, backgroundColor: 'rgba(255,255,255,0.02)', padding: 8, borderRadius: 2, borderWidth: 1, borderColor: '#4C463A' }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Text style={styles.socketLabel}>Slot #{sIdx + 1}:</Text>
-                          <Text style={{ fontSize: 11, color: '#E8C86A', fontWeight: '700' }}>
+                          <Text style={{ fontSize: 11, color: '#E0C380', fontWeight: '700' }}>
                             {sockInfo.hasSeed ? sockInfo.fullDescription : sockInfo.label}
                           </Text>
                         </View>
@@ -627,14 +724,8 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                             return (
                               <TouchableOpacity
                                 key={`lvl_${sIdx}_${sl.level}`}
-                                style={{
-                                  paddingHorizontal: 7,
-                                  paddingVertical: 2,
-                                  borderRadius: 4,
-                                  backgroundColor: isLvlActive ? '#E8C86A' : '#1E1A16',
-                                  borderWidth: 1,
-                                  borderColor: isLvlActive ? '#E8C86A' : '#3E342B',
-                                }}
+                                style={{ height: 26, borderRadius: 2, overflow: 'hidden' }}
+                                activeOpacity={0.7}
                                 onPress={() => {
                                   const updatedLevels = [...socketLevels];
                                   updatedLevels[sIdx] = sl.level;
@@ -652,13 +743,19 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                                   }
                                 }}
                               >
-                                <Text style={{
-                                  fontSize: 10,
-                                  fontWeight: 'bold',
-                                  color: isLvlActive ? '#120F0D' : '#C5B5A5',
-                                }}>
-                                  {sl.badge}
-                                </Text>
+                                <ImageBackground
+                                  source={isLvlActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                  style={{ height: '100%', paddingHorizontal: 7, alignItems: 'center', justifyContent: 'center' }}
+                                  resizeMode="stretch"
+                                >
+                                  <Text style={{
+                                    fontSize: 10,
+                                    fontWeight: 'bold',
+                                    color: isLvlActive ? THEME.colors.oroClaro : '#C5B5A5',
+                                  }}>
+                                    {sl.badge}
+                                  </Text>
+                                </ImageBackground>
                               </TouchableOpacity>
                             );
                           })}
@@ -715,7 +812,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionHeading}>OPCIONES ANCIENT</Text>
                 {editedItem.isAncient && (
-                  <View style={[{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1 }, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.itemAncient }]}>
+                  <View style={[{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 2, borderWidth: 1 }, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.itemAncient }]}>
                     <Text style={{ fontSize: 10, color: THEME.colors.itemAncient, fontWeight: 'bold' }}>
                       {editedItem.ancientSetName || 'ANCIENT'} (+{decodeAncientByte(editedItem.ancientOption).staminaBonus} Stam)
                     </Text>
@@ -724,7 +821,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               </View>
 
               {!isItemAncientEligible(editedItem.group, editedItem.index) ? (
-                <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#333' }}>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 2, borderWidth: 1, borderColor: '#333' }}>
                   <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>
                     ℹ️ Esta pieza ({editedItem.name}) no posee ningún set Ancient oficial en Season 6.
                   </Text>
@@ -759,14 +856,9 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                   <View style={styles.ancientRow}>
                     {/* Botón Normal */}
                     <TouchableOpacity
-                      style={[
-                        styles.ancientBtn,
-                        editedItem.ancientOption === 0 && {
-                          borderColor: THEME.colors.primaryOrange,
-                          backgroundColor: 'rgba(255,102,0,0.15)',
-                        },
-                      ]}
+                      style={{ borderRadius: 2, overflow: 'hidden' }}
                       disabled={!isEditing}
+                      activeOpacity={0.7}
                       onPress={() => {
                         const baseDef = ItemDatabase.findItem(editedItem.group, editedItem.index);
                         setEditedItem({
@@ -781,14 +873,20 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                         });
                       }}
                     >
-                      <Text
-                        style={[
-                          styles.ancientBtnText,
-                          editedItem.ancientOption === 0 && { color: THEME.colors.primaryOrange, fontWeight: 'bold' },
-                        ]}
+                      <ImageBackground
+                        source={editedItem.ancientOption === 0 ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
                       >
-                        Normal (Sin Ancient)
-                      </Text>
+                        <Text
+                          style={[
+                            styles.ancientBtnText,
+                            editedItem.ancientOption === 0 && { color: THEME.colors.oroClaro, fontWeight: 'bold' },
+                          ]}
+                        >
+                          Normal (Sin Ancient)
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
 
                     {/* Sets específicos disponibles para este item */}
@@ -798,14 +896,9 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                       return (
                         <TouchableOpacity
                           key={`anc_set_${anc.tier}_${anc.setId}`}
-                          style={[
-                            styles.ancientBtn,
-                            isSelected && {
-                              borderColor: THEME.colors.itemAncient,
-                              backgroundColor: 'rgba(91, 141, 239, 0.15)',
-                            },
-                          ]}
+                          style={{ borderRadius: 2, overflow: 'hidden' }}
                           disabled={!isEditing}
+                          activeOpacity={0.7}
                           onPress={() => {
                             const currentStam = currentDecoded.staminaBonus === 10 ? 10 : 5;
                             const newByte8 = encodeAncientByte(anc.tier, currentStam);
@@ -824,14 +917,20 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                             });
                           }}
                         >
-                          <Text
-                            style={[
-                              styles.ancientBtnText,
-                              isSelected && { color: THEME.colors.itemAncient, fontWeight: 'bold' },
-                            ]}
+                          <ImageBackground
+                            source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
                           >
-                            {anc.name} (Tier {anc.tier})
-                          </Text>
+                            <Text
+                              style={[
+                                styles.ancientBtnText,
+                                isSelected && { color: THEME.colors.oroClaro, fontWeight: 'bold' },
+                              ]}
+                            >
+                              {anc.name} (Tier {anc.tier})
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -839,7 +938,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
                   {/* Stamina Bonus Selector si el ítem es Ancient */}
                   {editedItem.isAncient && (
-                    <View style={{ marginTop: 10, padding: 8, backgroundColor: 'rgba(91, 141, 239, 0.05)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(91, 141, 239, 0.2)' }}>
+                    <View style={{ marginTop: 10, padding: 8, backgroundColor: 'rgba(91, 141, 239, 0.05)', borderRadius: 2, borderWidth: 1, borderColor: 'rgba(91, 141, 239, 0.2)' }}>
                       <Text style={{ fontSize: 11, color: THEME.colors.itemAncient, fontWeight: 'bold', marginBottom: 6 }}>
                         Bonificación de Atributo Ancient (Stamina):
                       </Text>
@@ -850,18 +949,9 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                           return (
                             <TouchableOpacity
                               key={`stam_${bonus}`}
-                              style={[
-                                {
-                                  flex: 1,
-                                  paddingVertical: 6,
-                                  alignItems: 'center',
-                                  borderRadius: 6,
-                                  borderWidth: 1,
-                                  borderColor: isSelBonus ? THEME.colors.itemAncient : '#444',
-                                  backgroundColor: isSelBonus ? 'rgba(91, 141, 239, 0.2)' : 'transparent',
-                                },
-                              ]}
+                              style={{ flex: 1, height: 34, borderRadius: 2, overflow: 'hidden' }}
                               disabled={!isEditing}
+                              activeOpacity={0.7}
                               onPress={() => {
                                 const newByte8 = encodeAncientByte(currentDecoded.tier || 1, bonus);
                                 const info = getAncientInfo(editedItem.group, editedItem.index, newByte8);
@@ -875,9 +965,15 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                                 });
                               }}
                             >
-                              <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.itemAncient : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
-                                +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
-                              </Text>
+                              <ImageBackground
+                                source={isSelBonus ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                                resizeMode="stretch"
+                              >
+                                <Text style={{ fontSize: 11, color: isSelBonus ? THEME.colors.oroClaro : THEME.colors.textoSecundario, fontWeight: isSelBonus ? 'bold' : 'normal' }}>
+                                  +{bonus} Stamina ({bonus === 5 ? 'Standard' : 'Max'})
+                                </Text>
+                              </ImageBackground>
                             </TouchableOpacity>
                           );
                         })}
@@ -915,7 +1011,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
             <View style={styles.section}>
               <View style={styles.sectionHeaderRow}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={[styles.sectionHeading, { color: '#E8C86A' }]}>JEWEL OF HARMONY</Text>
+                  <Text style={[styles.sectionHeading, { color: '#E0C380' }]}>JEWEL OF HARMONY</Text>
                   {((editedItem.harmonyType || 0) > 0) && (
                     <Text style={{ fontSize: 11, color: '#FFD700', fontWeight: 'bold' }}>
                       (Tipo {editedItem.harmonyType} +{editedItem.harmonyLevel || 0})
@@ -983,7 +1079,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                     {isEditing ? (
                       <View style={styles.stepper}>
                         <TouchableOpacity
-                          style={styles.stepBtn}
+                          style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() =>
                             setEditedItem({
                               ...editedItem,
@@ -991,12 +1087,19 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                               isModified: true,
                             })
                           }
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.stepBtnText}>-</Text>
+                          <ImageBackground
+                            source={STITCH_ASSETS.buttons.small}
+                            style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={styles.stepBtnText}>-</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                         <Text style={styles.stepperVal}>+{editedItem.harmonyLevel || 0}</Text>
                         <TouchableOpacity
-                          style={styles.stepBtn}
+                          style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() =>
                             setEditedItem({
                               ...editedItem,
@@ -1004,11 +1107,18 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                               isModified: true,
                             })
                           }
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.stepBtnText}>+</Text>
+                          <ImageBackground
+                            source={STITCH_ASSETS.buttons.small}
+                            style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={styles.stepBtnText}>+</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={styles.maxBtn}
+                          style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
                           onPress={() =>
                             setEditedItem({
                               ...editedItem,
@@ -1016,8 +1126,15 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                               isModified: true,
                             })
                           }
+                          activeOpacity={0.7}
                         >
-                          <Text style={styles.maxBtnText}>MAX</Text>
+                          <ImageBackground
+                            source={STITCH_ASSETS.tabs.tabModeActive}
+                            style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            resizeMode="stretch"
+                          >
+                            <Text style={styles.maxBtnText}>MAX</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       </View>
                     ) : (
@@ -1033,7 +1150,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.rawHexLabel}>CADENA HEXADECIMAL (16 BYTES / 32 CARACTERES):</Text>
                 <TouchableOpacity onPress={handleCopyHex} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <MaterialCommunityIcons name="content-copy" size={16} color={THEME.colors.primaryOrange} />
+                  <MuIcon name="save" size={16} />
                 </TouchableOpacity>
               </View>
               <Text style={styles.rawHexCode} selectable={true}>
@@ -1043,41 +1160,39 @@ export const ItemModal: React.FC<ItemModalProps> = ({
           </ScrollView>
 
           {/* Action Buttons: Eliminar, Modo Edición, Guardar Cambios */}
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={handleDelete}
-              accessibilityLabel="Eliminar ítem"
-            >
-              <MaterialCommunityIcons name="trash-can-outline" size={22} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.editBtn, isEditing && styles.editBtnActive]}
-              onPress={() => setIsEditing(!isEditing)}
-            >
-              <MaterialCommunityIcons
-                name={isEditing ? 'pencil-lock' : 'pencil'}
-                size={20}
-                color={isEditing ? '#100D0B' : '#E8C86A'}
+          <View style={styles.footerRowStitch}>
+            <View style={{ width: 48 }}>
+              <MuButton
+                titulo=""
+                icono="delete"
+                variante="danger"
+                onPress={handleDelete}
+                altura={44}
+                accessibilityLabel="Eliminar ítem"
               />
-              <Text style={[styles.btnText, { color: isEditing ? '#100D0B' : '#FAF6EE' }]}>{isEditing ? 'Editando' : 'Editar'}</Text>
-            </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              style={[styles.okBtn, isEditing && { backgroundColor: THEME.colors.accentGreenBright, borderColor: '#5DF5B0' }]}
-              onPress={isEditing ? handleSave : onClose}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name={isEditing ? 'content-save-check' : 'close'}
-                size={20}
-                color="#100D0B"
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo={isEditing ? 'Editando' : 'Editar'}
+                icono={isEditing ? 'lock' : 'edit'}
+                variante={isEditing ? 'primary' : 'secondary'}
+                onPress={() => setIsEditing(!isEditing)}
+                altura={44}
               />
-              <Text style={[styles.btnText, { color: '#100D0B' }]}>{isEditing ? 'Guardar Cambios' : 'Cerrar'}</Text>
-            </TouchableOpacity>
+            </View>
+
+            <View style={{ flex: 1.3 }}>
+              <MuButton
+                titulo={isEditing ? 'Guardar' : 'Cerrar'}
+                icono={isEditing ? 'save' : 'close'}
+                variante={isEditing ? 'success' : 'primary'}
+                onPress={isEditing ? handleSave : onClose}
+                altura={44}
+              />
+            </View>
           </View>
-        </View>
+        </Panel>
       </View>
     </Modal>
   );
@@ -1096,10 +1211,6 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     height: '90%',
     maxHeight: '90%',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
     overflow: 'hidden',
     flexDirection: 'column',
     alignSelf: 'center',
@@ -1114,9 +1225,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: THEME.spacing.md,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#6B5533',
-    backgroundColor: '#1E1A16',
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.colors.borde,
+    backgroundColor: THEME.colors.superficie,
   },
   headerTitleContainer: {
     flex: 1,
@@ -1124,7 +1235,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#E0C380',
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.8,
     ...THEME.effects.textShadow,
@@ -1137,23 +1248,27 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   closeBtn: {
-    padding: 6,
+    padding: 8,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
     flex: 1,
   },
   bodyContent: {
     padding: THEME.spacing.md,
-    paddingBottom: 40,
+    paddingBottom: 60,
   },
   spriteCard: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: THEME.spacing.md,
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: '#0D0E0D',
+    borderRadius: 2,
     borderWidth: 1.5,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     marginBottom: THEME.spacing.md,
   },
   badgeRow: {
@@ -1166,7 +1281,7 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
   },
   pillText: {
@@ -1175,11 +1290,11 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: THEME.spacing.md,
-    backgroundColor: '#231D19',
-    borderRadius: 6,
+    backgroundColor: '#1F201F',
+    borderRadius: 2,
     padding: THEME.spacing.md,
     borderWidth: 1.2,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -1190,24 +1305,24 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 11.5,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: THEME.typography.fontTitle,
     ...THEME.effects.textShadow,
   },
   quickActionBtn: {
-    backgroundColor: 'rgba(232, 200, 106, 0.12)',
+    backgroundColor: 'rgba(224, 195, 128, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
   },
   quickActionBtnText: {
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#E8C86A',
+    color: '#E0C380',
     ...THEME.effects.textShadowSubtle,
   },
   rowItem: {
@@ -1225,7 +1340,7 @@ const styles = StyleSheet.create({
   rowVal: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#E0C380',
     ...THEME.effects.textShadow,
   },
   stepper: {
@@ -1234,53 +1349,53 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stepBtn: {
-    backgroundColor: '#1E1A16',
-    width: 36,
-    height: 36,
-    borderRadius: 6,
+    backgroundColor: '#1B1C1B',
+    width: 44,
+    height: 44,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
   },
   stepBtnText: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontSize: 16,
     fontWeight: 'bold',
   },
   stepperVal: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#E0C380',
     minWidth: 32,
     textAlign: 'center',
   },
   maxBtn: {
-    backgroundColor: '#E8C86A',
-    borderColor: '#F0D27A',
+    backgroundColor: '#E0C380',
+    borderColor: '#EFD28D',
     borderWidth: 1,
-    paddingHorizontal: 8,
-    height: 36,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    height: 44,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   maxBtnText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontSize: 10,
     fontWeight: '900',
   },
   numInput: {
-    backgroundColor: '#100D0B',
+    backgroundColor: '#0D0E0D',
     color: THEME.colors.texto,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    borderRadius: 6,
+    borderColor: '#4C463A',
+    borderRadius: 2,
     paddingHorizontal: 8,
     paddingVertical: 4,
     fontSize: 12,
     width: 60,
-    height: 36,
+    height: 44,
     textAlign: 'center',
     fontWeight: '800',
   },
@@ -1293,10 +1408,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 10,
-    backgroundColor: '#1E1A16',
-    borderRadius: 6,
+    minHeight: 44,
+    backgroundColor: '#1B1C1B',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     gap: 8,
   },
   excChipActive: {
@@ -1318,21 +1434,23 @@ const styles = StyleSheet.create({
   socketLabel: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#E8C86A',
+    color: '#E0C380',
     width: 60,
     ...THEME.effects.textShadowSubtle,
   },
   socketOptionBtn: {
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: 6,
+    minHeight: 44,
+    justifyContent: 'center',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    backgroundColor: '#1E1A16',
+    borderColor: '#4C463A',
+    backgroundColor: '#1B1C1B',
   },
   socketOptionBtnActive: {
-    borderColor: '#E8C86A',
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
+    borderColor: '#E0C380',
+    backgroundColor: 'rgba(224, 195, 128, 0.2)',
   },
   socketOptionText: {
     fontSize: 10.5,
@@ -1341,25 +1459,26 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   socketOptionTextActive: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontWeight: '800',
     ...THEME.effects.textShadow,
   },
   socketDisplayRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1A16',
-    borderRadius: 6,
+    backgroundColor: '#1B1C1B',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#3D312A',
+    borderColor: '#4C463A',
     paddingHorizontal: 10,
     paddingVertical: 8,
+    minHeight: 44,
     gap: 8,
   },
   socketDisplayIndex: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#E8C86A',
+    color: '#E0C380',
     minWidth: 70,
     ...THEME.effects.textShadow,
   },
@@ -1378,10 +1497,12 @@ const styles = StyleSheet.create({
   ancientBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    minHeight: 44,
+    justifyContent: 'center',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    backgroundColor: '#1E1A16',
+    borderColor: '#4C463A',
+    backgroundColor: '#1B1C1B',
   },
   ancientBtnText: {
     fontSize: 11.5,
@@ -1390,11 +1511,11 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   rawHexCard: {
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: '#0D0E0D',
+    borderRadius: 2,
     padding: THEME.spacing.sm,
     borderWidth: 1.2,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     marginBottom: THEME.spacing.md,
   },
   rawHexLabel: {
@@ -1407,18 +1528,28 @@ const styles = StyleSheet.create({
   rawHexCode: {
     fontFamily: THEME.typography.fontMono,
     fontSize: 10,
-    color: '#E8C86A',
+    color: '#E0C380',
     marginTop: 4,
     fontWeight: '700',
     ...THEME.effects.textShadow,
+  },
+  footerRowStitch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#1B1C1B',
+    borderTopWidth: 1.5,
+    borderTopColor: '#4C463A',
+    gap: 8,
+    flexShrink: 0,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: THEME.spacing.md,
-    backgroundColor: '#1E1A16',
+    backgroundColor: '#1B1C1B',
     borderTopWidth: 1.5,
-    borderTopColor: '#6B5533',
+    borderTopColor: '#4C463A',
     gap: THEME.spacing.sm,
     flexShrink: 0,
   },
@@ -1429,56 +1560,58 @@ const styles = StyleSheet.create({
     padding: 12,
     minHeight: 44,
     minWidth: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   editBtn: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#2B2521',
+    backgroundColor: '#292A29',
     borderWidth: 1.2,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
     paddingVertical: 12,
     minHeight: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   editBtnActive: {
-    backgroundColor: '#E8C86A',
-    borderColor: '#F0D27A',
+    backgroundColor: '#E0C380',
+    borderColor: '#EFD28D',
   },
   okBtn: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#E8C86A',
+    backgroundColor: '#E0C380',
     borderWidth: 1.2,
-    borderColor: '#F0D27A',
+    borderColor: '#EFD28D',
     paddingVertical: 12,
     minHeight: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   btnText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontWeight: '800',
     fontSize: 13,
   },
   harmonyOptionBtn: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: '#1E1A16',
+    minHeight: 44,
+    justifyContent: 'center',
+    borderRadius: 2,
+    backgroundColor: '#1B1C1B',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
   },
   harmonyOptionBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.2)',
-    borderColor: '#E8C86A',
+    backgroundColor: 'rgba(224, 195, 128, 0.2)',
+    borderColor: '#E0C380',
   },
   harmonyOptionText: {
     fontSize: 12,
@@ -1487,7 +1620,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   harmonyOptionTextActive: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontWeight: '800',
     ...THEME.effects.textShadow,
   },

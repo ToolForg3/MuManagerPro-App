@@ -36,9 +36,9 @@ export function getJewelImageByKey(key: string): any | null {
 }
 
 /**
- * Obtener imagen de joya por (Grupo, Index)
+ * Obtener imagen de joya por (Grupo, Index, Level)
  */
-export function getJewelImageByGroupIndex(group: number, index: number): any | null {
+export function getJewelImageByGroupIndex(group: number, index: number, level?: number): any | null {
   // Joyas individuales
   if (group === 14) {
     if (index === 13) return JEWEL_ASSET_IMAGES.Bless;
@@ -51,6 +51,10 @@ export function getJewelImageByGroupIndex(group: number, index: number): any | n
     if (index === 43) return JEWEL_ASSET_IMAGES.LowStone;
     if (index === 44) return JEWEL_ASSET_IMAGES.HighStone;
     // Box of Kundun +1 a +5 (Group 14, Index 11)
+    if (index === 11 && level === 2) return JEWEL_ASSET_IMAGES.Kundun2;
+    if (index === 11 && level === 3) return JEWEL_ASSET_IMAGES.Kundun3;
+    if (index === 11 && level === 4) return JEWEL_ASSET_IMAGES.Kundun4;
+    if (index === 11 && level === 5) return JEWEL_ASSET_IMAGES.Kundun5;
     if (index === 11) return JEWEL_ASSET_IMAGES.Kundun1;
   }
   if (group === 12) {

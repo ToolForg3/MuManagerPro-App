@@ -13,13 +13,15 @@ import {
   ActivityIndicator,
   AppState,
   AppStateStatus,
+  Image,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
-import { MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME } from '../../constants/theme';
-import { Panel, BotonOro, BotonPiedra, TituloSeccion } from '../../components/ui';
-import { CustomButton } from '../../components/common/CustomButton';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { Panel, BotonOro, BotonPiedra, TituloSeccion, MuCornerOrnaments, MuSideMoldings, MuHeaderBanner, MuButton } from '../../components/ui';
 import { LanguageModal } from '../../components/common/LanguageModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -649,8 +651,8 @@ export const LoginScreen = () => {
 
       if (res.success) {
         Alert.alert(
-          '✅ Solicitud Enviada al Panel',
-          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${proHwid || 'Registrado'}\n💬 Contacto: ${cleanPhone !== 'Sin número' ? cleanPhone : (proEmail.trim() || 'Registrado en sistema')}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
+          '[ÉXITO] Solicitud Enviada al Panel',
+          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${proHwid || 'Registrado'}\n[CONTACTO]: ${cleanPhone !== 'Sin número' ? cleanPhone : (proEmail.trim() || 'Registrado en sistema')}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
           [
             {
               text: 'Entendido',
@@ -663,7 +665,7 @@ export const LoginScreen = () => {
         );
       } else if (res.alreadyRequested) {
         Alert.alert(
-          '⚠️ Solicitud Previa Registrada',
+          '[AVISO] Solicitud Previa Registrada',
           res.message || `Este dispositivo (${proHwid || 'HWID'}) ya tiene una solicitud previa registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
           [
             {
@@ -682,40 +684,115 @@ export const LoginScreen = () => {
     }
   };
 
+  const renderStitchOtpBoxes = (
+    code: string,
+    onChange: (val: string) => void,
+    onPaste: () => void,
+    pasteLabel: string = "PEGAR"
+  ) => {
+    return (
+      <View style={styles.stitchOtpContainer}>
+        <View style={styles.stitchOtpHeaderRow}>
+          <Text style={styles.stitchOtpHeaderLabel}>CÓDIGO RECIBIDO (6 DÍGITOS)</Text>
+          <TouchableOpacity
+            onPress={onPaste}
+            style={{ borderRadius: 2, overflow: 'hidden' }}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Pegar código"
+          >
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.stitchOtpPasteWrap}
+              resizeMode="stretch"
+            >
+              <MuIcon name="content-paste" size={12} color="#EFD28D" style={{ marginRight: 4 }} />
+              <Text style={styles.stitchOtpPasteText}>{pasteLabel}</Text>
+            </ImageBackground>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.stitchOtpBoxesRow}>
+          {[0, 1, 2, 3, 4, 5].map((idx) => {
+            const digit = code[idx] || '';
+            return (
+              <ImageBackground
+                key={idx}
+                source={STITCH_ASSETS.items.slotBox}
+                style={styles.stitchOtpBoxBg}
+                resizeMode="stretch"
+              >
+                <Text style={styles.stitchOtpDigitText}>{digit}</Text>
+              </ImageBackground>
+            );
+          })}
+          {/* Input invisible superpuesto para capturar foco táctil y teclado numérico */}
+          <TextInput
+            style={styles.stitchOtpHiddenInput}
+            value={code}
+            onChangeText={(t) => {
+              const clean = t.replace(/\D/g, '').slice(0, 6);
+              onChange(clean);
+            }}
+            keyboardType="number-pad"
+            maxLength={6}
+          />
+        </View>
+      </View>
+    );
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <LanguageModal floating={true} />
+      <ImageBackground
+        source={STITCH_ASSETS.backgrounds.stone}
+        style={styles.container}
+        imageStyle={styles.bgStoneImage}
+        resizeMode="repeat"
+      >
+        <LanguageModal floating={true} />
 
-      <ScrollView
+        <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: Math.max(32, insets.top + 16),
-            paddingBottom: Math.max(24, insets.bottom + 16),
+            paddingTop: Math.max(20, insets.top + 8),
+            paddingBottom: Math.max(60, insets.bottom + 40),
           },
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Brand Header Mu Online: Escudo dorado con corona y título Cinzel */}
+        {/* Banner Superior Gótico NewUI */}
+        <MuHeaderBanner
+          titulo="MU MANAGER PRO"
+          subtitulo={isRegisterMode ? "SEGURIDAD Y CUENTAS · REGISTRO" : "SEGURIDAD Y CUENTAS · ACCESO"}
+        />
+
+        {/* Brand Header Mu Online: Monograma 01 con marco metálico Season 6 */}
         <View style={styles.brandContainer}>
           <View style={styles.logoCircle}>
-            <FontAwesome5 name="shield-alt" size={38} color={THEME.colors.oroClaro} />
-            <FontAwesome5 name="crown" size={18} color={THEME.colors.oroClaro} style={styles.crownIcon} />
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={{ width: 70, height: 70, borderRadius: 2 }}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.brandTitle}>MU ONLINE</Text>
           <Text style={styles.brandSubtitle}>DATABASE MANAGER PRO</Text>
           <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>SEASON 6 LOUIS UPDATE 40/50</Text>
+            <Text style={styles.versionText}>MU ONLINE • DATABASE MANAGER PRO • UNIVERSAL EDITION</Text>
           </View>
         </View>
 
         {/* Login / Register Form Panel */}
-        <Panel style={styles.card}>
+        <Panel variant="box" style={styles.card}>
+          <MuCornerOrnaments size={12} />
           <TituloSeccion
             titulo={isRegisterMode ? 'Crear Nueva Cuenta' : 'Autenticación de Cuenta'}
+            subtitulo={isRegisterMode ? 'Creación de credenciales para el servidor' : 'Acceso administrativo al servidor de juego'}
             style={{ marginVertical: 8 }}
           />
 
@@ -725,7 +802,7 @@ export const LoginScreen = () => {
               {isRegisterMode ? 'Nombre de Usuario (Para Iniciar Sesión)' : 'Usuario o Correo Electrónico'}
             </Text>
             <View style={styles.inputWrapper}>
-              <Feather
+              <MuIcon
                 name="user"
                 size={18}
                 color={THEME.colors.oro}
@@ -747,7 +824,7 @@ export const LoginScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Correo Electrónico (Para Validación y Recuperación)</Text>
               <View style={styles.inputWrapper}>
-                <Feather
+                <MuIcon
                   name="mail"
                   size={18}
                   color={THEME.colors.arcano}
@@ -770,7 +847,7 @@ export const LoginScreen = () => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('password') || 'Contraseña'}</Text>
             <View style={styles.inputWrapper}>
-              <Feather
+              <MuIcon
                 name="lock"
                 size={18}
                 color={THEME.colors.oro}
@@ -788,7 +865,7 @@ export const LoginScreen = () => {
                 onPress={() => setSecureText(!secureText)}
                 style={styles.eyeBtn}
               >
-                <Feather
+                <MuIcon
                   name={secureText ? 'eye-off' : 'eye'}
                   size={18}
                   color={THEME.colors.textoSecundario}
@@ -802,7 +879,7 @@ export const LoginScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Confirmar Contraseña</Text>
               <View style={styles.inputWrapper}>
-                <Feather
+                <MuIcon
                   name="check-circle"
                   size={18}
                   color={THEME.colors.oro}
@@ -820,7 +897,7 @@ export const LoginScreen = () => {
                   onPress={() => setSecureConfirmText(!secureConfirmText)}
                   style={styles.eyeBtn}
                 >
-                  <Feather
+                  <MuIcon
                     name={secureConfirmText ? 'eye-off' : 'eye'}
                     size={18}
                     color={THEME.colors.textoSecundario}
@@ -838,7 +915,7 @@ export const LoginScreen = () => {
                 onPress={() => setRemember(!remember)}
                 activeOpacity={0.8}
               >
-                <Feather
+                <MuIcon
                   name={remember ? 'check-square' : 'square'}
                   size={18}
                   color={remember ? THEME.colors.oroClaro : THEME.colors.textoSecundario}
@@ -864,55 +941,69 @@ export const LoginScreen = () => {
             </View>
           )}
 
-          {/* Submit Button (Botón Oro de 56 dp) */}
+          {/* Submit Button (Botón Oro de 52 dp) */}
           <BotonOro
-            titulo={isRegisterMode ? 'Crear mi Cuenta' : (t('signIn') || 'Iniciar Sesión')}
+            titulo={isRegisterMode ? 'CREAR CUENTA' : (t('signIn') || 'INICIAR SESIÓN')}
             onPress={handleSubmit}
             cargando={loading}
             icono={isRegisterMode ? 'user-plus' : 'log-in'}
-            altura={56}
+            altura={52}
             style={styles.submitBtn}
           />
 
-          {/* Botón Iniciar Sesión con Google OAuth */}
-          <TouchableOpacity
-            style={styles.googleBtn}
-            onPress={handleGoogleLogin}
-            disabled={googleLoading}
-            activeOpacity={0.8}
-            accessibilityLabel="Continuar con Google"
-          >
-            {googleLoading ? (
-              <ActivityIndicator size="small" color={THEME.colors.oroClaro} />
-            ) : (
-              <>
-                <FontAwesome5 name="google" size={16} color={THEME.colors.oroClaro} style={{ marginRight: 10 }} />
-                <Text style={styles.googleBtnText}>Continuar con Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Acceso Rápido Modo Prueba (Botón Piedra de 44 dp) */}
-          {!isRegisterMode && (
+          {/* En modo Registro: Botón Secundario Volver */}
+          {isRegisterMode && (
             <BotonPiedra
-              titulo="Acceso Rápido (Demo 10 min)"
-              onPress={handleDemoAccess}
-              cargando={loadingDemo}
-              icono="zap"
-              altura={44}
-              style={{ marginTop: 12 }}
+              titulo="VOLVER A INICIAR SESIÓN"
+              onPress={() => {
+                setIsRegisterMode(false);
+                setPassword('');
+                setConfirmPassword('');
+              }}
+              icono="arrow-left"
+              altura={48}
+              style={{ marginTop: 10 }}
             />
           )}
 
-          {/* Botón Solicitar Prueba PRO */}
-          <TouchableOpacity
-            style={styles.proRequestBtn}
-            onPress={openProModal}
-            activeOpacity={0.8}
-          >
-            <FontAwesome5 name="crown" size={13} color={THEME.colors.oroClaro} style={{ marginRight: 8 }} />
-            <Text style={styles.proRequestBtnText}>⭐ Solicitar Prueba del Plan PRO</Text>
-          </TouchableOpacity>
+          {/* Botones específicos de modo Login */}
+          {!isRegisterMode && (
+            <>
+              {/* Botón Iniciar Sesión con Google OAuth */}
+              <MuButton
+                titulo="Continuar con Google"
+                icono="google"
+                variante="secondary"
+                altura={48}
+                onPress={handleGoogleLogin}
+                disabled={googleLoading}
+                cargando={googleLoading}
+                style={{ marginTop: 12 }}
+                accessibilityLabel="Continuar con Google"
+              />
+
+              {/* Acceso Rápido Modo Prueba (Botón Piedra de 48 dp) */}
+              <BotonPiedra
+                titulo="Acceso Rápido (Demo 10 min)"
+                onPress={handleDemoAccess}
+                cargando={loadingDemo}
+                icono="zap"
+                altura={48}
+                style={{ marginTop: 12 }}
+              />
+
+              {/* Botón Solicitar Prueba PRO */}
+              <MuButton
+                titulo="⭐ Solicitar Prueba del Plan PRO"
+                icono="crown"
+                variante="primary"
+                altura={48}
+                onPress={openProModal}
+                style={{ marginTop: 12 }}
+                accessibilityLabel="Solicitar Prueba del Plan PRO"
+              />
+            </>
+          )}
 
           {/* Toggle Register / Login Mode */}
           <TouchableOpacity
@@ -943,21 +1034,47 @@ export const LoginScreen = () => {
 
         {/* Security Notice */}
         <View style={styles.securityNotice}>
-          <MaterialCommunityIcons name="shield-check" size={16} color={THEME.colors.jade} />
+          <MuIcon name="shield-check" size={16} color={THEME.colors.jade} />
           <Text style={styles.securityText}>Conexión cifrada TLS / TDS puerto 1433 TCP</Text>
         </View>
 
-        {/* Telegram ToolForg3 & Produced by ToolForg3 */}
+        {/* Telegram ToolForg3 */}
         <View style={styles.brandingSection}>
           <TouchableOpacity
-            style={styles.telegramButton}
+            style={{ borderRadius: 2, overflow: 'hidden' }}
             onPress={() => Linking.openURL('https://t.me/ToolForg3').catch(() => Alert.alert('Telegram', 'Canal oficial: https://t.me/ToolForg3'))}
             activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name={"send" as any} size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.telegramButtonText}>Telegram ToolForg3</Text>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.telegramButton}
+              resizeMode="stretch"
+            >
+              <MuIcon name={"send" as any} size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.telegramButtonText}>Telegram ToolForg3</Text>
+            </ImageBackground>
           </TouchableOpacity>
-          <Text style={styles.producedByText}>Producido por ToolForg3 • v{APP_VERSION}</Text>
+        </View>
+
+        {/* Zócalo Inferior Gótico Stitch 06 */}
+        <View style={styles.stitchFooterSocket}>
+          <Image
+            source={STITCH_ASSETS.decorations.goldDividerLine}
+            style={styles.stitchFooterGoldDivider}
+            resizeMode="stretch"
+          />
+          <ImageBackground
+            source={STITCH_ASSETS.decorations.gothicBottomFooter}
+            style={styles.stitchFooterBannerBg}
+            resizeMode="contain"
+          >
+            <Text style={styles.stitchFooterBannerText}>
+              PORTAL DE SEGURIDAD Y CUENTAS
+            </Text>
+          </ImageBackground>
+          <Text style={styles.stitchFooterSubText}>
+            MU ONLINE ARCHIVE • CONEXIÓN CIFRADA 256-BIT • v{APP_VERSION}
+          </Text>
         </View>
       </ScrollView>
 
@@ -969,10 +1086,11 @@ export const LoginScreen = () => {
         onRequestClose={() => setForgotModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <Panel variant="box" style={styles.modalCard}>
+            <MuCornerOrnaments size={12} />
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
+                <MuIcon name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
                 <Text style={styles.modalTitle}>Recuperar Contraseña</Text>
               </View>
               <TouchableOpacity
@@ -982,7 +1100,7 @@ export const LoginScreen = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar modal de recuperación"
               >
-                <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
+                <MuIcon name="close" size={22} color={THEME.colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -996,7 +1114,7 @@ export const LoginScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Correo Electrónico o Usuario</Text>
                     <View style={styles.inputWrapper}>
-                      <MaterialCommunityIcons name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                      <MuIcon name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="tu@correo.com o tu_usuario"
@@ -1008,14 +1126,13 @@ export const LoginScreen = () => {
                     </View>
                   </View>
 
-                  <CustomButton
-                    title="Enviar Código de Verificación"
+                  <BotonOro
+                    titulo={forgotLoading ? "ENVIANDO CÓDIGO..." : "ENVIAR CÓDIGO DE VERIFICACIÓN"}
                     onPress={handleRequestResetCode}
-                    variant="orange"
-                    loading={forgotLoading}
-                    icon="email-send-outline"
-                    size="md"
-                    style={{ marginTop: 8 }}
+                    cargando={forgotLoading}
+                    icono="mail"
+                    altura={48}
+                    style={{ marginTop: 12 }}
                   />
                 </View>
               ) : (
@@ -1026,7 +1143,7 @@ export const LoginScreen = () => {
 
                   {/* Locked / Read-Only Recovery Email Badge */}
                   <View style={styles.lockedEmailBadge}>
-                    <MaterialCommunityIcons name="lock" size={18} color={THEME.colors.primaryOrange} />
+                    <MuIcon name="lock" size={18} color={THEME.colors.primaryOrange} />
                     <View style={{ flex: 1, marginLeft: 8 }}>
                       <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
                         Cuenta a recuperar (bloqueada)
@@ -1040,38 +1157,12 @@ export const LoginScreen = () => {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.inputGroup}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={styles.label}>Código de Seguridad (6 dígitos)</Text>
-                      <TouchableOpacity
-                        onPress={handlePasteForgotCode}
-                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2, paddingHorizontal: 6 }}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        accessibilityRole="button"
-                        accessibilityLabel="Pegar código de seguridad desde portapapeles"
-                      >
-                        <MaterialCommunityIcons name="content-paste" size={14} color={THEME.colors.primaryOrange} />
-                        <Text style={{ color: THEME.colors.primaryOrange, fontSize: 11, fontWeight: '700' }}>Pegar</Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.inputWrapper}>
-                      <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
-                      <TextInput
-                        style={[styles.input, { letterSpacing: 4, fontWeight: '800', fontSize: 16 }]}
-                        placeholder="123456"
-                        placeholderTextColor={THEME.colors.textMuted}
-                        value={forgotCode}
-                        onChangeText={setForgotCode}
-                        keyboardType="number-pad"
-                        maxLength={6}
-                      />
-                    </View>
-                  </View>
+                  {renderStitchOtpBoxes(forgotCode, setForgotCode, handlePasteForgotCode)}
 
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nueva Contraseña</Text>
                     <View style={styles.inputWrapper}>
-                      <MaterialCommunityIcons name="lock-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                      <MuIcon name="lock-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="••••••••"
@@ -1081,7 +1172,7 @@ export const LoginScreen = () => {
                         secureTextEntry={forgotSecure}
                       />
                       <TouchableOpacity onPress={() => setForgotSecure(!forgotSecure)} style={styles.eyeBtn}>
-                        <MaterialCommunityIcons name={forgotSecure ? 'eye-off-outline' : 'eye-outline'} size={20} color={THEME.colors.textSecondary} />
+                        <MuIcon name={forgotSecure ? 'eye-off-outline' : 'eye-outline'} size={20} color={THEME.colors.textSecondary} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1089,7 +1180,7 @@ export const LoginScreen = () => {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Confirmar Nueva Contraseña</Text>
                     <View style={styles.inputWrapper}>
-                      <MaterialCommunityIcons name="lock-check-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                      <MuIcon name="lock-check-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="••••••••"
@@ -1101,26 +1192,35 @@ export const LoginScreen = () => {
                     </View>
                   </View>
 
-                  <CustomButton
-                    title="Restablecer Contraseña"
-                    onPress={handleConfirmResetPassword}
-                    variant="orange"
-                    loading={forgotLoading}
-                    icon="check-circle-outline"
-                    size="md"
-                    style={{ marginTop: 8 }}
-                  />
+                  <View style={{ marginTop: 14, gap: 10 }}>
+                    <BotonOro
+                      titulo={forgotLoading ? "ACTUALIZANDO..." : "RESTABLECER CONTRASEÑA"}
+                      onPress={handleConfirmResetPassword}
+                      cargando={forgotLoading}
+                      icono="check-circle"
+                      altura={48}
+                    />
 
-                  <TouchableOpacity
-                    style={{ alignItems: 'center', marginTop: 12 }}
-                    onPress={() => setForgotStep(1)}
-                  >
-                    <Text style={{ color: THEME.colors.textMuted, fontSize: 12 }}>← Volver a ingresar correo</Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => setForgotStep(1)}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Volver a ingresar correo"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.stitchMedBtnWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stitchMedBtnText}>VOLVER A INGRESAR CORREO</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             </ScrollView>
-          </View>
+          </Panel>
         </View>
       </Modal>
 
@@ -1132,10 +1232,11 @@ export const LoginScreen = () => {
         onRequestClose={() => setVerifyModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <Panel variant="box" style={styles.modalCard}>
+            <MuCornerOrnaments size={12} />
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="email-check-outline" size={24} color={THEME.colors.primaryOrange} />
+                <MuIcon name="email-check-outline" size={24} color={THEME.colors.primaryOrange} />
                 <Text style={styles.modalTitle}>Verificar Cuenta</Text>
               </View>
               <TouchableOpacity
@@ -1145,7 +1246,7 @@ export const LoginScreen = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar modal de verificación"
               >
-                <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
+                <MuIcon name="close" size={22} color={THEME.colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -1156,7 +1257,7 @@ export const LoginScreen = () => {
 
               {!isEditingVerifyEmail && verifyEmail ? (
                 <View style={styles.lockedEmailBadge}>
-                  <MaterialCommunityIcons name="email-check" size={18} color={THEME.colors.primaryOrange} />
+                  <MuIcon name="email-check" size={18} color={THEME.colors.primaryOrange} />
                   <View style={{ flex: 1, marginLeft: 8 }}>
                     <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
                       Cuenta / Correo a verificar
@@ -1177,7 +1278,7 @@ export const LoginScreen = () => {
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Correo o Nombre de Usuario</Text>
                   <View style={styles.inputWrapper}>
-                    <MaterialCommunityIcons name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
+                    <MuIcon name="email-outline" size={20} color={THEME.colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="tu@correo.com o tu_usuario"
@@ -1198,66 +1299,55 @@ export const LoginScreen = () => {
                 </View>
               )}
 
-              <View style={styles.inputGroup}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.label}>Código de Activación (6 dígitos)</Text>
-                  <TouchableOpacity
-                    onPress={handlePasteVerifyCode}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2, paddingHorizontal: 6 }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Pegar código de activación desde portapapeles"
-                  >
-                    <MaterialCommunityIcons name="content-paste" size={14} color={THEME.colors.primaryOrange} />
-                    <Text style={{ color: THEME.colors.primaryOrange, fontSize: 11, fontWeight: '700' }}>Pegar</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.inputWrapper}>
-                  <MaterialCommunityIcons name="numeric" size={20} color={THEME.colors.primaryOrange} style={styles.inputIcon} />
-                  <TextInput
-                    style={[styles.input, { letterSpacing: 4, fontWeight: '800', fontSize: 16 }]}
-                    placeholder="123456"
-                    placeholderTextColor={THEME.colors.textMuted}
-                    value={verifyCode}
-                    onChangeText={setVerifyCode}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                  />
-                </View>
-              </View>
+              {renderStitchOtpBoxes(verifyCode, setVerifyCode, handlePasteVerifyCode)}
 
-              <CustomButton
-                title="Activar mi Cuenta"
+              <BotonOro
+                titulo={verifyLoading ? "ACTIVANDO..." : "ACTIVAR MI CUENTA"}
                 onPress={handleVerifyRegistration}
-                variant="orange"
-                loading={verifyLoading}
-                icon="check-decagram"
-                size="md"
-                style={{ marginTop: 8 }}
+                cargando={verifyLoading}
+                icono="check-circle"
+                altura={48}
+                style={{ marginTop: 12 }}
               />
 
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+              <View style={styles.stitchTwoBtnsGrid}>
                 <TouchableOpacity
                   onPress={handleResendVerification}
                   disabled={resendLoading}
-                  style={{ paddingVertical: 6 }}
+                  style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Reenviar código de verificación"
                 >
-                  <Text style={{ color: THEME.colors.primaryOrange, fontSize: 12, fontWeight: '600' }}>
-                    {resendLoading ? 'Reenviando...' : 'Reenviar Código'}
-                  </Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.stitchMedBtnWrap}
+                    resizeMode="stretch"
+                  >
+                    <Text style={styles.stitchMedBtnText}>
+                      {resendLoading ? 'REENVIANDO...' : 'REENVIAR CÓDIGO'}
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => setVerifyModalVisible(false)}
-                  style={{ paddingVertical: 6 }}
+                  style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancelar verificación"
                 >
-                  <Text style={{ color: THEME.colors.textMuted, fontSize: 12 }}>
-                    Cerrar
-                  </Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.stitchMedBtnWrap}
+                    resizeMode="stretch"
+                  >
+                    <Text style={styles.stitchMedBtnText}>CANCELAR</Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
             </ScrollView>
-          </View>
+          </Panel>
         </View>
       </Modal>
 
@@ -1275,10 +1365,11 @@ export const LoginScreen = () => {
         onRequestClose={() => setProModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <Panel variant="box" style={styles.modalCard}>
+            <MuCornerOrnaments size={12} />
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <FontAwesome5 name="crown" size={18} color={THEME.colors.oroClaro} />
+                <MuIcon name="crown" size={18} color={THEME.colors.oroClaro} />
                 <Text style={styles.modalTitle}>Solicitar Prueba PRO</Text>
               </View>
               <TouchableOpacity
@@ -1288,7 +1379,7 @@ export const LoginScreen = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar modal de solicitud PRO"
               >
-                <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={22} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -1299,7 +1390,7 @@ export const LoginScreen = () => {
 
               {/* HWID Device Badge */}
               <View style={styles.lockedEmailBadge}>
-                <MaterialCommunityIcons name="cellphone-key" size={20} color={THEME.colors.oroClaro} />
+                <MuIcon name="cellphone-key" size={20} color={THEME.colors.oroClaro} />
                 <View style={{ flex: 1, marginLeft: 8 }}>
                   <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
                     ID de este Celular (HWID)
@@ -1314,7 +1405,7 @@ export const LoginScreen = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nombre o Apodo</Text>
                 <View style={styles.inputWrapper}>
-                  <Feather name="user" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
+                  <MuIcon name="user" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Ej: Administrador Luis"
@@ -1329,7 +1420,7 @@ export const LoginScreen = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Teléfono / WhatsApp (Opcional)</Text>
                 <View style={styles.inputWrapper}>
-                  <MaterialCommunityIcons name="whatsapp" size={20} color={THEME.colors.jade} style={styles.inputIcon} />
+                  <MuIcon name="whatsapp" size={20} color={THEME.colors.jade} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="+54 9 11 1234-5678"
@@ -1345,7 +1436,7 @@ export const LoginScreen = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Correo Electrónico (Opcional)</Text>
                 <View style={styles.inputWrapper}>
-                  <Feather name="mail" size={18} color={THEME.colors.arcano} style={styles.inputIcon} />
+                  <MuIcon name="mail" size={18} color={THEME.colors.arcano} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="admin@tuservidor.com"
@@ -1362,7 +1453,7 @@ export const LoginScreen = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nombre de tu Servidor MU (Opcional)</Text>
                 <View style={styles.inputWrapper}>
-                  <MaterialCommunityIcons name="server" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
+                  <MuIcon name="server" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Ej: Mu Argentina S6"
@@ -1405,9 +1496,10 @@ export const LoginScreen = () => {
                 <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Cancelar</Text>
               </TouchableOpacity>
             </ScrollView>
-          </View>
+          </Panel>
         </View>
       </Modal>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 };
@@ -1416,6 +1508,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.colors.fondo,
+  },
+  bgStoneImage: {
+    opacity: 0.50,
   },
   scrollContent: {
     flexGrow: 1,
@@ -1619,12 +1714,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.casillaFondo,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: THEME.shapes.radioEsquina,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    minHeight: 44,
   },
   telegramButtonText: {
     color: THEME.colors.arcano,
@@ -1678,7 +1770,7 @@ const styles = StyleSheet.create({
   changeEmailBtn: {
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 4,
+    borderRadius: THEME.shapes.radioEsquina,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   proRequestBtn: {
@@ -1698,5 +1790,177 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 13,
     letterSpacing: 0.5,
+  },
+  googleBtnWrap: {
+    minHeight: 48,
+    backgroundColor: '#1F201F',
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    borderRadius: THEME.shapes.radioEsquina,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    marginTop: 12,
+  },
+  googleBtnBg: {
+    width: '100%',
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  proRequestBtnWrap: {
+    minHeight: 46,
+    backgroundColor: 'rgba(232, 200, 106, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 200, 106, 0.35)',
+    borderRadius: THEME.shapes.radioEsquina,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  proRequestBtnBg: {
+    width: '100%',
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  stitchOtpContainer: {
+    marginVertical: 12,
+  },
+  stitchOtpHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stitchOtpHeaderLabel: {
+    fontSize: 11,
+    color: '#CDC6B9',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  stitchOtpPasteWrap: {
+    minHeight: 28,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stitchOtpPasteBg: {
+    height: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  stitchOtpPasteText: {
+    color: '#EFD28D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  stitchOtpBoxesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'relative',
+    paddingVertical: 4,
+  },
+  stitchOtpBoxBg: {
+    width: 44,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stitchOtpDigitText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FEDF99',
+    fontFamily: THEME.typography.fontTitle,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  stitchOtpHiddenInput: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.02,
+    color: 'transparent',
+  },
+  stitchTwoBtnsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  stitchMedBtnWrap: {
+    minHeight: 46,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  stitchMedBtnBg: {
+    width: '100%',
+    minHeight: 46,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  stitchMedBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E4E2E0',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  stitchFooterSocket: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  stitchFooterGoldDivider: {
+    width: '100%',
+    maxWidth: 340,
+    height: 3,
+    marginBottom: 6,
+    opacity: 0.85,
+  },
+  stitchFooterBannerBg: {
+    width: '100%',
+    maxWidth: 360,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  stitchFooterBannerText: {
+    fontSize: 10,
+    letterSpacing: 1.2,
+    color: '#FEDF99',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  stitchFooterSubText: {
+    fontSize: 9,
+    color: '#989081',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: 2,
   },
 });

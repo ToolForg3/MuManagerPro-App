@@ -9,12 +9,15 @@ import {
   Modal,
   TextInput,
   Platform,
+  Image,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
-import { MaterialCommunityIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
-import { Panel, TituloSeccion, BotonOro, BotonPiedra } from '../../components/ui';
+import { Panel, TituloSeccion, BotonOro, BotonPiedra, MuButton, MuHeaderBanner, MuSideMoldings } from '../../components/ui';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { MetricCard } from '../../components/common/MetricCard';
 import { Header } from '../../components/common/Header';
 import { useDatabase } from '../../context/DatabaseContext';
@@ -24,6 +27,7 @@ import { SqlClient } from '../../services/database/sqlClient';
 import { WatermarkBanner } from '../../components/security/WatermarkBanner';
 import { LicenseModal } from '../../components/security/LicenseModal';
 import { getAdminLog, clearAdminLog, AdminLogEntry } from '../../services/adminLog';
+import { maskHost } from '../../services/maskUtils';
 
 export const DashboardScreen = () => {
   const { t } = useLanguage();
@@ -119,7 +123,12 @@ export const DashboardScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={styles.container}
+      imageStyle={{ opacity: 0.50 }}
+      resizeMode="repeat"
+    >
       <Header
         title="Mu Manager PRO"
         subtitle="Panel de Control Principal"
@@ -144,282 +153,398 @@ export const DashboardScreen = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Imagen de castillo oscura difuminada arriba (30% opacidad, degradado hacia el fondo) */}
-        <View style={styles.castleBackdrop}>
-          <FontAwesome5 name="fort-awesome" size={130} color={THEME.colors.oro} style={styles.castleIcon} />
-        </View>
-
-        {/* Tarjeta de estado del servidor con punto verde Jade */}
-        <Panel style={styles.hostBanner}>
-          <View style={styles.hostLeft}>
-            {/* Punto verde de conexión con resplandor Jade */}
-            <View style={[styles.jewelSocket, isConnected ? styles.jewelSocketConnected : styles.jewelSocketDisconnected]}>
-              <View style={[styles.jewelCore, isConnected ? styles.jewelCoreConnected : styles.jewelCoreDisconnected]} />
+        {/* PANEL DE CONEXIÓN */}
+        <Panel tipo="box" conEsquineros conDivisor style={styles.hostBanner}>
+          <View style={styles.boxHeaderRow}>
+            <View style={styles.rowAlign}>
+              <View style={[styles.jewelDot, isConnected ? styles.jewelDotOnline : styles.jewelDotOffline]} />
+              <Text style={styles.boxHeaderTitle}>PANEL DE CONEXIÓN</Text>
             </View>
+            <Text style={[styles.boxHeaderStatus, isConnected ? styles.textJade : styles.textBrasa]}>
+              {isConnected ? 'ONLINE' : 'DESCONECTADO'}
+            </Text>
+          </View>
 
-            <View style={{ flex: 1 }}>
-              <View style={styles.hostHeaderLine}>
-                <Text style={styles.realmLabel}>REINO DE LORENCIA</Text>
-                <Text style={styles.realmSep}>•</Text>
-                <Text style={[styles.hostStatusText, isConnected ? styles.statusOnline : styles.statusOffline]}>
-                  {isConnected ? 'ONLINE' : 'DESCONECTADO'}
-                </Text>
-              </View>
-              <Text style={styles.hostSubText} numberOfLines={1}>
-                HOST: <Text style={styles.hostHighlight}>{config?.host || '127.0.0.1'}</Text> │ BASE: <Text style={styles.hostHighlight}>{config?.database || 'MuOnline'}</Text>
+          <View style={styles.connectionGrid}>
+            <View style={styles.connectionCell}>
+              <Text style={styles.cellLabel}>HOST</Text>
+              <Text style={styles.cellValueGold} numberOfLines={1}>
+                {config?.host ? maskHost(config.host) : '127.0.0.1'}
+              </Text>
+            </View>
+            <View style={styles.connectionCell}>
+              <Text style={styles.cellLabel}>BASE DE DATOS</Text>
+              <Text style={styles.cellValueGold} numberOfLines={1}>
+                {config?.database || 'MuOnline'}
+              </Text>
+            </View>
+            <View style={styles.connectionCell}>
+              <Text style={styles.cellLabel}>CONEXIÓN</Text>
+              <Text style={[styles.cellValue, isConnected ? styles.textJade : styles.textBrasa]} numberOfLines={1}>
+                {isConnected ? 'ONLINE' : 'OFFLINE'}
+              </Text>
+            </View>
+            <View style={styles.connectionCell}>
+              <Text style={styles.cellLabel}>TIPO DE CUENTA</Text>
+              <Text style={styles.cellValueGold} numberOfLines={1}>
+                {isConnected ? (metrics?.accountType || 'VIP PRO') : 'OFFLINE'}
               </Text>
             </View>
           </View>
+        </Panel>
 
-          <View style={styles.planBadgeContainer}>
-            <Feather name="award" size={15} color={THEME.colors.oroClaro} />
-            <Text style={styles.planBadgeText}>{isConnected ? (metrics?.accountType || 'VIP PRO') : 'OFFLINE'}</Text>
+        {/* ESTADO GENERAL DEL REINO */}
+        <Panel tipo="box" conEsquineros style={styles.realmPanel}>
+          <View style={styles.boxHeaderRow}>
+            <View style={styles.rowAlign}>
+              <MuIcon name="sword-cross" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
+              <Text style={styles.boxHeaderTitle}>ESTADO GENERAL DEL REINO</Text>
+            </View>
+          </View>
+
+          <View style={styles.metricsGrid}>
+            {/* Cuentas Totales */}
+            <TouchableOpacity
+              style={styles.metricCol}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas' })}
+            >
+              <View style={styles.kpiBox}>
+                <Text style={styles.kpiLabel}>CUENTAS TOTALES</Text>
+                <Text style={styles.kpiValueGold}>{metrics?.Cuentas || 0}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Personajes */}
+            <TouchableOpacity
+              style={styles.metricCol}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('Jugadores', { subTab: 'personajes' })}
+            >
+              <View style={styles.kpiBox}>
+                <Text style={styles.kpiLabel}>PERSONAJES</Text>
+                <Text style={styles.kpiValueGold}>{metrics?.Personajes || 0}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Online */}
+            <TouchableOpacity
+              style={styles.metricCol}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('Jugadores', { subTab: 'online' })}
+            >
+              <View style={styles.kpiBox}>
+                <Text style={styles.kpiLabel}>ONLINE</Text>
+                <Text style={[styles.kpiValueGold, styles.textJade]}>{metrics?.Online || 0}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* VIP Activas */}
+            <TouchableOpacity
+              style={styles.metricCol}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', filter: 'vip' })}
+            >
+              <View style={styles.kpiBox}>
+                <Text style={styles.kpiLabel}>VIP ACTIVAS</Text>
+                <Text style={styles.kpiValueGold}>{metrics?.VIP || 0}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Clanes / Guilds (Ancho Completo) */}
+            <TouchableOpacity
+              style={styles.metricColFull}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('Jugadores', { subTab: 'clanes' })}
+            >
+              <View style={styles.kpiBoxFull}>
+                <Text style={styles.kpiLabel}>CLANES / GUILDS</Text>
+                <Text style={styles.kpiValueGold}>{metrics?.Guilds || 0}</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </Panel>
 
-        {/* Encabezado: Estado General del Reino */}
-        <TituloSeccion titulo="Estado General del Reino" />
-
-        {/* 4 Tarjetas de Estadísticas en 2 Columnas (con números grandes en negrita) */}
-        <View style={styles.metricsGrid}>
-          {/* Cuentas Totales */}
-          <TouchableOpacity
-            style={styles.metricCol}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas' })}
-          >
-            <Panel style={styles.kpiPanel}>
-              <View style={styles.kpiHeaderRow}>
-                <Text style={styles.kpiLabel}>CUENTAS TOTALES</Text>
-                <Feather name="users" size={18} color={THEME.colors.oro} />
-              </View>
-              <Text style={styles.kpiValueBold}>{metrics?.Cuentas || 0}</Text>
-            </Panel>
-          </TouchableOpacity>
-
-          {/* Personajes Totales */}
-          <TouchableOpacity
-            style={styles.metricCol}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate('Jugadores', { subTab: 'personajes' })}
-          >
-            <Panel style={styles.kpiPanel}>
-              <View style={styles.kpiHeaderRow}>
-                <Text style={styles.kpiLabel}>PERSONAJES</Text>
-                <Feather name="shield" size={18} color={THEME.colors.oro} />
-              </View>
-              <Text style={styles.kpiValueBold}>{metrics?.Personajes || 0}</Text>
-            </Panel>
-          </TouchableOpacity>
-
-          {/* Usuarios Online (Semáforo en Jade) */}
-          <TouchableOpacity
-            style={styles.metricCol}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate('Jugadores', { subTab: 'online' })}
-          >
-            <Panel style={styles.kpiPanel}>
-              <View style={styles.kpiHeaderRow}>
-                <Text style={styles.kpiLabel}>ONLINE</Text>
-                <Feather name="activity" size={18} color={THEME.colors.jade} />
-              </View>
-              <Text style={[styles.kpiValueBold, { color: THEME.colors.jade }]}>{metrics?.Online || 0}</Text>
-            </Panel>
-          </TouchableOpacity>
-
-          {/* Cuentas VIP Activas (Estrella en Oro) */}
-          <TouchableOpacity
-            style={styles.metricCol}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', filter: 'vip' })}
-          >
-            <Panel style={styles.kpiPanel}>
-              <View style={styles.kpiHeaderRow}>
-                <Text style={styles.kpiLabel}>VIP ACTIVAS</Text>
-                <Feather name="award" size={18} color={THEME.colors.oroClaro} />
-              </View>
-              <Text style={[styles.kpiValueBold, { color: THEME.colors.oroClaro }]}>{metrics?.VIP || 0}</Text>
-            </Panel>
-          </TouchableOpacity>
+        {/* ACCIONES DE COMANDO */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.rowAlign}>
+            <MuIcon name="flash" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
+            <Text style={styles.sectionTitleText}>ACCIONES DE COMANDO</Text>
+          </View>
+          <Text style={styles.sectionSubTitleText}>OPERACIONES</Text>
         </View>
+        <Image
+          source={STITCH_ASSETS.decorations.goldDividerLine}
+          style={styles.sectionGoldDivider}
+          resizeMode="stretch"
+        />
 
-        {/* Clanes / Guilds (5to KPI elegante a lo ancho) */}
-        <TouchableOpacity
-          activeOpacity={0.75}
-          onPress={() => navigation.navigate('Jugadores', { subTab: 'clanes' })}
-          style={{ marginBottom: 8 }}
-        >
-          <Panel style={styles.guildPanel}>
-            <View style={styles.kpiHeaderRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Feather name="flag" size={18} color={THEME.colors.arcano} />
-                <Text style={styles.kpiLabel}>CLANES / GUILDS REGISTRADAS</Text>
-              </View>
-              <Text style={[styles.kpiValueBold, { fontSize: 20, color: THEME.colors.arcano }]}>{metrics?.Guilds || 0}</Text>
-            </View>
-          </Panel>
-        </TouchableOpacity>
-
-        {/* Acciones de Comando */}
-        <TituloSeccion titulo="Acciones de Comando" />
-        <View style={styles.quickActionsRow}>
+        <View style={styles.commandsGrid}>
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
-            onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', openCreateModal: true })}
+            onPress={() => setLicenseModalVisible(true)}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="user-plus" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
-              <Text style={styles.actionText}>{t('actionNewAccount')}</Text>
-              <Text style={styles.actionSubText}>REGISTRO</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="shield-lock" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Seguridad</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>BLOQUEOS / PIN</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', focusSearch: true })}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="search" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
-              <Text style={styles.actionText}>{t('actionSearchAccount')}</Text>
-              <Text style={styles.actionSubText}>PADRÓN</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="account-search" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Buscar cuenta</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>LOCALIZAR REGISTRO</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Jugadores', { subTab: 'personajes' })}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="shield" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
-              <Text style={styles.actionText}>{t('actionViewCharacters')}</Text>
-              <Text style={styles.actionSubText}>HÉROES</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="account-group" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Ver personajes</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>LISTA HÉROES</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Ajustes')}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="settings" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
-              <Text style={styles.actionText}>{t('actionSettings')}</Text>
-              <Text style={styles.actionSubText}>SISTEMA</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="cog" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Ajustes</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>CONFIGURACIÓN</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
         </View>
 
-        {/* Comandos Imperiales Admin */}
-        <TituloSeccion titulo="Comandos Imperiales Admin" />
-        <View style={styles.quickActionsRow}>
+        {/* COMANDOS IMPERIALES ADMIN */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.rowAlign}>
+            <MuIcon name="crown" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
+            <Text style={styles.sectionTitleText}>COMANDOS IMPERIALES ADMIN</Text>
+          </View>
+          <Text style={styles.sectionSubTitleText}>ADMIN</Text>
+        </View>
+        <Image
+          source={STITCH_ASSETS.decorations.goldDividerLine}
+          style={styles.sectionGoldDivider}
+          resizeMode="stretch"
+        />
+
+        <View style={styles.commandsGrid}>
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Objetos', { initialTab: 'prizes' })}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="gift" size={20} color={THEME.colors.brasa} style={styles.actionIcon} />
-              <Text style={styles.actionText}>Premios</Text>
-              <Text style={styles.actionSubText}>EVENTOS</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="treasure-chest" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Premios</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>ENTREGAR LOOT</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Jugadores', { subTab: 'clanes' })}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="flag" size={20} color={THEME.colors.brasa} style={styles.actionIcon} />
-              <Text style={styles.actionText}>Clanes</Text>
-              <Text style={styles.actionSubText}>GUILDS</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="sword-cross" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Clanes</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>GESTIÓN GUILDS</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Objetos', { initialTab: 'kit' })}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="package" size={20} color={THEME.colors.brasa} style={styles.actionIcon} />
-              <Text style={styles.actionText}>Starter Kit</Text>
-              <Text style={styles.actionSubText}>PAQUETES</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="package-variant-closed" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Starter Kit</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>PACKS NOVATO</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCardWrap}
+            style={{ width: '48.5%', borderRadius: 2, overflow: 'hidden' }}
             activeOpacity={0.75}
             onPress={() => navigation.navigate('Jugadores', { subTab: 'gm' })}
           >
-            <Panel sinRemaches style={styles.actionCard}>
-              <Feather name="award" size={20} color={THEME.colors.oroClaro} style={styles.actionIcon} />
-              <Text style={styles.actionText}>Staff GM</Text>
-              <Text style={styles.actionSubText}>MASTERS</Text>
-            </Panel>
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={styles.commandButtonCard}
+              resizeMode="stretch"
+            >
+              <View style={styles.commandIconWrap}>
+                <MuIcon name="shield-crown" size={22} color={THEME.colors.oroClaro} />
+              </View>
+              <View style={styles.commandTextWrap}>
+                <Text style={styles.commandTitle} numberOfLines={1}>Staff GM</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>GAME MASTERS</Text>
+              </View>
+            </ImageBackground>
           </TouchableOpacity>
         </View>
 
-        {/* Recent Accounts Section */}
-        <TituloSeccion titulo="Padrón de Ciudadanos Recientes" />
+        {/* PADRÓN DE CIUDADANOS RECIENTES */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.rowAlign}>
+            <MuIcon name="book-open-page-variant" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
+            <Text style={styles.sectionTitleText}>PADRÓN DE CIUDADANOS RECIENTES</Text>
+          </View>
+          <Text style={styles.sectionSubTitleText}>REGISTROS</Text>
+        </View>
+        <Image
+          source={STITCH_ASSETS.decorations.goldDividerLine}
+          style={styles.sectionGoldDivider}
+          resizeMode="stretch"
+        />
 
-        <Panel style={styles.accountsListCard}>
-          {recentAccounts.map((acc, index) => {
-            const badge = getPlanBadge(acc.AccountLevel);
-            return (
-              <TouchableOpacity
-                key={acc.memb___id || index}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', searchAccount: acc.memb___id })}
-                style={[
-                  styles.accountRow,
-                  index < recentAccounts.length - 1 && styles.accountRowBorder,
-                ]}
-              >
-                <View style={styles.accountLeft}>
-                  <View style={styles.accAvatar}>
-                    <MaterialCommunityIcons name="shield-account" size={18} color={THEME.colors.oroClaro} />
-                  </View>
-                  <View>
-                    <Text style={styles.accountIdText}>{acc.memb___id}</Text>
-                    <View style={styles.accStatusRow}>
-                      <View style={[styles.accStatusDot, { backgroundColor: acc.online ? THEME.colors.jade : THEME.colors.textoSecundario }]} />
-                      <Text style={[styles.accStatusText, acc.online ? { color: THEME.colors.jade } : { color: THEME.colors.textoSecundario }]}>
-                        {acc.online ? 'CIUDADANO EN LÍNEA' : 'DESCONECTADO'}
-                      </Text>
+        <Panel tipo="box" conEsquineros style={styles.accountsListCard}>
+          {recentAccounts.length === 0 ? (
+            <View style={styles.emptyStateBox}>
+              <Text style={styles.emptyStateText}>Sin cuentas recientes registradas</Text>
+              <View style={styles.emptyStateCols}>
+                <Text style={styles.colHeaderGold}>Cuenta</Text>
+                <Text style={styles.colHeaderMuted}>Estado</Text>
+                <Text style={styles.colHeaderMuted}>Fecha</Text>
+              </View>
+            </View>
+          ) : (
+            recentAccounts.map((acc, index) => {
+              const badge = getPlanBadge(acc.AccountLevel);
+              return (
+                <TouchableOpacity
+                  key={acc.memb___id || index}
+                  activeOpacity={0.7}
+                  onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', searchAccount: acc.memb___id })}
+                  style={[
+                    styles.accountRow,
+                    index < recentAccounts.length - 1 && styles.accountRowBorder,
+                  ]}
+                >
+                  <View style={styles.accountLeft}>
+                    <View style={styles.accAvatar}>
+                      <MuIcon
+                        name={String(acc.bloc_code) === '1' ? 'lock' : 'account'}
+                        size={18}
+                        color={String(acc.bloc_code) === '1' ? THEME.colors.brasa : THEME.colors.oroClaro}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.accountIdText}>{acc.memb___id}</Text>
+                      <View style={styles.accStatusRow}>
+                        <View style={[styles.accStatusDot, { backgroundColor: acc.online ? THEME.colors.jade : THEME.colors.textoSecundario }]} />
+                        <Text style={[styles.accStatusText, acc.online ? styles.textJade : styles.textMuted]}>
+                          {acc.online ? 'CIUDADANO EN LÍNEA' : 'DESCONECTADO'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                <View style={[styles.planBadge, { backgroundColor: badge.bg, borderColor: badge.color }]}>
-                  <Text style={[styles.planText, { color: badge.color }]}>{badge.label.toUpperCase()}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                  <View style={[styles.planBadge, { backgroundColor: badge.bg, borderColor: badge.color }]}>
+                    <Text style={[styles.planText, { color: badge.color }]}>{badge.label.toUpperCase()}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
         </Panel>
 
-        {/* Recent Admin Logs Section */}
+        {/* CRÓNICA DE ACCIONES ADMIN */}
         <View style={styles.sectionHeaderRow}>
-          <TituloSeccion titulo="CRÓNICA DE ACCIONES ADMIN" />
-          <TouchableOpacity
-            style={styles.seeAllBtn}
-            activeOpacity={0.75}
-            onPress={handleOpenAllLogs}
-          >
-            <Text style={styles.seeAllText}>HISTORIAL ➔</Text>
-          </TouchableOpacity>
+          <View style={styles.rowAlign}>
+            <MuIcon name="shield-check" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
+            <Text style={styles.sectionTitleText}>CRÓNICA DE ACCIONES ADMIN</Text>
+          </View>
+          <Text style={styles.sectionSubTitleText}>AUDIT</Text>
         </View>
+        <Image
+          source={STITCH_ASSETS.decorations.goldDividerLine}
+          style={styles.sectionGoldDivider}
+          resizeMode="stretch"
+        />
 
-        <Panel style={styles.logsCard}>
+        <Panel tipo="box" conEsquineros style={styles.logsCard}>
           {adminLogs.length === 0 ? (
-            <View style={styles.emptyLogsWrap}>
-              <MaterialCommunityIcons name="shield-check-outline" size={28} color={THEME.colors.textoSecundario} />
-              <Text style={styles.emptyLogsText}>Sin registros de administración recientes</Text>
+            <View style={styles.emptyStateBox}>
+              <Text style={styles.emptyStateText}>Sin registros de auditoría recientes</Text>
+              <View style={styles.emptyStateCols}>
+                <Text style={styles.colHeaderGold}>Evento</Text>
+                <Text style={styles.colHeaderMuted}>Operador</Text>
+                <Text style={styles.colHeaderMuted}>Hora</Text>
+              </View>
             </View>
           ) : (
             adminLogs.map((log, index) => (
@@ -447,7 +572,24 @@ export const DashboardScreen = () => {
               </View>
             ))
           )}
+
+          <MuButton
+            titulo="VER TODO EL HISTORIAL"
+            icono="history"
+            variante="primary"
+            altura={44}
+            onPress={handleOpenAllLogs}
+            accessibilityLabel="Ver todo el historial"
+            style={{ marginTop: 8 }}
+          />
         </Panel>
+
+        {/* Faldón Ornamental Gótico MU */}
+        <Image
+          source={STITCH_ASSETS.decorations.gothicFooterBanner}
+          style={styles.windowFooterOrnament}
+          resizeMode="contain"
+        />
       </ScrollView>
 
 
@@ -460,23 +602,41 @@ export const DashboardScreen = () => {
       >
         <View style={styles.logsModalContainer}>
           <View style={styles.logsModalHeader}>
-            <TouchableOpacity onPress={() => setLogsModalVisible(false)} style={styles.logsBackBtn}>
-              <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
+            <TouchableOpacity
+              onPress={() => setLogsModalVisible(false)}
+              style={{ borderRadius: 2, overflow: 'hidden' }}
+            >
+              <ImageBackground
+                source={STITCH_ASSETS.buttons.small}
+                style={styles.logsBackBtn}
+                resizeMode="stretch"
+              >
+                <MuIcon name="arrow-left" size={20} color="#FFF" />
+              </ImageBackground>
             </TouchableOpacity>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, marginLeft: 8 }}>
               <Text style={styles.logsModalTitle}>Auditoría y Acciones Admin</Text>
               <Text style={styles.logsModalSub}>Historial completo de operaciones</Text>
             </View>
             {allAdminLogs.length > 0 && (
-              <TouchableOpacity onPress={handleClearLogs} style={styles.logsClearBtn}>
-                <MaterialCommunityIcons name="trash-can-outline" size={20} color="#FF5252" />
+              <TouchableOpacity
+                onPress={handleClearLogs}
+                style={{ borderRadius: 2, overflow: 'hidden' }}
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  style={styles.logsClearBtn}
+                  resizeMode="stretch"
+                >
+                  <MuIcon name="trash-can-outline" size={18} color={THEME.colors.brasa} />
+                </ImageBackground>
               </TouchableOpacity>
             )}
           </View>
 
           {/* Buscador de acciones */}
           <View style={styles.logsSearchBox}>
-            <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textoSecundario} />
+            <MuIcon name="magnify" size={20} color={THEME.colors.textoSecundario} />
             <TextInput
               style={styles.logsSearchInput}
               placeholder="Buscar por acción o detalle..."
@@ -486,7 +646,7 @@ export const DashboardScreen = () => {
             />
             {logsSearchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setLogsSearchQuery('')}>
-                <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close-circle" size={18} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             )}
           </View>
@@ -505,7 +665,7 @@ export const DashboardScreen = () => {
               if (filtered.length === 0) {
                 return (
                   <View style={styles.emptyLogsWrapModal}>
-                    <MaterialCommunityIcons name="shield-check-outline" size={48} color={THEME.colors.textMuted} />
+                    <MuIcon name="shield-check-outline" size={48} color={THEME.colors.textMuted} />
                     <Text style={styles.emptyLogsTextModal}>
                       {allAdminLogs.length === 0
                         ? 'Sin registros administrativos guardados'
@@ -518,7 +678,7 @@ export const DashboardScreen = () => {
               return filtered.map((log, index) => {
                 const isDanger = /BAN|DC|DISCONNECT|DELETE|KILL|MUTE|EXCEDENTES/i.test(log.action);
                 const isWarning = /INJECT|EDIT|UPDATE|TELEPORT|SET/i.test(log.action);
-                const dotColor = isDanger ? '#FF5252' : isWarning ? '#FFB300' : '#4CAF50';
+                const dotColor = isDanger ? THEME.colors.brasa : isWarning ? THEME.colors.amber : THEME.colors.jade;
 
                 return (
                   <View key={`full_log_${log.timestamp}_${index}`} style={styles.fullLogRow}>
@@ -546,7 +706,7 @@ export const DashboardScreen = () => {
         visible={licenseModalVisible}
         onClose={() => setLicenseModalVisible(false)}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -576,14 +736,300 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: THEME.shapes.espaciadoBase,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   hostBanner: {
+    marginBottom: 12,
+    padding: 10,
+  },
+  boxHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 8,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.colors.borde,
+  },
+  rowAlign: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+  },
+  jewelDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4, /* círculo funcional (width/2) */
+    backgroundColor: THEME.colors.textoSecundario,
+  },
+  jewelDotOnline: {
+    backgroundColor: THEME.colors.jade,
+    shadowColor: THEME.colors.jade,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  jewelDotOffline: {
+    backgroundColor: THEME.colors.brasa,
+  },
+  boxHeaderTitle: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '700',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
+  },
+  boxHeaderIcon: {
+    color: THEME.colors.oroClaro,
+    fontSize: 12,
+  },
+  boxHeaderStatus: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.5,
+  },
+  connectionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+    gap: 6,
+  },
+  connectionCell: {
+    flex: 1,
+    minWidth: '46%',
+    backgroundColor: '#0C0D0C',
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    borderRadius: 2,
+    padding: 8,
+  },
+  cellLabel: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 9,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  cellValueGold: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: THEME.colors.oroClaro,
+    marginTop: 2,
+  },
+  cellValue: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 11.5,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  realmPanel: {
+    marginBottom: 12,
+    padding: 10,
+  },
+  kpiBox: {
+    backgroundColor: '#181918',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#28251E',
+    borderRightColor: '#28251E',
+    borderWidth: 1,
+    borderRadius: 2,
+    padding: 8,
+    minHeight: 52,
     justifyContent: 'space-between',
-    padding: 14,
-    marginBottom: 14,
+  },
+  kpiBoxFull: {
+    backgroundColor: '#181918',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#28251E',
+    borderRightColor: '#28251E',
+    borderWidth: 1,
+    borderRadius: 2,
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 46,
+  },
+  metricColFull: {
+    width: '100%',
+    padding: 4,
+  },
+  kpiValueGold: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 18,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    marginTop: 2,
+    ...THEME.effects.textShadow,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingBottom: 4,
+    marginTop: 10,
+    marginBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.colors.borde,
+  },
+  sectionHeaderIcon: {
+    color: THEME.colors.oroClaro,
+    fontSize: 11,
+    marginRight: 4,
+  },
+  sectionTitleText: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '700',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    ...THEME.effects.textShadow,
+  },
+  sectionSubTitleText: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 9,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.6,
+    ...THEME.effects.textShadowSubtle,
+  },
+  commandsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 8,
+  },
+  commandButtonCard: {
+    width: '100%',
+    minHeight: 54,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  commandIconWrap: {
+    width: 34,
+    height: 34,
+    backgroundColor: '#0A0B0A',
+    borderTopColor: '#1A1C1A',
+    borderLeftColor: '#1A1C1A',
+    borderBottomColor: '#3A3C38',
+    borderRightColor: '#3A3C38',
+    borderWidth: 1,
+    borderRadius: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  commandSpriteIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
+  },
+  commandTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  commandTitle: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 11,
+    fontWeight: '700',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.3,
+    ...THEME.effects.textShadow,
+  },
+  commandSub: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 8.5,
+    fontWeight: '600',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.5,
+    marginTop: 1,
+    ...THEME.effects.textShadowSubtle,
+  },
+  emptyStateBox: {
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    gap: 6,
+  },
+  emptyStateText: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    textAlign: 'center',
+  },
+  emptyStateCols: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.borde,
+    paddingTop: 6,
+    marginTop: 4,
+  },
+  colHeaderGold: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: THEME.colors.oroClaro,
+  },
+  colHeaderMuted: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 9.5,
+    fontWeight: '600',
+    color: THEME.colors.textoSecundarioLuminoso,
+  },
+  textJade: {
+    color: THEME.colors.jade,
+  },
+  textBrasa: {
+    color: THEME.colors.brasa,
+  },
+  textMuted: {
+    color: THEME.colors.textoSecundarioLuminoso,
+  },
+  windowFooterOrnament: {
+    width: '100%',
+    height: 36,
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  viewAllLogsBtn: {
+    width: '100%',
+    height: 44,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#1F201F',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#28251E',
+    borderRightColor: '#28251E',
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  viewAllLogsBtnText: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#EFD28D',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    ...THEME.effects.textShadow,
   },
   hostLeft: {
     flexDirection: 'row',
@@ -609,7 +1055,7 @@ const styles = StyleSheet.create({
   jewelCore: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 6, /* círculo funcional (width/2) */
   },
   jewelCoreConnected: {
     backgroundColor: THEME.colors.jade,
@@ -665,7 +1111,7 @@ const styles = StyleSheet.create({
   planBadgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(181, 143, 60, 0.15)',
+    backgroundColor: 'rgba(224, 195, 128, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: THEME.shapes.radioEsquina,
@@ -690,8 +1136,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   kpiPanel: {
-    padding: 12,
     minHeight: 74,
+    justifyContent: 'center',
   },
   kpiHeaderRow: {
     flexDirection: 'row',
@@ -713,7 +1159,8 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadow,
   },
   guildPanel: {
-    padding: 12,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   quickActionsRow: {
     flexDirection: 'row',
@@ -725,15 +1172,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionCard: {
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 78,
-    backgroundColor: THEME.colors.casillaFondo,
-    borderColor: THEME.colors.borde,
-    borderWidth: 1,
-    borderRadius: THEME.shapes.radioEsquina,
   },
   actionIcon: {
     marginBottom: 6,
@@ -756,14 +1199,24 @@ const styles = StyleSheet.create({
   },
 
   sectionHeaderRow: {
-    marginVertical: THEME.shapes.espaciadoBase,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 2,
+    marginTop: 14,
+    marginBottom: 4,
+  },
+  sectionGoldDivider: {
+    width: '100%',
+    height: 4,
+    marginBottom: 10,
+    opacity: 0.85,
   },
   seeAllBtn: {
     paddingVertical: 5,
     paddingHorizontal: 14,
     borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: THEME.colors.superficie,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     alignSelf: 'center',
@@ -798,11 +1251,15 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: THEME.colors.deepForge,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: THEME.colors.borde,
+  },
+  accAvatarImg: {
+    width: 22,
+    height: 22,
   },
   accountIdText: {
     fontSize: 13,
@@ -819,7 +1276,7 @@ const styles = StyleSheet.create({
   accStatusDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 3, /* círculo funcional (width/2) */
   },
   accStatusText: {
     fontSize: 9,
@@ -829,7 +1286,7 @@ const styles = StyleSheet.create({
   planBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 3,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
   },
   planText: {
@@ -862,7 +1319,7 @@ const styles = StyleSheet.create({
   logStatusDot: {
     width: 7,
     height: 7,
-    borderRadius: 3.5,
+    borderRadius: 3.5, /* círculo funcional (width/2) */
   },
   logActionText: {
     fontSize: 12,
@@ -896,14 +1353,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logsBackBtn: {
-    padding: 6,
-    minHeight: 44,
-    minWidth: 44,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logsModalTitle: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontSize: 17,
     fontWeight: 'bold',
   },
@@ -913,12 +1369,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   logsClearBtn: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: 'rgba(226, 112, 58, 0.15)',
-    borderWidth: 1,
-    borderColor: '#E2703A',
-    minHeight: 44,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -928,8 +1380,8 @@ const styles = StyleSheet.create({
   logsSearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     paddingHorizontal: 10,
     height: 40,
@@ -956,10 +1408,10 @@ const styles = StyleSheet.create({
   fullLogRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#1A1613',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
-    borderColor: THEME.colors.border,
+    borderColor: THEME.colors.borde,
     padding: 12,
     marginBottom: 8,
     gap: 10,

@@ -147,6 +147,12 @@ if (!process.env.JWT_SECRET) {
 if (!process.env.ADMIN_KEY) {
   console.warn('\x1b[33m[⚠ SECURITY] ADMIN_KEY env var no configurada. Se usará la clave efímera aleatoria de desarrollo. Configura ADMIN_KEY en producción.\x1b[0m');
 }
+if (process.env.NODE_ENV === 'production' &&
+  (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_ID.trim() ||
+   !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_CLIENT_SECRET.trim())) {
+  console.error('\x1b[31m[FATAL SECURITY] GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET son obligatorios y deben ser válidos en producción. Abortando arranque.\x1b[0m');
+  process.exit(1);
+}
 
 // [SEC-02] Clave admin efímera — se genera aleatoriamente en cada arranque del servidor en DEV.
 // En producción SIEMPRE se usa process.env.ADMIN_KEY y nunca hay fallback hardcodeado.
@@ -10119,12 +10125,33 @@ app.get('/api/auth/check-status', (req, res) => {
 // GOOGLE OAUTH 2.0 (SOCIAL LOGIN)
 // ==========================================
 
-const _gIdP = ['117483527911', 'amuanqmseih4d75kom65dfjvu527hm8n', 'apps', 'googleusercontent', 'com'];
-const _gSecP = ['GOCSPX', 'dywYtl4AUO8RYv2UQJreSOvGTels'];
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || (_gIdP[0] + '-' + _gIdP[1] + '.' + _gIdP.slice(2).join('.'));
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || _gSecP.join('-');
+// OAuth no admite valores de respaldo: el cliente eliminado o comprometido no puede revivir desde código.
+const GOOGLE_CLIENT_ID = (typeof process.env.GOOGLE_CLIENT_ID === 'string')
+  ? process.env.GOOGLE_CLIENT_ID.trim()
+  : '';
+const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET && typeof process.env.GOOGLE_CLIENT_SECRET === 'string')
+  ? process.env.GOOGLE_CLIENT_SECRET.trim()
+  : '';
+
+// Blindaje estricto de seguridad: ambas credenciales OAuth provienen exclusivamente de process.env.
+// En producción, si falta o es inválido, aborta el arranque sin imprimir valores.
+// En desarrollo, permite únicamente un modo OAuth explícitamente deshabilitado; nunca usa claves inventadas ni fallbacks.
+const isGoogleOAuthEnabled = Boolean(GOOGLE_CLIENT_SECRET && GOOGLE_CLIENT_SECRET.length >= 8 && GOOGLE_CLIENT_ID);
+
+if (process.env.NODE_ENV === 'production') {
+  if (!isGoogleOAuthEnabled) {
+    console.error('\x1b[31m[FATAL SECURITY] GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET son obligatorios y deben ser válidos en producción. Abortando arranque.\x1b[0m');
+    process.exit(1);
+  }
+} else if (!isGoogleOAuthEnabled) {
+  console.warn('\x1b[33m[⚠ SECURITY] Credenciales Google OAuth no configuradas en desarrollo. Google OAuth permanecerá deshabilitado de forma explícita.\x1b[0m');
+}
 
 function exchangeGoogleCodeForTokens(code, redirectUri) {
+  if (!isGoogleOAuthEnabled || !GOOGLE_CLIENT_SECRET) {
+    return Promise.reject(new Error('Google OAuth no está configurado o está deshabilitado en este servidor.'));
+  }
+
   const postData = new URLSearchParams({
     code,
     client_id: GOOGLE_CLIENT_ID,
@@ -10206,6 +10233,14 @@ function fetchGoogleUserInfo(accessToken) {
 // Iniciar flujo OAuth de Google
 app.get('/api/auth/oauth/google', (req, res) => {
   try {
+    if (!isGoogleOAuthEnabled) {
+      return res.status(503).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Google OAuth Deshabilitado',
+        message: 'El inicio de sesión con Google no está configurado o está deshabilitado en este entorno.'
+      }));
+    }
+
     const { hwid } = req.query;
     const cleanHwid = String(hwid || '').trim();
     const statePayload = Buffer.from(JSON.stringify({ hwid: cleanHwid, ts: Date.now() })).toString('base64url');
@@ -10233,6 +10268,14 @@ app.get('/api/auth/oauth/google', (req, res) => {
 // Callback receptor de autorización de Google OAuth
 app.get('/api/auth/oauth/google/callback', async (req, res) => {
   try {
+    if (!isGoogleOAuthEnabled) {
+      return res.status(503).send(renderActivationHtmlPage({
+        success: false,
+        title: 'Google OAuth Deshabilitado',
+        message: 'El inicio de sesión con Google no está configurado o está deshabilitado en este entorno.'
+      }));
+    }
+
     const { code, state, error, error_description } = req.query;
     if (error) {
       return res.status(400).send(renderActivationHtmlPage({
@@ -11609,7 +11652,7 @@ app.post('/api/admin/database/reset-clean', async (req, res) => {
         username: 'Admin',
         role: 'ADMIN',
         status: 'ACTIVE',
-        passwordHash: await hashPassword(process.env.ADMIN_KEY || 'MuAdminDefault2026!'),
+        passwordHash: await hashPassword(process.env.ADMIN_KEY || adminKey),
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
         lastSeen: new Date().toISOString(),

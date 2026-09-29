@@ -9,11 +9,13 @@ import {
 } from 'react-native';
 import { GothicAlert as Alert } from '../../../components/common/GothicAlert';
 import * as Clipboard from 'expo-clipboard';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../../components/ui/MuIcon';
 import { THEME } from '../../../constants/theme';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { AutocompleteInput } from '../../../components/common/AutocompleteInput';
 import { ItemImage } from '../../../components/common/ItemImage';
+import { Panel, MuButton, Chip } from '../../../components/ui';
+import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 
 interface AntiDupeTabProps {
   searchQuery: string;
@@ -48,7 +50,8 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
     <ErrorBoundary tabName="Anti-Dupe">
       <View style={styles.tabContent}>
         {/* Search & Dupe Controls */}
-        <View style={[styles.card, { zIndex: 10 }]}>
+        <Panel variant="box" style={[styles.card, { zIndex: 10 }]}>
+          <MuCornerOrnaments size={12} />
           <Text style={styles.cardTitle}>Buscador Global de Ítems</Text>
           <Text style={styles.cardDesc}>
             Busca cualquier ítem por nombre o número de serial en baúles e inventarios de todo el servidor:
@@ -62,64 +65,51 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
             maxSuggestions={6}
           />
 
-          {/* Filter Pills */}
+          {/* Filter Pills con texturas nativas MU */}
           <View style={styles.filterRow}>
             {(['all', 'warehouse', 'inventory'] as const).map((mode) => (
-              <TouchableOpacity
+              <Chip
                 key={`search_mode_${mode}`}
-                style={[
-                  styles.filterPill,
-                  searchFilter === mode && styles.filterPillActive,
-                ]}
+                activo={searchFilter === mode}
+                etiqueta={mode === 'all' ? 'Todos' : mode === 'warehouse' ? 'Solo Baúles' : 'Solo Inventarios'}
                 onPress={() => setSearchFilter(mode)}
-              >
-                <Text style={[styles.filterPillText, searchFilter === mode && styles.filterPillTextActive]}>
-                  {mode === 'all' ? 'Todos' : mode === 'warehouse' ? 'Solo Baúles' : 'Solo Inventarios'}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
           </View>
 
           <View style={styles.btnRow}>
-            <TouchableOpacity
-              style={[styles.searchBtn, { flex: 1 }]}
-              onPress={handleSearchItems}
-              disabled={isSearching}
-            >
-              {isSearching ? (
-                <ActivityIndicator color={THEME.colors.oroClaro} size="small" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="magnify" size={18} color={THEME.colors.oroClaro} />
-                  <Text style={styles.searchBtnText}>Buscar</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo="Buscar"
+                icono="magnify"
+                variante="primary"
+                onPress={handleSearchItems}
+                cargando={isSearching}
+                disabled={isSearching}
+                altura={44}
+              />
+            </View>
 
-            <TouchableOpacity
-              style={[styles.scanDupesBtn, { flex: 1 }]}
-              onPress={() => handleScanDupes(false)}
-              disabled={isScanningDupes}
-            >
-              {isScanningDupes ? (
-                <ActivityIndicator color={THEME.colors.brasa} size="small" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="alert-octagon" size={18} color={THEME.colors.brasa} />
-                  <Text style={styles.scanDupesBtnText}>Escanear Dupeos</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo="Escanear Dupeos"
+                icono="shield-alert"
+                variante="danger"
+                onPress={() => handleScanDupes(false)}
+                cargando={isScanningDupes}
+                disabled={isScanningDupes}
+                altura={44}
+              />
+            </View>
           </View>
-        </View>
+        </Panel>
 
         {/* Dupe Scanner Results Banner */}
         {hasScannedDupes && (
           <View style={[styles.dupeBanner, dupesResults.length > 0 ? styles.dupeBannerRed : styles.dupeBannerGreen]}>
-            <MaterialCommunityIcons
-              name={dupesResults.length > 0 ? 'alert' : 'check-circle'}
-              size={26}
-              color={dupesResults.length > 0 ? THEME.colors.brasa : THEME.colors.jade}
+            <MuIcon
+              name={dupesResults.length > 0 ? 'shield-alert' : 'check'}
+              size={24}
             />
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.dupeBannerTitle}>
@@ -139,16 +129,17 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
               style={styles.refreshIconBtn}
               accessibilityLabel="Forzar Re-Escaneo"
             >
-              <MaterialCommunityIcons name="refresh" size={22} color={dupesResults.length > 0 ? THEME.colors.brasa : THEME.colors.jade} />
+              <MuIcon name="refresh" size={20} />
             </TouchableOpacity>
           </View>
         )}
 
         {/* Dupe Results List */}
         {hasScannedDupes && dupesResults.map((dupe, dIdx) => (
-          <View key={`dupe_grp_${dupe.serial}_${dIdx}`} style={styles.dupeGroupCard}>
+          <Panel variant="box" key={`dupe_grp_${dupe.serial}_${dIdx}`} style={styles.dupeGroupCard}>
+            <MuCornerOrnaments size={10} />
             <View style={styles.dupeGroupHeader}>
-              <MaterialCommunityIcons name="content-copy" size={20} color={THEME.colors.brasa} />
+              <MuIcon name="save" size={18} color={THEME.colors.oroClaro} />
               <View style={{ flex: 1, marginLeft: 8 }}>
                 <Text style={styles.dupeSerialText}>
                   Serial: {dupe.serial} (0x{dupe.serialHex})
@@ -187,12 +178,13 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
                 {it.isExc && <Text style={styles.excBadge}>EXC</Text>}
               </View>
             ))}
-          </View>
+          </Panel>
         ))}
 
         {/* Standard Search Results List */}
         {!hasScannedDupes && searchResults.length > 0 && (
-          <View style={styles.card}>
+          <Panel variant="box" style={styles.card}>
+            <MuCornerOrnaments size={12} />
             <Text style={styles.cardTitle}>Resultados ({searchResults.length}):</Text>
             {searchResults.map((it, idx) => (
               <View key={`search_res_${idx}`} style={styles.dupeItemRow}>
@@ -225,7 +217,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
                 {it.isExc && <Text style={styles.excBadge}>EXC</Text>}
               </View>
             ))}
-          </View>
+          </Panel>
         )}
       </View>
     </ErrorBoundary>
@@ -235,14 +227,9 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
 const styles = StyleSheet.create({
   tabContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   card: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 14,
     marginBottom: 12,
   },
   cardTitle: {
@@ -270,14 +257,20 @@ const styles = StyleSheet.create({
   filterPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1E1915',
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderRadius: 2,
+    backgroundColor: '#1A1B1A',
+    borderWidth: 1,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   filterPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   filterPillText: {
     fontSize: 12,
@@ -286,7 +279,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   filterPillTextActive: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontWeight: 'bold',
     ...THEME.effects.textShadow,
   },
@@ -300,30 +293,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 10,
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
   },
   searchBtnText: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontSize: 13,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   scanDupesBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.brasa,
+    backgroundColor: '#2A1314',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 10,
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
   },
   scanDupesBtnText: {
-    color: THEME.colors.brasa,
+    color: '#FFB4AB',
     fontSize: 13,
     fontWeight: 'bold',
   },
@@ -331,17 +333,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     marginBottom: 12,
   },
   dupeBannerRed: {
-    backgroundColor: 'rgba(226, 112, 58, 0.15)',
-    borderColor: THEME.colors.brasa,
+    backgroundColor: '#2A1314',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
   },
   dupeBannerGreen: {
-    backgroundColor: 'rgba(63, 207, 142, 0.15)',
-    borderColor: THEME.colors.jade,
+    backgroundColor: '#10241A',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1A4D33',
+    borderBottomColor: '#1A4D33',
   },
   dupeBannerTitle: {
     color: THEME.colors.texto,
@@ -361,11 +369,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dupeGroupCard: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.brasa,
-    padding: 12,
     marginBottom: 12,
   },
   dupeGroupHeader: {
@@ -392,7 +395,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#241E1A',
+    borderBottomColor: THEME.colors.borde,
   },
   dupeItemName: {
     color: THEME.colors.texto,
@@ -416,12 +419,16 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   excBadge: {
-    color: THEME.colors.jade,
+    color: '#3FCF8E',
     fontSize: 9,
     fontWeight: 'bold',
+    backgroundColor: '#0D1A14',
     borderWidth: 1,
-    borderColor: THEME.colors.jade,
-    borderRadius: 4,
+    borderTopColor: '#5FCF9E',
+    borderLeftColor: '#5FCF9E',
+    borderRightColor: '#1A4D33',
+    borderBottomColor: '#1A4D33',
+    borderRadius: 2,
     paddingHorizontal: 4,
     paddingVertical: 1,
   },

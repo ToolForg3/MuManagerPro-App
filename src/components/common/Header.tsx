@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar, Image, ImageBackground } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon, MuIconName } from '../ui/MuIcon';
+import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { useDatabase } from '../../context/DatabaseContext';
+import { maskHost } from '../../services/maskUtils';
 
 interface HeaderProps {
   title: string;
@@ -12,7 +15,7 @@ interface HeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   rightAction?: {
-    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    icon: MuIconName;
     onPress: () => void;
   };
 }
@@ -33,7 +36,12 @@ export const Header: React.FC<HeaderProps> = ({
   );
 
   return (
-    <View style={[styles.container, { paddingTop: topInset + 8 }]}>
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={[styles.container, { paddingTop: topInset + 8 }]}
+      imageStyle={{ opacity: 0.35 }}
+      resizeMode="repeat"
+    >
       {/* Top Iron Rivets */}
       <View style={styles.topRivetRow}>
         <View style={styles.rivetDot} />
@@ -43,63 +51,138 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.mainRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           {showBack && onBack && (
-            <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7}>
-              <MaterialCommunityIcons name="arrow-left-bold" size={20} color="#FFD700" />
+            <TouchableOpacity
+              onPress={onBack}
+              style={styles.backButtonWrap}
+              activeOpacity={0.82}
+              accessibilityRole="button"
+              accessibilityLabel="Atrás"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <ImageBackground
+                source={STITCH_ASSETS.buttons.small}
+                resizeMode="stretch"
+                style={styles.backButtonFrame}
+              >
+                <View style={styles.backButtonContent}>
+                  <MuIcon name="arrow-left" size={13} color="#E4E2E0" containerStyle={{ marginRight: 3 }} />
+                  <Text style={styles.backButtonText}>Atrás</Text>
+                </View>
+              </ImageBackground>
             </TouchableOpacity>
           )}
           <View style={styles.titleContainer}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <MaterialCommunityIcons name="shield-crown" size={18} color={THEME.colors.oroClaro} />
-              <Text style={styles.title} numberOfLines={1}>{title}</Text>
-            </View>
-            {subtitle && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <MaterialCommunityIcons name="sword" size={11} color={THEME.colors.oroClaro} />
-                <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={styles.muLogoBox}>
+                <Image
+                  source={require('../../../assets/ui/icons/mu_logo.png')}
+                  style={styles.muLogoImg}
+                  resizeMode="contain"
+                />
               </View>
-            )}
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                  <View style={styles.nativoBadge}>
+                    <Text style={styles.nativoBadgeText}>NATIVO</Text>
+                  </View>
+                </View>
+                {subtitle && (
+                  <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+                )}
+              </View>
+            </View>
           </View>
         </View>
 
         <View style={styles.rightContainer}>
           {showConnectionBadge && (
-            <View style={[styles.badge, isConnected ? styles.badgeConnected : styles.badgeDisconnected]}>
-              <View style={[styles.jewelOrb, isConnected ? styles.jewelOrbConnected : styles.jewelOrbDisconnected]}>
-                <View style={styles.jewelGlance} />
-              </View>
-              <Text style={styles.badgeText} numberOfLines={1}>
-                {isConnected ? (config.host || 'MU REALM') : 'SIN CONEXIÓN'}
-              </Text>
+            <View style={styles.badgeWrap}>
+              <ImageBackground
+                source={STITCH_ASSETS.backgrounds.stone}
+                resizeMode="repeat"
+                style={[
+                  styles.badgeFrame,
+                  isConnected ? styles.badgeConnected : styles.badgeDisconnected,
+                ]}
+                imageStyle={{ opacity: 0.45, borderRadius: 2 }}
+              >
+                <View style={styles.badgeContent}>
+                  <View style={[styles.jewelOrb, isConnected ? styles.jewelOrbConnected : styles.jewelOrbDisconnected]}>
+                    <View style={styles.jewelGlance} />
+                  </View>
+                  <Text style={styles.badgeText} numberOfLines={1}>
+                    {isConnected ? (maskHost(config.host) || 'MU REALM') : 'SIN CONEXIÓN'}
+                  </Text>
+                </View>
+              </ImageBackground>
             </View>
           )}
 
           {rightAction && (
-            <TouchableOpacity style={styles.actionBtn} onPress={rightAction.onPress} activeOpacity={0.7}>
-              <MaterialCommunityIcons name={rightAction.icon} size={20} color="#FFD700" />
-            </TouchableOpacity>
+            rightAction.icon === 'refresh' ? (
+              <TouchableOpacity
+                style={styles.refreshButtonWrap}
+                onPress={rightAction.onPress}
+                activeOpacity={0.82}
+                accessibilityRole="button"
+                accessibilityLabel="Actualizar"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  resizeMode="stretch"
+                  style={styles.refreshButtonFrame}
+                >
+                  <View style={styles.refreshButtonContent}>
+                    <MuIcon name="refresh" size={12} color="#EFD28D" containerStyle={{ marginRight: 4 }} />
+                    <Text style={styles.refreshButtonText}>Actualizar</Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.actionBtnWrap}
+                onPress={rightAction.onPress}
+                activeOpacity={0.82}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  resizeMode="stretch"
+                  style={styles.actionBtnFrame}
+                >
+                  <MuIcon name={rightAction.icon} size={16} color="#EFD28D" />
+                </ImageBackground>
+              </TouchableOpacity>
+            )
           )}
         </View>
       </View>
 
       {/* Gold filigree bottom trim */}
-      <View style={styles.goldBottomTrim} />
-    </View>
+      <Image
+        source={STITCH_ASSETS.decorations.goldDividerLine}
+        style={styles.goldBottomDivider}
+        resizeMode="stretch"
+      />
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    backgroundColor: THEME.colors.fondo,
+    paddingHorizontal: 14,
+    paddingBottom: 4,
+    backgroundColor: '#111211',
     borderBottomWidth: 1.5,
-    borderBottomColor: THEME.colors.borde,
+    borderBottomColor: '#4C463A',
     position: 'relative',
-    elevation: 6,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.75,
+    shadowRadius: 4,
   },
   topRivetRow: {
     position: 'absolute',
@@ -114,9 +197,9 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#B58F3C',
+    backgroundColor: '#E0C380',
     borderWidth: 0.5,
-    borderColor: '#6B5533',
+    borderColor: '#4C463A',
   },
   mainRow: {
     flexDirection: 'row',
@@ -128,7 +211,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
     color: THEME.colors.oroClaro,
@@ -137,7 +220,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadow,
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -149,23 +232,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  badgeWrap: {
+    height: 32,
+    maxWidth: 155,
+  },
+  badgeFrame: {
+    flex: 1,
+    borderRadius: 2,
     borderWidth: 1,
-    maxWidth: 145,
-    backgroundColor: THEME.colors.casillaFondo,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
   },
   badgeConnected: {
-    borderColor: THEME.colors.jade,
-    backgroundColor: 'rgba(63, 207, 142, 0.12)',
+    borderTopColor: '#2C8E5B',
+    borderLeftColor: '#2C8E5B',
+    borderBottomColor: '#103822',
+    borderRightColor: '#103822',
+    backgroundColor: 'rgba(20, 45, 30, 0.45)',
   },
   badgeDisconnected: {
-    borderColor: THEME.colors.brasa,
-    backgroundColor: 'rgba(226, 112, 58, 0.12)',
+    borderTopColor: '#933D35',
+    borderLeftColor: '#933D35',
+    borderBottomColor: '#451612',
+    borderRightColor: '#451612',
+    backgroundColor: 'rgba(50, 20, 20, 0.45)',
+  },
+  badgeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 3,
   },
   jewelOrb: {
     width: 10,
@@ -204,38 +301,133 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    color: THEME.colors.texto,
+    color: '#E4E2E0',
     fontWeight: '800',
     letterSpacing: 0.4,
     flexShrink: 1,
+    ...THEME.effects.textShadowSubtle,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    backgroundColor: '#2B2521',
+  muLogoBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 2,
+    backgroundColor: '#0A0B0A',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#202020',
+    borderRightColor: '#202020',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    position: 'relative',
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    backgroundColor: '#2B2521',
+  muLogoImg: {
+    width: 24,
+    height: 24,
+  },
+  nativoBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#202020',
+    borderRightColor: '#202020',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+  },
+  nativoBadgeText: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#EFD28D',
+    letterSpacing: 0.6,
+    ...THEME.effects.textShadowSubtle,
+  },
+  goldBottomDivider: {
+    width: '100%',
+    height: 4,
+    marginTop: 6,
+    opacity: 0.9,
+  },
+  refreshButtonWrap: {
+    height: 30,
+    justifyContent: 'center',
+  },
+  refreshButtonFrame: {
+    height: 30,
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  refreshButtonContent: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  goldBottomTrim: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 1.5,
-    backgroundColor: THEME.colors.borde,
+  refreshButtonText: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#EFD28D',
+    letterSpacing: 0.6,
+    textAlign: 'center',
+    ...THEME.effects.textShadow,
+  },
+  actionBtnWrap: {
+    width: 32,
+    height: 30,
+    justifyContent: 'center',
+  },
+  actionBtnFrame: {
+    width: 32,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  backButtonWrap: {
+    height: 30,
+    marginRight: 8,
+    justifyContent: 'center',
+  },
+  backButtonFrame: {
+    height: 30,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  backButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#E4E2E0',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
 });

@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
 import { View, Image, StyleSheet, StyleProp, ImageStyle, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SqlClient } from '../../services/database/sqlClient';
 import { getSkillById } from '../../constants/muSkills';
 import { THEME } from '../../constants/theme';
-import { SKILL_ASSET_IMAGES } from '../../constants/skillAssets';
+import {
+  SKILL_ASSET_IMAGES,
+  SKILL_UNKNOWN_IMAGE,
+  SKILL_CLEAN_ASSET_IMAGES,
+  SKILL_CLEAN_UNKNOWN_IMAGE,
+} from '../../constants/skillAssets';
 
 interface SkillImageProps {
-  skillId: number;
-  size?: number;
+  skillId?: number;
+  isEmpty?: boolean;
+  size?: number; // Base width; height is calculated with authentic aspect ratio
+  width?: number;
+  height?: number;
   style?: StyleProp<ImageStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   showBorder?: boolean;
@@ -30,53 +37,62 @@ export const getSkillImageUrl = (skillId: number): string => {
 };
 
 export const SkillImage: React.FC<SkillImageProps> = ({
-  skillId,
-  size = 32,
+  skillId = 0,
+  isEmpty = false,
+  size = 34,
+  width: customWidth,
+  height: customHeight,
   style,
   containerStyle,
   showBorder = true,
   isSelected = false,
 }) => {
   const [hasError, setHasError] = useState(false);
-  const skillDef = getSkillById(skillId);
+  const isSlotEmpty = isEmpty || skillId <= 0;
 
-  const fallbackIcon = (skillDef?.icon || 'star') as any;
+  // Proporciones auténticas del cliente Season 6:
+  // - Con marco nativo (showBorder = true): 44 ancho x 56 alto (ratio 44:56)
+  // - Limpio / sin marco (showBorder = false): 34 ancho x 44 alto (ratio 34:44)
+  const finalWidth = customWidth || size;
+  const finalHeight = customHeight || (
+    showBorder
+      ? Math.round(finalWidth * (56 / 44))
+      : Math.round(finalWidth * (44 / 34))
+  );
 
-  // Frame colors based on skill category
-  let borderColor = THEME.colors.borde;
-  let bgColor = THEME.colors.casillaFondo;
-  if (skillDef?.category === 'Magia') {
-    borderColor = THEME.colors.arcano;
-  } else if (skillDef?.category === 'Buff') {
-    borderColor = THEME.colors.jade;
-  } else if (skillDef?.category === 'Invocación') {
-    borderColor = THEME.colors.oroClaro;
-  } else if (skillDef?.category === 'Especial') {
-    borderColor = THEME.colors.brasa;
+  // 1. RANURA VACÍA: Ranura de piedra sin habilidad equipada
+  if (isSlotEmpty) {
+    return (
+      <View
+        style={[
+          styles.container,
+          styles.emptySlot,
+          { width: finalWidth, height: finalHeight },
+          containerStyle,
+        ]}
+      >
+        <View style={styles.emptySlotInner} />
+      </View>
+    );
   }
 
-  // Si está seleccionado (como en la barra de MU Online), resaltar con marco dorado brillante
-  if (isSelected) {
-    borderColor = THEME.colors.oroClaro;
-  }
+  // 2. HABILIDAD CON ASSET LOCAL
+  const localSource = showBorder
+    ? (SKILL_ASSET_IMAGES[skillId] || null)
+    : (SKILL_CLEAN_ASSET_IMAGES[skillId] || null);
 
-  const localSource = SKILL_ASSET_IMAGES[skillId];
+  const fallbackImage = showBorder ? SKILL_UNKNOWN_IMAGE : SKILL_CLEAN_UNKNOWN_IMAGE;
   const imageUrl = !localSource ? getSkillImageUrl(skillId) : null;
-  const borderThickness = isSelected ? 2 : 1.5;
 
   return (
     <View
       style={[
         styles.container,
         {
-          width: size + (showBorder ? borderThickness * 2 : 0),
-          height: size + (showBorder ? borderThickness * 2 : 0),
-          borderRadius: 2,
-          backgroundColor: bgColor,
-          borderColor: showBorder ? borderColor : 'transparent',
-          borderWidth: showBorder ? borderThickness : 0,
+          width: finalWidth,
+          height: finalHeight,
         },
-        isSelected && styles.selectedGlow,
+        isSelected && styles.selectedAura,
         containerStyle,
       ]}
     >
@@ -85,29 +101,37 @@ export const SkillImage: React.FC<SkillImageProps> = ({
           source={localSource}
           style={[
             styles.image,
-            { width: size, height: size, borderRadius: 1 },
+            { width: finalWidth, height: finalHeight },
             style,
           ]}
-          resizeMode="cover"
+          resizeMode="contain"
         />
       ) : !hasError && imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
           style={[
             styles.image,
-            { width: size, height: size, borderRadius: 1 },
+            { width: finalWidth, height: finalHeight },
             style,
           ]}
-          resizeMode="cover"
+          resizeMode="contain"
           onError={() => setHasError(true)}
         />
       ) : (
-        <View style={[styles.fallbackWrapper, { width: size, height: size }]}>
-          <MaterialCommunityIcons
-            name={fallbackIcon}
-            size={Math.max(16, Math.floor(size * 0.65))}
-            color={borderColor}
+        // 3. HABILIDAD CUYO RECURSO NO ESTÁ DISPONIBLE (Diferente de ranura vacía)
+        <View style={[styles.missingAssetContainer, { width: finalWidth, height: finalHeight }]}>
+          <Image
+            source={fallbackImage}
+            style={[
+              styles.image,
+              { width: finalWidth, height: finalHeight, opacity: 0.8 },
+              style,
+            ]}
+            resizeMode="contain"
           />
+          <View style={styles.missingBadge}>
+            <View style={styles.missingDot} />
+          </View>
         </View>
       )}
     </View>
@@ -118,29 +142,55 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.6,
-    shadowRadius: 3,
-    elevation: 4,
-    borderRadius: THEME.shapes.radioEsquina,
-    borderColor: THEME.colors.borde,
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: 'transparent',
   },
-  selectedGlow: {
-    borderColor: THEME.colors.oroClaro,
+  emptySlot: {
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: THEME.colors.casillaFondo,
+    padding: 2,
+  },
+  emptySlotInner: {
+    flex: 1,
+    width: '100%',
+    borderRadius: THEME.shapes.radioEsquina,
+    borderWidth: 1,
+    borderColor: THEME.colors.borde,
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  missingAssetContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: THEME.colors.amber,
+    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: 'rgba(13, 14, 13, 0.7)',
+  },
+  missingBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: 'rgba(20, 15, 10, 0.85)',
+    borderRadius: THEME.shapes.radioEsquina,
+    padding: 1,
+  },
+  missingDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5, /* círculo funcional (width/2) */
+    backgroundColor: THEME.colors.amber,
+  },
+  selectedAura: {
     shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 6,
+    shadowOpacity: 0.95,
+    shadowRadius: 5,
     elevation: 8,
   },
   image: {
-    backgroundColor: THEME.colors.casillaFondo,
-  },
-  fallbackWrapper: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
 });

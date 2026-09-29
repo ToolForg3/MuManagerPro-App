@@ -13,6 +13,9 @@ import { THEME } from '../../constants/theme';
 import { ItemImage } from '../common/ItemImage';
 import { EXCELLENT_OPTIONS_WEAPON, EXCELLENT_OPTIONS_ARMOR } from '../../constants/muConstants';
 import { getAncientInfo } from '../../constants/ancientCatalog';
+import { Panel } from '../ui/Panel';
+import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
+import { MuButton } from '../ui/MuButton';
 
 interface ItemActionModalProps {
   visible: boolean;
@@ -89,7 +92,8 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.card}>
+        <Panel variant="box" style={styles.card}>
+          <MuCornerOrnaments size={10} />
           {/* Cabecera con Imagen grande, Título e Index */}
           <View style={styles.headerRow}>
             <View style={styles.imageBox}>
@@ -97,7 +101,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
                 item={item}
                 size={58}
                 fallbackIcon={item.spriteKey as any || 'shield-outline'}
-                fallbackColor={THEME.colors.primaryOrange}
+                fallbackColor={THEME.colors.oroClaro}
               />
             </View>
 
@@ -128,11 +132,11 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
             {/* Opciones Excelentes si las tiene */}
             {activeExcOptions.length > 0 && (
               <View style={styles.extraSection}>
-                <Text style={[styles.sectionHeader, { color: '#3FCF8E', marginTop: 10 }]}>
+                <Text style={[styles.sectionHeader, { color: THEME.colors.jade, marginTop: 10 }]}>
                   Excelente
                 </Text>
                 {activeExcOptions.map((opt) => (
-                  <Text key={opt.bit} style={[styles.attrLine, { color: '#3FCF8E' }]}>
+                  <Text key={opt.bit} style={[styles.attrLine, { color: THEME.colors.jade }]}>
                     • {opt.name}
                   </Text>
                 ))}
@@ -142,14 +146,14 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
             {/* Ancient Set si lo tiene */}
             {ancientInfo.isAncient && (
               <View style={styles.extraSection}>
-                <Text style={[styles.sectionHeader, { color: '#5B8DEF', marginTop: 10 }]}>
+                <Text style={[styles.sectionHeader, { color: THEME.colors.arcano, marginTop: 10 }]}>
                   Ancient ({ancientInfo.setName || 'Set Ancient'})
                 </Text>
-                <Text style={[styles.attrLine, { color: '#5B8DEF' }]}>
+                <Text style={[styles.attrLine, { color: THEME.colors.arcano }]}>
                   • Tier {ancientInfo.tier} (+{ancientInfo.staminaBonus} Stamina)
                 </Text>
                 {ancientInfo.set && ancientInfo.set.options.slice(0, 3).map((opt, i) => (
-                  <Text key={`act_anc_${i}`} style={[styles.attrLine, { color: '#80DEEA' }]}>
+                  <Text key={`act_anc_${i}`} style={[styles.attrLine, { color: THEME.colors.arcano }]}>
                     • {opt.optName}: +{opt.val}
                   </Text>
                 ))}
@@ -159,10 +163,10 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
             {/* Opción 380 */}
             {item.option380 && (
               <View style={styles.extraSection}>
-                <Text style={[styles.sectionHeader, { color: '#FF8A50', marginTop: 10 }]}>
+                <Text style={[styles.sectionHeader, { color: THEME.colors.amber, marginTop: 10 }]}>
                   Opción 380
                 </Text>
-                <Text style={[styles.attrLine, { color: '#FF8A50' }]}>
+                <Text style={[styles.attrLine, { color: THEME.colors.amber }]}>
                   • Propiedad Especial PvP Activa
                 </Text>
               </View>
@@ -171,10 +175,10 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
             {/* Harmony */}
             {!!item.harmonyType && item.harmonyType > 0 && (
               <View style={styles.extraSection}>
-                <Text style={[styles.sectionHeader, { color: '#E8C86A', marginTop: 10 }]}>
+                <Text style={[styles.sectionHeader, { color: THEME.colors.oroClaro, marginTop: 10 }]}>
                   Harmony
                 </Text>
-                <Text style={[styles.attrLine, { color: '#E8C86A' }]}>
+                <Text style={[styles.attrLine, { color: THEME.colors.oroClaro }]}>
                   • Tipo {item.harmonyType} (Lv +{item.harmonyLevel})
                 </Text>
               </View>
@@ -185,53 +189,81 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
           {(onQuickMax || onDuplicate) && (
             <View style={styles.quickActionsRow}>
               {onQuickMax && (
-                <TouchableOpacity
-                  style={styles.btnQuickMax}
-                  onPress={() => {
-                    onClose();
-                    setTimeout(() => onQuickMax(item, slotIndex), 100);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.btnQuickMaxText}>Full Exc +15</Text>
-                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Full Exc +15"
+                    variante="primary"
+                    altura={38}
+                    compacto
+                    onPress={() => {
+                      onClose();
+                      setTimeout(() => onQuickMax(item, slotIndex), 100);
+                    }}
+                  />
+                </View>
               )}
               {onDuplicate && (
-                <TouchableOpacity
-                  style={styles.btnDuplicate}
-                  onPress={() => {
-                    onClose();
-                    setTimeout(() => onDuplicate(item, slotIndex), 100);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.btnDuplicateText}>Duplicar</Text>
-                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Duplicar"
+                    variante="secondary"
+                    altura={38}
+                    compacto
+                    onPress={() => {
+                      onClose();
+                      setTimeout(() => onDuplicate(item, slotIndex), 100);
+                    }}
+                  />
+                </View>
               )}
             </View>
           )}
 
           {/* Botonera de Acciones Principales (OK | MOVER | EDITAR | ELIMINAR) */}
-          <View style={styles.footerRow}>
-            <TouchableOpacity style={styles.btnOk} onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.btnOkText} numberOfLines={1}>OK</Text>
-            </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 14 }}>
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo="OK"
+                variante="secondary"
+                altura={38}
+                compacto
+                onPress={onClose}
+              />
+            </View>
 
             {onMove && (
-              <TouchableOpacity style={styles.btnMove} onPress={handleMovePress} activeOpacity={0.7}>
-                <Text style={styles.btnMoveText} numberOfLines={1}>MOVER</Text>
-              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <MuButton
+                  titulo="MOVER"
+                  variante="primary"
+                  altura={38}
+                  compacto
+                  onPress={handleMovePress}
+                />
+              </View>
             )}
 
-            <TouchableOpacity style={styles.btnEdit} onPress={handleEditPress} activeOpacity={0.7}>
-              <Text style={styles.btnEditText} numberOfLines={1}>EDITAR</Text>
-            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo="EDITAR"
+                variante="primary"
+                altura={38}
+                compacto
+                onPress={handleEditPress}
+              />
+            </View>
 
-            <TouchableOpacity style={styles.btnDelete} onPress={handleDeletePress} activeOpacity={0.7}>
-              <Text style={styles.btnDeleteText} numberOfLines={1}>ELIMINAR</Text>
-            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo="BORRAR"
+                variante="danger"
+                altura={38}
+                compacto
+                onPress={handleDeletePress}
+              />
+            </View>
           </View>
-        </View>
+        </Panel>
       </View>
     </Modal>
   );
@@ -249,11 +281,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     maxHeight: '90%',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
     padding: 16,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.6,
@@ -270,7 +298,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     alignItems: 'center',
@@ -280,7 +308,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontFamily: THEME.typography.fontTitle,
     fontSize: 16,
     fontWeight: '900',
@@ -304,7 +332,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   sectionHeader: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontFamily: THEME.typography.fontTitle,
     fontSize: 12,
     fontWeight: '800',
@@ -339,9 +367,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(63, 207, 142, 0.12)',
     borderWidth: 1,
     borderColor: THEME.colors.jade,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingVertical: 10,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -356,9 +384,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(91, 141, 239, 0.12)',
     borderWidth: 1,
     borderColor: THEME.colors.arcano,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingVertical: 10,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -379,7 +407,7 @@ const styles = StyleSheet.create({
   btnOk: {
     flex: 1,
     paddingVertical: 12,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRightWidth: 1,
@@ -394,15 +422,15 @@ const styles = StyleSheet.create({
   btnMove: {
     flex: 1.1,
     paddingVertical: 12,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1E1708',
+    backgroundColor: '#1B1C1B',
     borderRightWidth: 1,
     borderRightColor: THEME.colors.borde,
   },
   btnMoveText: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontSize: 11,
     fontWeight: '900',
     ...THEME.effects.textShadowSubtle,
@@ -410,10 +438,10 @@ const styles = StyleSheet.create({
   btnEdit: {
     flex: 1.2,
     paddingVertical: 12,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#171E2B',
+    backgroundColor: '#1B1C1B',
     borderRightWidth: 1,
     borderRightColor: THEME.colors.borde,
   },
@@ -426,7 +454,7 @@ const styles = StyleSheet.create({
   btnDelete: {
     flex: 1.1,
     paddingVertical: 12,
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

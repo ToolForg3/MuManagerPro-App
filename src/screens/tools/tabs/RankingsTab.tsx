@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ImageBackground } from 'react-native';
+import { MuIcon } from '../../../components/ui/MuIcon';
 import { THEME } from '../../../constants/theme';
+import { STITCH_ASSETS } from '../../../constants/stitchAssets';
+import { Panel, MuButton } from '../../../components/ui';
+import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 interface RankingsTabProps {
@@ -24,48 +27,60 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
   return (
     <ErrorBoundary tabName="Rankings">
       <View style={styles.tabContent}>
-        {/* Sub-Tabs */}
+        {/* Sub-Tabs con texturas nativas MU */}
         <View style={styles.rankPillsContainer}>
           {[
             { id: 'resets', label: 'Top Resets', icon: 'refresh' },
-            { id: 'mresets', label: 'Master Resets', icon: 'star' },
-            { id: 'pk', label: 'Top Asesinos (PK)', icon: 'skull' },
-            { id: 'guilds', label: 'Top Guilds', icon: 'shield-account' },
-          ].map((sub) => (
-            <TouchableOpacity
-              key={`rank_tab_${sub.id}`}
-              style={[
-                styles.rankPill,
-                rankType === sub.id && styles.rankPillActive,
-              ]}
-              onPress={() => setRankType(sub.id as any)}
-            >
-              <MaterialCommunityIcons
-                name={sub.icon as any}
-                size={16}
-                color={rankType === sub.id ? '#FFF' : THEME.colors.textoSecundario}
-              />
-              <Text
-                style={[
-                  styles.rankPillText,
-                  rankType === sub.id && styles.rankPillTextActive,
-                ]}
+            { id: 'mresets', label: 'Master Resets', icon: 'crown' },
+            { id: 'pk', label: 'Top Asesinos (PK)', icon: 'sword' },
+            { id: 'guilds', label: 'Top Guilds', icon: 'shield' },
+          ].map((sub) => {
+            const isSel = rankType === sub.id;
+            return (
+              <TouchableOpacity
+                key={`rank_tab_${sub.id}`}
+                style={styles.rankPillTouch}
+                onPress={() => setRankType(sub.id as any)}
+                activeOpacity={0.8}
               >
-                {sub.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <ImageBackground
+                  source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                  style={[
+                    styles.rankPill,
+                    isSel && styles.rankPillActive,
+                  ]}
+                  resizeMode="stretch"
+                >
+                  <MuIcon
+                    name={sub.icon}
+                    size={16}
+                    color={isSel ? '#0D0E0D' : '#CDC6B9'}
+                  />
+                  <Text
+                    style={[
+                      styles.rankPillText,
+                      isSel && styles.rankPillTextActive,
+                    ]}
+                  >
+                    {sub.label}
+                  </Text>
+                </ImageBackground>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Refresh button */}
-        <TouchableOpacity
-          style={styles.refreshRankBtn}
+        <MuButton
+          titulo="Actualizar Ranking"
+          icono="refresh"
+          variante="primary"
           onPress={() => loadRankings(rankType)}
+          cargando={loadingRankings}
           disabled={loadingRankings}
-        >
-          <MaterialCommunityIcons name="reload" size={16} color={THEME.colors.oroClaro} />
-          <Text style={styles.refreshRankBtnText}>Actualizar Ranking</Text>
-        </TouchableOpacity>
+          altura={44}
+          style={{ marginBottom: 12 }}
+        />
 
         {loadingRankings ? (
           <ActivityIndicator size="large" color={THEME.colors.oroClaro} style={{ marginTop: 24 }} />
@@ -78,7 +93,8 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
 
               if (rankType === 'guilds') {
                 return (
-                  <View key={`guild_${entry.G_Name}_${index}`} style={styles.rankCard}>
+                  <Panel variant="box" key={`guild_${entry.G_Name}_${index}`} style={styles.rankCard}>
+                    <MuCornerOrnaments size={8} />
                     <View style={[styles.rankMedal, { backgroundColor: medalColor }]}>
                       <Text style={[styles.rankMedalText, rankPos > 3 && { color: THEME.colors.textoSecundario }]}>{rankPos}</Text>
                     </View>
@@ -92,7 +108,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
                       <Text style={styles.rankScoreVal}>{entry.G_Score}</Text>
                       <Text style={styles.rankScoreLabel}>Puntos</Text>
                     </View>
-                  </View>
+                  </Panel>
                 );
               }
 
@@ -108,7 +124,8 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
               }
 
               return (
-                <View key={`rank_${entry.Name}_${index}`} style={styles.rankCard}>
+                <Panel variant="box" key={`rank_${entry.Name}_${index}`} style={styles.rankCard}>
+                  <MuCornerOrnaments size={8} />
                   <View style={[styles.rankMedal, { backgroundColor: medalColor }]}>
                     <Text style={[styles.rankMedalText, rankPos > 3 && { color: THEME.colors.textoSecundario }]}>{rankPos}</Text>
                   </View>
@@ -129,7 +146,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
                     <Text style={styles.rankScoreVal}>{scoreVal}</Text>
                     <Text style={styles.rankScoreLabel}>{scoreLabel}</Text>
                   </View>
-                </View>
+                </Panel>
               );
             })}
           </View>
@@ -142,7 +159,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
 const styles = StyleSheet.create({
   tabContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   rankPillsContainer: {
     flexDirection: 'row',
@@ -150,67 +167,73 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  rankPillTouch: {
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
   rankPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: '#1E1915',
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderRadius: 2,
+    minHeight: 38,
+    overflow: 'hidden',
   },
   rankPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: THEME.colors.oroClaro,
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
   },
   rankPillText: {
     fontSize: 12,
-    color: THEME.colors.textoSecundarioLuminoso,
+    color: '#CDC6B9',
     fontWeight: '600',
     ...THEME.effects.textShadowSubtle,
   },
   rankPillTextActive: {
-    color: THEME.colors.oroClaro,
+    color: '#0D0E0D',
     fontWeight: 'bold',
-    ...THEME.effects.textShadow,
   },
   refreshRankBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 8,
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
     marginBottom: 14,
   },
   refreshRankBtnText: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   rankCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 12,
+    marginBottom: 8,
   },
   rankMedal: {
     width: 28,
     height: 28,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rankMedalText: {
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
     fontWeight: 'bold',
     fontSize: 13,
   },
@@ -229,7 +252,7 @@ const styles = StyleSheet.create({
   },
   classBadge: {
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingHorizontal: 5,
     paddingVertical: 1,
   },

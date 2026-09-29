@@ -7,11 +7,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { APP_VERSION } from '../../constants/appVersion';
+import { Panel } from '../ui/Panel';
+import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 
 export const TERMS_STORAGE_KEY = '@mumanager_terms_accepted_version';
 
@@ -70,25 +74,19 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
       onRequestClose={isOnboarding ? () => {} : onClose}
     >
       <View style={styles.backdrop}>
-        <View style={styles.cardContainer}>
-          {/* Remaches góticos superiores */}
-          <View style={styles.rivetRow}>
-            <View style={styles.rivet} />
-            <View style={styles.rivet} />
-          </View>
-
+        <Panel variant="box" style={styles.cardContainer}>
+          <MuCornerOrnaments size={12} />
           {/* Cabecera Medieval */}
           <View style={styles.header}>
             <View style={styles.headerTitleGroup}>
-              <MaterialCommunityIcons
-                name="shield-crown"
+              <MuIcon
+                name="crown"
                 size={24}
-                color={THEME.colors.oroClaro}
               />
               <View style={styles.headerTextCol}>
                 <Text style={styles.headerTitle}>Términos y Condiciones</Text>
                 <Text style={styles.headerSubtitle}>
-                  Mu Manager PRO • v{APP_VERSION} Oficial
+                  Mu Manager PRO • v{APP_VERSION}
                 </Text>
               </View>
             </View>
@@ -100,10 +98,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
                 activeOpacity={0.7}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <MaterialCommunityIcons
+                <MuIcon
                   name="close"
                   size={20}
-                  color={THEME.colors.textoSecundario}
                 />
               </TouchableOpacity>
             )}
@@ -111,10 +108,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
 
           {/* Badge informativo Season 6 */}
           <View style={styles.badgeBanner}>
-            <MaterialCommunityIcons
-              name="certificate-outline"
+            <MuIcon
+              name="check"
               size={16}
-              color={THEME.colors.jade}
               style={{ marginRight: 6 }}
             />
             <Text style={styles.badgeBannerText}>
@@ -134,10 +130,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
             {/* Artículo 1 */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons
-                  name="shield-account-variant-outline"
+                <MuIcon
+                  name="user"
                   size={18}
-                  color={THEME.colors.oroClaro}
                 />
                 <Text style={styles.sectionNumber}>1.</Text>
                 <Text style={styles.sectionTitle}>Ámbito de Uso Administrativo</Text>
@@ -154,10 +149,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
             {/* Artículo 2 */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons
-                  name="key-chain"
+                <MuIcon
+                  name="lock"
                   size={18}
-                  color={THEME.colors.oroClaro}
                 />
                 <Text style={styles.sectionNumber}>2.</Text>
                 <Text style={styles.sectionTitle}>Licenciamiento y Propiedad</Text>
@@ -174,10 +168,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
             {/* Artículo 3 */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons
-                  name="database-lock"
+                <MuIcon
+                  name="tools"
                   size={18}
-                  color={THEME.colors.oroClaro}
                 />
                 <Text style={styles.sectionNumber}>3.</Text>
                 <Text style={styles.sectionTitle}>Conexión SQL Server y Responsabilidad</Text>
@@ -194,10 +187,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
             {/* Artículo 4 */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons
-                  name="shield-check-outline"
+                <MuIcon
+                  name="check"
                   size={18}
-                  color={THEME.colors.jade}
                 />
                 <Text style={styles.sectionNumber}>4.</Text>
                 <Text style={styles.sectionTitle}>Privacidad, Telemetría y Cero Retención</Text>
@@ -214,10 +206,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
             {/* Artículo 5 */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeaderRow}>
-                <MaterialCommunityIcons
-                  name="handshake-outline"
+                <MuIcon
+                  name="community"
                   size={18}
-                  color={THEME.colors.oroClaro}
                 />
                 <Text style={styles.sectionNumber}>5.</Text>
                 <Text style={styles.sectionTitle}>Aceptación y Continuidad</Text>
@@ -231,10 +222,9 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
 
             {/* Distintivo de Fin de Lectura */}
             <View style={styles.documentEndBadge}>
-              <MaterialCommunityIcons
-                name="shield-check-outline"
+              <MuIcon
+                name="check"
                 size={16}
-                color={THEME.colors.jade}
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.documentEndText}>
@@ -243,53 +233,63 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
             </View>
           </ScrollView>
 
-          {/* Barra de Remaches Inferior */}
-          <View style={styles.rivetRowBottom}>
-            <View style={styles.rivet} />
-            <View style={styles.rivet} />
-          </View>
-
           {/* Acciones de Pie */}
           <View style={styles.footerActions}>
             {isOnboarding ? (
               <View style={styles.onboardingActionsCol}>
                 {!hasScrolledToEnd ? (
                   <TouchableOpacity
-                    style={styles.scrollDownIndicatorBtn}
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
                     onPress={handleScrollToBottom}
                     activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Deslizar hasta el final para aceptar"
                   >
-                    <MaterialCommunityIcons
-                      name="chevron-double-down"
-                      size={18}
-                      color={THEME.colors.oroClaro}
-                      style={{ marginRight: 6 }}
-                    />
-                    <Text style={styles.scrollDownIndicatorText}>
-                      Desliza hasta el final para aceptar
-                    </Text>
-                    <MaterialCommunityIcons
-                      name="chevron-double-down"
-                      size={18}
-                      color={THEME.colors.oroClaro}
-                      style={{ marginLeft: 6 }}
-                    />
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.scrollDownIndicatorBtn}
+                      resizeMode="stretch"
+                    >
+                      <MuIcon
+                        name="arrow-down"
+                        size={18}
+                        color="#E0C380"
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={styles.scrollDownIndicatorText}>
+                        Desliza hasta el final para aceptar
+                      </Text>
+                      <MuIcon
+                        name="arrow-down"
+                        size={18}
+                        color="#E0C380"
+                        style={{ marginLeft: 6 }}
+                      />
+                    </ImageBackground>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
-                    style={styles.primaryAcceptBtn}
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 48 }}
                     onPress={handleAccept}
                     activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Aceptar y Continuar"
                   >
-                    <MaterialCommunityIcons
-                      name="shield-check"
-                      size={20}
-                      color="#100D0B"
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={styles.primaryAcceptBtnText}>
-                      Aceptar y Continuar
-                    </Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={styles.primaryAcceptBtn}
+                      resizeMode="stretch"
+                    >
+                      <MuIcon
+                        name="check"
+                        size={18}
+                        color="#0D0E0D"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={styles.primaryAcceptBtnText}>
+                        ACEPTAR Y CONTINUAR
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 )}
                 <Text style={styles.footerHelpText}>
@@ -300,23 +300,31 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
               </View>
             ) : (
               <TouchableOpacity
-                style={styles.secondaryCloseBtn}
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 48 }}
                 onPress={handleAccept}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Entendido y Aceptado"
               >
-                <MaterialCommunityIcons
-                  name="check-bold"
-                  size={18}
-                  color={THEME.colors.oroClaro}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.secondaryCloseBtnText}>
-                  Entendido y Aceptado
-                </Text>
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeActive}
+                  style={styles.secondaryCloseBtn}
+                  resizeMode="stretch"
+                >
+                  <MuIcon
+                    name="check"
+                    size={18}
+                    color="#0D0E0D"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.secondaryCloseBtnText}>
+                    ENTENDIDO Y ACEPTADO
+                  </Text>
+                </ImageBackground>
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </Panel>
       </View>
     </Modal>
   );
@@ -337,36 +345,12 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 520,
     height: Math.min(640, windowHeight * 0.82),
-    backgroundColor: THEME.colors.fondo,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: THEME.colors.borde,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.6,
     shadowRadius: 10,
     elevation: 12,
     overflow: 'hidden',
-  },
-  rivetRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingTop: 8,
-  },
-  rivetRowBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingBottom: 4,
-  },
-  rivet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: THEME.colors.oro,
-    borderWidth: 1,
-    borderColor: '#0A0807',
   },
   header: {
     flexDirection: 'row',
@@ -389,7 +373,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 0.4,
     ...THEME.effects.textShadow,
   },
@@ -400,8 +384,12 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 6,
+    padding: 8,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 2,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: THEME.colors.borde,
@@ -423,7 +411,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: THEME.colors.superficieFin,
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     padding: 16,
@@ -431,7 +419,7 @@ const styles = StyleSheet.create({
   },
   sectionBox: {
     backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     padding: 12,
@@ -467,7 +455,7 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderTopWidth: 1,
     borderTopColor: THEME.colors.borde,
-    backgroundColor: THEME.colors.fondo,
+    backgroundColor: 'transparent',
   },
   onboardingActionsCol: {
     width: '100%',
@@ -480,7 +468,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(63, 207, 142, 0.10)',
     borderWidth: 1,
     borderColor: 'rgba(63, 207, 142, 0.3)',
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginTop: 6,
@@ -494,41 +482,33 @@ const styles = StyleSheet.create({
   },
   scrollDownIndicatorBtn: {
     width: '100%',
-    backgroundColor: 'rgba(232, 200, 106, 0.12)',
-    borderWidth: 1,
-    borderColor: THEME.colors.oroClaro,
     paddingVertical: 12,
-    borderRadius: 6,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   scrollDownIndicatorText: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '700',
-    color: THEME.colors.oroClaro,
+    color: '#E0C380',
     letterSpacing: 0.3,
+    fontFamily: THEME.typography.fontTitle,
     ...THEME.effects.textShadowSubtle,
   },
   primaryAcceptBtn: {
     width: '100%',
-    backgroundColor: THEME.colors.oroClaro,
-    paddingVertical: 13,
-    borderRadius: 6,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: THEME.colors.oroClaro,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingHorizontal: 12,
   },
   primaryAcceptBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#100D0B',
-    letterSpacing: 0.3,
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#0D0E0D',
+    letterSpacing: 0.6,
+    fontFamily: THEME.typography.fontTitle,
   },
   footerHelpText: {
     fontSize: 11,
@@ -539,19 +519,17 @@ const styles = StyleSheet.create({
   },
   secondaryCloseBtn: {
     width: '100%',
-    backgroundColor: THEME.colors.superficie,
-    borderWidth: 1,
-    borderColor: THEME.colors.bordeBrillante,
-    paddingVertical: 11,
-    borderRadius: 6,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 12,
   },
   secondaryCloseBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: THEME.colors.oroClaro,
-    ...THEME.effects.textShadowSubtle,
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#0D0E0D',
+    letterSpacing: 0.6,
+    fontFamily: THEME.typography.fontTitle,
   },
 });

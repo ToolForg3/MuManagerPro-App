@@ -8,18 +8,25 @@ import {
   TextInput,
   ScrollView,
   Linking,
+  Image,
+  ImageBackground,
+  Platform,
 } from 'react-native';
-import { GothicAlert as Alert } from '../common/GothicAlert';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { THEME } from '../../constants/theme';
-import { CustomButton } from '../common/CustomButton';
-import { LicenseService, LicenseStatus } from '../../services/security/licenseService';
-import { SqlClient } from '../../services/database/sqlClient';
 import * as Clipboard from 'expo-clipboard';
+import { GothicAlert as Alert } from '../common/GothicAlert';
+import { MuIcon } from '../ui/MuIcon';
+import { THEME } from '../../constants/theme';
+import { Panel, MuCornerOrnaments } from '../ui';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { LicenseService, LicenseStatus } from '../../services/security/licenseService';
+import { RemoteConfigService, RemoteConfigState } from '../../services/security/remoteConfigService';
+import { SqlClient } from '../../services/database/sqlClient';
+import { APP_VERSION } from '../../constants/appVersion';
 
 interface LicenseModalProps {
   visible: boolean;
   onClose: () => void;
+  initialSection?: 'license' | 'updates';
 }
 
 export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) => {
@@ -27,8 +34,8 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   const [inputKey, setInputKey] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Formulario de Solicitud de Licencia PRO
-  const [modeTab, setModeTab] = useState<'request' | 'key'>('request');
+  // Modo de Solicitud de Licencia PRO vs Ingreso de Clave (Stitch 08)
+  const [modeTab, setModeTab] = useState<'key' | 'request'>('key');
   const [reqName, setReqName] = useState('');
   const [reqPhone, setReqPhone] = useState('');
   const [reqEmail, setReqEmail] = useState('');
@@ -36,8 +43,19 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   const [reqNotes, setReqNotes] = useState('');
   const [sendingReq, setSendingReq] = useState(false);
 
+  // Estado de Actualizaciones de Sistema (Stitch 08)
+  const [remoteConfig, setRemoteConfig] = useState<RemoteConfigState>(RemoteConfigService.getState());
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadStarted, setDownloadStarted] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   useEffect(() => {
-    return LicenseService.subscribe(setStatus);
+    const unsubLicense = LicenseService.subscribe(setStatus);
+    const unsubConfig = RemoteConfigService.subscribe(setRemoteConfig);
+    return () => {
+      unsubLicense();
+      unsubConfig();
+    };
   }, []);
 
   const handleActivate = async () => {
@@ -88,7 +106,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
             Linking.openURL(url).catch(() => {
               Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
             });
-          }
+          },
         },
         {
           text: 'Incluir HWID',
@@ -99,12 +117,12 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
             Linking.openURL(url).catch(() => {
               Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
             });
-          }
+          },
         },
         {
           text: 'Cancelar',
           style: 'cancel',
-        }
+        },
       ]
     );
   };
@@ -129,14 +147,14 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
 
       if (res.success) {
         Alert.alert(
-          '✅ Solicitud Enviada al Panel',
-          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n📱 Dispositivo: ${status.hwid || 'Registrado'}\n💬 Contacto: ${cleanPhone !== 'Sin número' ? cleanPhone : 'Registrado en sistema'}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
+          '[ÉXITO] Solicitud Enviada al Panel',
+          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${status.hwid || 'Registrado'}\n[CONTACTO]: ${cleanPhone !== 'Sin número' ? cleanPhone : 'Registrado en sistema'}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
           [{ text: 'Entendido' }]
         );
         setReqNotes('');
       } else if (res.alreadyRequested) {
         Alert.alert(
-          '⚠️ Solicitud Previa Registrada',
+          '[AVISO] Solicitud Previa Registrada',
           res.message || `Este dispositivo (${status.hwid || 'HWID'}) ya tiene una solicitud previa registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
           [{ text: 'Entendido' }]
         );
@@ -148,194 +166,228 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
     }
   };
 
+  // Acciones de Actualización (Stitch 08)
+  const updateInfo = remoteConfig.updateInfo;
+  const isRollback = !!updateInfo?.isRollback;
+  const isBeta = remoteConfig.releaseChannel === 'BETA' || !!updateInfo?.isBeta;
+  const latestVersion = updateInfo?.latestVersion || APP_VERSION;
+  const hasUpdate = !!updateInfo?.hasUpdate;
+  const forceUpdate = !!updateInfo?.forceUpdate;
+  const changelogContent = updateInfo?.changelog || '• Mejoras de rendimiento en consultas SQL.\n• Sistema de diseño gótico Season 6 NewUI perfeccionado.\n• Corrección de estabilidad en conexiones de red.';
+
+  const handleDownload = async (customUrl?: string) => {
+    setDownloadError(null);
+    const url = customUrl || updateInfo?.apkUrl;
+    if (!url || !url.trim()) {
+      setDownloadError('No se encontró una dirección de descarga válida.');
+      return;
+    }
+    try {
+      setDownloadStarted(true);
+      await Linking.openURL(url.trim());
+    } catch (e: any) {
+      console.warn('Could not open APK URL', e);
+      setDownloadError('No se pudo abrir el enlace automáticamente. Puedes reintentar o copiar el enlace directo.');
+    }
+  };
+
+  const handleCopyUpdateLink = async () => {
+    const url = updateInfo?.apkUrl;
+    if (url && url.trim()) {
+      await Clipboard.setStringAsync(url.trim());
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+      Alert.alert('Enlace Copiado', 'El enlace de descarga del APK ha sido copiado al portapapeles.');
+    } else {
+      Alert.alert('Aviso', 'No hay enlace de descarga disponible en este momento.');
+    }
+  };
+
+  const handleDismissUpdate = () => {
+    RemoteConfigService.dismissUpdate();
+    onClose();
+  };
+
   const isPro = status.plan === 'PRO';
+  const licenseBadgeText = isPro
+    ? status.isLifetime || !status.expiresAt
+      ? 'LICENCIA PRO (VITALICIA)'
+      : `LICENCIA PRO (${status.daysRemaining !== undefined ? `${status.daysRemaining}D` : 'ACTIVA'})`
+    : status.hoursRemaining !== undefined && status.hoursRemaining > 0
+      ? `MODO DEMO (${status.hoursRemaining}H)`
+      : 'MODO DEMO';
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <MaterialCommunityIcons
-                name={isPro ? 'shield-check' : 'shield-alert'}
-                size={24}
-                color={isPro ? THEME.colors.accentGreenBright : THEME.colors.primaryOrange}
-              />
-              <Text style={styles.title}>
-                {isPro ? 'Licencia PRO Activada' : 'Activación de Licencia PRO'}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
-            </TouchableOpacity>
+        <View style={styles.windowWrapper}>
+          {/* Decorative Window Header Gothic Frame (Stitch 08) */}
+          <View style={styles.headerContainer}>
+            <Image
+              source={STITCH_ASSETS.decorations.headerGothicWindow}
+              style={styles.headerGothicWindow}
+              resizeMode="contain"
+            />
+            {/* Área de pulsación transparente sobre el icono de cerrar (X) nativo en la textura Stitch */}
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar ventana"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            />
+
+            {/* Header Title Section */}
+            <Text style={styles.windowTitle}>
+              MU MANAGER PRO · LICENCIA Y ACTUALIZACIONES
+            </Text>
           </View>
 
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Status Card */}
-            <View style={[styles.statusCard, isPro ? styles.statusCardPro : styles.statusCardDemo]}>
-              <View style={styles.statusRow}>
-                <Text style={styles.statusLabel}>Estado Actual:</Text>
-                <View style={[styles.pill, isPro ? styles.pillPro : styles.pillDemo]}>
-                  <Text style={[styles.pillText, isPro ? styles.pillTextPro : styles.pillTextDemo]}>
-                    {isPro ? 'VERSIÓN PRO (DESBLOQUEADA)' : 'MODO DEMO (LIMITADO)'}
+          <ScrollView
+            style={styles.cardScroll}
+            contentContainerStyle={styles.cardScrollContent}
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ======================================================== */}
+            {/* PANEL 1: GESTIÓN DE LICENCIA                             */}
+            {/* ======================================================== */}
+            <Panel variant="box" style={styles.sectionPanel}>
+              <MuCornerOrnaments size={12} />
+
+              {/* Section Header with Diamonds & Ornamental Divider */}
+              <View style={styles.sectionHeaderRow}>
+                <View style={styles.diamond} />
+                <Text style={styles.sectionTitle}>GESTIÓN DE LICENCIA</Text>
+                <View style={styles.diamond} />
+              </View>
+              <View style={styles.goldDivider} />
+
+              {/* License Status Display */}
+              <View style={styles.statusDisplayRow}>
+                <Text style={styles.statusTitleLabel}>ESTADO DE LICENCIA:</Text>
+                <View style={[styles.statusPill, isPro ? styles.statusPillPro : styles.statusPillDemo]}>
+                  <Text style={[styles.statusPillText, isPro ? styles.statusPillTextPro : styles.statusPillTextDemo]}>
+                    {licenseBadgeText}
                   </Text>
                 </View>
               </View>
 
-              <Text style={styles.statusDesc}>
-                {isPro
-                  ? 'Tienes acceso total: guardado y sincronización en SQL Server, edición de 108 slots de inventario, baúl ilimitado y stats sin restricciones.'
-                  : 'En modo demo puedes explorar la interfaz y ver personajes, pero el guardado en SQL Server y stats mayores a 500 requieren Licencia PRO activa.'}
-              </Text>
-            </View>
-
-            {/* Código de Hardware (HWID) */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>1. ID EXCLUSIVO DE TU DISPOSITIVO</Text>
-              <Text style={styles.sectionHelp}>
-                El sistema asocia criptográficamente tu licencia a este identificador de celular:
-              </Text>
-
-              <View style={styles.hwidBox}>
-                <Text style={styles.hwidText} selectable={true}>
-                  {status.hwid || 'CEL-CARGANDO-ID'}
-                </Text>
-                <TouchableOpacity style={styles.copyBtn} onPress={handleCopyHwid}>
-                  <MaterialCommunityIcons name="content-copy" size={16} color="#FFFFFF" />
-                  <Text style={styles.copyBtnText}>Copiar</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Canales de Contacto Directo */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>2. CONTACTO DIRECTO CON EL EQUIPO</Text>
-              <Text style={styles.sectionHelp}>
-                Comunícate directamente con nuestro equipo de soporte para activación inmediata o consultas:
-              </Text>
-
-              <View style={styles.contactButtonsRow}>
-                <TouchableOpacity style={styles.btnWhatsApp} onPress={handleOpenWhatsApp} activeOpacity={0.8}>
-                  <MaterialCommunityIcons name="whatsapp" size={20} color="#FFFFFF" />
-                  <Text style={styles.btnContactText}>WhatsApp Soporte</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.btnTelegram} onPress={handleOpenTelegram} activeOpacity={0.8}>
-                  <MaterialCommunityIcons name="send" size={18} color="#FFFFFF" />
-                  <Text style={styles.btnContactText}>Canal Telegram</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Selector de Pestaña: Solicitar vs Ingresar Clave */}
-            {!isPro ? (
-              <View style={styles.section}>
-                <View style={styles.tabSwitchContainer}>
-                  <TouchableOpacity
-                    style={[styles.tabSwitchBtn, modeTab === 'request' && styles.tabSwitchBtnActive]}
-                    onPress={() => setModeTab('request')}
-                  >
-                    <MaterialCommunityIcons
-                      name="email-send-outline"
-                      size={16}
-                      color={modeTab === 'request' ? '#FF5722' : THEME.colors.textSecondary}
-                    />
-                    <Text style={[styles.tabSwitchText, modeTab === 'request' && styles.tabSwitchTextActive]}>
-                      Solicitar PRO
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.tabSwitchBtn, modeTab === 'key' && styles.tabSwitchBtnActive]}
-                    onPress={() => setModeTab('key')}
-                  >
-                    <MaterialCommunityIcons
-                      name="key-outline"
-                      size={16}
-                      color={modeTab === 'key' ? '#FF5722' : THEME.colors.textSecondary}
-                    />
-                    <Text style={[styles.tabSwitchText, modeTab === 'key' && styles.tabSwitchTextActive]}>
-                      Tengo una Clave
-                    </Text>
-                  </TouchableOpacity>
+              {/* Identificador del Dispositivo (HWID) */}
+              <View style={styles.fieldBlock}>
+                <View style={styles.fieldLabelRow}>
+                  <MuIcon name="lock" size={13} color="#9AA0A6" />
+                  <Text style={styles.fieldLabel}>IDENTIFICADOR DEL DISPOSITIVO (HWID)</Text>
+                </View>
+                <View style={styles.texturedInputContainer}>
+                  <Text style={styles.hwidText} selectable={true}>
+                    {status.hwid || 'CEL-2026-9B4F-881A'}
+                  </Text>
                 </View>
 
-                {/* Formulario de Solicitud de Licencia PRO */}
-                {modeTab === 'request' ? (
-                  <View style={styles.formContainer}>
-                    <Text style={styles.formInstructions}>
-                      Completa tus datos de contacto para que nuestro equipo te envíe tu clave de activación oficial:
+                {/* Botón Táctil Copiar HWID (min 48px) */}
+                <TouchableOpacity
+                  style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}
+                  onPress={handleCopyHwid}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Copiar HWID"
+                >
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.bigBtnWrap}
+                    resizeMode="stretch"
+                  >
+                    <Text style={styles.bigBtnTextGold}>COPIAR HWID</Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              </View>
+
+              {/* Soporte Técnico Oficial */}
+              <View style={[styles.fieldBlock, styles.supportBlock]}>
+                <Text style={styles.fieldLabel}>SOPORTE TÉCNICO OFICIAL</Text>
+                <View style={styles.dualButtonRow}>
+                  <TouchableOpacity
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                    onPress={handleOpenWhatsApp}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Soporte WhatsApp"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.halfBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.mediumBtnTextWhite}>WHATSAPP</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                    onPress={handleOpenTelegram}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Canal Telegram"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.halfBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.mediumBtnTextWhite}>TELEGRAM</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Mode Native Tabs (Tengo una Clave vs Solicitar PRO) */}
+              <View style={styles.tabsRow}>
+                <TouchableOpacity
+                  style={styles.tabItem}
+                  onPress={() => setModeTab('key')}
+                  activeOpacity={0.8}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: modeTab === 'key' }}
+                >
+                  <ImageBackground
+                    source={modeTab === 'key' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.tabImgBg}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.tabText, modeTab === 'key' ? styles.tabTextActive : styles.tabTextInactive]}>
+                      TENGO UNA CLAVE
                     </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
 
-                    <Text style={styles.inputLabel}>Tu Nombre / Alias (Opcional)</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Ej: Carlos Silva (Admin Mu)"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={reqName}
-                      onChangeText={setReqName}
-                    />
-
-                    <Text style={styles.inputLabel}>Número de WhatsApp / Teléfono (Opcional)</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Ej: +54 9 11 2345-6789"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={reqPhone}
-                      onChangeText={setReqPhone}
-                      keyboardType="phone-pad"
-                    />
-
-                    <Text style={styles.inputLabel}>Correo Electrónico o Discord (Opcional)</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Ej: admin@servidormu.com"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={reqEmail}
-                      onChangeText={setReqEmail}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-
-                    <Text style={styles.inputLabel}>Nombre de tu Servidor MU (Opcional)</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Ej: Mu Colombia Season 6"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={reqServer}
-                      onChangeText={setReqServer}
-                    />
-
-                    <Text style={styles.inputLabel}>Mensaje / Consulta Adicional</Text>
-                    <TextInput
-                      style={[styles.textInput, { height: 65, textAlignVertical: 'top' }]}
-                      placeholder="¿Deseas plan mensual, anual o permanente?"
-                      placeholderTextColor={THEME.colors.textMuted}
-                      value={reqNotes}
-                      onChangeText={setReqNotes}
-                      multiline={true}
-                    />
-
-                    <CustomButton
-                      title={sendingReq ? 'Enviando...' : 'ENVIAR SOLICITUD AL EQUIPO'}
-                      onPress={handleSendProRequest}
-                      variant="orange"
-                      loading={sendingReq}
-                      icon="send"
-                      size="lg"
-                      style={{ marginTop: 14 }}
-                    />
-                  </View>
-                ) : (
-                  /* Ingreso manual de clave */
-                  <View style={styles.keyContainer}>
-                    <Text style={styles.sectionHelp}>
-                      Pega aquí la clave entregada por el equipo (ej: MUMANAGER-PRO-XXXX-XXXX-XXXX):
+                <TouchableOpacity
+                  style={styles.tabItem}
+                  onPress={() => setModeTab('request')}
+                  activeOpacity={0.8}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: modeTab === 'request' }}
+                >
+                  <ImageBackground
+                    source={modeTab === 'request' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.tabImgBg}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.tabText, modeTab === 'request' ? styles.tabTextActive : styles.tabTextInactive]}>
+                      SOLICITAR PRO
                     </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              </View>
 
+              {/* Contenido según pestaña seleccionada */}
+              {modeTab === 'key' ? (
+                <View style={styles.activationFormContainer}>
+                  <Text style={styles.fieldLabel}>CLAVE DE ACTIVACIÓN</Text>
+                  <View style={styles.texturedInputContainer}>
                     <TextInput
-                      style={styles.keyInput}
+                      style={styles.keyTextInput}
                       placeholder="MUMANAGER-PRO-XXXX-XXXX-XXXX"
                       placeholderTextColor={THEME.colors.textMuted}
                       value={inputKey}
@@ -343,66 +395,323 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       autoCapitalize="characters"
                       autoCorrect={false}
                     />
+                  </View>
 
-                    <CustomButton
-                      title={loading ? 'Verificando...' : 'ACTIVAR LICENCIA PRO'}
-                      onPress={handleActivate}
-                      variant="orange"
-                      loading={loading}
-                      icon="key-variant"
-                      size="lg"
-                      style={{ marginTop: 14 }}
+                  {/* Botones de Acción */}
+                  <TouchableOpacity
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}
+                    onPress={handleActivate}
+                    disabled={loading}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Activar Licencia"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={styles.bigBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.bigBtnTextGold, { color: '#0D0E0D' }]}>
+                        {loading ? 'VERIFICANDO...' : 'ACTIVAR LICENCIA'}
+                      </Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}
+                    onPress={handleResetToDemo}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Volver a Modo Demo"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.secondaryBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.bigBtnTextSilver}>VOLVER A MODO DEMO</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.activationFormContainer}>
+                  <Text style={styles.fieldLabel}>TU NOMBRE / ALIAS (OPCIONAL)</Text>
+                  <View style={styles.texturedInputContainer}>
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder="Ej: Carlos Silva (Admin Mu)"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={reqName}
+                      onChangeText={setReqName}
                     />
+                  </View>
+
+                  <Text style={styles.fieldLabel}>WHATSAPP / TELÉFONO (OPCIONAL)</Text>
+                  <View style={styles.texturedInputContainer}>
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder="Ej: +54 9 11 2345-6789"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={reqPhone}
+                      onChangeText={setReqPhone}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+
+                  <Text style={styles.fieldLabel}>CORREO ELECTRÓNICO (OPCIONAL)</Text>
+                  <View style={styles.texturedInputContainer}>
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder="Ej: admin@servidormu.com"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={reqEmail}
+                      onChangeText={setReqEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <Text style={styles.fieldLabel}>NOMBRE DE TU SERVIDOR (OPCIONAL)</Text>
+                  <View style={styles.texturedInputContainer}>
+                    <TextInput
+                      style={styles.formTextInput}
+                      placeholder="Ej: Mu Colombia Season 6"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={reqServer}
+                      onChangeText={setReqServer}
+                    />
+                  </View>
+
+                  <Text style={styles.fieldLabel}>MENSAJE / CONSULTA</Text>
+                  <View style={[styles.texturedInputContainer, { minHeight: 65 }]}>
+                    <TextInput
+                      style={[styles.formTextInput, { minHeight: 55, textAlignVertical: 'top' }]}
+                      placeholder="¿Deseas plan mensual, anual o permanente?"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={reqNotes}
+                      onChangeText={setReqNotes}
+                      multiline={true}
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}
+                    onPress={handleSendProRequest}
+                    disabled={sendingReq}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Enviar Solicitud al Equipo"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={styles.bigBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.bigBtnTextGold, { color: '#0D0E0D' }]}>
+                        {sendingReq ? 'ENVIANDO...' : 'ENVIAR SOLICITUD AL EQUIPO'}
+                      </Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </Panel>
+
+            {/* ======================================================== */}
+            {/* PANEL 2: ACTUALIZACIONES DEL SISTEMA                     */}
+            {/* ======================================================== */}
+            <Panel variant="box" style={[styles.sectionPanel, { marginTop: 12 }]}>
+              <MuCornerOrnaments size={12} />
+
+              {/* Section Header with Cog & Ornamental Divider */}
+              <View style={styles.sectionHeaderRow}>
+                <MuIcon name="tools" size={16} color="#EFD28D" />
+                <Text style={styles.sectionTitle}>ACTUALIZACIONES DEL SISTEMA</Text>
+                <MuIcon name="tools" size={16} color="#EFD28D" />
+              </View>
+              <View style={styles.goldDivider} />
+
+              {/* Version Compare Panel */}
+              <View style={styles.versionCompareBox}>
+                <View style={styles.versionCol}>
+                  <Text style={styles.versionColLabel}>INSTALADA</Text>
+                  <Text style={styles.versionColValCurrent}>v{APP_VERSION}</Text>
+                </View>
+                <View style={styles.versionColDivider} />
+                <View style={styles.versionCol}>
+                  <Text style={styles.versionColLabelGold}>ÚLTIMA DISPONIBLE</Text>
+                  <Text style={styles.versionColValLatest}>v{latestVersion}</Text>
+                </View>
+              </View>
+
+              {/* Notas de Versión */}
+              <View style={styles.fieldBlock}>
+                <Text style={styles.fieldLabel}>NOTAS DE VERSIÓN</Text>
+                <View style={styles.changelogBox}>
+                  <ScrollView style={styles.changelogScroll} nestedScrollEnabled={true}>
+                    <Text style={styles.changelogText}>{changelogContent}</Text>
+                  </ScrollView>
+                </View>
+              </View>
+
+              {/* Bloque de Variantes y Acciones */}
+              <View style={styles.variantsBlock}>
+                {/* Variante Recomendada (Normal) */}
+                <View style={styles.variantGroup}>
+                  <Text style={styles.variantGroupTitleGold}>VARIANTE RECOMENDADA (NORMAL)</Text>
+                  <View style={styles.dualButtonRow}>
+                    <TouchableOpacity
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => handleDownload()}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Descargar e Instalar Normal"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeActive}
+                        style={styles.halfBtnGoldWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.mediumBtnTextGoldSmall, { color: '#0D0E0D' }]}>DESCARGAR E INSTALAR</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={handleDismissUpdate}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Recordarme más tarde"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.halfBtnWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.mediumBtnTextWhiteSmall}>RECORDARME MÁS TARDE</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Variante Experimental (Beta) */}
+                <View style={styles.variantGroup}>
+                  <Text style={styles.variantGroupTitleMuted}>VARIANTE EXPERIMENTAL (BETA)</Text>
+                  <TouchableOpacity
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
+                    onPress={() => handleDownload(updateInfo?.apkUrl)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Descargar Beta"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.secondaryBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.bigBtnTextSilver}>DESCARGAR BETA</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Actualización Obligatoria (Crimson Button 1:1) */}
+                {forceUpdate && (
+                  <View style={styles.variantGroup}>
+                    <Text style={styles.variantGroupTitleCrimson}>ACTUALIZACIÓN OBLIGATORIA</Text>
+                    <TouchableOpacity
+                      style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => handleDownload()}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Descargar e Instalar Obligatoria"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.big}
+                        style={styles.crimsonBtnWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.crimsonBtnText}>DESCARGAR E INSTALAR</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Restauración de Sistema (Rollback) */}
+                {isRollback && (
+                  <View style={styles.variantGroup}>
+                    <Text style={styles.variantGroupTitleMuted}>RESTAURACIÓN DE SISTEMA</Text>
+                    <TouchableOpacity
+                      style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => handleDownload()}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Revertir a versión previa"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.secondaryBtnWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.bigBtnTextSilver}>REVERTIR A VERSIÓN PREVIA</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
-            ) : (
-              <View style={styles.activatedBox}>
-                <MaterialCommunityIcons name="check-decagram" size={38} color={THEME.colors.accentGreenBright} />
-                <Text style={styles.activatedTitle}>¡Aplicación Registrada en Modo PRO!</Text>
-                <Text style={styles.activatedSub}>
-                  Clave: {status.licenseKey || 'MUMANAGER-PRO-ACTIVATED'}
-                </Text>
 
-                <View style={[
-                  styles.vigenciaBadge,
-                  status.isLifetime || !status.expiresAt ? styles.vigenciaLifetime : styles.vigenciaDays
-                ]}>
-                  <MaterialCommunityIcons
-                    name={status.isLifetime || !status.expiresAt ? 'infinity' : 'calendar-clock'}
-                    size={16}
-                    color={status.isLifetime || !status.expiresAt ? THEME.colors.jade : '#FFB74D'}
-                  />
-                  <Text style={[
-                    styles.vigenciaText,
-                    { color: status.isLifetime || !status.expiresAt ? THEME.colors.jade : '#FFB74D' }
-                  ]}>
-                    {status.isLifetime || !status.expiresAt
-                      ? 'Licencia Vitalicia (Acceso Permanente)'
-                      : `Vigencia: Vence el ${new Date(status.expiresAt).toLocaleDateString()} ${new Date(status.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${
-                          status.timeRemainingFormatted
-                            ? ` (${status.timeRemainingFormatted} restantes)`
-                            : status.hoursRemaining !== undefined && status.hoursRemaining < 24
-                              ? ` (${status.hoursRemaining}h restantes)`
-                              : status.daysRemaining !== undefined
-                                ? ` (${status.daysRemaining} días)`
-                                : ''
-                        }`}
-                  </Text>
+              {/* Estado de Fallo en Descarga (Visible ante error o enlace de descarga) */}
+              {!!downloadError && (
+                <View style={styles.downloadFailureBox}>
+                  <View style={styles.failureTitleRow}>
+                    <MuIcon name="alert-triangle" size={14} color="#FFB4AB" />
+                    <Text style={styles.failureTitleText}>ESTADO DE FALLO EN DESCARGA</Text>
+                  </View>
+                  <Text style={styles.failureMessageText}>{downloadError}</Text>
+                  <View style={styles.dualButtonRow}>
+                    <TouchableOpacity
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => handleDownload()}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Reintentar Descarga"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeActive}
+                        style={styles.halfBtnGoldWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.mediumBtnTextGold, { color: '#0D0E0D' }]}>REINTENTAR</Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={handleCopyUpdateLink}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Copiar Enlace Directo"
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.halfBtnWrap}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.mediumBtnTextWhite}>
+                          {copiedLink ? '¡COPIADO!' : 'COPIAR ENLACE'}
+                        </Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  </View>
                 </View>
+              )}
+            </Panel>
 
-                <TouchableOpacity style={styles.resetBtn} onPress={handleResetToDemo}>
-                  <Text style={styles.resetBtnText}>Desactivar y volver a DEMO</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Anti-crack notice */}
-            <View style={styles.securityFooter}>
-              <MaterialCommunityIcons name="lock" size={14} color={THEME.colors.textMuted} />
-              <Text style={styles.securityText}>
-                Firma criptográfica SHA-256 ligada a hardware. Control centralizado contra copias no autorizadas.
-              </Text>
+            {/* Decorative Gothic Bottom Footer Frame (Stitch 08) */}
+            <View style={styles.footerContainer}>
+              <Image
+                source={STITCH_ASSETS.decorations.gothicBottomFooter}
+                style={styles.footerGothicWindow}
+                resizeMode="contain"
+              />
             </View>
           </ScrollView>
         </View>
@@ -414,345 +723,509 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(0,0,0,0.88)',
     justifyContent: 'center',
-    padding: THEME.spacing.md,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 18,
   },
-  container: {
-    maxHeight: '92%',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
+  windowWrapper: {
+    width: '100%',
+    maxWidth: 410,
+    maxHeight: '94%',
+    backgroundColor: '#131413',
+    borderWidth: 1,
+    borderColor: '#3C352A',
+    borderRadius: THEME.shapes.radioEsquina,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.9,
+    shadowRadius: 14,
+    elevation: 20,
   },
-  header: {
-    flexDirection: 'row',
+  headerContainer: {
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: THEME.spacing.md,
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#6B5533',
-    backgroundColor: '#1E1A16',
+    justifyContent: 'center',
+    paddingTop: 4,
+    paddingBottom: 6,
+    paddingHorizontal: 8,
+    backgroundColor: '#0E1012',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2E2920',
+    position: 'relative',
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: THEME.typography.weightBold,
-    color: '#E8C86A',
-    fontFamily: THEME.typography.fontTitle,
-    letterSpacing: 0.8,
-    ...THEME.effects.textShadow,
+  headerGothicWindow: {
+    width: '100%',
+    height: 48,
   },
   closeBtn: {
-    padding: 6,
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
-  body: {
-    padding: THEME.spacing.md,
+  closeBtnImg: {
+    width: 24,
+    height: 24,
   },
-  statusCard: {
-    padding: THEME.spacing.md,
-    borderRadius: 6,
-    borderWidth: 1.2,
-    marginBottom: THEME.spacing.md,
+  windowTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#EFD28D',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    marginTop: 4,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
-  statusCardDemo: {
-    backgroundColor: 'rgba(226, 112, 58, 0.1)',
-    borderColor: '#E2703A',
+  cardScroll: {
+    width: '100%',
   },
-  statusCardPro: {
-    backgroundColor: 'rgba(63, 207, 142, 0.12)',
-    borderColor: '#3FCF8E',
+  cardScrollContent: {
+    padding: 12,
+    paddingBottom: 20,
   },
-  statusRow: {
+  sectionPanel: {
+    position: 'relative',
+    backgroundColor: 'rgba(18, 20, 22, 0.95)',
+    borderWidth: 1,
+    borderColor: '#3C352A',
+    borderRadius: 2,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+  },
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 8,
     marginBottom: 6,
   },
-  statusLabel: {
-    fontSize: 12,
-    color: THEME.colors.textoSecundarioLuminoso,
-    fontWeight: '600',
-    ...THEME.effects.textShadowSubtle,
-  },
-  pill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  diamond: {
+    width: 6,
+    height: 6,
+    backgroundColor: '#EFD28D',
     borderWidth: 1,
-  },
-  pillDemo: {
-    backgroundColor: 'rgba(226, 112, 58, 0.2)',
-    borderColor: '#E2703A',
-  },
-  pillPro: {
-    backgroundColor: 'rgba(63, 207, 142, 0.2)',
-    borderColor: '#3FCF8E',
-  },
-  pillText: {
-    fontSize: 10,
-    fontWeight: THEME.typography.weightBold,
-  },
-  pillTextDemo: {
-    color: '#FFA87D',
-    ...THEME.effects.textShadowSubtle,
-  },
-  pillTextPro: {
-    color: '#5DF5B0',
-    ...THEME.effects.textShadowSubtle,
-  },
-  statusDesc: {
-    fontSize: 11.5,
-    color: THEME.colors.textoSecundarioLuminoso,
-    lineHeight: 16,
-    marginTop: 4,
-    ...THEME.effects.textShadowSubtle,
-  },
-  section: {
-    backgroundColor: '#231D19',
-    padding: THEME.spacing.md,
-    borderRadius: 6,
-    borderWidth: 1.2,
-    borderColor: '#6B5533',
-    marginBottom: THEME.spacing.md,
+    borderColor: '#3F311C',
+    transform: [{ rotate: '45deg' }],
   },
   sectionTitle: {
-    fontSize: 11.5,
-    fontWeight: THEME.typography.weightBold,
-    color: '#E8C86A',
-    letterSpacing: 1,
+    fontSize: 12,
+    fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    marginBottom: 4,
-    ...THEME.effects.textShadow,
+    color: '#EFD28D',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  sectionHelp: {
-    fontSize: 11.5,
-    color: THEME.colors.textoSecundarioLuminoso,
-    lineHeight: 16,
-    marginBottom: 10,
-    ...THEME.effects.textShadowSubtle,
+  goldDivider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: 'rgba(196, 154, 69, 0.4)',
+    marginVertical: 8,
   },
-  hwidBox: {
+  statusDisplayRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
+    backgroundColor: '#0E1012',
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderColor: '#2E2920',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  statusTitleLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#DCDFE3',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  statusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 2,
+    borderWidth: 1,
+  },
+  statusPillPro: {
+    backgroundColor: '#14231B',
+    borderColor: '#059669',
+  },
+  statusPillDemo: {
+    backgroundColor: '#26160F',
+    borderColor: '#E2703A',
+  },
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontMono,
+    letterSpacing: 0.5,
+  },
+  statusPillTextPro: {
+    color: '#34D399',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  statusPillTextDemo: {
+    color: '#FFA87D',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  fieldBlock: {
+    marginBottom: 12,
+  },
+  supportBlock: {
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#292E35',
+  },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  fieldLabel: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#9AA0A6',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  texturedInputContainer: {
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderColor: '#3A352A',
+    borderRadius: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 44,
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   hwidText: {
     fontFamily: THEME.typography.fontMono,
-    fontSize: 13,
-    fontWeight: THEME.typography.weightBold,
-    color: '#E8C86A',
-    ...THEME.effects.textShadow,
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#EFD28D',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  copyBtn: {
-    flexDirection: 'row',
+  keyTextInput: {
+    fontFamily: THEME.typography.fontMono,
+    fontSize: 12.5,
+    color: '#EFD28D',
+    padding: 0,
+    margin: 0,
+  },
+  formTextInput: {
+    fontSize: 12,
+    color: '#E4E2E0',
+    padding: 0,
+    margin: 0,
+  },
+  bigBtnWrap: {
+    width: '100%',
+    minHeight: 48,
     alignItems: 'center',
-    backgroundColor: '#2B2521',
-    borderWidth: 1,
-    borderColor: '#6B5533',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  secondaryBtnWrap: {
+    width: '100%',
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  btnImgBg: {
+    width: '100%',
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  tabImgBg: {
+    width: '100%',
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  bigBtnTextGold: {
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#EFD28D',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  bigBtnTextSilver: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#C5C8CD',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  dualButtonRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  halfBtnWrap: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  halfBtnGoldWrap: {
+    flex: 1,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  mediumBtnTextWhite: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#FFFFFF',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    textAlign: 'center',
+  },
+  mediumBtnTextGold: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#FEF08A',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  mediumBtnTextGoldSmall: {
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#FEF08A',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  mediumBtnTextWhiteSmall: {
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#F3F4F6',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    textAlign: 'center',
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#292E35',
+    marginBottom: 10,
+  },
+  tabItem: {
+    flex: 1,
+    minHeight: 48,
+  },
+  tabText: {
+    fontSize: 11,
+    fontFamily: THEME.typography.fontTitle,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  tabTextActive: {
+    fontWeight: '900',
+    color: '#0D0E0D',
+  },
+  tabTextInactive: {
+    fontWeight: '700',
+    color: '#CDC6B9',
+    ...THEME.effects.textShadowSubtle,
+  },
+  activationFormContainer: {
     gap: 4,
   },
-  copyBtnText: {
-    fontSize: 11,
-    color: THEME.colors.texto,
-    fontWeight: '600',
-    ...THEME.effects.textShadowSubtle,
-  },
-  contactButtonsRow: {
+  versionCompareBox: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  btnWhatsApp: {
-    flex: 1.2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1E7E34',
-    paddingVertical: 10,
-    minHeight: 44,
-    borderRadius: 6,
+    backgroundColor: '#0E1012',
     borderWidth: 1,
-    borderColor: '#3FCF8E',
-    gap: 6,
+    borderColor: '#2E2920',
+    padding: 10,
+    marginBottom: 10,
   },
-  btnTelegram: {
+  versionCol: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0088CC',
-    paddingVertical: 10,
-    minHeight: 44,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#5B8DEF',
-    gap: 6,
   },
-  btnContactText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  versionColDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#272B31',
+  },
+  versionColLabel: {
+    fontSize: 9.5,
     fontWeight: '700',
-    ...THEME.effects.textShadowSubtle,
+    color: '#787F8A',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 2,
   },
-  tabSwitchContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#100D0B',
-    borderRadius: 6,
-    padding: 3,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#6B5533',
+  versionColLabelGold: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#C5A059',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 2,
   },
-  tabSwitchBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    minHeight: 40,
-    borderRadius: 6,
-    gap: 6,
-  },
-  tabSwitchBtnActive: {
-    backgroundColor: '#2B2521',
-    borderWidth: 1,
-    borderColor: '#6B5533',
-  },
-  tabSwitchText: {
-    fontSize: 12,
+  versionColValCurrent: {
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 12.5,
     fontWeight: '600',
-    color: THEME.colors.textoSecundarioLuminoso,
-    ...THEME.effects.textShadowSubtle,
+    color: '#DCDFE3',
   },
-  tabSwitchTextActive: {
-    color: '#E8C86A',
+  versionColValLatest: {
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 12.5,
     fontWeight: '700',
-    ...THEME.effects.textShadow,
+    color: '#EFD28D',
   },
-  formContainer: {
-    gap: 6,
-  },
-  formInstructions: {
-    fontSize: 11.5,
-    color: THEME.colors.textoSecundarioLuminoso,
-    marginBottom: 6,
-    ...THEME.effects.textShadowSubtle,
-  },
-  inputLabel: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: THEME.colors.textoSecundarioLuminoso,
-    marginTop: 6,
-    marginBottom: 3,
-    ...THEME.effects.textShadowSubtle,
-  },
-  textInput: {
-    backgroundColor: '#100D0B',
+  changelogBox: {
+    backgroundColor: '#0D0E0D',
     borderWidth: 1,
-    borderColor: '#6B5533',
-    borderRadius: 6,
-    color: THEME.colors.texto,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 44,
-    fontSize: 12,
+    borderColor: '#3A352A',
+    borderRadius: 2,
+    padding: 10,
+    maxHeight: 110,
   },
-  keyContainer: {
-    marginTop: 4,
+  changelogScroll: {
+    maxHeight: 90,
   },
-  keyInput: {
-    backgroundColor: '#100D0B',
-    borderWidth: 1,
-    borderColor: '#6B5533',
-    borderRadius: 6,
-    color: THEME.colors.texto,
-    fontFamily: THEME.typography.fontMono,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-    fontSize: 13,
-  },
-  activatedBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    gap: 8,
-  },
-  activatedTitle: {
-    fontSize: 16,
-    fontWeight: THEME.typography.weightBold,
-    color: '#E8C86A',
-    fontFamily: THEME.typography.fontTitle,
-    ...THEME.effects.textShadow,
-  },
-  activatedSub: {
+  changelogText: {
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 11.5,
-    color: THEME.colors.textoSecundarioLuminoso,
-    fontFamily: THEME.typography.fontMono,
-    ...THEME.effects.textShadowSubtle,
+    color: '#CFC5B5',
+    lineHeight: 16,
   },
-  vigenciaBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    marginTop: 6,
+  variantsBlock: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#292E35',
+    gap: 10,
   },
-  vigenciaLifetime: {
-    backgroundColor: 'rgba(63, 207, 142, 0.12)',
-    borderColor: '#3FCF8E',
+  variantGroup: {
+    gap: 4,
   },
-  vigenciaDays: {
-    backgroundColor: 'rgba(232, 200, 106, 0.12)',
-    borderColor: '#E8C86A',
-  },
-  vigenciaText: {
-    fontSize: 12,
-    fontWeight: '700',
-    ...THEME.effects.textShadowSubtle,
-  },
-  resetBtn: {
-    marginTop: 10,
-    padding: 8,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  resetBtnText: {
-    fontSize: 11,
-    color: '#E2703A',
-    textDecorationLine: 'underline',
-  },
-  securityFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 8,
-    gap: 6,
-  },
-  securityText: {
+  variantGroupTitleGold: {
     fontSize: 10.5,
-    color: THEME.colors.textoSecundarioLuminoso,
-    textAlign: 'center',
-    ...THEME.effects.textShadowSubtle,
+    fontWeight: '700',
+    color: '#EFD28D',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  variantGroupTitleMuted: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#7E8794',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  variantGroupTitleCrimson: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFB4AB',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  crimsonBtnWrap: {
+    width: '100%',
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  crimsonBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  downloadFailureBox: {
+    backgroundColor: '#1A0E10',
+    borderWidth: 1,
+    borderColor: '#6B2525',
+    padding: 10,
+    marginTop: 10,
+    borderRadius: 2,
+    gap: 4,
+  },
+  failureTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  failureTitleText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFB4AB',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  failureMessageText: {
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 11.5,
+    color: '#FCA5A5',
+    lineHeight: 15,
+    marginBottom: 6,
+  },
+  footerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  footerGothicWindow: {
+    width: '100%',
+    height: 38,
   },
 });

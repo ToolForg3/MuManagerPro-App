@@ -6,28 +6,33 @@
   <title>Mu Manager PRO - Centro de Operaciones y Control Total</title>
   <style>
     :root {
-      --bg: #191512;
-      --card: #241E1A;
-      --card-hover: #2B2521;
-      --border: #6B5533;
-      --border-highlight: #A8894D;
-      --orange: #B58F3C;
-      --orange-hover: #E8C86A;
+      --bg: #131413;
+      --card: #1F201F;
+      --card-hover: #292A29;
+      --border: #4C463A;
+      --border-highlight: #EFD28D;
+      --gold: #EFD28D;
+      --gold-hover: #F5E2B3;
+      --orange: #EFD28D;
+      --orange-hover: #F5E2B3;
       --green: #245C3F;
       --green-bright: #3FCF8E;
-      --yellow: #E8C86A;
+      --yellow: #EFD28D;
       --red: #B84514;
       --red-bright: #E2703A;
       --blue: #5B8DEF;
-      --purple: #5B8DEF;
-      --text: #EDE4D3;
-      --muted: #9C9182;
+      --purple: #9B7AE8;
+      --text: #E4E2E0;
+      --muted: #CDC6B9;
       --font-mono: 'SF Mono', Monaco, Consolas, 'Courier New', monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(239, 210, 141, 0.05) 0%, transparent 60%),
+        linear-gradient(rgba(19, 20, 19, 0.96), rgba(19, 20, 19, 0.99));
       color: var(--text);
       padding: 24px;
       min-height: 100vh;
@@ -50,15 +55,16 @@
     .brand-logo {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, #B58F3C, #7A5E22);
-      border-radius: 6px;
+      background: linear-gradient(135deg, #EFD28D, #937332);
+      border-radius: 2px;
+      border: 1px solid #EFD28D;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 26px;
-      box-shadow: 0 4px 18px rgba(181, 143, 60, 0.35);
+      box-shadow: 0 4px 18px rgba(239, 210, 141, 0.25);
     }
-    .brand h1 { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; }
+    .brand h1 { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; color: var(--gold); }
     .brand p { font-size: 13px; color: var(--muted); }
     .header-actions {
       display: flex;
@@ -74,7 +80,7 @@
       border: 1px solid var(--green-bright);
       color: var(--green-bright);
       padding: 8px 14px;
-      border-radius: 6px;
+      border-radius: 2px;
       font-size: 13px;
       font-weight: 600;
     }
@@ -98,7 +104,11 @@
     .metric-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-top: 1px solid #5A5242;
+      border-left: 1px solid #5A5242;
+      border-bottom: 1px solid #28251E;
+      border-right: 1px solid #28251E;
+      border-radius: 2px;
       padding: 16px 18px;
       position: relative;
       transition: all 0.2s ease-in-out;
@@ -106,23 +116,24 @@
       user-select: none;
     }
     .metric-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
       background: var(--card-hover);
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      border-color: var(--gold);
     }
     .metric-card:active {
       transform: translateY(0);
     }
-    .metric-card.orange { border-top: 4px solid var(--orange); }
-    .metric-card.blue { border-top: 4px solid var(--blue); }
-    .metric-card.green { border-top: 4px solid var(--green-bright); }
-    .metric-card.yellow { border-top: 4px solid var(--yellow); }
-    .metric-card.red { border-top: 4px solid var(--red); }
-    .metric-card.purple { border-top: 4px solid var(--purple); }
+    .metric-card.orange { border-top: 3px solid var(--gold); }
+    .metric-card.blue { border-top: 3px solid var(--blue); }
+    .metric-card.green { border-top: 3px solid var(--green-bright); }
+    .metric-card.yellow { border-top: 3px solid var(--gold); }
+    .metric-card.red { border-top: 3px solid var(--red-bright); }
+    .metric-card.purple { border-top: 3px solid var(--purple); }
     .metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
-    .metric-value { font-size: 26px; font-weight: 800; }
-    .metric-hint { font-size: 10px; color: #666; margin-top: 4px; display: block; font-weight: 500; }
-    .metric-card:hover .metric-hint { color: var(--orange); }
+    .metric-value { font-size: 26px; font-weight: 800; color: #FFF; }
+    .metric-hint { font-size: 10px; color: var(--muted); margin-top: 4px; display: block; font-weight: 500; }
+    .metric-card:hover .metric-hint { color: var(--gold); }
 
     /* Master Module Hub Grid */
     .module-hub-grid {
@@ -132,9 +143,13 @@
       margin-bottom: 14px;
     }
     .module-hub-card {
-      background: #141417;
-      border: 1px solid #28282E;
-      border-radius: 6px;
+      background: #181918;
+      border: 1px solid var(--border);
+      border-top: 1px solid #5A5242;
+      border-left: 1px solid #5A5242;
+      border-bottom: 1px solid #28251E;
+      border-right: 1px solid #28251E;
+      border-radius: 2px;
       padding: 14px 16px;
       cursor: pointer;
       display: flex;
@@ -146,15 +161,15 @@
       user-select: none;
     }
     .module-hub-card:hover {
-      background: #1A1A20;
-      border-color: #3F3F48;
+      background: #242524;
+      border-color: #5A5242;
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
     }
     .module-hub-card.active {
-      background: linear-gradient(135deg, rgba(255, 87, 34, 0.14), rgba(20, 20, 24, 0.95));
-      border-color: var(--orange);
-      box-shadow: 0 0 16px rgba(255, 87, 34, 0.28);
+      background: linear-gradient(135deg, rgba(239, 210, 141, 0.12), rgba(24, 25, 24, 0.95));
+      border-color: var(--gold);
+      box-shadow: 0 0 16px rgba(239, 210, 141, 0.2);
     }
     .module-hub-card.active::before {
       content: '';
@@ -163,7 +178,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: var(--orange);
+      background: var(--gold);
     }
     .module-hub-header {
       display: flex;
@@ -180,8 +195,9 @@
       font-size: 22px;
       width: 36px;
       height: 36px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+      background: rgba(239, 210, 141, 0.08);
+      border: 1px solid rgba(239, 210, 141, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -203,10 +219,10 @@
       font-size: 10px;
       font-weight: 700;
       padding: 2px 7px;
-      border-radius: 10px;
-      background: rgba(255, 87, 34, 0.2);
-      color: var(--orange);
-      border: 1px solid rgba(255, 87, 34, 0.35);
+      border-radius: 2px;
+      background: rgba(239, 210, 141, 0.15);
+      color: var(--gold);
+      border: 1px solid rgba(239, 210, 141, 0.35);
     }
 
     /* Submodule Pills Bar */
@@ -215,16 +231,16 @@
       align-items: center;
       gap: 8px;
       padding: 10px 14px;
-      background: #0E0E11;
-      border: 1px solid #24242B;
-      border-radius: 6px;
+      background: #141514;
+      border: 1px solid #332F27;
+      border-radius: 2px;
       margin-bottom: 22px;
       overflow-x: auto;
     }
     .submodule-pills-label {
       font-size: 11px;
       font-weight: 700;
-      color: #777;
+      color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.6px;
       margin-right: 6px;
@@ -234,13 +250,13 @@
       white-space: nowrap;
     }
     .submodule-pill {
-      background: #18181C;
-      border: 1px solid #2F2F36;
-      color: #BBB;
+      background: #181918;
+      border: 1px solid #3A352B;
+      color: #CDC6B9;
       padding: 8px 14px;
       font-size: 12.5px;
       font-weight: 600;
-      border-radius: 6px;
+      border-radius: 2px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -250,17 +266,17 @@
       text-decoration: none;
     }
     .submodule-pill:hover {
-      background: #24242B;
-      color: #FFF;
-      border-color: #484856;
+      background: #242524;
+      color: #E4E2E0;
+      border-color: #5A5242;
       transform: translateY(-1px);
     }
     .submodule-pill.active {
-      background: var(--orange);
-      color: #FFF;
-      border-color: var(--orange);
+      background: #2A261D;
+      color: var(--gold);
+      border-color: var(--gold);
       font-weight: 700;
-      box-shadow: 0 0 12px rgba(255, 87, 34, 0.45);
+      box-shadow: 0 0 10px rgba(239, 210, 141, 0.3);
     }
     .submodule-pill.btn-action {
       background: rgba(63, 207, 142, 0.1);
@@ -291,7 +307,11 @@
     .main-section {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-top: 1px solid #5A5242;
+      border-left: 1px solid #5A5242;
+      border-bottom: 1px solid #28251E;
+      border-right: 1px solid #28251E;
+      border-radius: 2px;
       padding: 24px;
       margin-bottom: 24px;
     }
@@ -303,15 +323,17 @@
       flex-wrap: wrap;
       gap: 12px;
     }
-    .section-title { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .section-title { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: var(--gold); }
     
     .btn {
-      background: var(--orange);
-      color: #fff;
-      border: none;
+      background: var(--gold);
+      color: #0D0E0D;
+      border: 1px solid var(--gold);
+      border-top-color: #FFF2C8;
+      border-bottom-color: #8C6F2A;
       padding: 9px 16px;
-      border-radius: 6px;
-      font-weight: 600;
+      border-radius: 2px;
+      font-weight: 700;
       font-size: 13px;
       cursor: pointer;
       display: inline-flex;
@@ -320,65 +342,66 @@
       transition: all 0.2s;
       text-decoration: none;
     }
-    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-green { background: var(--green); }
-    .btn-green:hover { background: #388E3C; }
-    .btn-blue { background: #0288D1; }
+    .btn:hover { background: var(--gold-hover); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(239, 210, 141, 0.25); }
+    .btn-green { background: var(--green); color: #FFF; border-color: var(--green-bright); }
+    .btn-green:hover { background: #2E7D32; }
+    .btn-blue { background: #0288D1; color: #FFF; border-color: #29B6F6; }
     .btn-blue:hover { background: #0277BD; }
-    .btn-red { background: var(--red); }
+    .btn-red { background: var(--red); color: #FFF; border-color: var(--red-bright); }
     .btn-red:hover { background: #E53935; }
-    .btn-dark { background: #222; color: #FFF; border: 1px solid #3A3A40; }
-    .btn-dark:hover { background: #2E2E34; }
-    .btn-warning { background: #FFB74D; color: #100D0B; font-weight: 700; border: 1px solid #FFA726; }
-    .btn-warning:hover { background: #FFA726; color: #100D0B; }
-    .btn-pro { background: #3FCF8E; color: #191512; font-weight: 700; }
-    .btn-pro:hover { background: #5EE5A5; color: #191512; }
-    .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 6px; }
+    .btn-dark { background: #181918; color: var(--text); border: 1px solid #4C463A; border-top-color: #5A5242; border-bottom-color: #28251E; }
+    .btn-dark:hover { background: #242524; color: var(--gold); border-color: var(--gold); }
+    .btn-warning { background: #FFB74D; color: #0D0E0D; font-weight: 700; border: 1px solid #FFA726; border-radius: 2px; }
+    .btn-warning:hover { background: #FFA726; color: #0D0E0D; }
+    .btn-pro { background: #3FCF8E; color: #0D0E0D; font-weight: 700; border-radius: 2px; }
+    .btn-pro:hover { background: #5EE5A5; color: #0D0E0D; }
+    .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 2px; }
 
     .table-container { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th {
       padding: 12px 14px;
-      color: var(--muted);
+      color: var(--gold);
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       border-bottom: 1px solid var(--border);
       letter-spacing: 0.5px;
+      background: rgba(0, 0, 0, 0.2);
     }
     td {
       padding: 14px;
       font-size: 13px;
-      border-bottom: 1px solid #1E1E22;
+      border-bottom: 1px solid #28251E;
       vertical-align: middle;
     }
     tr {
       transition: background-color 0.25s ease, opacity 0.25s ease;
     }
-    tr:hover { background: rgba(255, 255, 255, 0.02); }
+    tr:hover { background: rgba(239, 210, 141, 0.03); }
     
     .badge {
       display: inline-block;
       padding: 4px 10px;
-      border-radius: 12px;
+      border-radius: 2px;
       font-size: 11px;
       font-weight: 700;
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
-    .badge-demo { background: rgba(255, 179, 0, 0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge-demo { background: rgba(239, 210, 141, 0.15); color: var(--gold); border: 1px solid var(--gold); }
     .badge-pro { background: rgba(63, 207, 142, 0.15); color: var(--green-bright); border: 1px solid var(--green-bright); }
     .badge-blocked { background: rgba(211, 47, 47, 0.15); color: var(--red-bright); border: 1px solid var(--red-bright); }
     .badge-expired { background: rgba(226, 112, 58, 0.15); color: #FF884D; border: 1px solid #E2703A; }
-    .badge-expired-pro { background: rgba(255, 179, 0, 0.15); color: #FFB300; border: 1px solid #FFB300; font-weight: 700; }
+    .badge-expired-pro { background: rgba(239, 210, 141, 0.15); color: var(--gold); border: 1px solid var(--gold); font-weight: 700; }
     .badge-expired-demo { background: rgba(226, 112, 58, 0.15); color: #FF884D; border: 1px solid #E2703A; font-weight: 700; }
-    .badge-admin { background: rgba(255, 87, 34, 0.15); color: #FF7043; border: 1px solid var(--orange); }
+    .badge-admin { background: rgba(239, 210, 141, 0.15); color: var(--gold); border: 1px solid var(--gold); }
     .badge-user { background: rgba(41, 182, 246, 0.15); color: var(--blue); border: 1px solid var(--blue); }
 
     .security-alert-banner {
       background: linear-gradient(90deg, rgba(211, 47, 47, 0.25), rgba(183, 28, 28, 0.35));
-      border: 1px solid #FF5252;
-      box-shadow: 0 0 20px rgba(255, 82, 82, 0.35);
-      border-radius: 12px;
+      border: 1px solid #E2703A;
+      box-shadow: 0 0 20px rgba(226, 112, 58, 0.35);
+      border-radius: 2px;
       padding: 14px 18px;
       margin-bottom: 20px;
       display: flex;
@@ -389,8 +412,8 @@
       animation: alertPulse 2s infinite alternate;
     }
     @keyframes alertPulse {
-      0% { box-shadow: 0 0 10px rgba(255, 82, 82, 0.3); border-color: #FF5252; }
-      100% { box-shadow: 0 0 25px rgba(255, 82, 82, 0.65); border-color: #FF1744; }
+      0% { box-shadow: 0 0 10px rgba(226, 112, 58, 0.3); border-color: #E2703A; }
+      100% { box-shadow: 0 0 25px rgba(226, 112, 58, 0.65); border-color: #FF1744; }
     }
     .badge-pulse {
       animation: badgeBlink 1.4s infinite;
@@ -403,16 +426,16 @@
     .hwid-code {
       font-family: var(--font-mono);
       font-weight: 700;
-      background: #0E0E10;
+      background: #141514;
       padding: 5px 8px;
-      border-radius: 6px;
-      border: 1px solid #333;
+      border-radius: 2px;
+      border: 1px solid var(--border);
       color: #FFF;
       font-size: 12px;
     }
     .client-note {
       font-size: 11px;
-      color: #AAA;
+      color: var(--muted);
       margin-top: 4px;
       display: flex;
       align-items: center;
@@ -432,19 +455,19 @@
       display: block;
       font-size: 12px;
       font-weight: 700;
-      color: #CCC;
+      color: var(--muted);
       margin-bottom: 6px;
     }
     .form-control {
       width: 100%;
-      background: #0E0E10;
-      border: 1px solid #333;
+      background: #141514;
+      border: 1px solid var(--border);
       color: #FFF;
       padding: 10px 14px;
-      border-radius: 6px;
+      border-radius: 2px;
       font-size: 13px;
     }
-    .form-control:focus { outline: none; border-color: var(--orange); }
+    .form-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 6px rgba(239, 210, 141, 0.3); }
     .form-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -457,9 +480,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 14px;
-      background: #111114;
+      background: #141514;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 2px;
       margin-bottom: 14px;
     }
     .switch-info h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
@@ -490,20 +513,20 @@
       transition: .3s;
       border-radius: 50%;
     }
-    input:checked + .slider { background-color: var(--orange); }
+    input:checked + .slider { background-color: var(--gold); }
     input:checked + .slider:before { transform: translateX(24px); }
     
     /* Terminal Logs */
     .terminal-box {
-      background: #0A0A0C;
-      border: 1px solid #222;
-      border-radius: 6px;
+      background: #101110;
+      border: 1px solid var(--border);
+      border-radius: 2px;
       padding: 16px;
       font-family: var(--font-mono);
       font-size: 12px;
       height: 380px;
       overflow-y: auto;
-      color: #A0A0A8;
+      color: #CDC6B9;
       line-height: 1.6;
     }
     .log-line { display: flex; gap: 10px; margin-bottom: 4px; border-bottom: 1px solid #141418; padding-bottom: 2px; }
@@ -526,9 +549,13 @@
       backdrop-filter: blur(8px);
     }
     .modal-box {
-      background: #18181C;
-      border: 1px solid #333;
-      border-radius: 6px;
+      background: #1F201F;
+      border: 1px solid var(--border);
+      border-top: 1px solid #5A5242;
+      border-left: 1px solid #5A5242;
+      border-bottom: 1px solid #28251E;
+      border-right: 1px solid #28251E;
+      border-radius: 2px;
       padding: 30px;
       width: 90%;
       max-width: 480px;
@@ -538,10 +565,11 @@
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #2E7D32;
+      background: #245C3F;
+      border: 1px solid #3FCF8E;
       color: #FFF;
       padding: 12px 20px;
-      border-radius: 8px;
+      border-radius: 2px;
       font-size: 13px;
       font-weight: 600;
       z-index: 10000;
@@ -558,7 +586,7 @@
       max-width: 90vw;
       background: #141418;
       border: 1px solid #33333A;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 87, 34, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(226, 112, 58, 0.1);
       border-radius: 6px;
       z-index: 10000;
       overflow: hidden;
@@ -600,8 +628,8 @@
       color: #FAF6EE;
     }
     .notif-filter-btn.active {
-      background: rgba(255, 87, 34, 0.15);
-      border-color: rgba(255, 87, 34, 0.4);
+      background: rgba(226, 112, 58, 0.15);
+      border-color: rgba(226, 112, 58, 0.4);
       color: #FF7043;
     }
     .notif-list {
@@ -622,7 +650,7 @@
       background: rgba(255, 255, 255, 0.03);
     }
     .notif-item.unread {
-      background: rgba(255, 87, 34, 0.04);
+      background: rgba(226, 112, 58, 0.04);
       border-left: 3px solid var(--orange);
     }
     .notif-item-icon {
@@ -687,12 +715,12 @@
       user-select: none;
     }
     .context-menu-item:hover {
-      background: rgba(255, 87, 34, 0.2);
+      background: rgba(226, 112, 58, 0.2);
       color: #FFF;
     }
     .context-menu-item.danger:hover {
       background: rgba(211, 47, 47, 0.25);
-      color: #FF5252;
+      color: #E2703A;
     }
     .context-menu-divider {
       height: 1px;
@@ -700,9 +728,9 @@
       margin: 5px 0;
     }
     .badge-emulator {
-      background: rgba(255, 82, 82, 0.18);
-      color: #FF5252;
-      border: 1px solid rgba(255, 82, 82, 0.45);
+      background: rgba(226, 112, 58, 0.18);
+      color: #E2703A;
+      border: 1px solid rgba(226, 112, 58, 0.45);
       font-weight: 800;
       letter-spacing: 0.5px;
     }
@@ -968,10 +996,10 @@
             </div>
           </label>
           
-          <label style="flex:1; display:flex; align-items:flex-start; gap:8px; padding:10px; border-radius:6px; border:1px solid rgba(255,82,82,0.4); background:rgba(255,82,82,0.05); cursor:pointer;">
+          <label style="flex:1; display:flex; align-items:flex-start; gap:8px; padding:10px; border-radius:6px; border:1px solid rgba(226, 112, 58,0.4); background:rgba(226, 112, 58,0.05); cursor:pointer;">
             <input type="radio" name="downgrade-action-choice" id="choice-exclude" value="EXCLUDE" onchange="onDowngradeActionChange()" style="margin-top:3px;" />
             <div>
-              <strong style="color:#FF5252; display:block; font-size:13px;">🚫 Bloquear y Excluir</strong>
+              <strong style="color:#E2703A; display:block; font-size:13px;">🚫 Bloquear y Excluir</strong>
               <small style="color:#AAA; font-size:11px;">Enviar a la lista de exclusión (Tombstones). Pierde acceso inmediatamente.</small>
             </div>
           </label>
@@ -1004,8 +1032,8 @@
 
         <!-- Sección EXCLUIR / BLOQUEAR -->
         <div id="downgrade-exclude-section" style="display:none;">
-          <div style="background:rgba(255,82,82,0.1); border:1px solid #FF5252; border-radius:6px; padding:10px; margin-bottom:10px;">
-            <div style="color:#FF5252; font-weight:800; font-size:12px; margin-bottom:4px;">⚠️ Advertencia de Bloqueo</div>
+          <div style="background:rgba(226, 112, 58,0.1); border:1px solid #E2703A; border-radius:6px; padding:10px; margin-bottom:10px;">
+            <div style="color:#E2703A; font-weight:800; font-size:12px; margin-bottom:4px;">⚠️ Advertencia de Bloqueo</div>
             <div style="color:#DDD; font-size:11px;">Al confirmar, el celular perderá acceso al instante y mostrará pantalla de dispositivo excluido. Podrás restaurarlo después desde la pestaña de Licencias.</div>
           </div>
           <label style="font-size:12px; color:#CCC; font-weight:700; margin-bottom:4px; display:block;">Motivo del bloqueo:</label>
@@ -1034,9 +1062,9 @@
       <label style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: block;">Acceso Rápido en Minutos y Días:</label>
       <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
         <button type="button" class="btn btn-pro btn-sm" onclick="setExpPreset('0')">♾️ Vitalicia</button>
-        <button type="button" class="btn btn-dark btn-sm" style="border-color:#FF9800; color:#FF9800;" onclick="setExpPreset('m15')">⚡ 15 Min</button>
-        <button type="button" class="btn btn-dark btn-sm" style="border-color:#FF9800; color:#FF9800;" onclick="setExpPreset('m30')">⚡ 30 Min</button>
-        <button type="button" class="btn btn-dark btn-sm" style="border-color:#FF9800; color:#FF9800;" onclick="setExpPreset('m60')">⚡ 1 Hora</button>
+        <button type="button" class="btn btn-dark btn-sm" style="border-color:#FFA87D; color:#FFA87D;" onclick="setExpPreset('m15')">⚡ 15 Min</button>
+        <button type="button" class="btn btn-dark btn-sm" style="border-color:#FFA87D; color:#FFA87D;" onclick="setExpPreset('m30')">⚡ 30 Min</button>
+        <button type="button" class="btn btn-dark btn-sm" style="border-color:#FFA87D; color:#FFA87D;" onclick="setExpPreset('m60')">⚡ 1 Hora</button>
         <button type="button" class="btn btn-dark btn-sm" onclick="setExpPreset('24')">24h (1D)</button>
         <button type="button" class="btn btn-dark btn-sm" onclick="setExpPreset('72')">72h (3D)</button>
         <button type="button" class="btn btn-dark btn-sm" onclick="setExpPreset('720')">30 Días</button>
@@ -1079,7 +1107,7 @@
         <label>Cantidad de minutos:</label>
         <div style="display:flex; gap:8px; align-items:center;">
           <input type="number" id="exp-custom-min-input" class="form-control" placeholder="Ej: 10, 25, 45, 90" min="1" max="1440" />
-          <span style="font-size:12px; color:#FF9800; font-weight:700;">minutos</span>
+          <span style="font-size:12px; color:#FFA87D; font-weight:700;">minutos</span>
         </div>
       </div>
 
@@ -1100,12 +1128,12 @@
 
   <!-- Modal Reinicio Limpio de Base de Datos -->
   <div id="clean-reset-modal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 500px; border: 1px solid #FF5252;">
-      <h3 style="font-size: 18px; font-weight: 800; color: #FF5252; margin-bottom: 8px;">⚠️ Reiniciar Base de Datos a Cero (Zero Ghost)</h3>
+    <div class="modal-box" style="max-width: 500px; border: 1px solid #E2703A;">
+      <h3 style="font-size: 18px; font-weight: 800; color: #E2703A; margin-bottom: 8px;">⚠️ Reiniciar Base de Datos a Cero (Zero Ghost)</h3>
       <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px;">
         Esta acción creará automáticamente un <strong>respaldo preventivo (.json)</strong> y luego vaciará por completo los celulares, licencias anteriores y usuarios no-admin, dejándote una base de datos limpia de fábrica.
       </p>
-      <div style="background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.3); border-radius: 6px; padding: 12px; font-size: 12px; color: #FF8A80; margin-bottom: 16px;">
+      <div style="background: rgba(226, 112, 58,0.1); border: 1px solid rgba(226, 112, 58,0.3); border-radius: 6px; padding: 12px; font-size: 12px; color: #FF8A80; margin-bottom: 16px;">
         Para confirmar, escribe exactamente: <strong style="color:#FFF;">RESET_CLEAN_DATABASE</strong>
       </div>
       <div class="form-group">
@@ -1328,10 +1356,10 @@
   <!-- Header -->
   <div class="header">
     <div class="brand">
-      <div class="brand-logo">🐉</div>
+      <div class="brand-logo" style="padding:0; overflow:hidden; background:transparent; border:none; box-shadow:none;"><img src="/assets/icon.png" alt="Logo Monograma MU" style="width:48px; height:48px; border-radius:6px; object-fit:contain; box-shadow:0 4px 18px rgba(181, 143, 60, 0.35);"></div>
       <div>
         <h1 style="display:flex; align-items:center; gap:10px;">
-          Mu Manager PRO <span class="badge" style="background:rgba(255,87,34,0.18); color:var(--orange); border:1px solid rgba(255,87,34,0.35); font-size:12px; font-weight:800;">v2.1.6 OFICIAL</span>
+          Mu Manager PRO <span class="badge" style="background:rgba(226, 112, 58,0.18); color:var(--orange); border:1px solid rgba(226, 112, 58,0.35); font-size:12px; font-weight:800;">v2.1.6 OFICIAL</span>
         </h1>
         <p>Centro de Operaciones Maestro — Sincronización en Tiempo Real & Control Louis S6</p>
       </div>
@@ -1345,14 +1373,14 @@
       <div class="notifications-wrapper" style="position: relative;">
         <button type="button" class="btn btn-dark btn-sm" id="btn-notifications" onclick="toggleNotificationsDrawer()" title="Centro de Notificaciones y Eventos en Vivo" style="position: relative;">
           🔔 <span style="font-weight: 700;">Alertas</span>
-          <span id="notif-count-badge" class="badge badge-pulse" style="background: #FF5252; color: #FAF6EE; font-size: 10px; padding: 2px 6px; border-radius: 6px; display: none; margin-left: 4px;">0</span>
+          <span id="notif-count-badge" class="badge badge-pulse" style="background: #E2703A; color: #FAF6EE; font-size: 10px; padding: 2px 6px; border-radius: 6px; display: none; margin-left: 4px;">0</span>
         </button>
         <div id="notifications-dropdown" class="notifications-dropdown" style="display: none;">
           <div class="notif-header">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
               <div style="font-weight: 800; font-size: 13px; color: #FAF6EE; display: flex; align-items: center; gap: 6px;">
                 <span>🔔 Eventos & Alertas en Vivo</span>
-                <span id="notif-total-indicator" class="badge" style="background: rgba(255,82,82,0.2); color: #FF5252; font-size: 10px; border: 1px solid rgba(255,82,82,0.4);">0</span>
+                <span id="notif-total-indicator" class="badge" style="background: rgba(226, 112, 58,0.2); color: #E2703A; font-size: 10px; border: 1px solid rgba(226, 112, 58,0.4);">0</span>
               </div>
               <div style="display: flex; gap: 6px;">
                 <button type="button" class="btn btn-dark btn-sm" style="font-size: 10px; padding: 3px 8px;" onclick="clearAllNotificationsUI()" title="Marcar todas como vistas">✓ Limpiar</button>
@@ -1390,8 +1418,8 @@
       <span style="font-size: 26px; animation: badgeBlink 1s infinite;">🚨</span>
       <div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-          <strong style="color: #FF5252; font-size: 15px; letter-spacing: 0.3px;">¡INCIDENTE DE SEGURIDAD DETECTADO EN VIVO!</strong>
-          <span id="banner-incident-type" class="badge" style="background: rgba(255, 82, 82, 0.25); color: #FF5252; border: 1px solid #FF5252; font-weight:800;">ATAQUE</span>
+          <strong style="color: #E2703A; font-size: 15px; letter-spacing: 0.3px;">¡INCIDENTE DE SEGURIDAD DETECTADO EN VIVO!</strong>
+          <span id="banner-incident-type" class="badge" style="background: rgba(226, 112, 58, 0.25); color: #E2703A; border: 1px solid #E2703A; font-weight:800;">ATAQUE</span>
           <span id="banner-incident-time" style="font-size: 11px; color: var(--muted);">Ahora</span>
         </div>
         <div id="banner-incident-details" style="font-size: 13px; color: #FFF; margin-top: 4px;">
@@ -1456,7 +1484,7 @@
     <div class="module-hub-card active" id="card-mod-devices" onclick="selectMainModule('mod-devices')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
-          <div class="module-hub-icon" style="color: #FF7043; background: rgba(255, 87, 34, 0.12);">📱</div>
+          <div class="module-hub-icon" style="color: #FF7043; background: rgba(226, 112, 58, 0.12);">📱</div>
           <div>
             <div class="module-hub-title">Dispositivos / Licencias</div>
             <div class="module-hub-desc">Celulares, HWID, Keygen y Solicitudes PRO</div>
@@ -1483,13 +1511,13 @@
     <div class="module-hub-card" id="card-mod-security" onclick="selectMainModule('mod-security')">
       <div class="module-hub-header">
         <div class="module-hub-icon-title">
-          <div class="module-hub-icon" style="color: #FF5252; background: rgba(255, 82, 82, 0.12);">🛡️</div>
+          <div class="module-hub-icon" style="color: #E2703A; background: rgba(226, 112, 58, 0.12);">🛡️</div>
           <div>
             <div class="module-hub-title">Seguridad / Telemetría</div>
             <div class="module-hub-desc">Bugs, Kill-Switch Maestro, WhatsApp y SMTP</div>
           </div>
         </div>
-        <span id="hub-badge-security" class="module-hub-badge" style="background: rgba(255, 82, 82, 0.2); color: #FF5252; border-color: rgba(255, 82, 82, 0.4); display:none;" title="Alertas de seguridad">0</span>
+        <span id="hub-badge-security" class="module-hub-badge" style="background: rgba(226, 112, 58, 0.2); color: #E2703A; border-color: rgba(226, 112, 58, 0.4); display:none;" title="Alertas de seguridad">0</span>
       </div>
     </div>
 
@@ -1531,7 +1559,7 @@
       <button class="submodule-pill active" data-tab="tab-devices" onclick="switchTab('tab-devices')">📱 Historial de Celulares</button>
       <button class="submodule-pill" data-tab="tab-all-licenses" onclick="switchTab('tab-all-licenses')">📋 Licencias Emitidas & Exclusiones</button>
       <button class="submodule-pill" data-tab="tab-keygen" onclick="switchTab('tab-keygen')">🔑 Generador Licencias PRO</button>
-      <button class="submodule-pill" data-tab="tab-pro-requests" onclick="switchTab('tab-pro-requests')">⭐ Solicitudes PRO <span id="pro-badge" class="badge" style="background:#FF5722; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
+      <button class="submodule-pill" data-tab="tab-pro-requests" onclick="switchTab('tab-pro-requests')">⭐ Solicitudes PRO <span id="pro-badge" class="badge" style="background:#E2703A; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
     </div>
 
     <!-- Submódulos Módulo 2: Cuentas de Usuarios -->
@@ -1542,7 +1570,7 @@
 
     <!-- Submódulos Módulo 3: Seguridad & Anti-Hack -->
     <div class="submodule-group" id="subgroup-mod-security" style="display: none; gap: 8px; flex-wrap: wrap; width: 100%; align-items: center;">
-      <button class="submodule-pill active" data-tab="tab-security" onclick="switchTab('tab-security')">🛡️ Bugs & Anti-Hack <span id="sec-alert-badge" class="badge badge-pulse" style="background:#FF5252; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
+      <button class="submodule-pill active" data-tab="tab-security" onclick="switchTab('tab-security')">🛡️ Bugs & Anti-Hack <span id="sec-alert-badge" class="badge badge-pulse" style="background:#E2703A; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
       <button class="submodule-pill" data-tab="tab-masters" onclick="switchTab('tab-masters')">⚡ Kill-Switch Maestro</button>
       <button class="submodule-pill" data-tab="tab-whatsapp" onclick="switchTab('tab-whatsapp')">📲 Alertas WhatsApp</button>
       <button class="submodule-pill" data-tab="tab-email" onclick="switchTab('tab-email')">📧 Servidor Correo (SMTP / OTP)</button>
@@ -1661,7 +1689,7 @@
         <p style="font-size: 13px; color: var(--muted); margin: 0;">
           Administra las cuentas registradas desde la APK o créalas manualmente para tus clientes:
         </p>
-        <span class="badge" style="background: rgba(255, 87, 34, 0.12); color: #FF7043; border: 1px solid rgba(255, 87, 34, 0.35); font-size: 11px; padding: 4px 10px; font-weight: 600;">
+        <span class="badge" style="background: rgba(226, 112, 58, 0.12); color: #FF7043; border: 1px solid rgba(226, 112, 58, 0.35); font-size: 11px; padding: 4px 10px; font-weight: 600;">
           💡 Tip: Clic derecho sobre cualquier fila para editar, cambiar clave o desvincular celular
         </span>
       </div>
@@ -1693,7 +1721,7 @@
       <div class="section-header">
         <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
           ⭐ Solicitudes de Licencia PRO
-          <span class="badge" style="background: rgba(255, 87, 34, 0.15); color: #FF5252; border: 1px solid rgba(255, 87, 34, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
+          <span class="badge" style="background: rgba(226, 112, 58, 0.15); color: #E2703A; border: 1px solid rgba(226, 112, 58, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
             Clientes Interesados
           </span>
         </div>
@@ -1731,7 +1759,7 @@
       <div class="section-header">
         <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
           🛡️ Centro de Monitoreo de Bugs, Crash & Anti-Hack
-          <span class="badge" style="background: rgba(255, 82, 82, 0.15); color: #FF5252; border: 1px solid rgba(255, 82, 82, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
+          <span class="badge" style="background: rgba(226, 112, 58, 0.15); color: #E2703A; border: 1px solid rgba(226, 112, 58, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
             Zero-Trust Telemetry
           </span>
         </div>
@@ -1984,8 +2012,8 @@
       <!-- Sección Rollback de Emergencia Oficial -->
       <div style="margin-top: 30px; padding: 18px; border-radius: 6px; background: rgba(244, 67, 54, 0.08); border: 1px solid rgba(244, 67, 54, 0.3);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h4 style="color: #FF5252; margin: 0;">🚨 Rollback de Emergencia Inmediato (Canal Oficial)</h4>
-          <span style="font-size: 11px; background: rgba(244, 67, 54, 0.2); color: #FF5252; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Reversión Global</span>
+          <h4 style="color: #E2703A; margin: 0;">🚨 Rollback de Emergencia Inmediato (Canal Oficial)</h4>
+          <span style="font-size: 11px; background: rgba(244, 67, 54, 0.2); color: #E2703A; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Reversión Global</span>
         </div>
         <p style="font-size: 12px; color: #C8BEAF; margin-bottom: 12px;">
           En caso de detectar una falla crítica en la última versión oficial, activa esta función. Cualquier APK con versión superior a la indicada será forzada a reinstalar la versión estable anterior.
@@ -2315,7 +2343,7 @@
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn btn-dark btn-sm" onclick="openPurgeInactiveModal()">🧹 Purgar Inactivos</button>
             <button class="btn btn-red btn-sm" onclick="purgeTestDevices()">🧪 Purgar Tests</button>
-            <button class="btn btn-red btn-sm" style="background:rgba(255,82,82,0.15); border:1px solid #FF5252; color:#FF5252;" onclick="openCleanResetModal()" title="Crea un respaldo automático y limpia celulares fantasma">⚠️ Reiniciar DB a Cero</button>
+            <button class="btn btn-red btn-sm" style="background:rgba(226, 112, 58,0.15); border:1px solid #E2703A; color:#E2703A;" onclick="openCleanResetModal()" title="Crea un respaldo automático y limpia celulares fantasma">⚠️ Reiniciar DB a Cero</button>
           </div>
         </div>
       </div>
@@ -2427,7 +2455,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-title">⛔ Expiradas</div>
-          <div class="metric-value" id="lic-metric-expired" style="color:#FF5252;">0</div>
+          <div class="metric-value" id="lic-metric-expired" style="color:#E2703A;">0</div>
         </div>
         <div class="metric-card">
           <div class="metric-title">🚫 Excluidos (Tombstone)</div>
@@ -2466,7 +2494,7 @@
       <div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
           <div>
-            <h4 style="font-size:15px; font-weight:800; color:#FF5252; margin:0;">🚫 Dispositivos Excluidos / Historial de Exclusiones (Tombstones)</h4>
+            <h4 style="font-size:15px; font-weight:800; color:#E2703A; margin:0;">🚫 Dispositivos Excluidos / Historial de Exclusiones (Tombstones)</h4>
             <p style="font-size:11px; color:#C8BEAF; margin:2px 0 0 0;">Historial de celulares excluidos. Puedes restaurarlos o eliminarlos definitivamente para limpiar el registro sin bloquearlos.</p>
           </div>
           <button class="btn btn-dark btn-sm" onclick="clearAllExcludedDevices()" style="color:#FFB74D; border:1px solid rgba(255, 183, 77, 0.4); font-size:12px; display:inline-flex; align-items:center; gap:6px;" title="Limpiar todos los registros de la lista de exclusión">
@@ -2598,7 +2626,7 @@
               id,
               category: 'expired',
               typeBadge: isPro ? 'PRO VENCIDO' : 'DEMO VENCIDO',
-              typeBadgeBg: isPro ? 'rgba(255, 179, 0, 0.2)' : 'rgba(255, 82, 82, 0.2)',
+              typeBadgeBg: isPro ? 'rgba(255, 179, 0, 0.2)' : 'rgba(226, 112, 58, 0.2)',
               typeBadgeColor: isPro ? '#FFB300' : '#FF8A80',
               icon: '⏳',
               title: `${isPro ? 'Licencia PRO' : 'Prueba Demo'} Vencida: ${dev.hwid}`,
@@ -2624,8 +2652,8 @@
               id,
               category: 'blocks',
               typeBadge: 'BLOQUEADO',
-              typeBadgeBg: 'rgba(255, 82, 82, 0.2)',
-              typeBadgeColor: '#FF5252',
+              typeBadgeBg: 'rgba(226, 112, 58, 0.2)',
+              typeBadgeColor: '#E2703A',
               icon: '⛔',
               title: `Celular Bloqueado: ${dev.hwid}`,
               desc: `Motivo: ${dev.blockReason || 'Suspendido por administrador'}${dev.currentUser ? ' • Usuario: ' + dev.currentUser : ''}${dev.deviceModel ? ' • ' + dev.deviceModel : ''}`,
@@ -2702,8 +2730,8 @@
               id,
               category: 'security',
               typeBadge: isCritical ? 'CRÍTICO' : (sec.severity || 'ALERTA'),
-              typeBadgeBg: isCritical ? 'rgba(255, 82, 82, 0.25)' : 'rgba(255, 183, 77, 0.2)',
-              typeBadgeColor: isCritical ? '#FF5252' : '#FFB74D',
+              typeBadgeBg: isCritical ? 'rgba(226, 112, 58, 0.25)' : 'rgba(255, 183, 77, 0.2)',
+              typeBadgeColor: isCritical ? '#E2703A' : '#FFB74D',
               icon: '🚨',
               title: `Seguridad: ${sec.type || 'Incidente Detectado'}`,
               desc: `${sec.message || ''} • IP: ${sec.ip || '127.0.0.1'}${sec.hwid ? ' • ' + sec.hwid : ''}`,
@@ -3349,7 +3377,7 @@
           <button class="btn btn-dark btn-sm" data-action="user-role" data-id="${escapeHtml(u.id || '')}" data-email="${escapeHtml(u.email || '')}" data-role="${escapeHtml(u.role || 'USER')}" title="Cambiar rol Admin/User">
             🛡️ Rol
           </button>
-          <button class="btn btn-dark btn-sm" style="color:#FF5252;" data-action="user-delete" data-id="${escapeHtml(u.id || '')}" data-email="${escapeHtml(u.email || '')}" title="Eliminar cuenta">
+          <button class="btn btn-dark btn-sm" style="color:#E2703A;" data-action="user-delete" data-id="${escapeHtml(u.id || '')}" data-email="${escapeHtml(u.email || '')}" title="Eliminar cuenta">
             🗑️
           </button>
         </td>
@@ -3910,7 +3938,7 @@
           const isPast = expDate <= new Date();
           const remainingStr = dev.timeRemainingFormatted || (dev.daysRemaining !== undefined ? `${dev.daysRemaining} días` : '');
           expText = isPast 
-            ? `<span style="color:#FF5252; font-weight:700;">⛔ PRO Vencida</span> <button type="button" class="btn btn-dark btn-sm" style="padding:1px 5px; font-size:10px; margin-left:4px;" data-action="expiration" title="Renovar o modificar vigencia">Renovar</button>` 
+            ? `<span style="color:#E2703A; font-weight:700;">⛔ PRO Vencida</span> <button type="button" class="btn btn-dark btn-sm" style="padding:1px 5px; font-size:10px; margin-left:4px;" data-action="expiration" title="Renovar o modificar vigencia">Renovar</button>` 
             : `<div style="color:#3FCF8E; font-weight:700; font-size:12px; display:flex; align-items:center; gap:4px;">
                 📅 ${expDate.toLocaleDateString()} ${expDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                 <button type="button" class="btn btn-dark btn-sm" style="padding:0 5px; font-size:10px; height:18px; line-height:16px;" data-action="expiration" title="Modificar vigencia o convertir a vitalicio">✏️</button>
@@ -3928,7 +3956,7 @@
           const isPast = expDate <= new Date();
           const remainingStr = dev.timeRemainingFormatted || '';
           expText = isPast 
-            ? '<span style="color:#FF5252; font-weight:700;">⛔ Prueba Vencida</span>' 
+            ? '<span style="color:#E2703A; font-weight:700;">⛔ Prueba Vencida</span>' 
             : `<div style="color:#FFB300; font-weight:700; font-size:12px;">⏳ ${expDate.toLocaleDateString()} ${expDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                <div style="font-size:11px; margin-top:2px;"><span class="badge dev-remaining-badge" style="background:rgba(255,179,0,0.15); color:#FFB300; border:1px solid rgba(255,179,0,0.3); padding:1px 6px; font-weight:700;">⚡ Restan: ${escapeHtml(remainingStr)}</span></div>`;
         } else {
@@ -3980,7 +4008,7 @@
         </td>
         <td>v${safeAppVersion}<br><small style="color:#666;" class="dev-pings-text">${dev.totalPings || 1} pings</small></td>
         <td>
-          <div style="font-weight: 700; font-size: 12px; color: ${isExpired ? '#FF5252' : (dev.mode === 'PRO' ? '#3FCF8E' : '#FFB300')};">
+          <div style="font-weight: 700; font-size: 12px; color: ${isExpired ? '#E2703A' : (dev.mode === 'PRO' ? '#3FCF8E' : '#FFB300')};">
             ${expText}
           </div>
           ${dev.mode === 'PRO' && !dev.isLifetime ? `
@@ -4009,7 +4037,7 @@
           <button type="button" class="btn btn-dark btn-sm" data-action="toggle-test" title="${dev.isTest ? 'Mover a Celulares de Clientes' : 'Mover a Dispositivos de Prueba'}">${dev.isTest ? '📱 A Cliente' : '🧪 A Test'}</button>
           <button type="button" class="btn btn-dark btn-sm" data-action="invalidate-session" title="Forzar cierre de sesión en este celular">🚪 Desvincular</button>
           <button type="button" class="btn btn-dark btn-sm" data-action="note" title="Agregar nota de cliente">📝 Nota</button>
-          <button type="button" class="btn btn-dark btn-sm" style="color:#FF5252;" data-action="delete" title="Eliminar del panel">🗑️</button>
+          <button type="button" class="btn btn-dark btn-sm" style="color:#E2703A;" data-action="delete" title="Eliminar del panel">🗑️</button>
         </td>
       `;
     }
@@ -4737,7 +4765,7 @@
             const expD = new Date(dev.expiresAt);
             const isPast = expD <= new Date();
             statusBox.innerHTML = isPast
-              ? `<span style="color:#FF5252; font-weight:bold;">⛔ Licencia PRO: VENCIDA el ${expD.toLocaleString()}</span>`
+              ? `<span style="color:#E2703A; font-weight:bold;">⛔ Licencia PRO: VENCIDA el ${expD.toLocaleString()}</span>`
               : `<span style="color:#FFB300; font-weight:bold;">📅 Licencia PRO: Vence el ${expD.toLocaleString()} (${timeStr} restantes)</span>`;
             document.getElementById('exp-hours-select').value = 'custom';
             if (customDaysBox) customDaysBox.style.display = 'block';
@@ -5178,12 +5206,12 @@
           if (existingDev) {
             const isDevPro = (existingDev.mode === 'PRO');
             const statusTxt = isDevPro ? '💎 PRO' : (existingDev.blocked ? '🚫 BLOQUEADO' : '⏱️ DEMO');
-            const bg = isDevPro ? 'rgba(63,207,142,0.15)' : (existingDev.blocked ? 'rgba(255,82,82,0.15)' : 'rgba(255,179,0,0.15)');
-            const col = isDevPro ? '#3FCF8E' : (existingDev.blocked ? '#FF5252' : '#FFB300');
+            const bg = isDevPro ? 'rgba(63,207,142,0.15)' : (existingDev.blocked ? 'rgba(226, 112, 58,0.15)' : 'rgba(255,179,0,0.15)');
+            const col = isDevPro ? '#3FCF8E' : (existingDev.blocked ? '#E2703A' : '#FFB300');
             devBadge = `<br><span class="badge" style="font-size:10px; margin-top:3px; display:inline-block; background:${bg}; color:${col}; border:1px solid ${col};">En BD: ${statusTxt}</span>`;
           }
           const repeatBadge = isRepeat
-            ? `<br><span class="badge" style="background:rgba(255,87,34,0.15); color:#FF5252; border:1px solid #FF5252; font-size:10px; margin-top:3px; display:inline-block;">⚠️ Reincidente (${reqCount} peticiones)</span>`
+            ? `<br><span class="badge" style="background:rgba(226, 112, 58,0.15); color:#E2703A; border:1px solid #E2703A; font-size:10px; margin-top:3px; display:inline-block;">⚠️ Reincidente (${reqCount} peticiones)</span>`
             : '';
 
           const rowHtml = `
@@ -5210,7 +5238,7 @@
               ${r.status !== 'APPROVED' ? `<button class="btn btn-pro btn-sm" data-action="pro-approve" data-id="${escapeHtml(r.id)}" data-hwid="${escapeHtml(r.hwid || '')}">⚡ Aprobar PRO</button>` : ''}
               ${r.status === 'PENDING' ? `<button class="btn btn-blue btn-sm" data-action="pro-contacted" data-id="${escapeHtml(r.id)}">📞 Contactado</button>` : ''}
               ${r.status !== 'PENDING' ? `<button class="btn btn-dark btn-sm" data-action="pro-reset" data-id="${escapeHtml(r.id)}" title="Reabrir / Marcar Pendiente">🔄</button>` : ''}
-              <button class="btn btn-dark btn-sm" style="color:#FF5252;" data-action="pro-delete" data-id="${escapeHtml(r.id)}" title="Eliminar solicitud permanentemente">🗑️</button>
+              <button class="btn btn-dark btn-sm" style="color:#E2703A;" data-action="pro-delete" data-id="${escapeHtml(r.id)}" title="Eliminar solicitud permanentemente">🗑️</button>
             </td>
           `;
 
@@ -5516,13 +5544,13 @@
 
           let typeBadge = '<span class="badge" style="background:rgba(41,182,246,0.15); color:#29B6F6;">INFO</span>';
           if (isSql) {
-            typeBadge = '<span class="badge" style="background:rgba(211,47,47,0.3); color:#FF5252; border:1px solid #FF5252; font-weight:800;">💥 SQL INJECTION</span>';
+            typeBadge = '<span class="badge" style="background:rgba(211,47,47,0.3); color:#E2703A; border:1px solid #E2703A; font-weight:800;">💥 SQL INJECTION</span>';
           } else if (isTamper) {
-            typeBadge = '<span class="badge badge-emulator" style="background:rgba(211,47,47,0.25); color:#FF5252; border:1px solid #FF5252; font-weight:800;">🚨 TAMPER / CRACK</span>';
+            typeBadge = '<span class="badge badge-emulator" style="background:rgba(211,47,47,0.25); color:#E2703A; border:1px solid #E2703A; font-weight:800;">🚨 TAMPER / CRACK</span>';
           } else if (isReplay) {
             typeBadge = '<span class="badge" style="background:rgba(255,179,0,0.2); color:#FFB300; border:1px solid #FFB300; font-weight:800;">⚠️ REPLAY ATTACK</span>';
           } else if (isSigMismatch) {
-            typeBadge = '<span class="badge" style="background:rgba(255,87,34,0.25); color:#FF5722; border:1px solid #FF5722; font-weight:800;">🛑 FIRMA ALTERADA</span>';
+            typeBadge = '<span class="badge" style="background:rgba(226, 112, 58,0.25); color:#E2703A; border:1px solid #E2703A; font-weight:800;">🛑 FIRMA ALTERADA</span>';
           } else if (isKill) {
             typeBadge = '<span class="badge" style="background:rgba(211,47,47,0.4); color:#FFF; border:1px solid #FF1744; font-weight:800;">⛔ KILL-SWITCH</span>';
           } else if (isAuthDenied) {
@@ -5554,7 +5582,7 @@
             payloadDetails = `<div style="font-size:11px; color:#FFAB91; margin-top:4px;">Motivo: ${escapeHtml(log.details.reason)}</div>`;
           }
 
-          const stackPreview = log.details?.stack ? `<details style="margin-top:4px;"><summary style="font-size:11px; color:#FF5722; cursor:pointer;">Ver Stack Trace</summary><pre style="font-size:10px; color:#BBB; background:#0A0A0C; padding:6px; border-radius:4px; max-height:120px; overflow-y:auto; margin-top:4px;">${escapeHtml(log.details.stack)}</pre></details>` : '';
+          const stackPreview = log.details?.stack ? `<details style="margin-top:4px;"><summary style="font-size:11px; color:#E2703A; cursor:pointer;">Ver Stack Trace</summary><pre style="font-size:10px; color:#BBB; background:#0A0A0C; padding:6px; border-radius:4px; max-height:120px; overflow-y:auto; margin-top:4px;">${escapeHtml(log.details.stack)}</pre></details>` : '';
 
           const rowHtml = `
             <td>${typeBadge}</td>
@@ -6054,7 +6082,7 @@
           const dot = document.getElementById('header-status-dot');
           if (s.globalMaintenance) {
             maintEl.innerText = '🔴 ACTIVO';
-            maintEl.style.color = '#FF5252';
+            maintEl.style.color = '#E2703A';
             dot.className = 'status-dot danger';
             document.getElementById('bridge-status').innerText = 'Mantenimiento';
           } else {
@@ -6188,12 +6216,12 @@
           statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito a WhatsApp!';
           showToast('Alerta enviada a +5521971217376');
         } else {
-          statusEl.style.color = '#FF5252';
+          statusEl.style.color = '#E2703A';
           statusEl.innerText = '❌ ' + (data.error || data.reason || 'Revisa tu conexión');
           showToast('Alerta enviada (Revisa estado)', true);
         }
       } catch (e) {
-        statusEl.style.color = '#FF5252';
+        statusEl.style.color = '#E2703A';
         statusEl.innerText = '❌ Error de red: ' + e.message;
       }
     }
@@ -6282,14 +6310,14 @@
           loadAuditLogs();
         } else {
           if (statusEl) {
-            statusEl.style.color = '#FF5252';
+            statusEl.style.color = '#E2703A';
             statusEl.innerText = '❌ ' + (data.error || 'Error al guardar');
           }
           showToast('Error al guardar ajustes de correo', true);
         }
       } catch (e) {
         if (statusEl) {
-          statusEl.style.color = '#FF5252';
+          statusEl.style.color = '#E2703A';
           statusEl.innerText = '❌ Error de red: ' + e.message;
         }
       }
@@ -6300,7 +6328,7 @@
       const statusEl = document.getElementById('email-test-status');
       if (!dest) {
         if (statusEl) {
-          statusEl.style.color = '#FF5252';
+          statusEl.style.color = '#E2703A';
           statusEl.innerText = '⚠️ Ingresa un correo de destino para la prueba.';
         }
         return;
@@ -6328,14 +6356,14 @@
           loadAuditLogs();
         } else {
           if (statusEl) {
-            statusEl.style.color = '#FF5252';
+            statusEl.style.color = '#E2703A';
             statusEl.innerText = '❌ ' + (data.error || 'Error al enviar correo');
           }
           showToast(data.error || 'Error en envío', true);
         }
       } catch (e) {
         if (statusEl) {
-          statusEl.style.color = '#FF5252';
+          statusEl.style.color = '#E2703A';
           statusEl.innerText = '❌ Error: ' + e.message;
         }
       }
@@ -6383,7 +6411,7 @@
           box.style.background = 'rgba(211, 47, 47, 0.12)';
           box.style.border = '1px solid var(--red-bright)';
           box.innerHTML = `
-            <div style="font-size: 15px; font-weight: 800; color: #FF5252; margin-bottom: 6px;">❌ Error al Conectar con SQL Server</div>
+            <div style="font-size: 15px; font-weight: 800; color: #E2703A; margin-bottom: 6px;">❌ Error al Conectar con SQL Server</div>
             <div style="font-size: 13px; color: #EEE;">Tiempo de intento: <strong>${escapeHtml(data.latencyMs)} ms</strong></div>
             <div style="font-size: 12px; color: #FF8A80; font-family: monospace; margin-top: 6px; white-space: pre-wrap;">${escapeHtml(data.error)}</div>
             <div style="font-size: 11px; color: #AAA; margin-top: 8px;">💡 Verifica que el puerto 1433 esté abierto en el Firewall del VPS del cliente y que el usuario 'sa' permita autenticación SQL Server.</div>
@@ -6394,7 +6422,7 @@
         box.style.display = 'block';
         box.style.background = 'rgba(211, 47, 47, 0.12)';
         box.style.border = '1px solid var(--red-bright)';
-        box.innerHTML = `<div style="color: #FF5252;">Error de red: ${escapeHtml(e.message)}</div>`;
+        box.innerHTML = `<div style="color: #E2703A;">Error de red: ${escapeHtml(e.message)}</div>`;
       } finally {
         btn.innerText = '⚡ Probar Conexión Ahora';
         btn.disabled = false;
@@ -6493,7 +6521,7 @@
 
       let expText = l.isLifetime 
         ? '<span style="color:#AAA;">Sin vencimiento</span>'
-        : (l.expiresAt ? (l.isExpired ? '<span style="color:#FF5252; font-weight:bold;">⛔ EXPIRADA</span>' : `<span style="color:#EEE;">${new Date(l.expiresAt).toLocaleDateString()} ${new Date(l.expiresAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`) : '<span style="color:#AAA;">N/A</span>');
+        : (l.expiresAt ? (l.isExpired ? '<span style="color:#E2703A; font-weight:bold;">⛔ EXPIRADA</span>' : `<span style="color:#EEE;">${new Date(l.expiresAt).toLocaleDateString()} ${new Date(l.expiresAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`) : '<span style="color:#AAA;">N/A</span>');
 
       return `
         <td><span class="hwid-code" style="font-size:11px;">${safeHwid}</span></td>
@@ -6705,14 +6733,14 @@
         const safeReason = escapeHtml(d.reason || 'Eliminado por el administrador');
 
         const rowHtml = `
-          <td><span class="hwid-code" style="font-size:11px; color:#FF5252;">${safeHwid}</span></td>
+          <td><span class="hwid-code" style="font-size:11px; color:#E2703A;">${safeHwid}</span></td>
           <td><small style="color:#AAA;">${safeDate}</small></td>
           <td>${safeModel}</td>
           <td><code style="font-size:10px; color:#C8BEAF;">${safeKey}</code></td>
           <td><small style="color:#FFB74D;">${safeReason}</small></td>
           <td>
             <button class="btn btn-green btn-sm" style="font-size:11px; padding:3px 8px;" data-action="unexclude-device" data-hwid="${safeHwid}" title="Restaurar dispositivo para que pueda volver a conectarse">♻️ Restaurar</button>
-            <button class="btn btn-dark btn-sm" style="color:#FF5252; border:1px solid rgba(255,82,82,0.3); font-size:11px; padding:3px 8px; margin-left:6px;" data-action="delete-tombstone" data-hwid="${safeHwid}" title="Eliminar definitivamente del registro sin bloquear el teléfono">🗑️ Eliminar</button>
+            <button class="btn btn-dark btn-sm" style="color:#E2703A; border:1px solid rgba(226, 112, 58,0.3); font-size:11px; padding:3px 8px; margin-left:6px;" data-action="delete-tombstone" data-hwid="${safeHwid}" title="Eliminar definitivamente del registro sin bloquear el teléfono">🗑️ Eliminar</button>
           </td>
         `;
 
@@ -6921,7 +6949,7 @@
         const cat = l.category || getLogCategoryFallback(l.type);
         let catColor = '#29B6F6';
         let catLabel = '⚙️ SISTEMA';
-        if (cat === 'SECURITY') { catColor = '#FF5252'; catLabel = '🛡️ SEGURIDAD'; }
+        if (cat === 'SECURITY') { catColor = '#E2703A'; catLabel = '🛡️ SEGURIDAD'; }
         else if (cat === 'LICENSE') { catColor = '#3FCF8E'; catLabel = '🔑 LICENCIA'; }
         else if (cat === 'USERS') { catColor = '#5B8DEF'; catLabel = '👥 USUARIOS'; }
         else if (cat === 'DEVICES') { catColor = '#FFB300'; catLabel = '📱 DISPOSITIVO'; }
@@ -7042,9 +7070,9 @@
           } else {
             if (badge) {
               badge.innerHTML = '🔴 Cloud DB: Error de Red';
-              badge.style.background = 'rgba(255, 82, 82, 0.15)';
-              badge.style.color = '#FF5252';
-              badge.style.border = '1px solid rgba(255, 82, 82, 0.35)';
+              badge.style.background = 'rgba(226, 112, 58, 0.15)';
+              badge.style.color = '#E2703A';
+              badge.style.border = '1px solid rgba(226, 112, 58, 0.35)';
             }
             if (modalText) {
               modalText.innerHTML = `🔴 <strong>ERROR DE CONEXIÓN CON UPSTASH</strong><br><span style="font-size:12px; color:#FF8A80;">${escapeHtml(data.livePingError || 'No se pudo conectar a la base de datos')}</span><br><span style="font-size:11px; color:#CCC;">Revisa que la URL y el Token en Vercel estén bien copiados sin espacios adicionales.</span>`;

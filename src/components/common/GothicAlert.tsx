@@ -11,9 +11,14 @@ import {
   Alert as RNAlert,
   BackHandler,
   Pressable,
+  Image,
+  ImageBackground,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon, MuIconName } from '../ui/MuIcon';
+import { MuButton } from '../ui/MuButton';
+import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 export type GothicAlertType = 'info' | 'success' | 'warning' | 'error' | 'confirm';
 
@@ -29,7 +34,7 @@ export interface GothicAlertOptions {
   cancelable?: boolean;
   onDismiss?: () => void;
   type?: GothicAlertType;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon?: MuIconName;
   subtitle?: string;
   badge?: string;
 }
@@ -151,7 +156,7 @@ class GothicAlertManager {
   }
 
   /**
-   * Dispara una alerta oficial Season 6. Firma compatible 100% con Alert.alert de React Native.
+   * Dispara una alerta oficial Stitch Ironforge. Firma compatible 100% con Alert.alert de React Native.
    */
   public alert(
     title: string,
@@ -319,7 +324,8 @@ export const GothicAlert = {
 const VARIANT_CONFIG: Record<
   GothicAlertType,
   {
-    icon: keyof typeof MaterialCommunityIcons.glyphMap;
+    icon: MuIconName;
+    sprite?: any;
     color: string;
     badgeText: string;
     badgeTextColor: string;
@@ -328,7 +334,8 @@ const VARIANT_CONFIG: Record<
   }
 > = {
   success: {
-    icon: 'shield-check',
+    icon: 'check',
+    sprite: STITCH_ASSETS.sprites.checkboxActive,
     color: THEME.colors.jade,
     badgeText: 'ÉXITO',
     badgeTextColor: '#5DF5B0',
@@ -337,6 +344,7 @@ const VARIANT_CONFIG: Record<
   },
   error: {
     icon: 'shield-alert',
+    sprite: STITCH_ASSETS.sprites.security,
     color: THEME.colors.brasa,
     badgeText: 'ATENCIÓN / ERROR',
     badgeTextColor: '#FFA87D', // Llama viva de alto contraste contra fondo oscuro (8:1 AAA)
@@ -344,7 +352,8 @@ const VARIANT_CONFIG: Record<
     glowBg: 'rgba(226, 112, 58, 0.22)',
   },
   warning: {
-    icon: 'alert-decagram',
+    icon: 'shield',
+    sprite: STITCH_ASSETS.sprites.pkEmblem,
     color: THEME.colors.oroClaro,
     badgeText: 'ADVERTENCIA',
     badgeTextColor: '#FEE180',
@@ -352,7 +361,8 @@ const VARIANT_CONFIG: Record<
     glowBg: 'rgba(232, 200, 106, 0.18)',
   },
   confirm: {
-    icon: 'shield-sword',
+    icon: 'sword',
+    sprite: STITCH_ASSETS.sprites.battleSwords,
     color: THEME.colors.oroClaro,
     badgeText: 'CONFIRMACIÓN',
     badgeTextColor: '#FEE180',
@@ -360,7 +370,8 @@ const VARIANT_CONFIG: Record<
     glowBg: 'rgba(232, 200, 106, 0.15)',
   },
   info: {
-    icon: 'shield-crown',
+    icon: 'crown',
+    sprite: STITCH_ASSETS.sprites.citadel,
     color: THEME.colors.oroClaro,
     badgeText: 'INFORMACIÓN',
     badgeTextColor: '#FEE180',
@@ -442,6 +453,15 @@ export const GothicAlertContainer: React.FC = () => {
           style={[styles.cardContainer, { borderColor: config.borderColor }]}
           onPress={(e) => e.stopPropagation()}
         >
+          <ImageBackground
+            source={require('../../../assets/ui/mu_stone_back.png')}
+            style={styles.cardStoneBg}
+            resizeMode="repeat"
+            imageStyle={{ opacity: 0.45 }}
+          >
+          {/* Esquineros góticos NewUI Stitch */}
+          <MuCornerOrnaments size={14} offset={-2} />
+
           {/* Remaches ornamentales en las 4 esquinas del marco */}
           <View style={[styles.cornerRivet, styles.cornerRivetTL]} />
           <View style={[styles.cornerRivet, styles.cornerRivetTR]} />
@@ -454,7 +474,15 @@ export const GothicAlertContainer: React.FC = () => {
           {/* Cabecera gótica Season 6 */}
           <View style={styles.header}>
             <View style={[styles.iconBox, { borderColor: config.color }]}>
-              <MaterialCommunityIcons name={iconName} size={24} color={config.color} />
+              {!alert.options.icon && config.sprite ? (
+                <Image
+                  source={config.sprite}
+                  style={styles.alertSpriteIcon}
+                  resizeMode="contain"
+                />
+              ) : (
+                <MuIcon name={iconName} size={24} />
+              )}
             </View>
             <View style={styles.headerTextCol}>
               <View style={[styles.badgeContainer, { borderColor: config.borderColor, backgroundColor: config.glowBg }]}>
@@ -513,43 +541,34 @@ export const GothicAlertContainer: React.FC = () => {
               const isDestructive = btn.style === 'destructive';
               const isPrimary = !isCancel && !isDestructive && (btn.variant === 'gold' || index === 0);
 
-              let btnStyle = styles.btnSecondary;
-              let btnTextStyle = styles.btnTextSecondary;
-
+              let muVariant: 'primary' | 'secondary' | 'danger' | 'success' = 'primary';
               if (btn.variant === 'jade') {
-                btnStyle = styles.btnJade;
-                btnTextStyle = styles.btnTextDark;
+                muVariant = 'success';
               } else if (isDestructive || btn.variant === 'brasa') {
-                btnStyle = styles.btnDestructive;
-                btnTextStyle = styles.btnTextDark;
+                muVariant = 'danger';
+              } else if (isCancel || btn.variant === 'stone') {
+                muVariant = 'secondary';
               } else if (isPrimary || btn.variant === 'gold') {
-                btnStyle = styles.btnPrimary;
-                btnTextStyle = styles.btnTextDark;
-              } else if (isCancel) {
-                btnStyle = styles.btnCancel;
-                btnTextStyle = styles.btnTextCancel;
+                muVariant = 'primary';
               }
 
               return (
-                <TouchableOpacity
+                <View
                   key={`btn_${index}_${btn.text}`}
-                  style={[styles.btnBase, btnStyle, layoutHorizontal && styles.btnFlex]}
-                  onPress={() => handleButtonPress(btn)}
-                  activeOpacity={0.75}
-                  accessibilityRole="button"
-                  accessibilityLabel={btn.accessibilityLabel || btn.text}
+                  style={layoutHorizontal ? styles.btnFlex : undefined}
                 >
-                  <Text
-                    style={[styles.btnTextBase, btnTextStyle]}
-                    numberOfLines={2}
-                    ellipsizeMode="tail"
-                  >
-                    {btn.text}
-                  </Text>
-                </TouchableOpacity>
+                  <MuButton
+                    titulo={btn.text}
+                    onPress={() => handleButtonPress(btn)}
+                    variante={muVariant}
+                    altura={48}
+                    accessibilityLabel={btn.accessibilityLabel || btn.text}
+                  />
+                </View>
               );
             })}
           </View>
+          </ImageBackground>
         </Pressable>
       </Pressable>
     </Modal>
@@ -571,8 +590,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     maxHeight: '90%',
-    backgroundColor: THEME.colors.card, // #241E1A (Superficie continua de piedra noble)
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -588,7 +607,7 @@ const styles = StyleSheet.create({
     left: 3,
     right: 3,
     bottom: 3,
-    borderRadius: 4,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: 'rgba(107, 85, 51, 0.40)', // Grabado dorado perimetral
     pointerEvents: 'none',
@@ -600,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 3, /* círculo funcional (width/2): remache ornamental gótico */
     backgroundColor: THEME.colors.oro,
     borderWidth: 1,
-    borderColor: '#0A0807',
+    borderColor: THEME.colors.deepForge,
     zIndex: 10,
   },
   cornerRivetTL: { top: 8, left: 8 },
@@ -618,7 +637,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22, /* círculo funcional (width/2): avatar de icono del aviso */
-    backgroundColor: THEME.colors.casillaFondo, // #100D0B
+    backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
@@ -629,6 +648,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  alertSpriteIcon: {
+    width: 26,
+    height: 26,
+  },
   headerTextCol: {
     flex: 1,
   },
@@ -636,7 +659,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 2.5,
-    borderRadius: 4,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     marginBottom: 5,
   },
@@ -652,7 +675,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17.5,
     fontWeight: '700',
-    color: THEME.colors.texto, // #FAF6EE (14.02:1 AAA)
+    color: THEME.colors.texto, // Ivory Text #E4E2E0
     letterSpacing: 0.35,
     lineHeight: 23,
     textShadowColor: 'rgba(0, 0, 0, 0.90)',
@@ -669,6 +692,15 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
   },
+  cardStoneBg: {
+    width: '100%',
+    backgroundColor: THEME.colors.superficie,
+  },
+  ornamentalDividerImage: {
+    width: '100%',
+    height: 2,
+    marginVertical: 4,
+  },
   ornamentalDivider: {
     height: 1,
     backgroundColor: 'rgba(107, 85, 51, 0.35)', // Línea grabada sutil
@@ -679,8 +711,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   messageBox: {
-    backgroundColor: THEME.colors.casillaFondo, // #100D0B (Fondo profundo tipo pergamino tallado)
-    borderRadius: 4,
+    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: 'rgba(107, 85, 51, 0.35)',
     maxHeight: Math.min(340, windowHeight * 0.52),
@@ -697,7 +729,7 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     fontWeight: '500', // Medium definido: elimina delgadez y garantiza nitidez perfecta
     lineHeight: 22.5,
-    color: THEME.colors.texto, // #FAF6EE (16.98:1 AAA sobre casillaFondo #100D0B)
+    color: THEME.colors.texto, // Ivory Text #E4E2E0
     letterSpacing: 0.25,
     textShadowColor: 'rgba(0, 0, 0, 0.85)',
     textShadowOffset: { width: 0, height: 1 },
@@ -720,7 +752,7 @@ const styles = StyleSheet.create({
   },
   btnBase: {
     minHeight: 44, // WCAG AAA Touch Target
-    borderRadius: 6,
+    borderRadius: 2,
     paddingHorizontal: 14,
     paddingVertical: 10,
     justifyContent: 'center',
@@ -730,7 +762,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btnPrimary: {
-    backgroundColor: THEME.colors.oroClaro, // #E8C86A
+    backgroundColor: THEME.colors.oroClaro, // Gold Bright #EFD28D
     borderWidth: 1,
     borderColor: THEME.colors.oro,
     shadowColor: THEME.colors.oro,
@@ -760,14 +792,14 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   btnSecondary: {
-    backgroundColor: '#27201B',
+    backgroundColor: THEME.colors.raisedIron,
     borderWidth: 1,
-    borderColor: THEME.colors.bordeBrillante, // #A8894D
+    borderColor: THEME.colors.bordeBrillante,
   },
   btnCancel: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: THEME.colors.borde, // #6B5533
+    borderColor: THEME.colors.borde,
   },
   btnTextBase: {
     fontWeight: '700',
@@ -775,15 +807,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   btnTextDark: {
-    color: THEME.colors.textoOscuro, // #100D0B (WCAG AAA >= 7:1 en oro y jade; 6.10:1 en brasa)
+    color: THEME.colors.textoOscuro, // #0D0E0D (WCAG AAA >= 7:1 en oro y jade; 6.10:1 en brasa)
     fontSize: 14.5,
   },
   btnTextSecondary: {
-    color: THEME.colors.oroClaro, // #E8C86A
+    color: THEME.colors.oroClaro, // Gold Bright #EFD28D
     fontSize: 14,
   },
   btnTextCancel: {
-    color: THEME.colors.textoSecundario, // #C8BEAF
+    color: THEME.colors.textoSecundario, // Weathered Silver #CDC6B9
     fontSize: 14,
     fontWeight: '600',
   },

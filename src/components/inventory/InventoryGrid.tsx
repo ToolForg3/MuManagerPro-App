@@ -1,5 +1,5 @@
 import React, { useMemo, memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, ImageBackground } from 'react-native';
 import { THEME } from '../../constants/theme';
 import { ParsedItem } from '../../types/item';
 import { ItemImage } from '../common/ItemImage';
@@ -80,21 +80,24 @@ export const InventoryGrid: React.FC<InventoryGridProps> = memo(({
 
   // Celdas de fondo: slots vacíos interactivos o celdas ocupadas pasivas
   const renderBackgroundCells = () => {
+    const slotBoxAsset = require('../../../assets/ui/mu_slot_box.png');
     const cells = [];
     for (let i = 0; i < totalSlots; i++) {
       const globalSlot = startSlot + i;
       const isOccupied = occupiedSet.has(i);
 
       if (isOccupied) {
-        // Celda cubierta por un ítem multi-slot: celda de fondo pasiva
+        // Celda cubierta por un ítem multi-slot: celda de fondo pasiva con textura
         cells.push(
-          <View
+          <ImageBackground
             key={`bg_occ_${globalSlot}`}
+            source={slotBoxAsset}
             style={[styles.occupiedCellBg, { width: cellSize, height: cellSize }]}
+            resizeMode="stretch"
           />
         );
       } else {
-        // Slot realmente vacío: botón interactivo para abrir selector o reubicar ítem
+        // Slot realmente vacío: botón interactivo con textura nativa de slot
         cells.push(
           <TouchableOpacity
             key={`bg_empty_${globalSlot}`}
@@ -106,9 +109,15 @@ export const InventoryGrid: React.FC<InventoryGridProps> = memo(({
             onPress={() => onSlotPress(globalSlot, undefined)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.slotIndexText, isMoving && styles.slotIndexMoving]}>
-              {isMoving ? '+' : i + 1}
-            </Text>
+            <ImageBackground
+              source={slotBoxAsset}
+              style={styles.slotBoxBg}
+              resizeMode="stretch"
+            >
+              <Text style={[styles.slotIndexText, isMoving && styles.slotIndexMoving]}>
+                {isMoving ? '+' : i + 1}
+              </Text>
+            </ImageBackground>
           </TouchableOpacity>
         );
       }
@@ -217,11 +226,14 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#171817',
     padding: 7,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     borderWidth: 1.5,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     alignSelf: 'center',
     elevation: 6,
     shadowColor: '#000',
@@ -232,16 +244,31 @@ const styles = StyleSheet.create({
   gridContainer: {
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#090A09',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#3A3C38',
+    borderBottomColor: '#3A3C38',
   },
   gridBackground: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   emptyCell: {
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#090A09',
     borderWidth: 0.5,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#2C302C',
+    borderBottomColor: '#2C302C',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  slotBoxBg: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -274,7 +301,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.oroClaro,
     paddingHorizontal: 4,
     paddingVertical: 1,
-    borderRadius: 3,
+    borderRadius: 2,
   },
   movingBadgeText: {
     fontSize: 7,
@@ -284,7 +311,7 @@ const styles = StyleSheet.create({
   },
   multiSlotCard: {
     position: 'absolute',
-    borderRadius: 3,
+    borderRadius: 2,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
@@ -300,7 +327,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.8,
     paddingHorizontal: 3,
     paddingVertical: 0.5,
-    borderRadius: 3,
+    borderRadius: 2,
   },
   levelBadgeText: {
     fontSize: 9,
@@ -316,6 +343,6 @@ const styles = StyleSheet.create({
   miniDot: {
     width: 5,
     height: 5,
-    borderRadius: 2.5,
+    borderRadius: 2.5, /* círculo funcional (width/2) */
   },
 });

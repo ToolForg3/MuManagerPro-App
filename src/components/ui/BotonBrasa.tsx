@@ -1,12 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, ActivityIndicator, StyleProp, ViewStyle, TextStyle } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { THEME } from '../../constants/theme';
+import { StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { MuButton } from './MuButton';
+import { MuIconName } from './MuIcon';
 
 export interface BotonBrasaProps {
   titulo: string;
   onPress: () => void;
-  icono?: keyof typeof Feather.glyphMap | React.ReactNode;
+  icono?: MuIconName;
   disabled?: boolean;
   deshabilitado?: boolean;
   cargando?: boolean;
@@ -22,83 +22,25 @@ export const BotonBrasa: React.FC<BotonBrasaProps> = ({
   disabled = false,
   deshabilitado = false,
   cargando = false,
-  altura = THEME.shapes.alturaBotonPrincipal,
+  altura = 48,
   style,
   textStyle,
 }) => {
   const isDisabled = disabled || deshabilitado;
+  const iconStr = typeof icono === 'string' ? icono : undefined;
 
   return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !!isDisabled, busy: !!cargando }}
-      accessibilityLabel={cargando ? `Cargando, ${titulo}` : titulo}
-      style={[
-        styles.boton,
-        { minHeight: altura },
-        isDisabled && styles.disabled,
-        style,
-      ]}
+    <MuButton
+      titulo={titulo}
       onPress={onPress}
-      disabled={isDisabled || cargando}
-      activeOpacity={0.8}
-    >
-      <View style={styles.content}>
-        {cargando ? (
-          <ActivityIndicator color={THEME.colors.textoOscuro} size="small" />
-        ) : (
-          <>
-            {icono && (
-              typeof icono === 'string' ? (
-                <Feather
-                  name={icono as any}
-                  size={18}
-                  color={THEME.colors.textoOscuro}
-                  style={styles.icon}
-                />
-              ) : (
-                <View style={styles.icon}>{icono}</View>
-              )
-            )}
-            <Text style={[styles.texto, textStyle]}>{titulo.toUpperCase()}</Text>
-          </>
-        )}
-      </View>
-    </TouchableOpacity>
+      variante="danger"
+      icono={iconStr}
+      iconoFamily="feather"
+      disabled={isDisabled}
+      cargando={cargando}
+      altura={altura}
+      style={style}
+      textStyle={textStyle}
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  boton: {
-    backgroundColor: THEME.colors.brasa,
-    borderColor: '#FF884D',
-    borderWidth: 1,
-    borderRadius: THEME.shapes.radioEsquina,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    shadowColor: THEME.colors.brasa,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: {
-    marginRight: 8,
-  },
-  texto: {
-    color: THEME.colors.textoOscuro,
-    fontFamily: THEME.typography.fontTitle,
-    fontWeight: THEME.typography.weightBold,
-    fontSize: 14,
-    letterSpacing: THEME.typography.trackingWide,
-  },
-});

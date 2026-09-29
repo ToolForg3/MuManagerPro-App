@@ -1,0 +1,218 @@
+[
+  {
+    "archivo": "btn_cancel_left_disabled.png",
+    "sha256": "7b5d7cb745937ebd0b96c8e72eaa2b215f173b0f49a3935a8f61f60a501ce918",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_cancel_left_normal.png",
+    "sha256": "6373ce37fc0f0c167a9fdcc187164a7480c49af0a067214ce2631e320b526285",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_cancel_left_pressed.png",
+    "sha256": "b27a33b152d0371a81294029b580c655f6680d1c314760f1b125ecfc5acf4e6b",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_cancel_mid_disabled.png",
+    "sha256": "cab0010d16ca6f339b9bca1cd83c2fc097bc43b1206f6485e69745a72a8068c5",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_cancel_mid_normal.png",
+    "sha256": "161f024584a0a22b08ce38fe19b62c4f77111b75ba4c7c95af3de9658d4a5b6c",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_cancel_mid_pressed.png",
+    "sha256": "cf50caccb3ce1794b027b599bd472a4b295d0d7fb289d534c7a47b9e4c45dd8c",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_cancel_right_disabled.png",
+    "sha256": "1509592c7b86e9e7ab8bca2ac052948fdde8ee126308b524b8fa5c80e99c4bf1",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_cancel_right_normal.png",
+    "sha256": "631e25f136ad5656a34945c784806f131cd6a103cf81af5c7ef23aafd18e851f",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_cancel_right_pressed.png",
+    "sha256": "e09e6fe7c9418e91ce60231e144e28e645347e2a75bc02dc4f9c870168b5653e",
+    "fuente": "07_kit_ui_MSPro/newui_button_cancel_e2e2d4a98c8e9de4.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_ok_left_disabled.png",
+    "sha256": "741a79132e966ed134e9e2c6a1469a90c542795ba86f01f809d4639b09c2e4c7",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_ok_left_normal.png",
+    "sha256": "d0a42d43f25a0a5784855625a140018c50de38a898ad9230e2bf9848a32c63f4",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_ok_left_pressed.png",
+    "sha256": "594828bd425cb2e4175625156d37825c81e55752c6d6f1f34273a2926c15f7c7",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_ok_mid_disabled.png",
+    "sha256": "7f9ce17083d472a0a986718124231e935c584529792f9979ea8f244ac2d5a4d0",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_ok_mid_normal.png",
+    "sha256": "e7fcf16eca23b20d9725eea614187b13f6b82090074bcc4bf1b5269bbb8445b4",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_ok_mid_pressed.png",
+    "sha256": "7769d51c5ddb2f0b5ee9fc2bdf8621a6e4544b546b57ccedbee8542d25e9c26d",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_ok_right_disabled.png",
+    "sha256": "280332501f2cb3f70b04b665b59c8ed76a8537ea5f5183050850d882e38b2cf6",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_ok_right_normal.png",
+    "sha256": "964088be0de566b8ee7f363ec7cebad4fb8eb9dce612d68a0f8510b49b432dc2",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_ok_right_pressed.png",
+    "sha256": "d7230d97188a879a1b595dc81cf77854b516bc3fcafd2f1c877ec2da548d321b",
+    "fuente": "07_kit_ui_MSPro/newui_button_ok_5d4544d92cc9ea4b.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_primary_left_disabled.png",
+    "sha256": "288d22ab9d3936f45f34ac28852bcb742711c197bd0e1e8268e186841b8d666a",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_primary_left_normal.png",
+    "sha256": "21c9d5625a95bb6643db010c4986680011c00b3578d00325d40820cd3883c3f5",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_primary_left_pressed.png",
+    "sha256": "561f4e3977f4aceedbcce6098fc3a15a903308b45245e227002654f56803cace",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "left"
+  },
+  {
+    "archivo": "btn_primary_mid_disabled.png",
+    "sha256": "b220c0a4103c88c9fc1eb72677f482708d8eedebd5eeb87f72916866a521503d",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_primary_mid_normal.png",
+    "sha256": "6de877e3970e6e4898b8cd78a9eb80c5617bd1e4bdfc76f08f6ff927b6ee6efc",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_primary_mid_pressed.png",
+    "sha256": "115a0abc83bd43b38e2c1877330757ad737a088d00633c66142af041da53b224",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "mid"
+  },
+  {
+    "archivo": "btn_primary_right_disabled.png",
+    "sha256": "b14707768277e5b673ef379fa8aacedf79347beeb1cc02ce1ba596ef9fd34efc",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "disabled",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_primary_right_normal.png",
+    "sha256": "302cfaa36d1ba02d68d52d12deddfb6d0bf94e20360a671fd4942c38450bc8dc",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "normal",
+    "posicion": "right"
+  },
+  {
+    "archivo": "btn_primary_right_pressed.png",
+    "sha256": "ddf97352edba194390104386412b64613e2bb760087109382a88332d82067ed4",
+    "fuente": "07_kit_ui_MSPro/newui_btn_empty_8264ade35192d9a6.png",
+    "tipo": "SLICE_3_PIEZAS",
+    "estado": "pressed",
+    "posicion": "right"
+  }
+]

@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, ImageBackground } from 'react-native';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 export interface ChipProps {
   etiqueta: string;
@@ -24,67 +25,71 @@ export const Chip: React.FC<ChipProps> = ({
   return (
     <TouchableOpacity
       style={[
-        styles.chip,
-        activo ? styles.chipActivo : styles.chipInactivo,
+        styles.chipTouch,
         style,
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      {icono}
-      {children}
-      <Text
+      <ImageBackground
+        source={activo ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
         style={[
-          styles.texto,
-          activo ? styles.textoActivo : styles.textoInactivo,
-          icono ? { marginLeft: 6 } : undefined,
-          textStyle,
+          styles.chip,
+          activo ? styles.chipActivo : styles.chipInactivo,
         ]}
+        resizeMode="stretch"
       >
-        {etiqueta}
-      </Text>
+        {icono}
+        {children}
+        <Text
+          style={[
+            styles.texto,
+            activo ? styles.textoActivo : styles.textoInactivo,
+            icono ? { marginLeft: 6 } : undefined,
+            textStyle,
+          ]}
+        >
+          {etiqueta}
+        </Text>
+      </ImageBackground>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  chipTouch: {
+    marginRight: 8,
+  },
   chip: {
-    minHeight: 40,
+    minHeight: 38,
     flexDirection: 'row',
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: THEME.shapes.radioEsquina,
-    borderWidth: 1,
+    borderRadius: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    overflow: 'hidden',
   },
   chipActivo: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: THEME.colors.oroClaro,
-    borderWidth: 1.5,
     shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 5,
     elevation: 3,
   },
-  chipInactivo: {
-    backgroundColor: '#1E1915',
-    borderColor: 'rgba(107, 85, 51, 0.55)',
-  },
+  chipInactivo: {},
   texto: {
     fontSize: 12,
     fontWeight: THEME.typography.weightSemiBold,
   },
   textoActivo: {
-    color: THEME.colors.oroClaro,
-    fontWeight: '700',
-    ...THEME.effects.textShadow,
+    color: '#0D0E0D',
+    fontWeight: '900',
   },
   textoInactivo: {
-    color: THEME.colors.textoSecundarioLuminoso,
+    color: '#CDC6B9',
     fontWeight: '600',
     ...THEME.effects.textShadowSubtle,
   },
 });
+

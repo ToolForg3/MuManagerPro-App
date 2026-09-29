@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
 import { getMuClassInfo } from '../../constants/muConstants';
 
@@ -50,10 +50,9 @@ export const ClassAvatar: React.FC<ClassAvatarProps> = ({
             resizeMode="cover"
           />
         ) : (
-          <MaterialCommunityIcons
+          <MuIcon
             name={classInfo.avatarIcon as any}
             size={size * 0.55}
-            color={classInfo.accentColor}
           />
         )}
       </View>
@@ -64,11 +63,11 @@ export const ClassAvatar: React.FC<ClassAvatarProps> = ({
             styles.tierBadge,
             {
               backgroundColor: classInfo.tier === 3 ? THEME.colors.oroClaro : THEME.colors.arcano,
-              borderColor: classInfo.tier === 3 ? '#F0D27A' : '#7BA4F5',
+              borderColor: classInfo.tier === 3 ? THEME.colors.oroClaro : '#7BA4F5',
             },
           ]}
         >
-          <Text style={[styles.tierText, { color: classInfo.tier === 3 ? '#100D0B' : '#FFFFFF' }]}>{classInfo.code}</Text>
+          <Text style={[styles.tierText, { color: classInfo.tier === 3 ? THEME.colors.textoOscuro : '#FFFFFF' }]}>{classInfo.code}</Text>
         </View>
       )}
     </View>

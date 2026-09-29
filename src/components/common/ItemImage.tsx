@@ -1,6 +1,6 @@
 import React, { useState, memo } from 'react';
 import { View, Image, StyleSheet, StyleProp, ImageStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { ParsedItem } from '../../types/item';
 import { ItemDatabase } from '../../services/parser/itemDatabase';
 import { SqlClient } from '../../services/database/sqlClient';
@@ -91,8 +91,9 @@ export const ItemImage: React.FC<ItemImageProps> = memo(({
   })() as any;
 
   // Prioridad 1: Si es una joya empaquetada localmente (Season 6), usar el sprite auténtico directo
+  const itemLevel = (item as any)?.level;
   const localJewel = (group !== undefined && index !== undefined)
-    ? getJewelImageByGroupIndex(group, index)
+    ? getJewelImageByGroupIndex(group, index, itemLevel)
     : (resolvedName ? getJewelImageByName(resolvedName) : null);
 
   if (localJewel) {
@@ -107,14 +108,13 @@ export const ItemImage: React.FC<ItemImageProps> = memo(({
     );
   }
 
-  // Si no tiene textura conocida o es genérico o dio error, mostrar icono vectorial limpio
+  // Si no tiene textura conocida o es genérico o dio error, mostrar icono limpio
   if (isGeneric || hasError || hasTexture === false) {
     return (
       <View style={[styles.fallbackContainer, { width: size, height: size }]}>
-        <MaterialCommunityIcons
+        <MuIcon
           name={safeIcon}
           size={size * 0.75}
-          color={fallbackColor}
         />
       </View>
     );
@@ -125,10 +125,9 @@ export const ItemImage: React.FC<ItemImageProps> = memo(({
   if (!imageUrl) {
     return (
       <View style={[styles.fallbackContainer, { width: size, height: size }]}>
-        <MaterialCommunityIcons
+        <MuIcon
           name={safeIcon}
           size={size * 0.75}
-          color={fallbackColor}
         />
       </View>
     );

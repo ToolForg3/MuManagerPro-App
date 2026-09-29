@@ -11,16 +11,21 @@ import {
   StatusBar,
   Switch,
   Image,
+  ImageBackground,
   Modal,
   FlatList,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
-import { CustomButton } from '../../components/common/CustomButton';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { BotonOro } from '../../components/ui/BotonOro';
+import { MuButton } from '../../components/ui/MuButton';
+import { Panel } from '../../components/ui/Panel';
+import { MuCornerOrnaments } from '../../components/ui/MuCornerOrnaments';
+import { MuSideMoldings } from '../../components/ui/MuSideMoldings';
 import { ClassAvatar, CLASS_PORTRAITS } from '../../components/common/ClassAvatar';
 import { PaperdollView } from '../../components/paperdoll/PaperdollView';
 import { InventoryGrid } from '../../components/inventory/InventoryGrid';
@@ -183,7 +188,7 @@ export const CharacterEditScreen = () => {
       // Adquirir candado suave multi-admin para este personaje
       SqlClient.acquireEditorLock(`Character:${charName}`).then((res) => {
         if (isMounted && res && res.locked && res.holder) {
-          setEditorLockWarning(`⚠️ ${charName} está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s`);
+          setEditorLockWarning(`[AVISO] ${charName} está siendo editado por ${res.holder} hace ${res.elapsedSec || 0}s`);
         }
       }).catch(() => {});
     } else {
@@ -319,7 +324,7 @@ export const CharacterEditScreen = () => {
       if (!res.success) {
         if (res.message && res.message.includes('ONLINE_WARNING')) {
           Alert.alert(
-            '⚠️ Personaje Conectado',
+            '[AVISO] Personaje Conectado',
             `El personaje "${charName}" o su cuenta se encuentra actualmente ONLINE en el servidor de juego.\n\nEliminarlo mientras juega puede causar desincronización en la memoria del GameServer.\n\n¿Deseas forzar la eliminación de todos modos?`,
             [
               { text: 'Cancelar', style: 'cancel' },
@@ -389,7 +394,7 @@ export const CharacterEditScreen = () => {
       if (isOnline) {
         Alert.alert(
           'Desconexión Requerida para Guardar',
-          `El personaje "${charName}" ${accountId ? `(Cuenta: "${accountId}")` : ''} está actualmente CONECTADO en el servidor de juego.\n\n⚠️ BLOQUEO DE SEGURIDAD: Mientras el personaje esté dentro del juego, el GameServer controla los datos en la memoria RAM del GameServer y SOBREESCRIBIRÁ tus modificaciones tan pronto como el jugador camine, cambie de mapa o desconecte.\n\nPara guardar cambios en ${actionName.toLowerCase()}, el jugador debe salir a la pantalla de selección de personajes ("Cambiar de Personaje") o cerrar el juego.\n\n💡 Tus modificaciones permanecen intactas en la pantalla; no se perderán. Presiona "${actionName}" nuevamente en cuanto el jugador haya salido.`,
+          `El personaje "${charName}" ${accountId ? `(Cuenta: "${accountId}")` : ''} está actualmente CONECTADO en el servidor de juego.\n\n[SEGURIDAD]: Mientras el personaje esté dentro del juego, el GameServer controla los datos en la memoria RAM del GameServer y SOBREESCRIBIRÁ tus modificaciones tan pronto como el jugador camine, cambie de mapa o desconecte.\n\nPara guardar cambios en ${actionName.toLowerCase()}, el jugador debe salir a la pantalla de selección de personajes ("Cambiar de Personaje") o cerrar el juego.\n\n[NOTA]: Tus modificaciones permanecen intactas en la pantalla; no se perderán. Presiona "${actionName}" nuevamente en cuanto el jugador haya salido.`,
           [
             {
               text: 'Esperar a que salga',
@@ -1307,14 +1312,14 @@ export const CharacterEditScreen = () => {
   if (loadError) {
     return (
       <View style={styles.loadingContainer}>
-        <MaterialCommunityIcons name="alert-circle-outline" size={48} color={THEME.colors.dangerRed} />
+        <MuIcon name="alert-circle-outline" size={48} color={THEME.colors.dangerRed} />
         <Text style={[styles.loadingText, { color: THEME.colors.dangerRed, marginTop: 12, textAlign: 'center' }]}>
           {loadError}
         </Text>
-        <CustomButton
-          title="Reintentar Carga"
+        <BotonOro
+          titulo="Reintentar Carga"
           onPress={loadCharacter}
-          variant="orange"
+          altura={48}
           style={{ marginTop: 20, paddingHorizontal: 24 }}
         />
       </View>
@@ -1324,71 +1329,92 @@ export const CharacterEditScreen = () => {
   const classInfo = getMuClassInfo(character?.Class || 0);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: topInset + 6 }]}>
-        <View style={styles.headerLeft}>
-          <ClassAvatar classId={character?.Class || 0} size={42} showBadge={false} />
-          <View style={styles.headerTextCol}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-              <Text style={styles.headerName}>{character?.Name}</Text>
-              <TouchableOpacity
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={styles.container}
+      imageStyle={{ opacity: 0.50 }}
+      resizeMode="repeat"
+    >
+      {/* Header Gótico Táctico NewUI (Stitch 03/16R) */}
+      <View style={[styles.stitchHeaderBar, { paddingTop: topInset + 4 }]}>
+        <View style={styles.stitchHeaderContent}>
+          {/* Botón Volver NewUI Season 6 */}
+          <TouchableOpacity
+            style={styles.stitchBackBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
+            accessibilityLabel="Volver a lista de personajes"
+          >
+            <MuIcon name="arrow-left" size={16} color={THEME.colors.oroClaro} />
+            <Text style={styles.stitchBackBtnText}>VOLVER</Text>
+          </TouchableOpacity>
+
+          {/* Avatar de Clase MU */}
+          <View style={styles.stitchHeaderAvatarWrap}>
+            <ClassAvatar classId={character?.Class || 0} size={34} />
+          </View>
+
+          {/* Avatar y Datos del Personaje */}
+          <View style={styles.stitchHeaderCenter}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={styles.stitchHeaderName} numberOfLines={1}>
+                {character?.Name}
+              </Text>
+              <View
                 style={[
-                  styles.headerStatusPill,
-                  isCharacterOnline ? styles.headerStatusPillOnline : styles.headerStatusPillOffline
+                  styles.stitchHeaderStatusBadge,
+                  isCharacterOnline ? styles.stitchHeaderStatusOnline : styles.stitchHeaderStatusOffline,
                 ]}
-                activeOpacity={0.7}
-                onPress={() => checkLiveOnlineStatus(false)}
               >
-                <View
-                  style={[
-                    styles.statusDot,
-                    { width: 7, height: 7, backgroundColor: isCharacterOnline ? '#FF5252' : THEME.colors.jade }
-                  ]}
-                />
                 <Text
                   style={[
-                    styles.headerStatusPillText,
-                    { color: isCharacterOnline ? '#FF5252' : THEME.colors.jade }
+                    styles.stitchHeaderStatusBadgeText,
+                    { color: isCharacterOnline ? THEME.colors.brasa : THEME.colors.jade },
                   ]}
                 >
-                  {isCharacterOnline ? 'EN LÍNEA' : 'OFFLINE'}
+                  {isCharacterOnline ? 'ONLINE' : 'OFFLINE'}
                 </Text>
-              </TouchableOpacity>
+              </View>
+              {/* Badge PK con sprite Stitch */}
+              <View style={styles.stitchHeaderPkBadge}>
+                <Image
+                  source={STITCH_ASSETS.sprites.pkEmblem}
+                  style={styles.stitchHeaderPkIcon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.stitchHeaderPkText}>PK {pkCount || '0'}</Text>
+              </View>
             </View>
-            <Text style={styles.headerClass}>
+            <Text style={styles.stitchHeaderSubtitle} numberOfLines={1}>
               {classInfo.name} • Lv {level} ({(character?.ResetCount ?? 0)}R)
             </Text>
           </View>
-        </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <TouchableOpacity
-            style={styles.deleteHeaderBtn}
-            onPress={promptDeleteCurrentCharacter}
-            disabled={isDeletingChar}
-            activeOpacity={0.7}
-            accessibilityLabel="Eliminar Personaje"
-          >
-            {isDeletingChar ? (
-              <ActivityIndicator size="small" color="#FF5252" />
-            ) : (
-              <MaterialCommunityIcons name="trash-can-outline" size={22} color="#FF5252" />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.closeBtn, isRefreshing && { backgroundColor: 'rgba(255, 152, 0, 0.2)' }]}
-            onPress={() => loadCharacter(true)}
-            disabled={isRefreshing}
-            activeOpacity={0.7}
-          >
-            {isRefreshing ? (
-              <ActivityIndicator size="small" color={THEME.colors.primaryOrange} />
-            ) : (
-              <MaterialCommunityIcons name="refresh" size={22} color={THEME.colors.textPrimary} />
-            )}
-          </TouchableOpacity>
+          {/* Botones SYNC y BORRAR */}
+          <View style={styles.stitchHeaderRightActions}>
+            <MuButton
+              titulo="SYNC"
+              icono="refresh"
+              variante="primary"
+              compacto={true}
+              altura={36}
+              onPress={() => loadCharacter(true)}
+              disabled={isRefreshing}
+              cargando={isRefreshing}
+              accessibilityLabel="Sincronizar Datos"
+            />
+            <MuButton
+              titulo="BORRAR"
+              icono="close"
+              variante="danger"
+              compacto={true}
+              altura={36}
+              onPress={promptDeleteCurrentCharacter}
+              disabled={isDeletingChar}
+              cargando={isDeletingChar}
+              accessibilityLabel="Eliminar Personaje"
+            />
+          </View>
         </View>
       </View>
 
@@ -1409,7 +1435,7 @@ export const CharacterEditScreen = () => {
         />
         <View style={{ flex: 1 }}>
           <Text style={[styles.statusBannerTitle, { color: isCharacterOnline ? '#FF7043' : THEME.colors.jade }]}>
-            {isCharacterOnline ? '🔴 PERSONAJE EN JUEGO (EN LÍNEA)' : '🟢 DESCONECTADO (OFFLINE) • SEGURO'}
+            {isCharacterOnline ? '[ONLINE] PERSONAJE EN JUEGO (EN LÍNEA)' : '[OFFLINE] DESCONECTADO • SEGURO'}
           </Text>
           <Text style={styles.statusBannerSubtitle}>
             {isCharacterOnline
@@ -1420,7 +1446,7 @@ export const CharacterEditScreen = () => {
         {isCheckingStatus ? (
           <ActivityIndicator size="small" color={isCharacterOnline ? '#FF7043' : THEME.colors.jade} />
         ) : (
-          <MaterialCommunityIcons
+          <MuIcon
             name={isCharacterOnline ? 'alert-circle-outline' : 'shield-check'}
             size={20}
             color={isCharacterOnline ? '#FF7043' : THEME.colors.jade}
@@ -1431,30 +1457,47 @@ export const CharacterEditScreen = () => {
       {/* Banner de Aviso de Soft-Lock Colaborativo Multi-Admin */}
       {editorLockWarning ? (
         <View style={styles.lockWarningBanner}>
-          <MaterialCommunityIcons name="shield-alert" size={18} color="#FFD54F" />
+          <MuIcon name="shield-alert" size={18} color="#FFD54F" />
           <Text style={styles.lockWarningText}>{editorLockWarning}</Text>
           <TouchableOpacity onPress={() => setEditorLockWarning(null)}>
-            <MaterialCommunityIcons name="close" size={16} color="#FFE082" />
+            <MuIcon name="close" size={16} color="#FFE082" />
           </TouchableOpacity>
         </View>
       ) : null}
 
-      {/* Tabs Navigation Bar */}
-      <View style={styles.tabBarWrapper}>
+      {/* Barra de Sub-Navegación Táctica NewUI (Stitch 03/16R) */}
+      <View style={styles.stitchSubNavWrapper}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabBarScroll}
+          contentContainerStyle={styles.stitchSubNavScroll}
         >
           {(['Stats', 'Progreso', 'Skills', 'Inventario', 'Ubicacion', 'Quest'] as TabType[]).map((tab) => {
             const isActive = activeTab === tab;
             return (
               <TouchableOpacity
                 key={tab}
-                style={[styles.tabItem, isActive && styles.tabItemActive]}
+                style={styles.stitchSubNavBtnTouchable}
                 onPress={() => setActiveTab(tab)}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
               >
-                <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab}</Text>
+                <ImageBackground
+                  source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                  style={styles.stitchSubNavBtnBg}
+                  resizeMode="stretch"
+                  imageStyle={{ borderRadius: 2 }}
+                >
+                  <Text
+                    style={[
+                      styles.stitchSubNavBtnText,
+                      isActive && styles.stitchSubNavBtnTextActive,
+                    ]}
+                  >
+                    {tab.toUpperCase()}
+                  </Text>
+                </ImageBackground>
               </TouchableOpacity>
             );
           })}
@@ -1491,54 +1534,81 @@ export const CharacterEditScreen = () => {
 
           return (
             <View style={styles.tabContent}>
-              {/* Ventana de Personaje con Marco Clásico de Granito y Borde Dorado */}
-              <View style={styles.muCharWindow}>
-                {/* Header: Nombre y Clase */}
-                <View style={styles.muCharHeader}>
-                  <Text style={styles.muCharName}>{character?.Name || 'PETERETE'}</Text>
-                  <Text style={styles.muCharClass}>({classInfo.name})</Text>
-                </View>
-
-                {/* Resumen: Nivel, Puntos, Resets */}
-                <View style={styles.muLevelRow}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                      <TouchableOpacity
-                        style={styles.muLevelBadgeBtn}
-                        onPress={() => setLevelModalVisible(true)}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.muLevelText}>
-                          Level: <Text style={styles.muYellowValUnderline}>{level}</Text> ✏️
-                        </Text>
-                      </TouchableOpacity>
-                      <Text style={styles.muLevelText}>
-                        Point: <Text style={styles.muYellowVal}>{lvlPoints}</Text>    Reset: <Text style={styles.muYellowVal}>{resets}</Text>
-                      </Text>
-                    </View>
-                    <Text style={styles.muLevelText}>
-                      GranReset: <Text style={styles.muYellowVal}>{mResets}</Text>
-                    </Text>
-                    <Text style={styles.muLevelText}>
-                      MasterLevel: <Text style={styles.muYellowVal}>{mLevel}</Text>
-                    </Text>
+              {/* Sección 1: MÉTRICAS CLAVE (Stitch 03) */}
+              <View style={styles.stitchStatsSectionCard}>
+                <MuCornerOrnaments size={12} />
+                <View style={styles.stitchSectionHeader}>
+                  <View style={styles.stitchSectionHeaderLeft}>
+                    <Text style={styles.stitchGoldDiamond}>◆</Text>
+                    <Text style={styles.stitchSectionTitle}>MÉTRICAS CLAVE</Text>
                   </View>
+                  <Text style={styles.stitchSectionSubtag}>[Character]</Text>
+                </View>
+                <View style={styles.stitchGoldDividerLine} />
+
+                {/* Cuadrícula de Métricas */}
+                <View style={styles.stitchMetricsGrid}>
                   <TouchableOpacity
-                    style={styles.muStonePlusBtn}
-                    onPress={() => handleQuickAddPoints(5000)}
-                    activeOpacity={0.7}
+                    style={styles.stitchMetricBox}
+                    onPress={() => setLevelModalVisible(true)}
+                    activeOpacity={0.8}
                   >
-                    <Text style={styles.muStonePlusText}>+</Text>
+                    <Text style={styles.stitchMetricLabel}>LEVEL</Text>
+                    <Text style={styles.stitchMetricValue}>{level}</Text>
                   </TouchableOpacity>
+
+                  <View style={[styles.stitchMetricBox, styles.stitchMetricBoxHighlight]}>
+                    <Text style={[styles.stitchMetricLabel, { color: THEME.colors.oroClaro }]}>POINT</Text>
+                    <Text style={[styles.stitchMetricValue, { color: THEME.colors.oroClaro }]}>{lvlPoints}</Text>
+                  </View>
+
+                  <View style={styles.stitchMetricBox}>
+                    <Text style={styles.stitchMetricLabel}>RESET</Text>
+                    <Text style={styles.stitchMetricValue}>{resets}</Text>
+                  </View>
+
+                  <View style={styles.stitchMetricBox}>
+                    <Text style={styles.stitchMetricLabel}>GRAN RESET</Text>
+                    <Text style={styles.stitchMetricValue}>{mResets}</Text>
+                  </View>
+
+                  <View style={[styles.stitchMetricBox, { flex: 2 }]}>
+                    <Text style={styles.stitchMetricLabel}>MASTER LEVEL</Text>
+                    <Text style={styles.stitchMetricValue}>{mLevel}</Text>
+                  </View>
                 </View>
 
-                {/* ================= BARRA STR ================= */}
-                <View style={styles.muStatSection}>
-                  <View style={styles.muCapsuleRow}>
-                    <View style={styles.muCapsuleBar}>
-                      <Text style={styles.muStatLabel}>STR</Text>
+                {/* Botón Rápido +5000 Puntos Disponibles */}
+                <MuButton
+                  titulo="+5000 PUNTOS DISPONIBLES"
+                  icono="plus-circle"
+                  variante="primary"
+                  altura={42}
+                  onPress={() => handleQuickAddPoints(5000)}
+                  accessibilityLabel="Agregar 5000 puntos libres"
+                  style={{ marginTop: 10 }}
+                />
+              </View>
+
+              {/* Sección 2: ATRIBUTOS BASE (Stitch 03) */}
+              <View style={styles.stitchStatsSectionCard}>
+                <MuCornerOrnaments size={12} />
+                <View style={styles.stitchSectionHeader}>
+                  <View style={styles.stitchSectionHeaderLeft}>
+                    <Text style={styles.stitchGoldDiamond}>◆</Text>
+                    <Text style={styles.stitchSectionTitle}>ATRIBUTOS BASE</Text>
+                  </View>
+                  <Text style={styles.stitchSectionSubtag}>[Stats]</Text>
+                </View>
+                <View style={styles.stitchGoldDividerLine} />
+
+                {/* STR / Fuerza */}
+                <View style={styles.stitchStatRowWrap}>
+                  <View style={styles.stitchStatRecessedBox}>
+                    <View style={styles.stitchStatInfoCol}>
+                      <Text style={styles.stitchStatTag}>STR / FUERZA</Text>
                       <TextInput
-                        style={styles.muStatInput}
+                        style={styles.stitchStatInput}
                         value={str}
                         onChangeText={setStr}
                         keyboardType="numeric"
@@ -1546,30 +1616,38 @@ export const CharacterEditScreen = () => {
                       />
                     </View>
                     <TouchableOpacity
-                      style={styles.muStonePlusBtn}
+                      style={styles.stitchPlus1000BtnTouchable}
                       onPress={() => handleQuickAddStat('str', 1000)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.8}
+                      accessibilityLabel="Agregar 1000 de Fuerza"
                     >
-                      <Text style={styles.muStonePlusText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.stitchPlus1000BtnBg}
+                        resizeMode="stretch"
+                        imageStyle={{ borderRadius: 2 }}
+                      >
+                        <Text style={styles.stitchPlus1000Text}>+1000</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.muSubStats}>
-                    <Text style={styles.muCyanSubText}>
-                      Dano(indice): {minDmg}~{maxDmg} ({maxTotalDmg})
+                  <View style={styles.stitchSubStatsBox}>
+                    <Text style={styles.stitchSubStatCyan}>
+                      Daño (índice): {minDmg}~{maxDmg} ({maxTotalDmg})
                     </Text>
-                    <Text style={styles.muCyanSubText}>
-                      Indice de ataque: {attackRate}
+                    <Text style={styles.stitchSubStatCyan}>
+                      Índice de ataque: {attackRate}
                     </Text>
                   </View>
                 </View>
 
-                {/* ================= BARRA AGI ================= */}
-                <View style={styles.muStatSection}>
-                  <View style={styles.muCapsuleRow}>
-                    <View style={styles.muCapsuleBar}>
-                      <Text style={styles.muStatLabel}>AGI</Text>
+                {/* AGI / Agilidad */}
+                <View style={styles.stitchStatRowWrap}>
+                  <View style={styles.stitchStatRecessedBox}>
+                    <View style={styles.stitchStatInfoCol}>
+                      <Text style={styles.stitchStatTag}>AGI / AGILIDAD</Text>
                       <TextInput
-                        style={styles.muStatInput}
+                        style={styles.stitchStatInput}
                         value={agi}
                         onChangeText={setAgi}
                         keyboardType="numeric"
@@ -1577,33 +1655,38 @@ export const CharacterEditScreen = () => {
                       />
                     </View>
                     <TouchableOpacity
-                      style={styles.muStonePlusBtn}
+                      style={styles.stitchPlus1000BtnTouchable}
                       onPress={() => handleQuickAddStat('agi', 1000)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.8}
+                      accessibilityLabel="Agregar 1000 de Agilidad"
                     >
-                      <Text style={styles.muStonePlusText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.stitchPlus1000BtnBg}
+                        resizeMode="stretch"
+                        imageStyle={{ borderRadius: 2 }}
+                      >
+                        <Text style={styles.stitchPlus1000Text}>+1000</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.muSubStats}>
-                    <Text style={styles.muWhiteSubText}>
-                      Defensa (indice): {defense} ({maxDefense})
+                  <View style={styles.stitchSubStatsBox}>
+                    <Text style={styles.stitchSubStatWhite}>
+                      Defensa: {defense} ({maxDefense}) • Vel. Ataque: {attackSpeed}
                     </Text>
-                    <Text style={styles.muWhiteSubText}>
-                      Velocidad de ataque: {attackSpeed}
-                    </Text>
-                    <Text style={styles.muWhiteSubText}>
-                      Indice de defensa: {defenseRate}
+                    <Text style={styles.stitchSubStatWhite}>
+                      Índice de defensa: {defenseRate}
                     </Text>
                   </View>
                 </View>
 
-                {/* ================= BARRA RES / VIT ================= */}
-                <View style={styles.muStatSection}>
-                  <View style={styles.muCapsuleRow}>
-                    <View style={styles.muCapsuleBar}>
-                      <Text style={styles.muStatLabel}>RES</Text>
+                {/* RES / Vitalidad */}
+                <View style={styles.stitchStatRowWrap}>
+                  <View style={styles.stitchStatRecessedBox}>
+                    <View style={styles.stitchStatInfoCol}>
+                      <Text style={styles.stitchStatTag}>RES / VITALIDAD</Text>
                       <TextInput
-                        style={styles.muStatInput}
+                        style={styles.stitchStatInput}
                         value={vit}
                         onChangeText={setVit}
                         keyboardType="numeric"
@@ -1611,27 +1694,35 @@ export const CharacterEditScreen = () => {
                       />
                     </View>
                     <TouchableOpacity
-                      style={styles.muStonePlusBtn}
+                      style={styles.stitchPlus1000BtnTouchable}
                       onPress={() => handleQuickAddStat('vit', 1000)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.8}
+                      accessibilityLabel="Agregar 1000 de Vitalidad"
                     >
-                      <Text style={styles.muStonePlusText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.stitchPlus1000BtnBg}
+                        resizeMode="stretch"
+                        imageStyle={{ borderRadius: 2 }}
+                      >
+                        <Text style={styles.stitchPlus1000Text}>+1000</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.muSubStats}>
-                    <Text style={styles.muWhiteSubText}>
-                      HP: {maxHp} / {maxHp}
+                  <View style={styles.stitchSubStatsBox}>
+                    <Text style={styles.stitchSubStatWhite}>
+                      HP Máximo: {maxHp} / {maxHp}
                     </Text>
                   </View>
                 </View>
 
-                {/* ================= BARRA ENE ================= */}
-                <View style={styles.muStatSection}>
-                  <View style={styles.muCapsuleRow}>
-                    <View style={styles.muCapsuleBar}>
-                      <Text style={styles.muStatLabel}>ENE</Text>
+                {/* ENE / Energía */}
+                <View style={styles.stitchStatRowWrap}>
+                  <View style={styles.stitchStatRecessedBox}>
+                    <View style={styles.stitchStatInfoCol}>
+                      <Text style={styles.stitchStatTag}>ENE / ENERGÍA</Text>
                       <TextInput
-                        style={styles.muStatInput}
+                        style={styles.stitchStatInput}
                         value={ene}
                         onChangeText={setEne}
                         keyboardType="numeric"
@@ -1639,31 +1730,36 @@ export const CharacterEditScreen = () => {
                       />
                     </View>
                     <TouchableOpacity
-                      style={styles.muStonePlusBtn}
+                      style={styles.stitchPlus1000BtnTouchable}
                       onPress={() => handleQuickAddStat('ene', 1000)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.8}
+                      accessibilityLabel="Agregar 1000 de Energía"
                     >
-                      <Text style={styles.muStonePlusText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.stitchPlus1000BtnBg}
+                        resizeMode="stretch"
+                        imageStyle={{ borderRadius: 2 }}
+                      >
+                        <Text style={styles.stitchPlus1000Text}>+1000</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.muSubStats}>
-                    <Text style={styles.muWhiteSubText}>
-                      Mana: {maxMana} / {maxMana}
-                    </Text>
-                    <Text style={styles.muWhiteSubText}>
-                      Dano a la habilidad: {skillDmg}%
+                  <View style={styles.stitchSubStatsBox}>
+                    <Text style={styles.stitchSubStatWhite}>
+                      Mana: {maxMana} / {maxMana} • Daño Habilidad: {skillDmg}%
                     </Text>
                   </View>
                 </View>
 
-                {/* ================= BARRA CMD (DARK LORD) ================= */}
+                {/* CMD / Comando (Dark Lord) */}
                 {isDarkLord && (
-                  <View style={styles.muStatSection}>
-                    <View style={styles.muCapsuleRow}>
-                      <View style={styles.muCapsuleBar}>
-                        <Text style={styles.muStatLabel}>CMD</Text>
+                  <View style={styles.stitchStatRowWrap}>
+                    <View style={styles.stitchStatRecessedBox}>
+                      <View style={styles.stitchStatInfoCol}>
+                        <Text style={styles.stitchStatTag}>CMD / COMANDO</Text>
                         <TextInput
-                          style={styles.muStatInput}
+                          style={styles.stitchStatInput}
                           value={cmd}
                           onChangeText={setCmd}
                           keyboardType="numeric"
@@ -1671,81 +1767,126 @@ export const CharacterEditScreen = () => {
                         />
                       </View>
                       <TouchableOpacity
-                        style={styles.muStonePlusBtn}
+                        style={styles.stitchPlus1000BtnTouchable}
                         onPress={() => handleQuickAddStat('cmd', 1000)}
-                        activeOpacity={0.7}
+                        activeOpacity={0.8}
+                        accessibilityLabel="Agregar 1000 de Comando"
                       >
-                        <Text style={styles.muStonePlusText}>+</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeInactive}
+                          style={styles.stitchPlus1000BtnBg}
+                          resizeMode="stretch"
+                          imageStyle={{ borderRadius: 2 }}
+                        >
+                          <Text style={styles.stitchPlus1000Text}>+1000</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
-                    <View style={styles.muSubStats}>
-                      <Text style={styles.muWhiteSubText}>
-                        Fuerza Caballo/Cuervo: +{Math.floor(numCmd / 10)}
+                    <View style={styles.stitchSubStatsBox}>
+                      <Text style={styles.stitchSubStatWhite}>
+                        Fuerza Caballo / Cuervo: +{Math.floor(numCmd / 10)}
                       </Text>
                     </View>
                   </View>
                 )}
+              </View>
 
-                {/* Zen & Ruud Row */}
-                <View style={styles.muZenRowWrap}>
-                  <View style={styles.muZenCol}>
-                    <Text style={styles.muZenTag}>ZEN</Text>
+              {/* Sección 3: MONEDAS / DIVISAS (Stitch 03) */}
+              <View style={styles.stitchStatsSectionCard}>
+                <MuCornerOrnaments size={12} />
+                <View style={styles.stitchSectionHeader}>
+                  <View style={styles.stitchSectionHeaderLeft}>
+                    <MuIcon name="cash-multiple" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 6 }} />
+                    <Text style={styles.stitchSectionTitle}>MONEDAS / DIVISAS</Text>
+                  </View>
+                </View>
+                <View style={styles.stitchGoldDividerLine} />
+                <View style={styles.stitchCurrenciesGrid}>
+                  <View style={styles.stitchCurrencyBox}>
+                    <Text style={styles.stitchCurrencyLabel}>ZEN</Text>
                     <TextInput
-                      style={styles.muZenValField}
+                      style={styles.stitchCurrencyInput}
                       value={zen}
                       onChangeText={setZen}
                       keyboardType="numeric"
                     />
                   </View>
-                  <View style={styles.muZenCol}>
-                    <Text style={[styles.muZenTag, { color: THEME.colors.arcano }]}>RUUD</Text>
+                  <View style={styles.stitchCurrencyBox}>
+                    <Text style={[styles.stitchCurrencyLabel, { color: THEME.colors.arcano }]}>RUUD</Text>
                     <TextInput
-                      style={[styles.muZenValField, { color: THEME.colors.arcano }]}
+                      style={[styles.stitchCurrencyInput, { color: THEME.colors.arcano }]}
                       value={ruud}
                       onChangeText={setRuud}
                       keyboardType="numeric"
                     />
                   </View>
                 </View>
+              </View>
 
-                {/* Botones Inferiores Clásicos de MU Online [ X ] [ C ] [ P ] [ M ] */}
-                <View style={styles.muFooterActionsRow}>
+              {/* Sección 4: ATAJOS CLÁSICOS MU (Stitch 03) */}
+              <View style={styles.stitchShortcutsCard}>
+                <Text style={styles.stitchShortcutsLabel}>ATAJOS CLÁSICOS MU:</Text>
+                <View style={styles.stitchShortcutsRow}>
                   <TouchableOpacity
-                    style={styles.muFooterBtn}
+                    style={styles.stitchShortcutKeyBtn}
                     onPress={() => navigation.goBack()}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Atajo X Cash Shop"
                   >
-                    <Text style={styles.muFooterBtnGoldText}>X</Text>
+                    <Image
+                      source={STITCH_ASSETS.sprites.cashShop}
+                      style={styles.stitchShortcutSpriteImg}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.stitchShortcutKeySub}>[X] SHOP</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.muFooterBtn}
-                    onPress={() => setActiveTab('Quest')}
-                    activeOpacity={0.7}
+                    style={styles.stitchShortcutKeyBtn}
+                    onPress={() => setActiveTab('Stats')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Atajo C Personaje"
                   >
-                    <MaterialCommunityIcons name="script-text-outline" size={20} color="#FFD700" />
+                    <Image
+                      source={STITCH_ASSETS.sprites.knightHelm}
+                      style={styles.stitchShortcutSpriteImg}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.stitchShortcutKeySub}>[C] CHAR</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.muFooterBtn}
+                    style={styles.stitchShortcutKeyBtn}
                     onPress={() => setActiveTab('Skills')}
-                    activeOpacity={0.7}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Atajo P Party"
                   >
-                    <MaterialCommunityIcons name="feather" size={20} color="#FFD700" />
+                    <Image
+                      source={STITCH_ASSETS.sprites.party}
+                      style={styles.stitchShortcutSpriteImg}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.stitchShortcutKeySub}>[P] PARTY</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.muFooterBtn}
-                    onPress={() => setActiveTab('Progreso')}
-                    activeOpacity={0.7}
+                    style={styles.stitchShortcutKeyBtn}
+                    onPress={() => setActiveTab('Ubicacion')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Atajo M Move Map"
                   >
-                    <Text style={[styles.muFooterBtnGoldText, { fontWeight: '900', fontSize: 16 }]}>M</Text>
+                    <Image
+                      source={STITCH_ASSETS.sprites.warp}
+                      style={styles.stitchShortcutSpriteImg}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.stitchShortcutKeySub}>[M] MOVE</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
-          );
-        })()}
+        );
+      })()}
 
         {/* ================= TAB 2: INVENTARIO ================= */}
         {activeTab === 'Inventario' && (
@@ -1768,35 +1909,51 @@ export const CharacterEditScreen = () => {
                   return (
                     <TouchableOpacity
                       key={sub.key}
-                      style={[styles.subTabPill, isCurrent && styles.subTabPillActive]}
+                      style={styles.subTabPillTouchable}
                       onPress={() => setActiveInvSubTab(sub.key as InventorySubTab)}
+                      activeOpacity={0.8}
                     >
-                      <MaterialCommunityIcons
-                        name={sub.icon as any}
-                        size={14}
-                        color={isCurrent ? '#FFFFFF' : THEME.colors.textSecondary}
-                      />
-                      <Text style={[styles.subTabText, isCurrent && styles.subTabTextActive]}>
-                        {sub.label}
-                      </Text>
+                      <ImageBackground
+                        source={isCurrent ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.subTabPillBg}
+                        resizeMode="stretch"
+                        imageStyle={{ borderRadius: 2 }}
+                      >
+                        <MuIcon
+                          name={sub.icon as any}
+                          size={14}
+                          color={isCurrent ? '#EFD28D' : THEME.colors.textoSecundarioLuminoso}
+                        />
+                        <Text style={[styles.subTabText, isCurrent && styles.subTabTextActive]}>
+                          {sub.label}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
 
                 {/* Botón Manual de Sincronización Rápida con el Juego */}
                 <TouchableOpacity
-                  style={[styles.subTabPill, { backgroundColor: '#1A237E', borderColor: '#3F51B5' }]}
+                  style={styles.subTabPillTouchable}
                   onPress={() => loadCharacter(true)}
                   disabled={isRefreshing}
+                  activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons
-                    name="sync"
-                    size={14}
-                    color="#8C9EFF"
-                  />
-                  <Text style={[styles.subTabText, { color: '#8C9EFF', fontWeight: '700' }]}>
-                    {isRefreshing ? 'Sincronizando...' : 'Refrescar'}
-                  </Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.subTabPillBg}
+                    resizeMode="stretch"
+                    imageStyle={{ borderRadius: 2 }}
+                  >
+                    <MuIcon
+                      name="sync"
+                      size={14}
+                      color="#EFD28D"
+                    />
+                    <Text style={[styles.subTabText, { color: '#EFD28D', fontWeight: '700' }]}>
+                      {isRefreshing ? 'Sincronizando...' : 'Refrescar'}
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -1839,28 +1996,38 @@ export const CharacterEditScreen = () => {
                   <Text style={[styles.gridHeaderTitle, { marginBottom: 0 }]}>
                     {invGridMode === '32' ? 'INVENTARIO PRINCIPAL (32 CUADROS)' : 'INVENTARIO PRINCIPAL (64 CUADROS)'}
                   </Text>
-                  <View style={{ flexDirection: 'row', backgroundColor: THEME.colors.card, borderRadius: 8, padding: 2, borderWidth: 1, borderColor: THEME.colors.border }}>
+                  <View style={{ flexDirection: 'row', backgroundColor: '#111211', borderRadius: 2, padding: 2, borderWidth: 1, borderTopColor: '#141514', borderLeftColor: '#141514', borderRightColor: '#4A463F', borderBottomColor: '#4A463F' }}>
                     <TouchableOpacity
                       style={{
-                        paddingVertical: 3,
-                        paddingHorizontal: 8,
-                        borderRadius: 6,
-                        backgroundColor: invGridMode === '32' ? THEME.colors.primaryOrange : 'transparent',
+                        paddingVertical: 4,
+                        paddingHorizontal: 10,
+                        borderRadius: 2,
+                        backgroundColor: invGridMode === '32' ? '#26221A' : 'transparent',
+                        borderWidth: invGridMode === '32' ? 1 : 0,
+                        borderTopColor: '#EFD28D',
+                        borderLeftColor: '#EFD28D',
+                        borderRightColor: '#5C4A22',
+                        borderBottomColor: '#5C4A22',
                       }}
                       onPress={() => setInvGridMode('32')}
                     >
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: invGridMode === '32' ? '#FFF' : THEME.colors.textSecondary }}>32 Oficial</Text>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: invGridMode === '32' ? '#EFD28D' : THEME.colors.textSecondary }}>32 Oficial</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{
-                        paddingVertical: 3,
-                        paddingHorizontal: 8,
-                        borderRadius: 6,
-                        backgroundColor: invGridMode === '64' ? THEME.colors.primaryOrange : 'transparent',
+                        paddingVertical: 4,
+                        paddingHorizontal: 10,
+                        borderRadius: 2,
+                        backgroundColor: invGridMode === '64' ? '#26221A' : 'transparent',
+                        borderWidth: invGridMode === '64' ? 1 : 0,
+                        borderTopColor: '#EFD28D',
+                        borderLeftColor: '#EFD28D',
+                        borderRightColor: '#5C4A22',
+                        borderBottomColor: '#5C4A22',
                       }}
                       onPress={() => setInvGridMode('64')}
                     >
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: invGridMode === '64' ? '#FFF' : THEME.colors.textSecondary }}>64 Exp.</Text>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: invGridMode === '64' ? '#EFD28D' : THEME.colors.textSecondary }}>64 Exp.</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1884,16 +2051,15 @@ export const CharacterEditScreen = () => {
                     <Text style={[styles.gridHeaderTitle, { marginBottom: 0 }]}>
                       EXTENSIÓN 1 DE INVENTARIO (MOCHILA 1 - 32 CUADROS)
                     </Text>
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#332200', borderColor: '#FF9800', borderWidth: 1, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, gap: 4 }}
+                    <MuButton
+                      titulo={unlockingExt ? 'Desbloqueando...' : 'Desbloquear en Juego'}
+                      icono="lock-open-variant-outline"
+                      variante="primary"
+                      compacto
+                      altura={32}
                       onPress={handleUnlockExtensions}
                       disabled={unlockingExt}
-                    >
-                      <MaterialCommunityIcons name="lock-open-variant-outline" size={14} color="#FF9800" />
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF9800' }}>
-                        {unlockingExt ? 'Desbloqueando...' : 'Desbloquear en Juego'}
-                      </Text>
-                    </TouchableOpacity>
+                    />
                   </View>
                   <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 3 }}>
                     Abierta en el cliente del juego con la tecla [K] o el botón de inventario expandido.
@@ -1918,16 +2084,15 @@ export const CharacterEditScreen = () => {
                     <Text style={[styles.gridHeaderTitle, { marginBottom: 0 }]}>
                       EXTENSIÓN 2 DE INVENTARIO (MOCHILA 2 - 32 CUADROS)
                     </Text>
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#332200', borderColor: '#FF9800', borderWidth: 1, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, gap: 4 }}
+                    <MuButton
+                      titulo={unlockingExt ? 'Desbloqueando...' : 'Desbloquear en Juego'}
+                      icono="lock-open-variant-outline"
+                      variante="primary"
+                      compacto
+                      altura={32}
                       onPress={handleUnlockExtensions}
                       disabled={unlockingExt}
-                    >
-                      <MaterialCommunityIcons name="lock-open-variant-outline" size={14} color="#FF9800" />
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF9800' }}>
-                        {unlockingExt ? 'Desbloqueando...' : 'Desbloquear en Juego'}
-                      </Text>
-                    </TouchableOpacity>
+                    />
                   </View>
                   <Text style={{ color: THEME.colors.textoSecundario, fontSize: 10, marginTop: 3 }}>
                     Abierta en el cliente del juego con la tecla [K] o el botón de inventario expandido.
@@ -1952,21 +2117,23 @@ export const CharacterEditScreen = () => {
                     PERSONAL STORE (TIENDA PERSONAL)
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#332200', borderColor: '#FF9800', borderWidth: 1, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, gap: 4 }}
+                    <MuButton
+                      titulo="Liberar Candado"
+                      icono="lock-open-outline"
+                      variante="primary"
+                      compacto
+                      altura={32}
                       onPress={handleUnlockExtensions}
                       disabled={unlockingExt}
-                    >
-                      <MaterialCommunityIcons name="lock-open-outline" size={14} color="#FF9800" />
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF9800' }}>Liberar Candado</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#330000', borderColor: '#FF5252', borderWidth: 1, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, gap: 4 }}
+                    />
+                    <MuButton
+                      titulo="Vaciar Store"
+                      icono="trash-can-outline"
+                      variante="danger"
+                      compacto
+                      altura={32}
                       onPress={handleClearStore}
-                    >
-                      <MaterialCommunityIcons name="trash-can-outline" size={14} color="#FF5252" />
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#FF5252' }}>Vaciar Store</Text>
-                    </TouchableOpacity>
+                    />
                   </View>
                 </View>
                 <InventoryGrid
@@ -2002,16 +2169,17 @@ export const CharacterEditScreen = () => {
         {/* ================= TAB 3: PROGRESO ================= */}
         {activeTab === 'Progreso' && (
           <View style={styles.tabContent}>
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.cardTitle}>RESETS Y MASTER LEVEL</Text>
-                <TouchableOpacity
-                  style={styles.quickPkBtn}
+                <MuButton
+                  titulo="PK CLEAR"
+                  icono="broom"
+                  variante="success"
+                  compacto
+                  altura={32}
                   onPress={handleQuickPkClear}
-                >
-                  <MaterialCommunityIcons name="broom" size={14} color={THEME.colors.accentGreenBright} />
-                  <Text style={styles.quickPkBtnText}>PK CLEAR</Text>
-                </TouchableOpacity>
+                />
               </View>
 
               {/* Nivel Base (cLevel) */}
@@ -2029,30 +2197,84 @@ export const CharacterEditScreen = () => {
                     keyboardType="numeric"
                   />
                   <TouchableOpacity
-                    style={styles.stepperSmallBtn}
+                    style={styles.stepperSmallBtnTouchable}
                     onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 1)))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.stepperText}>-</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={styles.stepperSmallBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.stepperText}>-</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.stepperSmallBtn}
+                    style={styles.stepperSmallBtnTouchable}
                     onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 1)))}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.stepperText}>+</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={styles.stepperSmallBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.stepperText}>+</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.quickStepRow}>
-                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('1')}>
-                    <Text style={styles.quickStepText}>Nv 1</Text>
+                  <TouchableOpacity
+                    style={styles.quickStepBtnTouchable}
+                    onPress={() => setLevel('1')}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.quickStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.quickStepText}>Nv 1</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('220')}>
-                    <Text style={styles.quickStepText}>Nv 220</Text>
+                  <TouchableOpacity
+                    style={styles.quickStepBtnTouchable}
+                    onPress={() => setLevel('220')}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.quickStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.quickStepText}>Nv 220</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('380')}>
-                    <Text style={styles.quickStepText}>Nv 380</Text>
+                  <TouchableOpacity
+                    style={styles.quickStepBtnTouchable}
+                    onPress={() => setLevel('380')}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.quickStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.quickStepText}>Nv 380</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.quickStepBtn} onPress={() => setLevel('400')}>
-                    <Text style={[styles.quickStepText, { color: THEME.colors.oroClaro }]}>Nv 400 (MAX)</Text>
+                  <TouchableOpacity
+                    style={styles.quickStepBtnTouchable}
+                    onPress={() => setLevel('400')}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={styles.quickStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.quickStepText, { color: THEME.colors.oroClaro }]}>Nv 400 (MAX)</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2069,24 +2291,58 @@ export const CharacterEditScreen = () => {
                       keyboardType="numeric"
                     />
                     <TouchableOpacity
-                      style={styles.stepperSmallBtn}
+                      style={styles.stepperSmallBtnTouchable}
                       onPress={() => setResets(String(Math.max(0, (parseInt(resets, 10) || 0) - 1)))}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepperText}>-</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={styles.stepperSmallBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepperText}>-</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.stepperSmallBtn}
+                      style={styles.stepperSmallBtnTouchable}
                       onPress={() => setResets(String((parseInt(resets, 10) || 0) + 1))}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepperText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={styles.stepperSmallBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepperText}>+</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                   <View style={styles.quickStepRow}>
-                    <TouchableOpacity style={styles.quickStepBtn} onPress={() => setResets(String((parseInt(resets, 10) || 0) + 10))}>
-                      <Text style={styles.quickStepText}>+10</Text>
+                    <TouchableOpacity
+                      style={styles.quickStepBtnTouchable}
+                      onPress={() => setResets(String((parseInt(resets, 10) || 0) + 10))}
+                      activeOpacity={0.7}
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.quickStepBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.quickStepText}>+10</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.quickStepBtn} onPress={() => setResets(String((parseInt(resets, 10) || 0) + 100))}>
-                      <Text style={styles.quickStepText}>+100</Text>
+                    <TouchableOpacity
+                      style={styles.quickStepBtnTouchable}
+                      onPress={() => setResets(String((parseInt(resets, 10) || 0) + 100))}
+                      activeOpacity={0.7}
+                    >
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.quickStepBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.quickStepText}>+100</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -2101,16 +2357,30 @@ export const CharacterEditScreen = () => {
                       keyboardType="numeric"
                     />
                     <TouchableOpacity
-                      style={styles.stepperSmallBtn}
+                      style={styles.stepperSmallBtnTouchable}
                       onPress={() => setMResets(String(Math.max(0, (parseInt(mResets, 10) || 0) - 1)))}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepperText}>-</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={styles.stepperSmallBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepperText}>-</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.stepperSmallBtn}
+                      style={styles.stepperSmallBtnTouchable}
                       onPress={() => setMResets(String((parseInt(mResets, 10) || 0) + 1))}
+                      activeOpacity={0.7}
                     >
-                      <Text style={styles.stepperText}>+</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.buttons.small}
+                        style={styles.stepperSmallBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.stepperText}>+</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -2157,20 +2427,24 @@ export const CharacterEditScreen = () => {
                   return (
                     <TouchableOpacity
                       key={pk.level}
-                      style={[
-                        styles.pkPill,
-                        isSelected && { backgroundColor: pk.bg, borderColor: pk.color, borderWidth: 1.5 }
-                      ]}
+                      style={styles.pkPillTouchable}
                       onPress={() => setPkLevel(pk.level)}
+                      activeOpacity={0.7}
                     >
-                      <Text
-                        style={[
-                          styles.pkPillText,
-                          isSelected && { color: pk.color, fontWeight: 'bold' }
-                        ]}
+                      <ImageBackground
+                        source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.pkPillBg}
+                        resizeMode="stretch"
                       >
-                        {pk.label}
-                      </Text>
+                        <Text
+                          style={[
+                            styles.pkPillText,
+                            isSelected && { color: pk.color, fontWeight: 'bold' }
+                          ]}
+                        >
+                          {pk.label}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
@@ -2200,29 +2474,30 @@ export const CharacterEditScreen = () => {
               {/* Zona de Peligro: Eliminar Personaje */}
               <View style={styles.dangerZoneCard}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <MaterialCommunityIcons name="alert-octagon-outline" size={20} color="#FF5252" />
+                  <MuIcon name="alert-octagon-outline" size={20} color="#FF5252" />
                   <Text style={styles.dangerZoneTitle}>Zona de Peligro</Text>
                 </View>
                 <Text style={styles.dangerZoneDesc}>
                   Eliminar permanentemente a "{charName}". Esta operación borrará stats, inventario, habilidades y desvinculará el slot de la cuenta "{character?.AccountID || ''}".
                 </Text>
                 <TouchableOpacity
-                  style={styles.dangerDeleteBtn}
+                  style={styles.dangerDeleteBtnWrap}
                   onPress={promptDeleteCurrentCharacter}
                   disabled={isDeletingChar}
                   activeOpacity={0.8}
+                  accessibilityLabel="Eliminar Personaje de SQL"
                 >
                   {isDeletingChar ? (
-                    <ActivityIndicator size="small" color="#FFF" />
+                    <ActivityIndicator size="small" color="#FFD0D0" />
                   ) : (
                     <>
-                      <MaterialCommunityIcons name="trash-can" size={18} color="#FFF" />
+                      <MuIcon name="trash-can" size={18} color="#FF6B6B" />
                       <Text style={styles.dangerDeleteBtnText}>Eliminar Personaje de SQL</Text>
                     </>
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
+            </Panel>
           </View>
         )}
 
@@ -2266,7 +2541,7 @@ export const CharacterEditScreen = () => {
             </View>
 
             {/* Card 1: Resumen y Guardar */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View>
                   <Text style={styles.cardTitle}>HABILIDADES (MAGICLIST)</Text>
@@ -2275,34 +2550,36 @@ export const CharacterEditScreen = () => {
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
-                  <TouchableOpacity
-                    style={styles.skillHeaderBtnAdd}
+                  <MuButton
+                    titulo="Agregar"
+                    icono="plus-circle-outline"
+                    variante="primary"
+                    compacto
+                    altura={34}
                     onPress={() => {
                       setSkillSearchQuery('');
                       setSkillRaceFilter('ALL');
                       setAddSkillModalVisible(true);
                     }}
-                  >
-                    <MaterialCommunityIcons name="plus-circle-outline" size={16} color="#FFF" />
-                    <Text style={styles.skillHeaderBtnText}>Agregar</Text>
-                  </TouchableOpacity>
+                  />
                   {skills.length > 0 && (
-                    <TouchableOpacity
-                      style={styles.skillHeaderBtnClear}
+                    <MuButton
+                      titulo="Vaciar"
+                      icono="trash-can-outline"
+                      variante="danger"
+                      compacto
+                      altura={34}
                       onPress={handleClearAllSkills}
-                    >
-                      <MaterialCommunityIcons name="trash-can-outline" size={16} color="#FF5252" />
-                      <Text style={[styles.skillHeaderBtnText, { color: '#FF5252' }]}>Vaciar</Text>
-                    </TouchableOpacity>
+                    />
                   )}
                 </View>
               </View>
-            </View>
+            </Panel>
 
             {/* Card 2: Envío Rápido por Raza */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <MaterialCommunityIcons name="flash" size={20} color={THEME.colors.primaryOrange} />
+                <MuIcon name="flash" size={20} color={THEME.colors.primaryOrange} />
                 <Text style={styles.cardTitle}>ENVÍO RÁPIDO DE SKILLS POR RAZA</Text>
               </View>
               <Text style={{ fontSize: 12, color: THEME.colors.textMuted, marginBottom: 12 }}>
@@ -2321,7 +2598,7 @@ export const CharacterEditScreen = () => {
                     activeOpacity={0.8}
                   >
                     <View style={[styles.quickRaceIconCircle, { backgroundColor: charPreset.color }]}>
-                      <MaterialCommunityIcons name={charPreset.icon as any} size={22} color="#FFF" />
+                      <MuIcon name={charPreset.icon as any} size={22} color="#FFF" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.quickRaceMainTitle}>
@@ -2331,7 +2608,7 @@ export const CharacterEditScreen = () => {
                         {charPreset.skillIds.length} habilidades nativas completas
                       </Text>
                     </View>
-                    <MaterialCommunityIcons name="arrow-right-bold-circle" size={24} color={charPreset.color} />
+                    <MuIcon name="arrow-right-bold-circle" size={24} color={charPreset.color} />
                   </TouchableOpacity>
                 );
               })()}
@@ -2341,22 +2618,36 @@ export const CharacterEditScreen = () => {
                 <Text style={{ fontSize: 12, color: THEME.colors.textSecondary, fontWeight: '600' }}>
                   Modo de envío:
                 </Text>
-                <View style={{ flexDirection: 'row', backgroundColor: '#1A1A1A', borderRadius: 8, padding: 3, gap: 4 }}>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
                   <TouchableOpacity
-                    style={[styles.quickModeBtn, quickSendMode === 'replace' && styles.quickModeBtnActive]}
+                    style={styles.quickModeBtnTouchable}
                     onPress={() => setQuickSendMode('replace')}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[styles.quickModeBtnText, quickSendMode === 'replace' && styles.quickModeBtnTextActive]}>
-                      Reemplazar
-                    </Text>
+                    <ImageBackground
+                      source={quickSendMode === 'replace' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.quickModeBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.quickModeBtnText, quickSendMode === 'replace' && styles.quickModeBtnTextActive]}>
+                        Reemplazar
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.quickModeBtn, quickSendMode === 'merge' && styles.quickModeBtnActive]}
+                    style={styles.quickModeBtnTouchable}
                     onPress={() => setQuickSendMode('merge')}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[styles.quickModeBtnText, quickSendMode === 'merge' && styles.quickModeBtnTextActive]}>
-                      Agregar (+)
-                    </Text>
+                    <ImageBackground
+                      source={quickSendMode === 'merge' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.quickModeBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.quickModeBtnText, quickSendMode === 'merge' && styles.quickModeBtnTextActive]}>
+                        Agregar (+)
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2369,24 +2660,31 @@ export const CharacterEditScreen = () => {
                   return (
                     <TouchableOpacity
                       key={key}
-                      style={styles.raceChipBtn}
+                      style={styles.raceChipBtnTouchable}
                       onPress={() => handleQuickSendSkills(key)}
+                      activeOpacity={0.7}
                     >
-                      <MaterialCommunityIcons name={p.icon as any} size={14} color={p.color} />
-                      <Text style={styles.raceChipText}>{p.code}</Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.raceChipBtnBg}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon name={p.icon as any} size={14} color={p.color} />
+                        <Text style={styles.raceChipText}>{p.code}</Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-            </View>
+            </Panel>
 
             {/* Card 3: Lista de Habilidades Actuales */}
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <Text style={styles.cardTitle}>HABILIDADES ACTIVAS ({skills.length})</Text>
 
               {skills.length === 0 ? (
                 <View style={styles.emptySkillsContainer}>
-                  <MaterialCommunityIcons name="book-open-blank-variant" size={44} color={THEME.colors.textMuted} />
+                  <MuIcon name="book-open-blank-variant" size={44} color={THEME.colors.textMuted} />
                   <Text style={styles.emptySkillsText}>
                     Este personaje no tiene ninguna habilidad aprendida.
                   </Text>
@@ -2415,20 +2713,20 @@ export const CharacterEditScreen = () => {
                         onPress={() => handleRemoveSkill(skill.id)}
                         activeOpacity={0.7}
                       >
-                        <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
+                        <MuIcon name="trash-can-outline" size={18} color="#FF5252" />
                       </TouchableOpacity>
                     </View>
                   ))}
                 </View>
               )}
-            </View>
+            </Panel>
           </View>
         )}
 
         {/* ================= TAB 4: UBICACION ================= */}
         {activeTab === 'Ubicacion' && (
           <View style={styles.tabContent}>
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               <Text style={styles.cardTitle}>COORDENADAS Y MAPA</Text>
               <View style={styles.fieldCol}>
                 <Text style={styles.fieldLabel}>Mapa Actual:</Text>
@@ -2487,28 +2785,28 @@ export const CharacterEditScreen = () => {
                 ].map((tp) => (
                   <TouchableOpacity
                     key={tp.name}
-                    style={{
-                      backgroundColor: THEME.colors.surface,
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      borderRadius: 6,
-                      borderWidth: 1,
-                      borderColor: THEME.colors.border,
-                    }}
+                    style={styles.teleportBtnTouchable}
                     onPress={() => handleSaveLocation(tp.map, tp.x, tp.y)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={{ color: THEME.colors.textPrimary, fontSize: 12 }}>{tp.name}</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.teleportBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.teleportBtnText}>{tp.name}</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
+            </Panel>
           </View>
         )}
 
         {/* ================= TAB 5: QUEST ================= */}
         {activeTab === 'Quest' && (
           <View style={styles.tabContent}>
-            <View style={styles.card}>
+            <Panel style={styles.card}>
               {/* 1. Selector de Raza Base */}
               <Text style={styles.cardTitle}>RAZA DEL PERSONAJE</Text>
               <Text style={styles.fieldSubtitle}>Selecciona la raza base del personaje (Louis Emulator Season 6):</Text>
@@ -2555,7 +2853,7 @@ export const CharacterEditScreen = () => {
                                 resizeMode="cover"
                               />
                             ) : (
-                              <MaterialCommunityIcons
+                              <MuIcon
                                 name={race.avatarIcon as any}
                                 size={18}
                                 color={isCurrentRace ? race.accentColor : THEME.colors.textMuted}
@@ -2570,7 +2868,7 @@ export const CharacterEditScreen = () => {
                               {race.name}
                             </Text>
                             {isCurrentRace && (
-                              <MaterialCommunityIcons name="check" size={14} color={race.accentColor} />
+                              <MuIcon name="check" size={14} color={race.accentColor} />
                             )}
                           </TouchableOpacity>
                         );
@@ -2625,7 +2923,7 @@ export const CharacterEditScreen = () => {
                               />
                             </View>
                           ) : (
-                            <MaterialCommunityIcons
+                            <MuIcon
                               name={t.icon as any}
                               size={24}
                               color={isSelected ? THEME.colors.primaryOrange : THEME.colors.textMuted}
@@ -2638,7 +2936,7 @@ export const CharacterEditScreen = () => {
                             <Text style={styles.classTierSub}>{t.subtitle}</Text>
                           </View>
                           {isSelected && (
-                            <MaterialCommunityIcons name="check-circle" size={20} color={THEME.colors.primaryOrange} />
+                            <MuIcon name="check-circle" size={20} color={THEME.colors.primaryOrange} />
                           )}
                         </TouchableOpacity>
                       );
@@ -2704,24 +3002,27 @@ export const CharacterEditScreen = () => {
               </View>
 
               {/* Quick Actions 1-clic */}
-              <View style={styles.quickQuestActionRow}>
-                <TouchableOpacity
-                  style={[styles.quickQuestBtn, { backgroundColor: 'rgba(63, 207, 142, 0.15)', borderColor: THEME.colors.jade }]}
-                  onPress={handleCompleteAllQuests}
-                >
-                  <MaterialCommunityIcons name="star-shooting" size={16} color={THEME.colors.jade} />
-                  <Text style={[styles.quickQuestText, { color: THEME.colors.jade }]}>Completar Todas (3ra Clase)</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.quickQuestBtn, { backgroundColor: 'rgba(255, 82, 82, 0.15)', borderColor: '#FF5252' }]}
-                  onPress={handleResetAllQuests}
-                >
-                  <MaterialCommunityIcons name="restart" size={16} color="#FF5252" />
-                  <Text style={[styles.quickQuestText, { color: '#FF5252' }]}>Reiniciar (1ra Clase)</Text>
-                </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Completar Todas"
+                    icono="star-shooting"
+                    variante="success"
+                    altura={42}
+                    onPress={handleCompleteAllQuests}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Reiniciar"
+                    icono="restart"
+                    variante="danger"
+                    altura={42}
+                    onPress={handleResetAllQuests}
+                  />
+                </View>
               </View>
-            </View>
+            </Panel>
           </View>
         )}
       </ScrollView>
@@ -2789,7 +3090,7 @@ export const CharacterEditScreen = () => {
                 style={styles.skillPickerCloseBtn}
                 onPress={() => setAddSkillModalVisible(false)}
               >
-                <MaterialCommunityIcons name="close" size={22} color="#FFF" />
+                <MuIcon name="close" size={22} color="#FFF" />
               </TouchableOpacity>
             </View>
 
@@ -2820,25 +3121,32 @@ export const CharacterEditScreen = () => {
                   { key: 'SU', label: 'Summoner' },
                   { key: 'RF', label: 'Rage Fighter' },
                   { key: 'COMMON', label: 'Comunes' },
-                ].map((f) => (
-                  <TouchableOpacity
-                    key={f.key}
-                    style={[
-                      styles.skillFilterChip,
-                      skillRaceFilter === f.key && styles.skillFilterChipActive,
-                    ]}
-                    onPress={() => setSkillRaceFilter(f.key)}
-                  >
-                    <Text
-                      style={[
-                        styles.skillFilterChipText,
-                        skillRaceFilter === f.key && styles.skillFilterChipTextActive,
-                      ]}
+                ].map((f) => {
+                  const isActive = skillRaceFilter === f.key;
+                  return (
+                    <TouchableOpacity
+                      key={f.key}
+                      style={styles.skillFilterChipTouchable}
+                      onPress={() => setSkillRaceFilter(f.key)}
+                      activeOpacity={0.7}
                     >
-                      {f.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <ImageBackground
+                        source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.skillFilterChipBg}
+                        resizeMode="stretch"
+                      >
+                        <Text
+                          style={[
+                            styles.skillFilterChipText,
+                            isActive && styles.skillFilterChipTextActive,
+                          ]}
+                        >
+                          {f.label}
+                        </Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
             </View>
 
@@ -2867,23 +3175,14 @@ export const CharacterEditScreen = () => {
                         ID: {item.id} • {item.name} • {item.category}
                       </Text>
                     </View>
-                    <TouchableOpacity
-                      style={[
-                        styles.skillCatalogItemBtn,
-                        alreadyAdded && styles.skillCatalogItemBtnDisabled,
-                      ]}
-                      onPress={() => !alreadyAdded && handleAddIndividualSkill(item)}
+                    <MuButton
+                      titulo={alreadyAdded ? 'Añadida' : '+ Añadir'}
+                      variante={alreadyAdded ? 'secondary' : 'primary'}
+                      compacto
+                      altura={32}
                       disabled={alreadyAdded}
-                    >
-                      <Text
-                        style={[
-                          styles.skillCatalogItemBtnText,
-                          alreadyAdded && { color: THEME.colors.textMuted },
-                        ]}
-                      >
-                        {alreadyAdded ? 'Añadida' : '+ Añadir'}
-                      </Text>
-                    </TouchableOpacity>
+                      onPress={() => !alreadyAdded && handleAddIndividualSkill(item)}
+                    />
                   </View>
                 );
               }}
@@ -2921,7 +3220,7 @@ export const CharacterEditScreen = () => {
                 onPress={() => setLevelModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
@@ -2937,13 +3236,19 @@ export const CharacterEditScreen = () => {
                 return (
                   <TouchableOpacity
                     key={p.val}
-                    style={[styles.levelModalQuickBtn, isActive && styles.levelModalQuickBtnActive]}
+                    style={styles.levelModalQuickBtnTouchable}
                     onPress={() => setLevel(p.val)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.levelModalQuickText, isActive && styles.levelModalQuickTextActive]}>
-                      {p.label}
-                    </Text>
+                    <ImageBackground
+                      source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.levelModalQuickBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.levelModalQuickText, isActive && styles.levelModalQuickTextActive]}>
+                        {p.label}
+                      </Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 );
               })}
@@ -2952,18 +3257,30 @@ export const CharacterEditScreen = () => {
             {/* Stepper e Input Centrado */}
             <View style={styles.levelModalStepperRow}>
               <TouchableOpacity
-                style={styles.levelModalStepBtn}
+                style={styles.levelModalStepBtnTouchable}
                 onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 10)))}
                 activeOpacity={0.7}
               >
-                <Text style={styles.levelModalStepBtnText}>-10</Text>
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  style={styles.levelModalStepBtnBg}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.levelModalStepBtnText}>-10</Text>
+                </ImageBackground>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.levelModalStepBtn}
+                style={styles.levelModalStepBtnTouchable}
                 onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 1)))}
                 activeOpacity={0.7}
               >
-                <Text style={styles.levelModalStepBtnText}>-1</Text>
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  style={styles.levelModalStepBtnBg}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.levelModalStepBtnText}>-1</Text>
+                </ImageBackground>
               </TouchableOpacity>
 
               <TextInput
@@ -2980,18 +3297,30 @@ export const CharacterEditScreen = () => {
               />
 
               <TouchableOpacity
-                style={styles.levelModalStepBtn}
+                style={styles.levelModalStepBtnTouchable}
                 onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 1)))}
                 activeOpacity={0.7}
               >
-                <Text style={styles.levelModalStepBtnText}>+1</Text>
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  style={styles.levelModalStepBtnBg}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.levelModalStepBtnText}>+1</Text>
+                </ImageBackground>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.levelModalStepBtn}
+                style={styles.levelModalStepBtnTouchable}
                 onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 10)))}
                 activeOpacity={0.7}
               >
-                <Text style={styles.levelModalStepBtnText}>+10</Text>
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.small}
+                  style={styles.levelModalStepBtnBg}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.levelModalStepBtnText}>+10</Text>
+                </ImageBackground>
               </TouchableOpacity>
             </View>
 
@@ -3002,26 +3331,23 @@ export const CharacterEditScreen = () => {
 
             {/* Acciones */}
             <View style={styles.levelModalFooterRow}>
-              <TouchableOpacity
-                style={styles.levelModalCancelBtn}
+              <MuButton
+                titulo="Cerrar"
+                variante="secondary"
+                altura={42}
                 onPress={() => setLevelModalVisible(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.levelModalCancelText}>Cerrar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.levelModalSaveBtn}
+              />
+              <MuButton
+                titulo="Guardar Nivel en SQL"
+                icono="content-save"
+                variante="primary"
+                altura={42}
+                disabled={savingProgress}
                 onPress={() => {
                   setLevelModalVisible(false);
                   handleSaveProgress();
                 }}
-                disabled={savingProgress}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="content-save" size={16} color="#1A1612" />
-                <Text style={styles.levelModalSaveText}>Guardar Nivel en SQL</Text>
-              </TouchableOpacity>
+              />
             </View>
           </View>
         </View>
@@ -3032,7 +3358,7 @@ export const CharacterEditScreen = () => {
         visible={licenseModalVisible}
         onClose={() => setLicenseModalVisible(false)}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -3041,6 +3367,481 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: THEME.colors.background,
   },
+  /* ================= STITCH 03/16R ESTILOS PERSONAJE ================= */
+  stitchHeaderBar: {
+    backgroundColor: '#131413',
+    borderBottomWidth: 1,
+    borderBottomColor: '#343534',
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+  },
+  stitchHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stitchBackBtn: {
+    minHeight: 36,
+    paddingHorizontal: 8,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    backgroundColor: '#292A29',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  stitchBackBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    fontFamily: THEME.typography.fontTitle,
+  },
+  stitchHeaderAvatarWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 2,
+    backgroundColor: '#0D0E0D',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#E0C380',
+    borderBottomColor: '#5C4A22',
+    borderRightColor: '#5C4A22',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  stitchHeaderPkBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A1314',
+    borderWidth: 1,
+    borderColor: '#93000A',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 2,
+    gap: 3,
+  },
+  stitchHeaderPkIcon: {
+    width: 12,
+    height: 12,
+  },
+  stitchHeaderPkText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFB4AB',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  stitchHeaderCenter: {
+    flex: 1,
+  },
+  stitchHeaderName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.5,
+    ...THEME.effects.textShadow,
+  },
+  stitchHeaderStatusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+    borderWidth: 1,
+  },
+  stitchHeaderStatusOnline: {
+    backgroundColor: 'rgba(226, 112, 58, 0.15)',
+    borderColor: THEME.colors.brasa,
+  },
+  stitchHeaderStatusOffline: {
+    backgroundColor: 'rgba(63, 207, 142, 0.15)',
+    borderColor: THEME.colors.jade,
+  },
+  stitchHeaderStatusBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  stitchHeaderSubtitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: THEME.colors.textoSecundarioLuminoso,
+    marginTop: 2,
+  },
+  stitchHeaderRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stitchSyncBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 48,
+    paddingHorizontal: 10,
+    borderRadius: 2,
+    backgroundColor: '#1F201F',
+    borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#E0C380',
+    borderBottomColor: '#5C4A22',
+    borderRightColor: '#5C4A22',
+  },
+  stitchSyncBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+  },
+  stitchDeleteCharBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 48,
+    paddingHorizontal: 10,
+    borderRadius: 2,
+    backgroundColor: '#2A1314',
+    borderWidth: 1,
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderBottomColor: '#5A1A1A',
+    borderRightColor: '#5A1A1A',
+  },
+  stitchDeleteCharBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFB4AB',
+  },
+  stitchSubNavWrapper: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#0D0E0D',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2B2A',
+  },
+  stitchSubNavScroll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stitchSubNavBtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 44,
+  },
+  stitchSubNavBtnBg: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stitchSubNavBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.5,
+    ...THEME.effects.textShadowSubtle,
+  },
+  stitchSubNavBtnTextActive: {
+    color: '#EFD28D',
+    fontWeight: '900',
+    ...THEME.effects.textShadow,
+  },
+  stitchStatsSectionCard: {
+    position: 'relative',
+    backgroundColor: '#171817',
+    borderRadius: 2,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#161716',
+    borderRightColor: '#161716',
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  stitchSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  stitchSectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stitchGoldDiamond: {
+    fontSize: 12,
+    color: THEME.colors.oroClaro,
+    fontWeight: 'bold',
+  },
+  stitchSectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.5,
+  },
+  stitchSectionSubtag: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: THEME.colors.textMuted,
+  },
+  stitchGoldDividerLine: {
+    height: 1.5,
+    backgroundColor: 'rgba(232, 200, 106, 0.4)',
+    marginBottom: 10,
+  },
+  stitchMetricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 10,
+  },
+  stitchMetricBox: {
+    flex: 1,
+    minWidth: 70,
+    backgroundColor: '#090A09',
+    borderRadius: 2,
+    borderTopColor: '#161715',
+    borderLeftColor: '#161715',
+    borderBottomColor: '#3A3C38',
+    borderRightColor: '#3A3C38',
+    borderWidth: 1,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stitchMetricBoxHighlight: {
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#C4A65E',
+    borderBottomColor: '#5C4A22',
+    borderRightColor: '#5C4A22',
+    borderWidth: 1.2,
+  },
+  stitchMetricLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: THEME.colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  stitchMetricValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#E4E2E0',
+    marginTop: 2,
+  },
+  stitchQuickPointsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 48,
+    paddingHorizontal: 12,
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#C4A65E',
+    borderBottomColor: '#5C4A22',
+    borderRightColor: '#5C4A22',
+    borderWidth: 1,
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  stitchQuickPointsSub: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: THEME.colors.textMuted,
+  },
+  stitchQuickPointsText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    letterSpacing: 0.5,
+  },
+  stitchQuickPointsArrow: {
+    fontSize: 12,
+    color: THEME.colors.oroClaro,
+  },
+  stitchStatRowWrap: {
+    marginBottom: 10,
+  },
+  stitchStatRecessedBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#090A09',
+    borderRadius: 2,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderBottomColor: '#3A3C38',
+    borderRightColor: '#3A3C38',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    height: 48,
+  },
+  stitchStatInfoCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stitchStatTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundario,
+    width: 105,
+  },
+  stitchStatInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  stitchPlus1000Btn: {
+    width: 68,
+    height: 38,
+    borderRadius: 2,
+    backgroundColor: '#252625',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#161716',
+    borderRightColor: '#161716',
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.6,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  stitchPlus1000Bg: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stitchPlus1000Text: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#EFD28D',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  stitchSubStatsBox: {
+    paddingHorizontal: 12,
+    paddingTop: 4,
+  },
+  stitchSubStatCyan: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: THEME.colors.arcano,
+  },
+  stitchSubStatWhite: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: THEME.colors.textoSecundarioLuminoso,
+  },
+  stitchCurrenciesGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  stitchCurrencyBox: {
+    flex: 1,
+    backgroundColor: '#090A09',
+    borderRadius: 2,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderBottomColor: '#3A3C38',
+    borderRightColor: '#3A3C38',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.7,
+    shadowRadius: 2,
+  },
+  stitchCurrencyLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.textMuted,
+  },
+  stitchCurrencyInput: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+    paddingVertical: 4,
+  },
+  stitchShortcutsCard: {
+    backgroundColor: '#161715',
+    borderRadius: 2,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderBottomColor: '#161716',
+    borderRightColor: '#161716',
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  stitchShortcutsLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.textMuted,
+    marginBottom: 6,
+  },
+  stitchShortcutsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  stitchShortcutKeyBtn: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 2,
+    backgroundColor: '#1C1D1C',
+    borderTopColor: '#4A4840',
+    borderLeftColor: '#4A4840',
+    borderBottomColor: '#121312',
+    borderRightColor: '#121312',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  stitchShortcutKeyLetter: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: THEME.colors.oroClaro,
+  },
+  stitchShortcutKeySub: {
+    fontSize: 8,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  stitchShortcutSpriteImg: {
+    width: 24,
+    height: 24,
+  },
+  /* ================= FIN STITCH PERSONAJE ================= */
   loadingContainer: {
     flex: 1,
     backgroundColor: '#070A0F',
@@ -3089,27 +3890,33 @@ const styles = StyleSheet.create({
   closeBtn: {
     width: 44,
     height: 44,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     alignItems: 'center',
     justifyContent: 'center',
   },
   deleteHeaderBtn: {
     width: 44,
     height: 44,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
+    borderRadius: 2,
+    backgroundColor: '#2A1314',
     borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.35)',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   dangerZoneCard: {
     marginTop: 16,
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 2,
     backgroundColor: 'rgba(244, 67, 54, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(244, 67, 54, 0.35)',
@@ -3126,19 +3933,35 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 12,
   },
-  dangerDeleteBtn: {
+  dangerDeleteBtnWrap: {
+    width: '100%',
+    minHeight: 44,
+    backgroundColor: '#2A1616',
+    borderWidth: 1,
+    borderColor: '#7A2E28',
+    borderRadius: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#D32F2F',
-    paddingVertical: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#FF5252',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  dangerDeleteBtnBg: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  dangerDeleteOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(148, 57, 57, 0.45)',
+    borderRadius: 2,
   },
   dangerDeleteBtnText: {
-    color: '#FFFFFF',
+    color: '#FF6B6B',
     fontSize: 13,
     fontWeight: 'bold',
     fontFamily: THEME.typography.fontTitle,
@@ -3158,6 +3981,7 @@ const styles = StyleSheet.create({
   tabItem: {
     paddingVertical: 12,
     paddingHorizontal: 12,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3195,17 +4019,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: THEME.shapes.radioEsquina,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: THEME.spacing.md,
     marginBottom: THEME.spacing.md,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 4,
   },
   cardTitle: {
     fontSize: 13,
@@ -3237,23 +4051,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: THEME.colors.texto,
     fontWeight: '800',
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#090A09',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
   },
   fieldInput: {
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#090A09',
     color: THEME.colors.texto,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 15,
     fontWeight: '800',
+    minHeight: 40,
   },
   zenContainer: {
     marginTop: 4,
@@ -3261,17 +4082,23 @@ const styles = StyleSheet.create({
   rankBadge: {
     paddingVertical: 8,
     paddingHorizontal: 10,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     alignItems: 'center',
     borderWidth: 1,
   },
   rankGm: {
-    backgroundColor: 'rgba(255, 143, 0, 0.15)',
-    borderColor: '#FFA000',
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   rankPlayer: {
-    backgroundColor: THEME.colors.casillaFondo,
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#1A1B1A',
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   rankBadgeText: {
     fontSize: 12,
@@ -3289,6 +4116,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 2,
+    paddingRight: 24,
   },
   subTabPill: {
     flexDirection: 'row',
@@ -3296,15 +4124,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: THEME.shapes.radioEsquina,
+    minHeight: 44,
+    borderRadius: 2,
     gap: 5,
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#1A1B1A',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   subTabPillActive: {
-    backgroundColor: THEME.colors.oro,
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   subTabText: {
     fontSize: 11,
@@ -3312,8 +4147,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   subTabTextActive: {
-    color: THEME.colors.textoOscuro,
+    color: '#EFD28D',
     fontWeight: '900',
+    ...THEME.effects.textShadow,
   },
   gridWrapper: {
     alignItems: 'center',
@@ -3352,12 +4188,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(63, 207, 142, 0.15)',
+    backgroundColor: '#15241C',
     borderWidth: 1,
-    borderColor: THEME.colors.jade,
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1E5A3E',
+    borderBottomColor: '#1E5A3E',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
   },
   quickPkBtnText: {
     color: THEME.colors.jade,
@@ -3372,10 +4211,13 @@ const styles = StyleSheet.create({
   stepperSmallBtn: {
     width: 32,
     height: 36,
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -3390,12 +4232,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   quickStepBtn: {
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#1A1B1A',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
   },
   quickStepText: {
     color: THEME.colors.textoSecundario,
@@ -3416,10 +4261,13 @@ const styles = StyleSheet.create({
   pkPill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.casillaFondo,
+    borderRadius: 2,
+    backgroundColor: '#1A1B1A',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   pkPillText: {
     fontSize: 11,
@@ -3432,22 +4280,30 @@ const styles = StyleSheet.create({
   },
   raceScrollContainer: {
     paddingVertical: 4,
+    paddingRight: 24,
     gap: 8,
   },
   raceChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.casillaFondo,
+    backgroundColor: '#1A1B1A',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    minHeight: 44,
     gap: 6,
   },
   raceChipActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   raceChipText: {
     color: THEME.colors.textoSecundario,
@@ -3464,15 +4320,21 @@ const styles = StyleSheet.create({
   classTierCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
     padding: 10,
   },
   classTierCardActive: {
-    borderColor: THEME.colors.oroClaro,
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   classTierName: {
     color: THEME.colors.textPrimary,
@@ -3508,7 +4370,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 2,
     borderWidth: 1,
     gap: 6,
   },
@@ -3519,10 +4381,10 @@ const styles = StyleSheet.create({
   movingBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1613',
-    borderColor: '#B58F3C',
+    backgroundColor: '#1B1C1B',
+    borderColor: '#E0C380',
     borderWidth: 1.5,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingVertical: 8,
     paddingHorizontal: 12,
     gap: 10,
@@ -3530,7 +4392,7 @@ const styles = StyleSheet.create({
     maxWidth: 380,
   },
   movingBannerTitle: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -3546,7 +4408,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     minHeight: 36,
     justifyContent: 'center',
   },
@@ -3556,40 +4418,44 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   // Skills Tab Styles
-  skillHeaderBtnAdd: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#B58F3C',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    gap: 4,
-    minHeight: 44,
-  },
-  skillHeaderBtnClear: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(226, 112, 58, 0.15)',
-    borderColor: '#E2703A',
+  skillHeaderBtnWrap: {
+    height: 38,
+    minWidth: 80,
+    borderRadius: 2,
+    backgroundColor: '#252625',
     borderWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
+    borderColor: '#4C463A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
     gap: 4,
-    minHeight: 44,
+  },
+  skillHeaderBtnVaciar: {
+    backgroundColor: '#2A1616',
+    borderColor: '#7A2E28',
+  },
+  skillHeaderBtnBg: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    gap: 4,
   },
   skillHeaderBtnText: {
-    color: '#FFF',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
   },
   quickRaceMainBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2B2521',
+    backgroundColor: '#1F201F',
     borderWidth: 1.5,
-    borderColor: '#6B5533',
-    borderRadius: 6,
+    borderColor: '#4C463A',
+    borderRadius: 2,
     padding: 12,
     gap: 12,
     minHeight: 48,
@@ -3614,7 +4480,7 @@ const styles = StyleSheet.create({
   quickModeBtn: {
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   quickModeBtnActive: {
     backgroundColor: THEME.colors.primaryOrange,
@@ -3631,12 +4497,15 @@ const styles = StyleSheet.create({
   raceChipBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.superficie,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     gap: 6,
   },
   emptySkillsContainer: {
@@ -3661,16 +4530,19 @@ const styles = StyleSheet.create({
   skillCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.border,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderRadius: 8,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderRightColor: '#121312',
+    borderBottomColor: '#121312',
+    borderRadius: 2,
     padding: 10,
   },
   skillIconWrapper: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 2,
     backgroundColor: 'rgba(255, 107, 0, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -3684,7 +4556,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#262626',
     paddingVertical: 2,
     paddingHorizontal: 6,
-    borderRadius: 4,
+    borderRadius: 2,
   },
   skillCategoryBadgeText: {
     color: THEME.colors.textMuted,
@@ -3700,7 +4572,7 @@ const styles = StyleSheet.create({
   skillDeleteBtn: {
     padding: 6,
     backgroundColor: 'rgba(255, 82, 82, 0.1)',
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: 'rgba(255, 82, 82, 0.3)',
   },
@@ -3711,11 +4583,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   skillPickerModalContent: {
-    backgroundColor: '#191512',
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
+    backgroundColor: '#171817',
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     maxHeight: '90%',
     width: '100%',
     maxWidth: 420,
@@ -3730,27 +4605,35 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#3D312A',
+    borderBottomColor: '#4C463A',
   },
   skillPickerModalTitle: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontSize: 16,
     fontWeight: '800',
   },
   skillPickerCloseBtn: {
-    padding: 4,
+    padding: 8,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   skillSearchInput: {
-    backgroundColor: '#14110E',
-    borderColor: '#4A3B2C',
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderRadius: 6,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     color: '#FFF',
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 13,
     marginHorizontal: 16,
     marginTop: 12,
+    minHeight: 44,
   },
   skillFilterRow: {
     paddingHorizontal: 16,
@@ -3758,18 +4641,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skillFilterChip: {
-    backgroundColor: '#1A1613',
+    backgroundColor: '#1B1C1B',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    minHeight: 36,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    minHeight: 44,
     justifyContent: 'center',
   },
   skillFilterChipActive: {
-    backgroundColor: '#B58F3C',
-    borderColor: '#E8C86A',
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   skillFilterChipText: {
     color: THEME.colors.textMuted,
@@ -3777,8 +4666,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   skillFilterChipTextActive: {
-    color: '#FFF',
+    color: '#EFD28D',
     fontWeight: '800',
+    ...THEME.effects.textShadow,
   },
   skillCatalogItem: {
     flexDirection: 'row',
@@ -3794,7 +4684,7 @@ const styles = StyleSheet.create({
   skillCatalogItemLeft: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 2,
     backgroundColor: '#242424',
     alignItems: 'center',
     justifyContent: 'center',
@@ -3814,7 +4704,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.primaryOrange,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   skillCatalogItemBtnDisabled: {
     backgroundColor: '#2C2C2C',
@@ -3828,26 +4718,36 @@ const styles = StyleSheet.create({
   // ==========================================
   // ESTILOS CLÁSICOS MU ONLINE SEASON 6 (CAPTURAS)
   // ==========================================
+  muCharWindowOuter: {
+    backgroundColor: THEME.colors.fondoRadialTop,
+    borderWidth: 1.5,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.85,
+    shadowRadius: 10,
+  },
   muCharWindow: {
     backgroundColor: THEME.colors.superficie,
-    borderRadius: THEME.shapes.radioEsquina,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     padding: 12,
-    marginBottom: 16,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.7,
-    shadowRadius: 6,
   },
   muCharHeader: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.borde,
-    marginBottom: 10,
+    width: '100%',
+    height: 54,
+    marginBottom: 8,
+  },
+  muCharFooterImage: {
+    width: '100%',
+    height: 24,
   },
   muCharName: {
     fontSize: 17,
@@ -3871,7 +4771,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.borde,
+    borderBottomColor: '#3A3C38',
     marginBottom: 10,
   },
   muLevelText: {
@@ -3885,20 +4785,28 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   muStonePlusBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.superficie,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    width: 44,
+    height: 44,
+    borderRadius: 2,
+    backgroundColor: '#292A29',
+    borderWidth: 1.5,
+    borderColor: '#E0C380',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
   },
   muStonePlusText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '900',
-    color: THEME.colors.oroClaro,
+    color: '#E4E2E0',
     marginTop: -2,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   muStatSection: {
     marginBottom: 10,
@@ -3913,11 +4821,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 36,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.casillaFondo,
+    height: 38,
+    borderRadius: 2,
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
     paddingHorizontal: 12,
   },
   muStatLabel: {
@@ -3961,12 +4872,15 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#090A09',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
     paddingHorizontal: 8,
-    height: 36,
+    height: 38,
   },
   muZenTag: {
     fontSize: 12,
@@ -3989,15 +4903,18 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: THEME.colors.borde,
+    borderTopColor: '#3A3C38',
   },
   muFooterBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.superficie,
+    width: 44,
+    height: 44,
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -4008,11 +4925,14 @@ const styles = StyleSheet.create({
   },
   muFooterBtnSave: {
     flex: 1,
-    height: 38,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.oro,
-    borderWidth: 1,
-    borderColor: THEME.colors.oroClaro,
+    height: 44,
+    borderRadius: 2,
+    backgroundColor: '#26221A',
+    borderWidth: 1.5,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -4021,14 +4941,18 @@ const styles = StyleSheet.create({
   muFooterBtnSaveText: {
     fontSize: 12,
     fontWeight: '900',
-    color: THEME.colors.textoOscuro,
+    color: '#EFD28D',
     letterSpacing: 0.6,
+    ...THEME.effects.textShadow,
   },
   muSkillBarContainer: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#171817',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     padding: 10,
     marginBottom: 12,
   },
@@ -4045,18 +4969,24 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   muSkillSlotFrame: {
-    width: 42,
-    height: 42,
-    borderRadius: THEME.shapes.radioEsquina,
-    backgroundColor: THEME.colors.casillaFondo,
+    width: 44,
+    height: 44,
+    borderRadius: 2,
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#4C463A',
+    borderBottomColor: '#4C463A',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   muSkillSlotSelected: {
-    borderColor: THEME.colors.oroClaro,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
     shadowColor: THEME.colors.oroClaro,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
@@ -4074,15 +5004,21 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#3A3C38',
+    borderBottomColor: '#3A3C38',
   },
   muInvZenRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#171817',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginTop: 10,
@@ -4091,10 +5027,13 @@ const styles = StyleSheet.create({
   },
   muInvZenBox: {
     flex: 1,
-    backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: THEME.shapes.radioEsquina,
+    backgroundColor: '#090A09',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
     paddingHorizontal: 12,
     paddingVertical: 6,
     justifyContent: 'center',
@@ -4106,10 +5045,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   lockWarningBanner: {
-    backgroundColor: 'rgba(255, 179, 0, 0.16)',
-    borderColor: '#FFB300',
+    backgroundColor: '#262010',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
     borderWidth: 1,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     marginHorizontal: 12,
     marginTop: 6,
     paddingHorizontal: 10,
@@ -4129,24 +5071,30 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: THEME.shapes.radioEsquina,
+    borderRadius: 2,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   connectionStatusOnline: {
-    backgroundColor: 'rgba(255, 82, 82, 0.12)',
-    borderColor: '#FF5252',
+    backgroundColor: '#2A1314',
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
   },
   connectionStatusOffline: {
-    backgroundColor: 'rgba(63, 207, 142, 0.10)',
-    borderColor: THEME.colors.jade,
+    backgroundColor: '#15241C',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1E5A3E',
+    borderBottomColor: '#1E5A3E',
   },
   statusDot: {
     width: 10,
     height: 10,
-    borderRadius: 5,
+    borderRadius: 5, /* círculo funcional (width/2): indicador de estado de conexión */
   },
   statusBannerTitle: {
     fontSize: 11,
@@ -4163,7 +5111,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     gap: 4,
   },
@@ -4183,7 +5131,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(232, 200, 106, 0.12)',
     borderColor: THEME.colors.bordeBrillante,
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
@@ -4200,16 +5148,19 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   levelModalContent: {
-    backgroundColor: '#1E1915',
-    borderColor: '#4A3B2C',
-    borderWidth: 1,
-    borderRadius: 6,
+    backgroundColor: '#171817',
+    borderWidth: 1.5,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
     width: '100%',
     maxWidth: 420,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.8,
     shadowRadius: 10,
     elevation: 8,
   },
@@ -4219,7 +5170,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#3D312A',
+    borderBottomColor: '#3A3C38',
     marginBottom: 16,
   },
   levelModalTitle: {
@@ -4245,16 +5196,22 @@ const styles = StyleSheet.create({
   },
   levelModalQuickBtn: {
     flex: 1,
-    backgroundColor: '#14110E',
-    borderColor: '#3D312A',
+    backgroundColor: '#1A1B1A',
     borderWidth: 1,
-    borderRadius: 6,
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
     paddingVertical: 8,
     alignItems: 'center',
   },
   levelModalQuickBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   levelModalQuickText: {
     color: THEME.colors.textoSecundario,
@@ -4262,8 +5219,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   levelModalQuickTextActive: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontWeight: '800',
+    ...THEME.effects.textShadow,
   },
   levelModalStepperRow: {
     flexDirection: 'row',
@@ -4273,13 +5231,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   levelModalStepBtn: {
-    backgroundColor: '#2A221B',
-    borderColor: '#4A3B2C',
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderRadius: 6,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    borderRadius: 2,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minWidth: 44,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -4289,10 +5251,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   levelModalInput: {
-    backgroundColor: '#14110E',
-    borderColor: THEME.colors.bordeBrillante,
-    borderWidth: 1.5,
-    borderRadius: 6,
+    backgroundColor: '#090A09',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     color: THEME.colors.oroClaro,
     fontSize: 22,
     fontWeight: '900',
@@ -4315,11 +5280,16 @@ const styles = StyleSheet.create({
   levelModalCancelBtn: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#3D312A',
-    backgroundColor: '#14110E',
+    borderTopColor: '#4A463F',
+    borderLeftColor: '#4A463F',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
+    backgroundColor: '#1A1B1A',
     alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
   },
   levelModalCancelText: {
     color: THEME.colors.textoSecundario,
@@ -4330,15 +5300,160 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderWidth: 1.5,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     gap: 6,
+    minHeight: 44,
   },
   levelModalSaveText: {
-    color: '#1A1612',
+    color: '#EFD28D',
     fontSize: 13,
     fontWeight: '800',
+    ...THEME.effects.textShadow,
+  },
+  subTabPillTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 36,
+    marginHorizontal: 3,
+  },
+  subTabPillBg: {
+    minHeight: 36,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  stitchPlus1000BtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    width: 68,
+    height: 38,
+  },
+  stitchPlus1000BtnBg: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperSmallBtnTouchable: {
+    width: 34,
+    height: 36,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  stepperSmallBtnBg: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickStepBtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 28,
+  },
+  quickStepBtnBg: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pkPillTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  pkPillBg: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickModeBtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 32,
+  },
+  quickModeBtnBg: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  raceChipBtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 30,
+  },
+  raceChipBtnBg: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    justifyContent: 'center',
+  },
+  teleportBtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 34,
+  },
+  teleportBtnBg: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teleportBtnText: {
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
+  },
+  skillFilterChipTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 30,
+    marginRight: 6,
+  },
+  skillFilterChipBg: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelModalQuickBtnTouchable: {
+    flex: 1,
+    borderRadius: 2,
+    overflow: 'hidden',
+    minHeight: 34,
+  },
+  levelModalQuickBtnBg: {
+    width: '100%',
+    height: '100%',
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelModalStepBtnTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
+    minWidth: 44,
+    minHeight: 44,
+  },
+  levelModalStepBtnBg: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

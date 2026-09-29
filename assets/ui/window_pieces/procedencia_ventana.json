@@ -1,0 +1,38 @@
+[
+  {
+    "archivo": "win_header_left.png",
+    "sha256": "b920d906b56f8366afdbfcb474cac15bef46a886ab6a9fd6b68d33efbc8ccda9",
+    "fuente": "assets/ui/mu_window_header.png",
+    "tipo": "SLICE_VENTANA_3_PIEZAS"
+  },
+  {
+    "archivo": "win_header_mid.png",
+    "sha256": "b281d284104fbfb2f4e8395ad8345609ee23e5fb33753bab79215382cc4d2ed1",
+    "fuente": "assets/ui/mu_window_header.png",
+    "tipo": "SLICE_VENTANA_3_PIEZAS"
+  },
+  {
+    "archivo": "win_header_right.png",
+    "sha256": "a55ddbbc41289accfe5fcb626985dfae3fce4e30362148fd6a671a7516b6354e",
+    "fuente": "assets/ui/mu_window_header.png",
+    "tipo": "SLICE_VENTANA_3_PIEZAS"
+  },
+  {
+    "archivo": "win_footer_left.png",
+    "sha256": "edfcf07258379b7b1c0fd9549f22f2339d7afe61904b94488c505d16a9045db6",
+    "fuente": "assets/ui/mu_window_footer.png",
+    "tipo": "SLICE_VENTANA_3_PIEZAS"
+  },
+  {
+    "archivo": "win_footer_mid.png",
+    "sha256": "64b9ebb6223e7f07f24e668a66f3027b2766c903c237f971a07df20336afe2e0",
+    "fuente": "assets/ui/mu_window_footer.png",
+    "tipo": "SLICE_VENTANA_3_PIEZAS"
+  },
+  {
+    "archivo": "win_footer_right.png",
+    "sha256": "089146166c879595997427f0b90d9a51f8ce7c816e3ce6c4a959e252e0f3c573",
+    "fuente": "assets/ui/mu_window_footer.png",
+    "tipo": "SLICE_VENTANA_3_PIEZAS"
+  }
+]

@@ -9,14 +9,19 @@ import {
   RefreshControl,
   ActivityIndicator,
   Modal,
+  ImageBackground,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
-import { Header } from '../../components/common/Header';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { Panel, MuCornerOrnaments, MuSideMoldings, MuHeaderBanner, MuButton } from '../../components/ui';
 import { SqlClient } from '../../services/database/sqlClient';
 
 interface DeviceItem {
@@ -230,11 +235,15 @@ export const AppManagerScreen = () => {
   const blockedCount = devices.filter((d) => d.blocked).length;
 
   return (
-    <View style={styles.container}>
-      <Header
-        title="App Manager"
-        subtitle="Telemetría y Control de Celulares"
-        showBack={true}
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={styles.container}
+      imageStyle={{ opacity: 0.50 }}
+      resizeMode="repeat"
+    >
+      <MuHeaderBanner
+        titulo="MU MANAGER PRO"
+        subtitulo="CONTROL DE LICENCIAS Y TELEMETRÍA"
         onBack={() => navigation.goBack()}
         rightAction={{
           icon: 'refresh',
@@ -257,7 +266,7 @@ export const AppManagerScreen = () => {
           <Text style={styles.kpiLabel}>En PRO</Text>
         </View>
         <View style={styles.kpiCard}>
-          <Text style={[styles.kpiValue, { color: '#FF5252' }]}>{blockedCount}</Text>
+          <Text style={[styles.kpiValue, { color: THEME.colors.brasa }]}>{blockedCount}</Text>
           <Text style={styles.kpiLabel}>Bloqueados</Text>
         </View>
       </View>
@@ -265,7 +274,7 @@ export const AppManagerScreen = () => {
       {/* Search Input & Admin Key Button */}
       <View style={styles.searchRow}>
         <View style={styles.searchBar}>
-          <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textSecondary} />
+          <MuIcon name="magnify" size={20} color={THEME.colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar por HWID, IP o modo..."
@@ -276,34 +285,55 @@ export const AppManagerScreen = () => {
           />
         </View>
         <TouchableOpacity
-          style={styles.keyBtn}
+          style={{ width: 48, height: 48, borderRadius: 2, overflow: 'hidden' }}
           onPress={() => {
             setTempKeyInput(adminKey);
             setShowKeyModal(true);
           }}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="shield-key" size={20} color={THEME.colors.primaryOrange} />
+          <ImageBackground
+            source={STITCH_ASSETS.buttons.small}
+            style={{ width: 48, height: 48, justifyContent: 'center', alignItems: 'center' }}
+            resizeMode="stretch"
+          >
+            <MuIcon name="shield-key" size={20} color={THEME.colors.primaryOrange} />
+          </ImageBackground>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.keyBtn, { borderColor: 'rgba(211, 47, 47, 0.4)' }]}
+          style={{ width: 48, height: 48, borderRadius: 2, overflow: 'hidden' }}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="lock-reset" size={20} color={THEME.colors.dangerRed} />
+          <ImageBackground
+            source={STITCH_ASSETS.buttons.small}
+            style={{ width: 48, height: 48, justifyContent: 'center', alignItems: 'center' }}
+            resizeMode="stretch"
+          >
+            <MuIcon name="lock-reset" size={20} color={THEME.colors.dangerRed} />
+          </ImageBackground>
         </TouchableOpacity>
       </View>
 
       {/* Error Card */}
       {errorMessage && (
         <View style={styles.errorCard}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF5252" />
+          <MuIcon name="alert-circle-outline" size={20} color={THEME.colors.brasa} />
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.errorTitle}>Servidor de Telemetría no responde</Text>
             <Text style={styles.errorSub}>{errorMessage}</Text>
           </View>
-          <TouchableOpacity onPress={() => fetchDevices()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Reintentar</Text>
+          <TouchableOpacity
+            onPress={() => fetchDevices()}
+            style={{ borderRadius: 2, overflow: 'hidden' }}
+          >
+            <ImageBackground
+              source={STITCH_ASSETS.tabs.tabModeInactive}
+              style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+              resizeMode="stretch"
+            >
+              <Text style={[styles.retryText, { color: '#E2703A' }]}>Reintentar</Text>
+            </ImageBackground>
           </TouchableOpacity>
         </View>
       )}
@@ -323,7 +353,7 @@ export const AppManagerScreen = () => {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="cellphone-wireless" size={48} color={THEME.colors.textMuted} />
+              <MuIcon name="cellphone-wireless" size={48} color={THEME.colors.textMuted} />
               <Text style={styles.emptyText}>
                 {errorMessage
                   ? 'No se pudieron consultar los celulares.'
@@ -337,14 +367,15 @@ export const AppManagerScreen = () => {
           const isPro = item.mode === 'PRO';
 
           return (
-            <View style={[styles.deviceCard, isBlocked && styles.cardBlocked]}>
+            <Panel variant="box" style={[styles.deviceCard, isBlocked && styles.cardBlocked]}>
+              <MuCornerOrnaments size={10} />
               <View style={styles.cardTop}>
                 <View style={styles.deviceInfo}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <MaterialCommunityIcons
+                    <MuIcon
                       name={isBlocked ? 'cellphone-lock' : 'cellphone'}
                       size={20}
-                      color={isBlocked ? '#FF5252' : isPro ? THEME.colors.accentGreenBright : '#FFB300'}
+                      color={isBlocked ? THEME.colors.brasa : isPro ? THEME.colors.jade : THEME.colors.amber}
                     />
                     <Text style={styles.hwidText}>{item.hwid}</Text>
                   </View>
@@ -368,10 +399,10 @@ export const AppManagerScreen = () => {
                     style={[
                       styles.modeBadgeText,
                       isBlocked
-                        ? { color: '#FF5252' }
+                        ? { color: THEME.colors.brasa }
                         : isPro
-                        ? { color: THEME.colors.accentGreenBright }
-                        : { color: '#FFB300' },
+                        ? { color: THEME.colors.jade }
+                        : { color: THEME.colors.amber },
                     ]}
                   >
                     {isBlocked ? 'BLOQUEADO' : item.mode}
@@ -381,94 +412,96 @@ export const AppManagerScreen = () => {
 
               {/* Action Buttons Row */}
               <View style={styles.cardBottom}>
-                <TouchableOpacity
-                  style={styles.actionBtnKey}
-                  onPress={() => handleGenerateKey(item.hwid)}
-                >
-                  <MaterialCommunityIcons name="key-plus" size={16} color="#0D0D0D" />
-                  <Text style={styles.actionBtnKeyText}>Generar Clave PRO</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.actionBtnBlock,
-                    isBlocked ? styles.btnBlockActive : styles.btnBlockInactive,
-                  ]}
-                  onPress={() => handleToggleBlock(item.hwid, isBlocked)}
-                >
-                  <MaterialCommunityIcons
-                    name={isBlocked ? 'shield-check' : 'shield-remove'}
-                    size={16}
-                    color={isBlocked ? '#4CAF50' : '#FF5252'}
+                <View style={{ flex: 1.2 }}>
+                  <MuButton
+                    titulo="Generar Clave PRO"
+                    icono="key-plus"
+                    variante="primary"
+                    onPress={() => handleGenerateKey(item.hwid)}
+                    compacto={true}
+                    altura={36}
                   />
-                  <Text
-                    style={[
-                      styles.actionBtnBlockText,
-                      { color: isBlocked ? '#4CAF50' : '#FF5252' },
-                    ]}
-                  >
-                    {isBlocked ? 'Desbloquear' : 'Bloquear'}
-                  </Text>
-                </TouchableOpacity>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo={isBlocked ? 'Desbloquear' : 'Bloquear'}
+                    icono={isBlocked ? 'shield-check' : 'shield-remove'}
+                    variante={isBlocked ? 'success' : 'danger'}
+                    onPress={() => handleToggleBlock(item.hwid, isBlocked)}
+                    compacto={true}
+                    altura={36}
+                  />
+                </View>
               </View>
-            </View>
+            </Panel>
           );
         }}
       />
 
       <Modal visible={showKeyModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <MaterialCommunityIcons name="shield-key" size={24} color={THEME.colors.primaryOrange} />
-              <Text style={styles.modalTitle}>Clave Maestra de Pasarela</Text>
-            </View>
-            <Text style={styles.modalDesc}>
-              Ingresa la clave (X-Admin-Key) para autenticar las operaciones administrativas contra la pasarela cloud:
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Introduce tu clave maestra..."
-              placeholderTextColor={THEME.colors.textMuted}
-              value={tempKeyInput}
-              onChangeText={setTempKeyInput}
-              secureTextEntry
-              autoCapitalize="none"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalBtnCancel}
-                onPress={() => {
-                  setShowKeyModal(false);
-                  if (!adminKey) {
-                    navigation.goBack();
-                  }
-                }}
-              >
-                <Text style={styles.modalBtnCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalBtnSave}
-                onPress={async () => {
-                  const newKey = tempKeyInput.trim();
-                  if (!newKey) {
-                    Alert.alert('Error', 'La clave no puede estar vacía');
-                    return;
-                  }
-                  setAdminKey(newKey);
-                  await SqlClient.setStoredAdminKey(newKey);
-                  await AsyncStorage.removeItem(ADMIN_KEY_STORAGE).catch(() => {});
-                  setShowKeyModal(false);
-                  fetchDevices(newKey);
-                }}
-              >
-                <Text style={styles.modalBtnSaveText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <Panel variant="box" style={styles.modalContent}>
+            <MuCornerOrnaments size={12} />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" bounces={false}>
+              <View style={styles.modalHeader}>
+                <MuIcon name="shield-key" size={24} color={THEME.colors.primaryOrange} />
+                <Text style={styles.modalTitle}>Clave Maestra de Pasarela</Text>
+              </View>
+              <Text style={styles.modalDesc}>
+                Ingresa la clave (X-Admin-Key) para autenticar las operaciones administrativas contra la pasarela cloud:
+              </Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Introduce tu clave maestra..."
+                placeholderTextColor={THEME.colors.textMuted}
+                value={tempKeyInput}
+                onChangeText={setTempKeyInput}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+              <View style={styles.modalButtons}>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Cancelar"
+                    variante="secondary"
+                    onPress={() => {
+                      setShowKeyModal(false);
+                      if (!adminKey) {
+                        navigation.goBack();
+                      }
+                    }}
+                    altura={44}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <MuButton
+                    titulo="Guardar"
+                    variante="primary"
+                    onPress={async () => {
+                      const newKey = tempKeyInput.trim();
+                      if (!newKey) {
+                        Alert.alert('Error', 'La clave no puede estar vacía');
+                        return;
+                      }
+                      setAdminKey(newKey);
+                      await SqlClient.setStoredAdminKey(newKey);
+                      await AsyncStorage.removeItem(ADMIN_KEY_STORAGE).catch(() => {});
+                      setShowKeyModal(false);
+                      fetchDevices(newKey);
+                    }}
+                    altura={44}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+          </Panel>
+        </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -515,20 +548,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    height: 44,
+    height: 48,
   },
   keyBtn: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    width: 48,
+    height: 48,
+    backgroundColor: '#292A29',
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   searchInput: {
     flex: 1,
@@ -545,7 +578,7 @@ const styles = StyleSheet.create({
     marginHorizontal: THEME.spacing.md,
     marginTop: THEME.spacing.sm,
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   errorTitle: {
     color: THEME.colors.brasa,
@@ -561,7 +594,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(226, 112, 58, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   retryText: {
     color: THEME.colors.brasa,
@@ -570,13 +603,9 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: THEME.spacing.md,
+    paddingBottom: 120,
   },
   deviceCard: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 14,
     marginBottom: 10,
   },
   cardBlocked: {
@@ -606,7 +635,7 @@ const styles = StyleSheet.create({
   modeBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
   },
   badgeDemo: {
@@ -641,11 +670,11 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: THEME.colors.oro,
     paddingVertical: 10,
-    minHeight: 44,
-    borderRadius: 6,
+    minHeight: 48,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   actionBtnKeyText: {
-    color: '#191512',
+    color: THEME.colors.textoOscuro,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -656,8 +685,8 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    minHeight: 44,
-    borderRadius: 6,
+    minHeight: 48,
+    borderRadius: 2,
     borderWidth: 1,
   },
   btnBlockInactive: {
@@ -695,10 +724,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     maxHeight: '90%',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     padding: 20,
   },
   modalHeader: {
@@ -726,12 +751,12 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderRadius: 2,
     color: THEME.colors.texto,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    minHeight: 44,
+    minHeight: 48,
     marginBottom: 20,
     fontFamily: THEME.typography.fontMono,
   },
@@ -743,9 +768,9 @@ const styles = StyleSheet.create({
   modalBtnCancel: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -758,12 +783,12 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.oroClaro,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   modalBtnSaveText: {
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
     fontSize: 13,
     fontWeight: 'bold',
   },

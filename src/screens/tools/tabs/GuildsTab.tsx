@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../../components/ui/MuIcon';
 import { THEME } from '../../../constants/theme';
+import { Panel, MuButton } from '../../../components/ui';
+import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 
 interface GuildsTabProps {
@@ -36,18 +38,21 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
               Gestión directa en tabla Guild & GuildMember (SQL Server)
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.refreshBtn}
+          <MuButton
+            titulo="Actualizar"
+            icono="refresh"
+            variante="primary"
             onPress={loadGuilds}
-          >
-            <MaterialCommunityIcons name="refresh" size={16} color={THEME.colors.oroClaro} />
-            <Text style={styles.refreshBtnText}>Actualizar</Text>
-          </TouchableOpacity>
+            cargando={loadingGuilds}
+            disabled={loadingGuilds}
+            compacto={true}
+            altura={36}
+          />
         </View>
 
         {/* Search Input */}
         <View style={styles.inputWrap}>
-          <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textoSecundario} />
+          <MuIcon name="tools" size={18} />
           <TextInput
             style={styles.textInput}
             placeholder="Buscar clan por nombre o Guild Master..."
@@ -57,7 +62,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
           />
           {guildSearch.length > 0 && (
             <TouchableOpacity onPress={() => setGuildSearch('')}>
-              <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textoSecundario} />
+              <MuIcon name="close" size={16} />
             </TouchableOpacity>
           )}
         </View>
@@ -66,7 +71,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
           <ActivityIndicator color={THEME.colors.oroClaro} style={{ marginVertical: 30 }} />
         ) : guildsList.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <MaterialCommunityIcons name="shield-off-outline" size={48} color={THEME.colors.textoSecundario} />
+            <MuIcon name="shield" size={44} />
             <Text style={styles.emptyText}>
               No se encontraron clanes registrados en el servidor.
             </Text>
@@ -87,11 +92,11 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
                 const gNotice = g.G_Notice || g.notice || '';
                 const memberCount = g.memberCount !== undefined ? g.memberCount : 0;
                 return (
-                  <View key={`guild_${gName}_${gIdx}`} style={styles.card}>
+                  <Panel variant="box" key={`guild_${gName}_${gIdx}`} style={styles.card}>
                     <View style={styles.cardRow}>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <MaterialCommunityIcons name="shield-crown" size={22} color={THEME.colors.oroClaro} />
+                          <MuIcon name="crown" size={20} />
                           <Text style={styles.guildName}>{gName}</Text>
                         </View>
                         <Text style={styles.masterText}>
@@ -105,32 +110,34 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
                             Score: <Text style={{ fontWeight: 'bold' }}>{gScore}</Text>
                           </Text>
                         </View>
-                        {gNotice ? (
+                        {gNotice && String(gNotice).trim() !== '' && String(gNotice).trim() !== '0' ? (
                           <Text style={styles.noticeText} numberOfLines={1}>
-                            "{gNotice}"
+                            "{String(gNotice).trim()}"
                           </Text>
                         ) : null}
                       </View>
 
                       <View style={styles.actionCol}>
-                        <TouchableOpacity
-                          style={styles.membersBtn}
+                        <MuButton
+                          titulo="Miembros"
+                          icono="user"
+                          variante="primary"
                           onPress={() => handleOpenGuildMembers(g)}
-                        >
-                          <MaterialCommunityIcons name="account-group" size={15} color={THEME.colors.oroClaro} />
-                          <Text style={styles.membersBtnText}>Miembros</Text>
-                        </TouchableOpacity>
+                          compacto={true}
+                          altura={32}
+                        />
 
-                        <TouchableOpacity
-                          style={styles.dissolveBtn}
+                        <MuButton
+                          titulo="Disolver"
+                          icono="delete"
+                          variante="danger"
                           onPress={() => handleDeleteGuild(gName)}
-                        >
-                          <MaterialCommunityIcons name="trash-can-outline" size={15} color={THEME.colors.brasa} />
-                          <Text style={styles.dissolveBtnText}>Disolver</Text>
-                        </TouchableOpacity>
+                          compacto={true}
+                          altura={32}
+                        />
                       </View>
                     </View>
-                  </View>
+                  </Panel>
                 );
               })}
           </View>
@@ -143,7 +150,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
 const styles = StyleSheet.create({
   tabContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   headerRow: {
     flexDirection: 'row',
@@ -172,23 +179,30 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-    borderColor: THEME.colors.oroClaro,
+    borderRadius: 2,
+    backgroundColor: '#26221A',
     borderWidth: 1,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   refreshBtnText: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontSize: 12,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#191512',
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     paddingHorizontal: 12,
     height: 44,
     marginBottom: 12,
@@ -211,11 +225,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   card: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 14,
+    marginBottom: 10,
   },
   cardRow: {
     flexDirection: 'row',
@@ -259,15 +269,19 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
     borderWidth: 1,
-    borderRadius: 6,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
+    borderRadius: 2,
   },
   membersBtnText: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontSize: 11,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   dissolveBtn: {
     flexDirection: 'row',
@@ -275,13 +289,16 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.brasa,
+    backgroundColor: '#2A1314',
     borderWidth: 1,
-    borderRadius: 6,
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
+    borderRadius: 2,
   },
   dissolveBtnText: {
-    color: THEME.colors.brasa,
+    color: '#FFB4AB',
     fontSize: 11,
     fontWeight: 'bold',
   },

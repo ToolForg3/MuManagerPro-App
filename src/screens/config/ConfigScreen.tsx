@@ -10,13 +10,18 @@ import {
   Modal,
   ActivityIndicator,
   Linking,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { Header } from '../../components/common/Header';
-import { CustomButton } from '../../components/common/CustomButton';
+import { BotonOro, BotonPiedra, BotonBrasa, MuButton } from '../../components/ui';
+import { Panel } from '../../components/ui/Panel';
+import { MuCornerOrnaments } from '../../components/ui/MuCornerOrnaments';
+import { MuSideMoldings } from '../../components/ui/MuSideMoldings';
 import { DebugPanelModal } from '../../components/debug/DebugPanelModal';
 import { useNavigation } from '@react-navigation/native';
 import { useDatabase } from '../../context/DatabaseContext';
@@ -32,6 +37,20 @@ import { APP_VERSION, APP_BUILD, APP_DISPLAY_VERSION } from '../../constants/app
 import { ServerProfile } from '../../types/admin';
 import { logAdminAction } from '../../services/adminLog';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
+const maskHost = (h?: string): string => {
+  if (!h) return '';
+  const ipMatch = h.match(/^(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}$/);
+  if (ipMatch) return `${ipMatch[1]}.***.***`;
+  if (h === 'localhost' || h === '127.0.0.1') return h;
+  if (h.length > 8) return h.substring(0, 4) + '***' + h.substring(h.length - 3);
+  return '***';
+};
+
+const maskUser = (u?: string): string => {
+  if (!u) return '';
+  if (u.length <= 1) return `${u}***`;
+  return `${u[0]}***${u[u.length - 1]}`;
+};
 
 export const ConfigScreen = () => {
   const navigation = useNavigation<any>();
@@ -52,6 +71,7 @@ export const ConfigScreen = () => {
   const [adminAuthModalVisible, setAdminAuthModalVisible] = useState(false);
   const [adminKeyInput, setAdminKeyInput] = useState('');
   const [verifyingAdminKey, setVerifyingAdminKey] = useState(false);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const secretTapCountRef = useRef(0);
   const secretTapTimerRef = useRef<any>(null);
 
@@ -70,6 +90,11 @@ export const ConfigScreen = () => {
   useEffect(() => {
     const unsubLicense = LicenseService.subscribe(setLicenseStatus);
     const unsubRemote = RemoteConfigService.subscribe(setRemoteConfig);
+    SqlClient.getStoredAdminKey().then((key) => {
+      if (key && key.trim().length > 0) {
+        setIsAdminUnlocked(true);
+      }
+    }).catch(() => {});
     return () => {
       unsubLicense();
       unsubRemote();
@@ -519,6 +544,7 @@ export const ConfigScreen = () => {
 
       await SqlClient.setStoredAdminKey(key);
       await AsyncStorage.removeItem('@mumanager_admin_key').catch(() => {});
+      setIsAdminUnlocked(true);
       setAdminAuthModalVisible(false);
       setAdminKeyInput('');
       navigation.navigate('AppManager');
@@ -615,74 +641,80 @@ export const ConfigScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={styles.container}
+      imageStyle={{ opacity: 0.50 }}
+      resizeMode="repeat"
+    >
       <Header
-        title={t('configTitle')}
-        subtitle="Ajustes de SQL Server y Emulador"
+        title="MU MANAGER PRO"
+        subtitle="SEASON 6 • PANEL AJUSTES"
         showConnectionBadge={true}
-        rightAction={{
+        rightAction={isAdminUnlocked ? {
           icon: 'console',
           onPress: () => setDebugVisible(true),
-        }}
+        } : undefined}
       />
 
-      {/* Selector de Secciones Temáticas */}
+      {/* Selector de Secciones Temáticas con Texturas Nativas MU Season 6 */}
       <View style={styles.sectionTabRow}>
-        <TouchableOpacity
-          style={[styles.sectionTabBtn, activeSection === 'server' && styles.sectionTabBtnActive]}
-          onPress={() => setActiveSection('server')}
-        >
-          <MaterialCommunityIcons
-            name="server-network"
-            size={16}
-            color={activeSection === 'server' ? THEME.colors.oro : THEME.colors.textoSecundario}
-          />
-          <Text style={[styles.sectionTabText, activeSection === 'server' && styles.sectionTabTextActive]}>
-            Servidor
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.sectionTabBtn, activeSection === 'security' && styles.sectionTabBtnActive]}
-          onPress={() => setActiveSection('security')}
-        >
-          <MaterialCommunityIcons
-            name="shield-lock"
-            size={16}
-            color={activeSection === 'security' ? THEME.colors.oro : THEME.colors.textoSecundario}
-          />
-          <Text style={[styles.sectionTabText, activeSection === 'security' && styles.sectionTabTextActive]}>
-            Seguridad
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.sectionTabBtn, activeSection === 'system' && styles.sectionTabBtnActive]}
-          onPress={() => setActiveSection('system')}
-        >
-          <MaterialCommunityIcons
-            name="cog"
-            size={16}
-            color={activeSection === 'system' ? THEME.colors.oro : THEME.colors.textoSecundario}
-          />
-          <Text style={[styles.sectionTabText, activeSection === 'system' && styles.sectionTabTextActive]}>
-            Sistema
-          </Text>
-        </TouchableOpacity>
+        {[
+          { id: 'server', label: 'SERVIDOR', icon: 'server-network' },
+          { id: 'security', label: 'SEGURIDAD', icon: 'shield-lock' },
+          { id: 'system', label: 'SISTEMA', icon: 'cog' },
+        ].map((tab) => {
+          const isSel = activeSection === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={styles.sectionTabTouch}
+              onPress={() => setActiveSection(tab.id as any)}
+              activeOpacity={0.8}
+            >
+              <ImageBackground
+                source={isSel ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={[styles.sectionTabBtn, isSel && styles.sectionTabBtnActive]}
+                resizeMode="stretch"
+              >
+                <MuIcon
+                  name={tab.icon as any}
+                  size={16}
+                  color={isSel ? '#EFD28D' : '#CDC6B9'}
+                />
+                <Text style={[styles.sectionTabText, isSel && styles.sectionTabTextActive]}>
+                  {tab.label}
+                </Text>
+              </ImageBackground>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* BANNER IMAGEN DECORATIVA AMBIENTAL STITCH 15R */}
+        <View style={styles.heroBanner}>
+          <View style={styles.heroBannerHeader}>
+            <View style={styles.goldDiamond} />
+            <Text style={styles.heroBannerTitle}>CONFIGURACIÓN GENERAL</Text>
+          </View>
+          <Text style={styles.heroBannerSubtitle}>
+            Panel de enlace central, licencias y protección de nodo
+          </Text>
+        </View>
+
         {/* ========================================================================= */}
         {/* SECCIÓN 1: SERVIDOR & SQL                                                 */}
         {/* ========================================================================= */}
         {activeSection === 'server' && (
           <>
             {/* Real SQL Session Card */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <Text style={styles.sectionTitle}>Sesión SQL Server</Text>
               <View style={styles.profileRow}>
                 <View style={[styles.profileAvatar, { backgroundColor: isConnected ? 'rgba(46, 125, 50, 0.15)' : 'rgba(211, 47, 47, 0.15)' }]}>
-                  <MaterialCommunityIcons
+                  <MuIcon
                     name={isConnected ? "database-check" : "database-off"}
                     size={28}
                     color={isConnected ? THEME.colors.accentGreenBright : THEME.colors.dangerRed}
@@ -697,50 +729,66 @@ export const ConfigScreen = () => {
                   </Text>
                 </View>
               </View>
-            </View>
+            </Panel>
 
             {/* Emulator Selector Section */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <Text style={styles.sectionTitle}>{t('emulatorSection')}</Text>
               <View style={styles.emuRow}>
                 <TouchableOpacity
-                  style={[styles.emuBtn, emulator === 'MSPro' && styles.emuBtnActive]}
+                  style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setEmulator('MSPro')}
+                  activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons
-                    name="shield-check"
-                    size={20}
-                    color={emulator === 'MSPro' ? THEME.colors.primaryOrange : THEME.colors.textMuted}
-                  />
-                  <View style={{ marginLeft: 8 }}>
-                    <Text style={[styles.emuTitle, emulator === 'MSPro' && styles.emuTextActive]}>
-                      MSPro
-                    </Text>
-                    <Text style={styles.emuSub}>MSPro Season 6 Emulator</Text>
-                  </View>
+                  <ImageBackground
+                    source={emulator === 'MSPro' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.emuBtn}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon
+                      name="shield-check"
+                      size={20}
+                      color={emulator === 'MSPro' ? '#0D0E0D' : THEME.colors.primaryOrange}
+                    />
+                    <View style={{ marginLeft: 8, flex: 1 }}>
+                      <Text style={[styles.emuTitle, emulator === 'MSPro' && styles.emuTextActive]}>
+                        MSPro
+                      </Text>
+                      <Text style={[styles.emuSub, emulator === 'MSPro' && styles.emuSubActive]}>MSPro Season 6 Emulator</Text>
+                    </View>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.emuBtn, emulator === 'Louis' && styles.emuBtnActive]}
+                  style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setEmulator('Louis')}
+                  activeOpacity={0.8}
                 >
-                  <MaterialCommunityIcons
-                    name="code-braces"
-                    size={20}
-                    color={emulator === 'Louis' ? THEME.colors.primaryOrange : THEME.colors.textMuted}
-                  />
-                  <View style={{ marginLeft: 8 }}>
-                    <Text style={[styles.emuTitle, emulator === 'Louis' && styles.emuTextActive]}>
-                      Louis
-                    </Text>
-                    <Text style={styles.emuSub}>Louis MU Emulator</Text>
-                  </View>
+                  <ImageBackground
+                    source={emulator === 'Louis' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.emuBtn}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon
+                      name="code-braces"
+                      size={20}
+                      color={emulator === 'Louis' ? '#0D0E0D' : THEME.colors.primaryOrange}
+                    />
+                    <View style={{ marginLeft: 8, flex: 1 }}>
+                      <Text style={[styles.emuTitle, emulator === 'Louis' && styles.emuTextActive]}>
+                        Louis
+                      </Text>
+                      <Text style={[styles.emuSub, emulator === 'Louis' && styles.emuSubActive]}>Louis MU Emulator</Text>
+                    </View>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Panel>
 
             {/* SQL Server Connection Form */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <Text style={styles.sectionTitle}>{t('sqlSection')}</Text>
 
               {/* Host IP with quick buttons */}
@@ -750,6 +798,7 @@ export const ConfigScreen = () => {
                   style={styles.input}
                   value={host}
                   onChangeText={handleHostChange}
+                  editable={true}
                   placeholder="IP de tu VPS o servidor"
                   placeholderTextColor={THEME.colors.textMuted}
                   autoCapitalize="none"
@@ -761,10 +810,17 @@ export const ConfigScreen = () => {
                     {quickIps.map((ip) => (
                       <TouchableOpacity
                         key={ip}
-                        style={styles.quickIpBtn}
+                        style={{ borderRadius: 2, overflow: 'hidden', marginRight: 6 }}
                         onPress={() => handleHostChange(ip)}
+                        activeOpacity={0.8}
                       >
-                        <Text style={styles.quickIpText}>{ip}</Text>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeInactive}
+                          style={styles.quickIpBtn}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.quickIpText}>{ip}</Text>
+                        </ImageBackground>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -805,6 +861,7 @@ export const ConfigScreen = () => {
                     style={styles.input}
                     value={user}
                     onChangeText={setUser}
+                    editable={true}
                     placeholder="sa"
                     placeholderTextColor={THEME.colors.textMuted}
                     autoCapitalize="none"
@@ -838,28 +895,25 @@ export const ConfigScreen = () => {
 
               {/* Connect & Clear Action Buttons */}
               <View style={styles.buttonsRow}>
-                <CustomButton
-                  title={isConnecting ? 'Conectando...' : t('btnConnect')}
+                <BotonOro
+                  titulo={isConnecting ? 'Conectando...' : t('btnConnect')}
                   onPress={handleConnect}
-                  variant="orange"
-                  loading={isConnecting}
-                  icon="database-check"
-                  size="md"
+                  cargando={isConnecting}
+                  altura={48}
                   style={{ flex: 2 }}
                 />
-                <CustomButton
-                  title="Limpiar"
+                <BotonPiedra
+                  titulo="Limpiar"
                   onPress={handleClearConfig}
-                  variant="dark"
-                  icon="eraser"
-                  size="md"
+                  altura={48}
                   style={{ flex: 1, marginLeft: 8 }}
                 />
               </View>
-            </View>
+            </Panel>
 
             {/* PASO 5: Perfiles de Servidor (Multi-Server) */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>PERFILES DE SERVIDOR (MAX 5)</Text>
                 <View style={styles.versionPill}>
@@ -872,7 +926,7 @@ export const ConfigScreen = () => {
 
               {serverProfiles.length === 0 ? (
                 <View style={styles.emptyProfilesBox}>
-                  <MaterialCommunityIcons name="server-network-off" size={24} color={THEME.colors.textMuted} />
+                  <MuIcon name="server-network-off" size={24} color={THEME.colors.textMuted} />
                   <Text style={styles.emptyProfilesText}>No tienes perfiles guardados aún.</Text>
                 </View>
               ) : (
@@ -889,29 +943,37 @@ export const ConfigScreen = () => {
                         {p.host}:{p.port} • DB: {p.database} ({p.user})
                       </Text>
                     </View>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
-                      <TouchableOpacity
-                        style={styles.profileLoadBtn}
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      <MuButton
+                        titulo="Cargar"
                         onPress={() => handleLoadProfile(p)}
-                        activeOpacity={0.7}
-                      >
-                        <MaterialCommunityIcons name="cloud-upload-outline" size={16} color="#100D0B" />
-                        <Text style={styles.profileLoadBtnText}>Cargar</Text>
-                      </TouchableOpacity>
+                        icono="cloud-upload-outline"
+                        altura={34}
+                        compacto
+                        variante="primary"
+                        style={{ minWidth: 80 }}
+                      />
                       <TouchableOpacity
-                        style={styles.profileDeleteBtn}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => handleDeleteProfile(p.id, p.name)}
                         activeOpacity={0.7}
                       >
-                        <MaterialCommunityIcons name="trash-can-outline" size={16} color={THEME.colors.dangerRed} />
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={styles.profileDeleteBtn}
+                          resizeMode="stretch"
+                        >
+                          <MuIcon name="trash-can-outline" size={16} color={THEME.colors.dangerRed} />
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
                   </View>
                 ))
               )}
 
-              <TouchableOpacity
-                style={[styles.addProfileBtn, serverProfiles.length >= 5 && { opacity: 0.5 }]}
+              <BotonPiedra
+                titulo="Guardar Configuración Actual como Perfil"
+                icono="content-save"
                 onPress={() => {
                   if (serverProfiles.length >= 5) {
                     Alert.alert('Límite alcanzado', 'Solo puedes guardar hasta 5 perfiles.');
@@ -921,16 +983,14 @@ export const ConfigScreen = () => {
                   setSaveProfileModalVisible(true);
                 }}
                 disabled={serverProfiles.length >= 5}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="content-save" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.addProfileBtnText}>Guardar Configuración Actual como Perfil</Text>
-              </TouchableOpacity>
-            </View>
+                altura={44}
+                style={{ marginTop: 8 }}
+              />
+            </Panel>
 
             {/* Network and Firewall Reminder Card */}
             <View style={styles.networkNoticeCard}>
-              <MaterialCommunityIcons name="shield-alert-outline" size={24} color={THEME.colors.primaryOrange} />
+              <MuIcon name="shield-alert-outline" size={24} color={THEME.colors.primaryOrange} />
               <View style={styles.networkNoticeContent}>
                 <Text style={styles.networkNoticeTitle}>{t('networkNoticeTitle')}</Text>
                 <Text style={styles.networkNoticeDesc}>{t('networkNoticeDesc')}</Text>
@@ -945,7 +1005,8 @@ export const ConfigScreen = () => {
         {activeSection === 'security' && (
           <>
             {/* PASO 4: Seguridad de Acceso (PIN 4 Dígitos) */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>SEGURIDAD DE ACCESO (PIN)</Text>
                 <View style={[
@@ -967,46 +1028,44 @@ export const ConfigScreen = () => {
               <View style={styles.pinActionRow}>
                 {hasPinConfigured ? (
                   <>
-                    <TouchableOpacity
-                      style={styles.pinChangeBtn}
+                    <BotonOro
+                      titulo="Cambiar PIN"
+                      icono="lock-reset"
                       onPress={() => {
                         setNewPinInput('');
                         setConfirmPinInput('');
                         setPinModalVisible(true);
                       }}
-                      activeOpacity={0.8}
-                    >
-                      <MaterialCommunityIcons name="lock-reset" size={16} color="#100D0B" style={{ marginRight: 6 }} />
-                      <Text style={styles.pinChangeBtnText}>Cambiar PIN</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.pinDisableBtn}
+                      altura={44}
+                      style={{ flex: 1 }}
+                    />
+                    <BotonBrasa
+                      titulo="Desactivar"
+                      icono="lock-open-variant-outline"
                       onPress={handleDisablePin}
-                      activeOpacity={0.8}
-                    >
-                      <MaterialCommunityIcons name="lock-open-variant-outline" size={16} color={THEME.colors.dangerRed} style={{ marginRight: 6 }} />
-                      <Text style={styles.pinDisableBtnText}>Desactivar</Text>
-                    </TouchableOpacity>
+                      altura={44}
+                      style={{ minWidth: 110 }}
+                    />
                   </>
                 ) : (
-                  <TouchableOpacity
-                    style={styles.pinEnableBtn}
+                  <BotonOro
+                    titulo="Activar Bloqueo por PIN (4 Dígitos)"
+                    icono="shield-lock-outline"
                     onPress={() => {
                       setNewPinInput('');
                       setConfirmPinInput('');
                       setPinModalVisible(true);
                     }}
-                    activeOpacity={0.8}
-                  >
-                    <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#100D0B" style={{ marginRight: 6 }} />
-                    <Text style={styles.pinEnableBtnText}>Activar Bloqueo por PIN (4 Dígitos)</Text>
-                  </TouchableOpacity>
+                    altura={46}
+                    style={{ flex: 1 }}
+                  />
                 )}
               </View>
-            </View>
+            </Panel>
 
             {/* PASO 6: Control de Límite de Cuentas por IP */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>CONTROL DE LÍMITE DE IP</Text>
                 <Switch
@@ -1025,23 +1084,37 @@ export const ConfigScreen = () => {
                     <Text style={styles.ipLimitLabel}>Cuentas Máximas por IP:</Text>
                     <View style={styles.stepperContainer}>
                       <TouchableOpacity
-                        style={styles.stepperBtn}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => {
                           const cur = parseInt(ipLimitMax, 10) || 3;
                           if (cur > 1) handleSaveIpLimit(true, String(cur - 1), ipLimitAction);
                         }}
+                        activeOpacity={0.8}
                       >
-                        <MaterialCommunityIcons name="minus" size={16} color="#FFFFFF" />
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={styles.stepperBtn}
+                          resizeMode="stretch"
+                        >
+                          <MuIcon name="minus" size={16} color="#CDC6B9" />
+                        </ImageBackground>
                       </TouchableOpacity>
                       <Text style={styles.stepperValue}>{ipLimitMax}</Text>
                       <TouchableOpacity
-                        style={styles.stepperBtn}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
                         onPress={() => {
                           const cur = parseInt(ipLimitMax, 10) || 3;
                           if (cur < 20) handleSaveIpLimit(true, String(cur + 1), ipLimitAction);
                         }}
+                        activeOpacity={0.8}
                       >
-                        <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={styles.stepperBtn}
+                          resizeMode="stretch"
+                        >
+                          <MuIcon name="plus" size={16} color="#CDC6B9" />
+                        </ImageBackground>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -1049,77 +1122,71 @@ export const ConfigScreen = () => {
                   <Text style={[styles.ipLimitLabel, { marginTop: 12, marginBottom: 8 }]}>Acción en Exceso:</Text>
                   <View style={styles.ipLimitActionRow}>
                     <TouchableOpacity
-                      style={[styles.ipActionBtn, ipLimitAction === 'LOG' && styles.ipActionBtnActive]}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => handleSaveIpLimit(true, ipLimitMax, 'LOG')}
                       activeOpacity={0.8}
                     >
-                      <MaterialCommunityIcons
-                        name="file-document-outline"
-                        size={16}
-                        color={ipLimitAction === 'LOG' ? '#FFFFFF' : THEME.colors.textMuted}
-                        style={{ marginRight: 6 }}
-                      />
-                      <Text style={[styles.ipActionBtnText, ipLimitAction === 'LOG' && styles.ipActionBtnTextActive]}>
-                        Solo Registrar (Log)
-                      </Text>
+                      <ImageBackground
+                        source={ipLimitAction === 'LOG' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.ipActionBtn}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon
+                          name="file-document-outline"
+                          size={16}
+                          color={ipLimitAction === 'LOG' ? '#0D0E0D' : THEME.colors.textMuted}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={[styles.ipActionBtnText, ipLimitAction === 'LOG' && styles.ipActionBtnTextActive]}>
+                          Solo Registrar (Log)
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.ipActionBtn, ipLimitAction === 'DISCONNECT' && styles.ipActionBtnDanger]}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => handleSaveIpLimit(true, ipLimitMax, 'DISCONNECT')}
                       activeOpacity={0.8}
                     >
-                      <MaterialCommunityIcons
-                        name="account-off"
-                        size={16}
-                        color={ipLimitAction === 'DISCONNECT' ? '#FFFFFF' : THEME.colors.textMuted}
-                        style={{ marginRight: 6 }}
-                      />
-                      <Text style={[styles.ipActionBtnText, ipLimitAction === 'DISCONNECT' && styles.ipActionBtnTextActive]}>
-                        Desconectar Excedentes
-                      </Text>
+                      <ImageBackground
+                        source={ipLimitAction === 'DISCONNECT' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.ipActionBtn}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon
+                          name="account-off"
+                          size={16}
+                          color={ipLimitAction === 'DISCONNECT' ? '#0D0E0D' : THEME.colors.textMuted}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={[styles.ipActionBtnText, ipLimitAction === 'DISCONNECT' && styles.ipActionBtnTextActive]}>
+                          Desconectar Excedentes
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   </View>
 
                   {/* Botón de Ejecución Inmediata */}
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: ipLimitAction === 'DISCONNECT' ? '#D32F2F' : THEME.colors.primaryOrange,
-                      marginTop: 14,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingVertical: 11,
-                      paddingHorizontal: 12,
-                      borderRadius: 8,
-                      gap: 8,
-                    }}
+                  <MuButton
+                    titulo={
+                      ipLimitAction === 'DISCONNECT'
+                        ? 'Chequear y Desconectar Excedentes Ahora'
+                        : 'Escanear y Reportar IPs Excedidas Ahora'
+                    }
+                    icono={ipLimitAction === 'DISCONNECT' ? 'shield-account' : 'shield-search'}
                     onPress={() => handleRunIpLimitNow()}
+                    variante={ipLimitAction === 'DISCONNECT' ? 'danger' : 'primary'}
                     disabled={checkingIpLimit}
-                    activeOpacity={0.8}
-                  >
-                    {checkingIpLimit ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <>
-                        <MaterialCommunityIcons
-                          name={ipLimitAction === 'DISCONNECT' ? 'shield-account' : 'shield-search'}
-                          size={18}
-                          color="#FFFFFF"
-                        />
-                        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 }}>
-                          {ipLimitAction === 'DISCONNECT'
-                            ? 'Chequear y Desconectar Excedentes Ahora'
-                            : 'Escanear y Reportar IPs Excedidas Ahora'}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                    cargando={checkingIpLimit}
+                    altura={46}
+                    style={{ marginTop: 14 }}
+                  />
                 </View>
               )}
-            </View>
+            </Panel>
 
             {/* License & Activation Section */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <Text style={styles.sectionTitle}>LICENCIA Y SEGURIDAD</Text>
               <View style={styles.licenseRow}>
                 <View style={{ flex: 1 }}>
@@ -1145,14 +1212,14 @@ export const ConfigScreen = () => {
                     </Text>
                   </TouchableOpacity>
                 </View>
-                <CustomButton
-                  title={licenseStatus.plan === 'PRO' ? 'Ver Licencia' : 'Activar PRO'}
+                <BotonOro
+                  titulo={licenseStatus.plan === 'PRO' ? 'Ver Licencia' : 'Activar PRO'}
                   onPress={() => setLicenseModalVisible(true)}
-                  variant={licenseStatus.plan === 'PRO' ? 'outline' : 'orange'}
-                  size="sm"
+                  altura={40}
+                  style={{ minWidth: 120 }}
                 />
               </View>
-            </View>
+            </Panel>
           </>
         )}
 
@@ -1162,18 +1229,19 @@ export const ConfigScreen = () => {
         {activeSection === 'system' && (
           <>
             {/* Actualizaciones y Versión del Sistema */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>ACTUALIZACIONES Y SISTEMA</Text>
                 <View style={styles.versionPill}>
-                  <Text style={styles.versionPillText}>v{APP_VERSION} Oficial</Text>
+                  <Text style={styles.versionPillText}>v{APP_VERSION} (TEST)</Text>
                 </View>
               </View>
 
               <View style={styles.updateCardBody}>
                 <View style={styles.updateRow}>
                   <View style={[styles.updateIconBox, { backgroundColor: remoteConfig.updateInfo?.hasUpdate ? 'rgba(255, 87, 34, 0.15)' : 'rgba(46, 125, 50, 0.15)' }]}>
-                    <MaterialCommunityIcons
+                    <MuIcon
                       name={remoteConfig.updateInfo?.hasUpdate ? "cloud-download" : "check-decagram"}
                       size={24}
                       color={remoteConfig.updateInfo?.hasUpdate ? THEME.colors.primaryOrange : THEME.colors.accentGreenBright}
@@ -1194,38 +1262,32 @@ export const ConfigScreen = () => {
                 </View>
 
                 <View style={styles.updateButtonsRow}>
-                  <TouchableOpacity
-                    style={styles.checkUpdateBtn}
+                  <BotonPiedra
+                    titulo="Buscar Actualizaciones"
+                    icono="sync"
                     onPress={handleCheckUpdatesManually}
                     disabled={isCheckingUpdate}
-                    activeOpacity={0.8}
-                  >
-                    {isCheckingUpdate ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <>
-                        <MaterialCommunityIcons name="sync" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                        <Text style={styles.checkUpdateBtnText}>Buscar Actualizaciones</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                    cargando={isCheckingUpdate}
+                    altura={44}
+                    style={{ flex: 1 }}
+                  />
 
                   {remoteConfig.updateInfo?.hasUpdate && (
-                    <TouchableOpacity
-                      style={styles.downloadUpdateBtn}
+                    <BotonOro
+                      titulo={`Instalar v${remoteConfig.updateInfo.latestVersion}`}
+                      icono="download"
                       onPress={() => setUpdateModalManualVisible(true)}
-                      activeOpacity={0.8}
-                    >
-                      <MaterialCommunityIcons name="download" size={16} color="#100D0B" style={{ marginRight: 6 }} />
-                      <Text style={styles.downloadUpdateBtnText}>Instalar v{remoteConfig.updateInfo.latestVersion}</Text>
-                    </TouchableOpacity>
+                      altura={44}
+                      style={{ flex: 1 }}
+                    />
                   )}
                 </View>
               </View>
-            </View>
+            </Panel>
 
             {/* Programa Beta y Canal de Despliegue */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.sectionTitle}>CANAL DE ACTUALIZACIÓN (BETA)</Text>
                 <View style={[styles.versionPill, { backgroundColor: remoteConfig.releaseChannel === 'BETA' ? 'rgba(232, 200, 106, 0.2)' : 'rgba(91, 141, 239, 0.15)' }]}>
@@ -1238,7 +1300,7 @@ export const ConfigScreen = () => {
               <View style={styles.updateCardBody}>
                 <View style={styles.updateRow}>
                   <View style={[styles.updateIconBox, { backgroundColor: remoteConfig.releaseChannel === 'BETA' ? 'rgba(232, 200, 106, 0.15)' : 'rgba(255, 255, 255, 0.05)' }]}>
-                    <MaterialCommunityIcons
+                    <MuIcon
                       name={remoteConfig.releaseChannel === 'BETA' ? "flask-round-bottom" : "shield-check"}
                       size={24}
                       color={remoteConfig.releaseChannel === 'BETA' ? THEME.colors.oroClaro : THEME.colors.textSecondary}
@@ -1263,42 +1325,23 @@ export const ConfigScreen = () => {
                 </View>
 
                 {remoteConfig.releaseChannel !== 'BETA' && (
-                  <TouchableOpacity
-                    style={[
-                      styles.checkUpdateBtn,
-                      {
-                        marginTop: 12,
-                        backgroundColor: remoteConfig.betaStatus === 'PENDING' ? 'rgba(255, 255, 255, 0.08)' : THEME.colors.oroOscuro,
-                        borderColor: remoteConfig.betaStatus === 'PENDING' ? THEME.colors.border : THEME.colors.oroClaro,
-                        borderWidth: 1,
-                      }
-                    ]}
+                  <MuButton
+                    titulo={remoteConfig.betaStatus === 'PENDING' ? 'En Espera de Aprobación' : 'Solicitar Acceso al Canal Beta'}
+                    icono={remoteConfig.betaStatus === 'PENDING' ? 'clock-outline' : 'flask-outline'}
                     onPress={handleToggleBeta}
                     disabled={requestingBeta || remoteConfig.betaStatus === 'PENDING'}
-                    activeOpacity={0.8}
-                  >
-                    {requestingBeta ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <>
-                        <MaterialCommunityIcons
-                          name={remoteConfig.betaStatus === 'PENDING' ? "clock-outline" : "flask-outline"}
-                          size={16}
-                          color="#FFFFFF"
-                          style={{ marginRight: 6 }}
-                        />
-                        <Text style={styles.checkUpdateBtnText}>
-                          {remoteConfig.betaStatus === 'PENDING' ? 'En Espera de Aprobación' : 'Solicitar Acceso al Canal Beta'}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                    cargando={requestingBeta}
+                    variante={remoteConfig.betaStatus === 'PENDING' ? 'secondary' : 'primary'}
+                    altura={44}
+                    style={{ marginTop: 12, width: '100%' }}
+                  />
                 )}
               </View>
-            </View>
+            </Panel>
 
             {/* Language Selector Section */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <Text style={styles.sectionTitle}>{t('languageSection')}</Text>
               <View style={styles.langRow}>
                 {LANGUAGES.map((l) => {
@@ -1306,93 +1349,65 @@ export const ConfigScreen = () => {
                   return (
                     <TouchableOpacity
                       key={l.code}
-                      style={[styles.langBtn, active && styles.langBtnActive]}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setLanguage(l.code)}
+                      activeOpacity={0.8}
                     >
-                      <Text style={styles.flagText}>{l.flag}</Text>
-                      <Text style={[styles.langBtnText, active && styles.langBtnTextActive]}>
-                        {l.name}
-                      </Text>
+                      <ImageBackground
+                        source={active ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.langBtn}
+                        resizeMode="stretch"
+                      >
+                        <Text style={styles.flagText}>{l.flag}</Text>
+                        <Text style={[styles.langBtnText, active && styles.langBtnTextActive]}>
+                          {l.name}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-            </View>
+            </Panel>
 
             {/* User Account & Session Section */}
-            <View style={styles.card}>
+            <Panel variant="box" style={styles.card}>
+              <MuCornerOrnaments size={12} />
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <MaterialCommunityIcons name="account-circle" size={24} color={THEME.colors.primaryOrange} />
+                  <MuIcon name="account-circle" size={24} color={THEME.colors.primaryOrange} />
                   <Text style={styles.sectionTitle}>Cuenta de Usuario</Text>
                 </View>
-                <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(63, 207, 142, 0.3)' }}>
+                <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: 'rgba(63, 207, 142, 0.3)' }}>
                   <Text style={{ color: THEME.colors.jade, fontSize: 10, fontWeight: '700' }}>SESIÓN ACTIVA</Text>
                 </View>
               </View>
 
-              <View style={{ backgroundColor: '#111114', padding: 12, borderRadius: 6, marginBottom: 14, borderWidth: 1, borderColor: THEME.colors.border }}>
+              <View style={{ backgroundColor: THEME.colors.deepForge, padding: 12, borderRadius: 2, marginBottom: 14, borderWidth: 1, borderColor: THEME.colors.border }}>
                 <Text style={{ color: THEME.colors.textMuted, fontSize: 11, textTransform: 'uppercase', marginBottom: 2 }}>Usuario Conectado</Text>
-                <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '700' }}>{userEmail || 'Usuario'}</Text>
+                <Text style={{ color: THEME.colors.texto, fontSize: 14, fontWeight: '700' }}>{userEmail || 'Usuario'}</Text>
               </View>
 
               {/* Botón Cambiar Contraseña */}
-              <TouchableOpacity
-                style={{
-                  backgroundColor: THEME.colors.superficie,
-                  borderWidth: 1,
-                  borderColor: THEME.colors.bordeBrillante,
-                  borderRadius: 6,
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  marginBottom: 10,
-                }}
+              <BotonOro
+                titulo="Cambiar Mi Contraseña"
+                icono="lock-reset"
                 onPress={() => setChangePwModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="lock-reset" size={18} color={THEME.colors.oroClaro} />
-                <Text style={{ color: THEME.colors.oroClaro, fontSize: 14, fontWeight: '700' }}>Cambiar Mi Contraseña</Text>
-              </TouchableOpacity>
+                altura={44}
+                style={{ marginBottom: 10 }}
+              />
 
               {/* Botón Ver Términos y Condiciones */}
-              <TouchableOpacity
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                  borderWidth: 1,
-                  borderColor: THEME.colors.borde,
-                  borderRadius: 6,
-                  paddingVertical: 11,
-                  paddingHorizontal: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  marginBottom: 14,
-                }}
+              <BotonPiedra
+                titulo="Ver Términos y Condiciones"
+                icono="file-document-outline"
                 onPress={() => setTermsModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="file-document-outline" size={18} color={THEME.colors.textoSecundario} />
-                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, fontWeight: '600' }}>Ver Términos y Condiciones</Text>
-              </TouchableOpacity>
+                altura={44}
+                style={{ marginBottom: 12 }}
+              />
 
-              <TouchableOpacity
-                style={{
-                  backgroundColor: 'rgba(255, 82, 82, 0.12)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 82, 82, 0.3)',
-                  borderRadius: 6,
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8
-                }}
+              <BotonBrasa
+                titulo="Cerrar Sesión"
+                icono="logout"
                 onPress={() => {
                   Alert.alert(
                     'Cerrar Sesión',
@@ -1409,38 +1424,44 @@ export const ConfigScreen = () => {
                     ]
                   );
                 }}
-              >
-                <MaterialCommunityIcons name="logout" size={20} color="#FF5252" />
-                <Text style={{ color: '#FF5252', fontSize: 14, fontWeight: '700' }}>Cerrar Sesión</Text>
-              </TouchableOpacity>
-            </View>
+                altura={44}
+              />
+            </Panel>
 
-            {/* Debug Panel Shortcut Banner */}
-            <TouchableOpacity style={styles.debugBanner} onPress={() => setDebugVisible(true)}>
-              <View style={styles.debugLeft}>
-                <MaterialCommunityIcons name="console-network" size={24} color={THEME.colors.primaryOrange} />
-                <View>
-                  <Text style={styles.debugTitle}>{t('debugPanel')}</Text>
-                  <Text style={styles.debugSubtitle}>Diagnóstico de red, latencia y telemetría operativa</Text>
+            {/* Debug Panel Shortcut Banner (Solo visible cuando la administración está desbloqueada) */}
+            {isAdminUnlocked && (
+              <TouchableOpacity style={styles.debugBanner} onPress={() => setDebugVisible(true)}>
+                <View style={styles.debugLeft}>
+                  <MuIcon name="console-network" size={24} color={THEME.colors.primaryOrange} />
+                  <View>
+                    <Text style={styles.debugTitle}>{t('debugPanel')}</Text>
+                    <Text style={styles.debugSubtitle}>Diagnóstico de red, latencia y telemetría operativa</Text>
+                  </View>
                 </View>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.textSecondary} />
-            </TouchableOpacity>
+                <MuIcon name="chevron-right" size={20} color={THEME.colors.textSecondary} />
+              </TouchableOpacity>
+            )}
 
             {/* Canales Oficiales y Soporte ToolForg3 */}
             <View style={styles.brandingFooterConfig}>
               <View style={styles.officialChannelsRow}>
                 <TouchableOpacity
-                  style={styles.telegramButtonConfig}
+                  style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                   activeOpacity={0.8}
                   onPress={() => Linking.openURL('https://t.me/ToolForg3').catch(() => Alert.alert('Telegram', 'Canal oficial: https://t.me/ToolForg3'))}
                 >
-                  <MaterialCommunityIcons name={"send" as any} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.telegramButtonTextConfig}>Telegram ToolForg3</Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.telegramButtonConfig}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon name={"send" as any} size={16} color="#5B8DEF" style={{ marginRight: 6 }} />
+                    <Text style={styles.telegramButtonTextConfig}>Telegram ToolForg3</Text>
+                  </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.whatsappButtonConfig}
+                  style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                   activeOpacity={0.8}
                   onPress={() => {
                     Alert.alert(
@@ -1468,8 +1489,14 @@ export const ConfigScreen = () => {
                     );
                   }}
                 >
-                  <MaterialCommunityIcons name={"whatsapp" as any} size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.whatsappButtonTextConfig}>WhatsApp Soporte</Text>
+                  <ImageBackground
+                    source={STITCH_ASSETS.tabs.tabModeInactive}
+                    style={styles.whatsappButtonConfig}
+                    resizeMode="stretch"
+                  >
+                    <MuIcon name={"whatsapp" as any} size={16} color="#3FCF8E" style={{ marginRight: 6 }} />
+                    <Text style={styles.whatsappButtonTextConfig}>WhatsApp Soporte</Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
 
@@ -1479,16 +1506,16 @@ export const ConfigScreen = () => {
                 style={styles.versionFooterBox}
               >
                 <View style={styles.producedByBadge}>
-                  <MaterialCommunityIcons name="code-tags" size={14} color="#E8C86A" style={{ marginRight: 5 }} />
+                  <MuIcon name="code-tags" size={14} color="#E0C380" style={{ marginRight: 5 }} />
                   <Text style={styles.producedByBadgeText}>PRODUCIDO POR TOOLFORG3</Text>
                 </View>
                 <Text style={styles.brandingFooterVersionText}>
-                  Mu Manager PRO v{APP_VERSION} • Build {APP_BUILD} Oficial
+                  Mu Manager PRO v{APP_VERSION} • Build {APP_BUILD} (Prueba local)
                 </Text>
                 <View style={styles.liveStatusRow}>
                   <View style={styles.liveStatusDot} />
                   <Text style={styles.versionSubFooterText}>
-                    Gateway Vercel en Línea • Season 6 Update 40
+                    Gateway Vercel en Línea • Universal Edition
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -1503,7 +1530,7 @@ export const ConfigScreen = () => {
           <View style={styles.adminModalContent}>
             <View style={styles.adminModalHeader}>
               <View style={styles.adminModalIconWrap}>
-                <MaterialCommunityIcons name="server-plus" size={24} color={THEME.colors.primaryOrange} />
+                <MuIcon name="server-plus" size={24} color={THEME.colors.primaryOrange} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.adminModalTitle}>Guardar Perfil</Text>
@@ -1523,18 +1550,18 @@ export const ConfigScreen = () => {
               autoFocus
             />
             <View style={styles.adminModalButtons}>
-              <TouchableOpacity
-                style={styles.adminModalBtnCancel}
+              <BotonPiedra
+                titulo="Cancelar"
                 onPress={() => setSaveProfileModalVisible(false)}
-              >
-                <Text style={styles.adminModalBtnCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.adminModalBtnSubmit}
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
+              <BotonOro
+                titulo="Guardar"
                 onPress={handleSaveProfile}
-              >
-                <Text style={styles.adminModalBtnSubmitText}>Guardar</Text>
-              </TouchableOpacity>
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
             </View>
           </View>
         </View>
@@ -1546,7 +1573,7 @@ export const ConfigScreen = () => {
           <View style={styles.adminModalContent}>
             <View style={styles.adminModalHeader}>
               <View style={styles.adminModalIconWrap}>
-                <MaterialCommunityIcons name="shield-key" size={24} color={THEME.colors.primaryOrange} />
+                <MuIcon name="shield-key" size={24} color={THEME.colors.primaryOrange} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.adminModalTitle}>Establecer PIN</Text>
@@ -1577,18 +1604,18 @@ export const ConfigScreen = () => {
               secureTextEntry
             />
             <View style={styles.adminModalButtons}>
-              <TouchableOpacity
-                style={styles.adminModalBtnCancel}
+              <BotonPiedra
+                titulo="Cancelar"
                 onPress={() => setPinModalVisible(false)}
-              >
-                <Text style={styles.adminModalBtnCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.adminModalBtnSubmit}
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
+              <BotonOro
+                titulo="Guardar PIN"
                 onPress={handleSavePin}
-              >
-                <Text style={styles.adminModalBtnSubmitText}>Guardar PIN</Text>
-              </TouchableOpacity>
+                altura={38}
+                style={{ minWidth: 100 }}
+              />
             </View>
           </View>
         </View>
@@ -1612,7 +1639,7 @@ export const ConfigScreen = () => {
           <View style={styles.adminModalContent}>
             <View style={styles.adminModalHeader}>
               <View style={styles.adminModalIconWrap}>
-                <MaterialCommunityIcons name="shield-lock" size={26} color={THEME.colors.primaryOrange} />
+                <MuIcon name="shield-lock" size={26} color={THEME.colors.primaryOrange} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.adminModalTitle}>Acceso Administrador</Text>
@@ -1633,26 +1660,23 @@ export const ConfigScreen = () => {
               autoFocus
             />
             <View style={styles.adminModalButtons}>
-              <TouchableOpacity
-                style={styles.adminModalBtnCancel}
+              <BotonPiedra
+                titulo="Cancelar"
                 onPress={() => {
                   setAdminAuthModalVisible(false);
                   setAdminKeyInput('');
                 }}
-              >
-                <Text style={styles.adminModalBtnCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.adminModalBtnSubmit}
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
+              <BotonOro
+                titulo="Acceder"
                 onPress={handleAdminAuthSubmit}
                 disabled={verifyingAdminKey}
-              >
-                {verifyingAdminKey ? (
-                  <ActivityIndicator size="small" color="#100D0B" />
-                ) : (
-                  <Text style={styles.adminModalBtnSubmitText}>Acceder</Text>
-                )}
-              </TouchableOpacity>
+                cargando={verifyingAdminKey}
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
             </View>
           </View>
         </View>
@@ -1664,24 +1688,24 @@ export const ConfigScreen = () => {
           <View style={styles.adminModalContent}>
             <View style={styles.adminModalHeader}>
               <View style={styles.adminModalIconWrap}>
-                <MaterialCommunityIcons name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
+                <MuIcon name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.adminModalTitle}>Cambiar Contraseña</Text>
                 <Text style={styles.adminModalSubtitle}>{userEmail || 'Cuenta de Administrador'}</Text>
               </View>
               <TouchableOpacity onPress={() => setChangePwModalVisible(false)} style={{ padding: 4 }}>
-                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textoSecundario} />
+                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.adminModalDesc}>
-              Ingresa tu contraseña actual y define una nueva clave de acceso de al menos 6 caracteres:
+              Ingresa tu contraseña actual y define una nueva clave de acceso de al menos 8 caracteres:
             </Text>
 
             <View style={{ marginBottom: 12 }}>
               <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Contraseña Actual</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 6, paddingHorizontal: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
                 <TextInput
                   style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
                   placeholder="Tu contraseña actual"
@@ -1692,14 +1716,14 @@ export const ConfigScreen = () => {
                   autoCapitalize="none"
                 />
                 <TouchableOpacity onPress={() => setShowCurrentPw(!showCurrentPw)} style={{ padding: 6 }}>
-                  <MaterialCommunityIcons name={showCurrentPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
+                  <MuIcon name={showCurrentPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
                 </TouchableOpacity>
               </View>
             </View>
 
             <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Nueva Contraseña (mínimo 6 caracteres)</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 6, paddingHorizontal: 10 }}>
+              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Nueva Contraseña (mínimo 8 caracteres)</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
                 <TextInput
                   style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
                   placeholder="Nueva contraseña"
@@ -1710,14 +1734,14 @@ export const ConfigScreen = () => {
                   autoCapitalize="none"
                 />
                 <TouchableOpacity onPress={() => setShowNewPw(!showNewPw)} style={{ padding: 6 }}>
-                  <MaterialCommunityIcons name={showNewPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
+                  <MuIcon name={showNewPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
                 </TouchableOpacity>
               </View>
             </View>
 
             <View style={{ marginBottom: 16 }}>
               <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Confirmar Nueva Contraseña</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 6, paddingHorizontal: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
                 <TextInput
                   style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
                   placeholder="Repite la nueva contraseña"
@@ -1731,28 +1755,25 @@ export const ConfigScreen = () => {
             </View>
 
             <View style={styles.adminModalButtons}>
-              <TouchableOpacity
-                style={styles.adminModalBtnCancel}
+              <BotonPiedra
+                titulo="Cancelar"
                 onPress={() => {
                   setChangePwModalVisible(false);
                   setCurrentPwInput('');
                   setNewPwInput('');
                   setConfirmPwInput('');
                 }}
-              >
-                <Text style={styles.adminModalBtnCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.adminModalBtnSubmit}
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
+              <BotonOro
+                titulo="Guardar"
                 onPress={handleChangePassword}
                 disabled={isChangingPw}
-              >
-                {isChangingPw ? (
-                  <ActivityIndicator size="small" color="#100D0B" />
-                ) : (
-                  <Text style={styles.adminModalBtnSubmitText}>Guardar</Text>
-                )}
-              </TouchableOpacity>
+                cargando={isChangingPw}
+                altura={38}
+                style={{ minWidth: 90 }}
+              />
             </View>
           </View>
         </View>
@@ -1763,7 +1784,7 @@ export const ConfigScreen = () => {
         visible={termsModalVisible}
         onClose={() => setTermsModalVisible(false)}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -1781,49 +1802,79 @@ const styles = StyleSheet.create({
   },
   sectionTabRow: {
     flexDirection: 'row',
-    backgroundColor: '#100D0B',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.borde,
     gap: 6,
   },
-  sectionTabBtn: {
+  sectionTabTouch: {
     flex: 1,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  sectionTabBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 9,
+    minHeight: 40,
     paddingHorizontal: 4,
-    borderRadius: 6,
-    backgroundColor: '#1E1915',
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
-    gap: 4,
+    borderRadius: 2,
+    gap: 6,
   },
   sectionTabBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: THEME.colors.oroClaro,
+    shadowColor: '#EFD28D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
   },
   sectionTabText: {
     fontSize: 11.5,
     fontWeight: '700',
-    color: THEME.colors.textoSecundarioLuminoso,
+    color: '#CDC6B9',
     ...THEME.effects.textShadowSubtle,
   },
   sectionTabTextActive: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontWeight: '900',
     ...THEME.effects.textShadow,
   },
-  card: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+  heroBanner: {
+    width: '100%',
+    backgroundColor: THEME.colors.deepForge,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    padding: 14,
+    borderRadius: THEME.shapes.radioEsquina,
+    padding: 12,
     marginBottom: 12,
-    elevation: 3,
+  },
+  heroBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  goldDiamond: {
+    width: 8,
+    height: 8,
+    backgroundColor: '#EFD28D',
+    transform: [{ rotate: '45deg' }],
+  },
+  heroBannerTitle: {
+    fontFamily: THEME.typography.fontTitle,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#EFD28D',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  heroBannerSubtitle: {
+    fontFamily: THEME.typography.fontBody,
+    fontSize: 11,
+    color: '#BBB4A8',
+    marginTop: 2,
+  },
+  card: {
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 13,
@@ -1845,17 +1896,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     minHeight: 44,
     gap: 6,
-  },
-  langBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-    borderWidth: 1,
-    borderColor: THEME.colors.oro,
   },
   flagText: {
     fontSize: 18,
@@ -1863,18 +1905,22 @@ const styles = StyleSheet.create({
   langBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: THEME.colors.textoSecundario,
+    color: '#CDC6B9',
+    ...THEME.effects.textShadowSubtle,
   },
   langBtnTextActive: {
-    color: THEME.colors.oro,
+    color: '#0D0E0D',
     fontWeight: '900',
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+    textShadowOffset: { width: 0, height: 0 },
   },
   debugBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: THEME.colors.superficie,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     padding: 14,
@@ -1910,30 +1956,29 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 10,
-    minHeight: 44,
-  },
-  emuBtnActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
-    borderWidth: 1,
-    borderColor: THEME.colors.oro,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minHeight: 52,
   },
   emuTitle: {
     fontSize: 13,
     fontWeight: '900',
-    color: THEME.colors.texto,
+    color: '#E0C380',
+    ...THEME.effects.textShadowSubtle,
   },
   emuTextActive: {
-    color: THEME.colors.oro,
+    color: '#0D0E0D',
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+    textShadowOffset: { width: 0, height: 0 },
   },
   emuSub: {
     fontSize: 10,
-    color: THEME.colors.textoSecundario,
+    color: '#A89E8C',
     marginTop: 2,
+  },
+  emuSubActive: {
+    color: '#2B261D',
   },
   inputGroup: {
     marginBottom: 10,
@@ -1951,12 +1996,12 @@ const styles = StyleSheet.create({
     color: THEME.colors.texto,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 13,
     fontWeight: '700',
-    minHeight: 44,
+    minHeight: 48,
   },
   quickIpRow: {
     flexDirection: 'row',
@@ -1969,17 +2014,16 @@ const styles = StyleSheet.create({
     color: THEME.colors.textMuted,
   },
   quickIpBtn: {
-    backgroundColor: THEME.colors.surface,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    marginRight: 4,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quickIpText: {
     fontSize: 10,
-    color: THEME.colors.textSecondary,
+    fontWeight: '700',
+    color: '#CDC6B9',
+    ...THEME.effects.textShadowSubtle,
   },
   row2: {
     flexDirection: 'row',
@@ -2042,7 +2086,7 @@ const styles = StyleSheet.create({
   profileAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: THEME.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -2081,7 +2125,7 @@ const styles = StyleSheet.create({
   licensePill: {
     paddingHorizontal: 9,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
   },
   pillDemo: {
@@ -2138,7 +2182,7 @@ const styles = StyleSheet.create({
     maxWidth: 380,
     maxHeight: '90%',
     backgroundColor: THEME.colors.surface,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: 'rgba(255, 87, 34, 0.4)',
     padding: THEME.spacing.lg,
@@ -2152,7 +2196,7 @@ const styles = StyleSheet.create({
   adminModalIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: 'rgba(226, 112, 58, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2212,7 +2256,7 @@ const styles = StyleSheet.create({
   },
   adminModalBtnSubmitText: {
     fontSize: 13,
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
     fontWeight: 'bold',
   },
   cardHeaderRow: {
@@ -2225,7 +2269,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
     backgroundColor: 'rgba(63, 207, 142, 0.15)',
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: 'rgba(63, 207, 142, 0.65)',
   },
@@ -2263,7 +2307,7 @@ const styles = StyleSheet.create({
   updateIconBox: {
     width: 44,
     height: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2312,7 +2356,7 @@ const styles = StyleSheet.create({
   downloadUpdateBtnText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
   },
   settingDescText: {
     fontSize: 12.5,
@@ -2355,7 +2399,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 87, 34, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 2,
   },
   profileItemBadgeText: {
     fontSize: 9,
@@ -2374,18 +2418,17 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.oroClaro,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: THEME.borderRadius.sm,
+    borderRadius: THEME.shapes.radioEsquina,
     gap: 4,
   },
   profileLoadBtnText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
   },
   profileDeleteBtn: {
-    padding: 6,
-    backgroundColor: 'rgba(244, 67, 54, 0.15)',
-    borderRadius: THEME.borderRadius.sm,
+    width: 34,
+    height: 34,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2396,8 +2439,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    borderRadius: THEME.borderRadius.md,
-    paddingVertical: 10,
+    borderRadius: THEME.shapes.radioEsquina,
+    minHeight: 48,
     marginTop: 6,
   },
   addProfileBtnText: {
@@ -2416,13 +2459,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: THEME.colors.oroClaro,
-    borderRadius: THEME.borderRadius.md,
-    paddingVertical: 10,
+    borderRadius: THEME.shapes.radioEsquina,
+    minHeight: 48,
   },
   pinChangeBtnText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
   },
   pinDisableBtn: {
     flexDirection: 'row',
@@ -2431,9 +2474,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(244, 67, 54, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(244, 67, 54, 0.3)',
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    minHeight: 48,
   },
   pinDisableBtnText: {
     fontSize: 12,
@@ -2446,13 +2489,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: THEME.colors.oroClaro,
-    borderRadius: THEME.borderRadius.md,
-    paddingVertical: 11,
+    borderRadius: THEME.shapes.radioEsquina,
+    minHeight: 48,
   },
   pinEnableBtnText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#100D0B',
+    color: THEME.colors.textoOscuro,
   },
   ipLimitOptionsBox: {
     backgroundColor: THEME.colors.surface,
@@ -2475,15 +2518,13 @@ const styles = StyleSheet.create({
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.background,
-    borderRadius: THEME.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
+    backgroundColor: 'transparent',
   },
   stepperBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    width: 34,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   stepperValue: {
     paddingHorizontal: 14,
@@ -2501,28 +2542,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 9,
+    paddingVertical: 10,
     paddingHorizontal: 6,
-    borderRadius: THEME.borderRadius.sm,
-    backgroundColor: THEME.colors.background,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-  ipActionBtnActive: {
-    borderColor: THEME.colors.primaryOrange,
-    backgroundColor: 'rgba(255, 87, 34, 0.15)',
-  },
-  ipActionBtnDanger: {
-    borderColor: THEME.colors.dangerRed,
-    backgroundColor: 'rgba(244, 67, 54, 0.18)',
+    minHeight: 40,
   },
   ipActionBtnText: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: '#CDC6B9',
     fontWeight: 'bold',
+    ...THEME.effects.textShadowSubtle,
   },
   ipActionBtnTextActive: {
-    color: '#FFFFFF',
+    color: '#0D0E0D',
+    fontWeight: '900',
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+    textShadowOffset: { width: 0, height: 0 },
   },
   brandingFooterConfig: {
     alignItems: 'center',
@@ -2541,73 +2576,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0088CC',
-    paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: THEME.borderRadius.md,
-    borderWidth: 1,
-    borderColor: '#29B6F6',
     minHeight: 46,
-    shadowColor: '#0088CC',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    height: 46,
   },
   telegramButtonTextConfig: {
-    color: '#FFFFFF',
+    color: '#CDC6B9',
     fontWeight: 'bold',
-    fontSize: 13,
+    fontSize: 12,
     letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   whatsappButtonConfig: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1E7E34',
-    paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: THEME.borderRadius.md,
-    borderWidth: 1,
-    borderColor: '#3FCF8E',
     minHeight: 46,
-    shadowColor: '#1E7E34',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    height: 46,
   },
   whatsappButtonTextConfig: {
-    color: '#FFFFFF',
+    color: '#CDC6B9',
     fontWeight: 'bold',
-    fontSize: 13,
+    fontSize: 12,
     letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   versionFooterBox: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: THEME.borderRadius.md,
-    backgroundColor: '#1E1A16',
+    borderRadius: 2,
+    backgroundColor: '#1B1C1B',
     borderWidth: 1.2,
-    borderColor: '#4A3B2C',
+    borderColor: '#4C463A',
     width: '100%',
   },
   producedByBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(232, 200, 106, 0.12)',
+    backgroundColor: 'rgba(224, 195, 128, 0.12)',
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 4,
+    borderRadius: 2,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: 'rgba(232, 200, 106, 0.35)',
+    borderColor: 'rgba(224, 195, 128, 0.35)',
   },
   producedByBadgeText: {
-    color: '#E8C86A',
+    color: '#E0C380',
     fontSize: 11,
     fontWeight: 'bold',
     letterSpacing: 0.8,
@@ -2626,12 +2645,22 @@ const styles = StyleSheet.create({
   liveStatusDot: {
     width: 7,
     height: 7,
-    borderRadius: 3.5,
+    borderRadius: 3.5, /* círculo funcional (width/2) */
     backgroundColor: '#3FCF8E',
   },
   versionSubFooterText: {
     color: THEME.colors.textoSecundario,
     fontSize: 11,
     fontWeight: '500',
+  },
+  maskedLockBtn: {
+    position: 'absolute',
+    right: 4,
+    top: 2,
+    bottom: 2,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

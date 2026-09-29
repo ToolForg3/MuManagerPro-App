@@ -9,9 +9,11 @@ import {
   Share,
 } from 'react-native';
 import { GothicAlert as Alert } from '../common/GothicAlert';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
 import { useDatabase } from '../../context/DatabaseContext';
+import { Panel } from '../ui/Panel';
+import { MuButton } from '../ui/MuButton';
 
 interface DebugPanelModalProps {
   visible: boolean;
@@ -69,15 +71,15 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <Panel style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <MaterialCommunityIcons name="console" size={22} color={THEME.colors.oroClaro} />
+              <MuIcon name="tools" size={20} />
               <Text style={styles.title}>Diagnóstico y Rendimiento de Red</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <MuIcon name="close" size={20} />
             </TouchableOpacity>
           </View>
 
@@ -103,7 +105,7 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
           <ScrollView style={styles.logsContainer} showsVerticalScrollIndicator={false}>
             {logs.length === 0 ? (
               <View style={styles.emptyState}>
-                <MaterialCommunityIcons name="database-check" size={40} color={THEME.colors.textMuted} />
+                <MuIcon name="check" size={38} />
                 <Text style={styles.emptyText}>No hay consultas ejecutadas todavía.</Text>
               </View>
             ) : (
@@ -127,7 +129,7 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
                       <Text style={styles.logDuration}>({log.durationMs} ms)</Text>
                     </View>
                     {log.rowCount !== undefined && (
-                      <Text style={styles.rowCountText}>{log.rowCount} filas</Text>
+                       <Text style={styles.rowCountText}>{log.rowCount} filas</Text>
                     )}
                   </View>
 
@@ -145,22 +147,37 @@ export const DebugPanelModal: React.FC<DebugPanelModalProps> = ({ visible, onClo
 
           {/* Footer Actions */}
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.actionBtnSecondary} onPress={clearLogs}>
-              <MaterialCommunityIcons name="delete-outline" size={18} color="#FFFFFF" />
-              <Text style={styles.btnText}>Limpiar</Text>
-            </TouchableOpacity>
+            <MuButton
+              titulo="Limpiar"
+              icono="delete"
+              variante="danger"
+              onPress={clearLogs}
+              compacto
+              altura={38}
+              style={{ flex: 1 }}
+            />
 
-            <TouchableOpacity style={styles.actionBtnSecondary} onPress={handleShareLogs}>
-              <MaterialCommunityIcons name="share-variant" size={18} color="#FFFFFF" />
-              <Text style={styles.btnText}>Exportar</Text>
-            </TouchableOpacity>
+            <MuButton
+              titulo="Exportar"
+              icono="save"
+              variante="secondary"
+              onPress={handleShareLogs}
+              compacto
+              altura={38}
+              style={{ flex: 1 }}
+            />
 
-            <TouchableOpacity style={styles.actionBtnPrimary} onPress={connect}>
-              <MaterialCommunityIcons name="refresh" size={18} color="#FFFFFF" />
-              <Text style={styles.btnText}>Test Query</Text>
-            </TouchableOpacity>
+            <MuButton
+              titulo="Test Query"
+              icono="refresh"
+              variante="primary"
+              onPress={connect}
+              compacto
+              altura={38}
+              style={{ flex: 1 }}
+            />
           </View>
-        </View>
+        </Panel>
       </View>
     </Modal>
   );
@@ -175,10 +192,6 @@ const styles = StyleSheet.create({
   },
   container: {
     maxHeight: '90%',
-    backgroundColor: THEME.colors.card,
-    borderRadius: THEME.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: THEME.colors.borderHighlight,
     overflow: 'hidden',
   },
   header: {
@@ -187,8 +200,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: THEME.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.border,
-    backgroundColor: THEME.colors.surface,
+    borderBottomColor: '#4C463A',
+    backgroundColor: '#1B1C1B',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -198,20 +211,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: THEME.typography.weightBold,
-    color: '#E8C86A',
+    color: '#E0C380',
     fontFamily: THEME.typography.fontTitle,
     ...THEME.effects.textShadow,
   },
   closeBtn: {
-    padding: 4,
+    padding: 8,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statusBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 8,
-    backgroundColor: '#121212',
+    backgroundColor: '#0D0E0D',
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.border,
+    borderBottomColor: '#4C463A',
   },
   statusItem: {
     flexDirection: 'row',
@@ -244,14 +261,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   logCard: {
-    backgroundColor: '#0F0F0F',
-    borderRadius: THEME.borderRadius.md,
+    backgroundColor: '#0D0E0D',
+    borderRadius: 2,
     borderWidth: 1,
     padding: THEME.spacing.sm,
     marginBottom: THEME.spacing.sm,
   },
   logCardSuccess: {
-    borderColor: '#263238',
+    borderColor: '#4C463A',
   },
   logCardError: {
     borderColor: THEME.colors.dangerRed,
@@ -270,7 +287,7 @@ const styles = StyleSheet.create({
   statusDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 3, /* círculo funcional (width/2): indicador de status */
   },
   logTime: {
     fontSize: 10,
@@ -288,7 +305,7 @@ const styles = StyleSheet.create({
   queryText: {
     fontFamily: THEME.typography.fontMono,
     fontSize: 11,
-    color: '#ECEFF1',
+    color: '#E4E2E0',
     lineHeight: 16,
   },
   errorText: {
@@ -299,9 +316,9 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     padding: THEME.spacing.md,
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: '#1B1C1B',
     borderTopWidth: 1,
-    borderTopColor: THEME.colors.border,
+    borderTopColor: '#4C463A',
     gap: 8,
   },
   actionBtnSecondary: {
@@ -309,9 +326,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#292A29',
+    borderWidth: 1,
+    borderColor: '#4C463A',
     paddingVertical: 10,
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: 2,
+    minHeight: 44,
     gap: 6,
   },
   actionBtnPrimary: {
@@ -319,14 +339,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: THEME.colors.primaryOrange,
+    backgroundColor: '#E0C380',
+    borderWidth: 1,
+    borderColor: '#EFD28D',
     paddingVertical: 10,
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: 2,
+    minHeight: 44,
     gap: 6,
   },
   btnText: {
-    color: '#FFFFFF',
+    color: '#E4E2E0',
     fontWeight: THEME.typography.weightBold,
+    fontSize: 12,
+  },
+  btnTextPrimary: {
+    color: '#0D0E0D',
+    fontWeight: '800',
     fontSize: 12,
   },
 });

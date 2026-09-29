@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.2.6",
+  "latestVersion": "2.2.7",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.2.6 (Build 128) - Unificación Visual Exhaustiva Season 6 Piedra & Oro:\n• CONTRASTE CERTIFICADO WCAG AAA (11.89:1): Sustitución sistemática del ocre apagado (#B58F3C) por Oro Resplandeciente Season 6 (#E8C86A) en todos los módulos, pantallas y modales de la APK.\n• NITIDEZ Y PROFUNDIDAD ANTI-DIFUMINADO: Implementación de sombra paralela sutil (drop shadow) y mayor peso tipográfico (Medium/Semi-bold/Bold) en textos secundarios, etiquetas de campos, subtítulos y cabeceras para máxima claridad sobre piedra oscura.\n• PÍLDORAS Y SELECTORES MEJORADOS: Erradicación del efecto caja marrón sobre marrón en selectores de baúles, categorías, rankings y badges [SIN PIN] / [MODO DEMO], ahora con fondo #1E1915 y bordes nítidos.\n• AUDITORÍA TOTAL DE MÓDULOS: Unificación completa en 32 componentes y pantallas (Dashboard, Config, Tools, Subtabs, Jugadores, Personajes, Cuentas, Login, PIN, Modales de Licencia, Kill-Switch, Ítems, Equipo, Actualización, Idioma, Avisos, Términos y ErrorBoundary).",
+  "updateChangelog": "MuManager PRO v2.2.7 (Build 129) - Rediseño Oficial Stitch Approved Ironforge 100% Nativo & Blindaje de Seguridad:\n• SISTEMA VISUAL STITCH IRONFORGE NATIVO: Cobertura del 100% de texturas oficiales de MU Online (tabModeActive, tabModeInactive, btn_small, btn_big) en todas las pestañas, subnavegadores, switches y botones de acción.\n• ERRADICACIÓN DE BORDES PLANOS: Cero cajas lisas de CSS. Biselado chiseled multidireccional con relieve 3D y contenedores anti-sangrado con bordes redondeados y overflow oculto.\n• TIPOGRAFÍA Y CONTRASTE WCAG AA: Tipografía gótica oscura de alto contraste (#0D0E0D peso 900) sin sombras oscuras sobre oro brillante, y tonos acero (#CDC6B9/#E0C380) sobre superficies inactivas.\n• BLINDAJE DE SEGURIDAD INTEGRAL: Compilación Hermes Bytecode, ofuscación avanzada Metro JS, R8/ProGuard, defensas activas anti-debug y anti-hooking (detección Frida/Xposed/Tamper), certificate pinning Root CAs y telemetría forense anti-abuso.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -57,15 +57,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.2.6 (Build 128)",
+  "updateTitle": "MuManager PRO v2.2.7 (Build 129)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 128,
+  "versionCode": 129,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.2.6 (Build 128) - Unificación Visual Exhaustiva Season 6 Piedra & Oro:\n• CONTRASTE CERTIFICADO WCAG AAA (11.89:1): Sustitución sistemática del ocre apagado (#B58F3C) por Oro Resplandeciente Season 6 (#E8C86A) en todos los módulos, pantallas y modales de la APK.\n• NITIDEZ Y PROFUNDIDAD ANTI-DIFUMINADO: Implementación de sombra paralela sutil (drop shadow) y mayor peso tipográfico (Medium/Semi-bold/Bold) en textos secundarios, etiquetas de campos, subtítulos y cabeceras para máxima claridad sobre piedra oscura.\n• PÍLDORAS Y SELECTORES MEJORADOS: Erradicación del efecto caja marrón sobre marrón en selectores de baúles, categorías, rankings y badges [SIN PIN] / [MODO DEMO], ahora con fondo #1E1915 y bordes nítidos.\n• AUDITORÍA TOTAL DE MÓDULOS: Unificación completa en 32 componentes y pantallas (Dashboard, Config, Tools, Subtabs, Jugadores, Personajes, Cuentas, Login, PIN, Modales de Licencia, Kill-Switch, Ítems, Equipo, Actualización, Idioma, Avisos, Términos y ErrorBoundary).",
+  "releaseNotes": "MuManager PRO v2.2.7 (Build 129) - Rediseño Oficial Stitch Approved Ironforge 100% Nativo & Blindaje de Seguridad:\n• SISTEMA VISUAL STITCH IRONFORGE NATIVO: Cobertura del 100% de texturas oficiales de MU Online (tabModeActive, tabModeInactive, btn_small, btn_big) en todas las pestañas, subnavegadores, switches y botones de acción.\n• ERRADICACIÓN DE BORDES PLANOS: Cero cajas lisas de CSS. Biselado chiseled multidireccional con relieve 3D y contenedores anti-sangrado con bordes redondeados y overflow oculto.\n• TIPOGRAFÍA Y CONTRASTE WCAG AA: Tipografía gótica oscura de alto contraste (#0D0E0D peso 900) sin sombras oscuras sobre oro brillante, y tonos acero (#CDC6B9/#E0C380) sobre superficies inactivas.\n• BLINDAJE DE SEGURIDAD INTEGRAL: Compilación Hermes Bytecode, ofuscación avanzada Metro JS, R8/ProGuard, defensas activas anti-debug y anti-hooking (detección Frida/Xposed/Tamper), certificate pinning Root CAs y telemetría forense anti-abuso.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.2.6",
-  "buildNumber": 128,
+  "appVersion": "2.2.7",
+  "buildNumber": 129,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +77,6 @@
       "pass": ""
     }
   },
-  "version": "2.2.6",
-  "build": 128
+  "version": "2.2.7",
+  "build": 129
 }

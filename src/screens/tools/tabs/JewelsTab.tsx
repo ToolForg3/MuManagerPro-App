@@ -9,13 +9,17 @@ import {
   Modal,
   ScrollView,
   Image,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../../components/common/GothicAlert';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../../components/ui/MuIcon';
 import { THEME } from '../../../constants/theme';
+import { STITCH_ASSETS } from '../../../constants/stitchAssets';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { AutocompleteInput } from '../../../components/common/AutocompleteInput';
 import { ItemImage } from '../../../components/common/ItemImage';
+import { Panel, MuButton } from '../../../components/ui';
+import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { SqlClient } from '../../../services/database/sqlClient';
 import { JewelAuditResult, JewelPurgeResult } from '../../../types/admin';
 import { DEFAULT_ITEM_CATALOG } from '../../../services/parser/itemDatabase';
@@ -33,17 +37,17 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
   catalogSuggestions = [],
 }) => {
   const JEWEL_PRESETS = useMemo(() => [
-    { id: 'all_jewels', label: 'Todas las Joyas', icon: 'diamond-stone', color: '#E8C86A' },
+    { id: 'all_jewels', label: 'Todas las Joyas', icon: 'diamond-stone', color: '#E0C380' },
     { id: 'bless', label: 'Bless', group: 14, index: 13, icon: 'diamond', color: '#3FCF8E' },
     { id: 'soul', label: 'Soul', group: 14, index: 14, icon: 'diamond', color: '#5B8DEF' },
     { id: 'chaos', label: 'Chaos', group: 12, index: 15, icon: 'fire', color: '#E2703A' },
-    { id: 'life', label: 'Life', group: 14, index: 16, icon: 'heart', color: '#E8C86A' },
+    { id: 'life', label: 'Life', group: 14, index: 16, icon: 'heart', color: '#E0C380' },
     { id: 'creation', label: 'Creation', group: 14, index: 22, icon: 'leaf', color: '#3FCF8E' },
-    { id: 'harmony', label: 'Harmony', group: 14, index: 42, icon: 'star', color: '#F0D27A' },
-    { id: 'guardian', label: 'Guardian', group: 14, index: 31, icon: 'shield', color: '#C8BEAF' },
+    { id: 'harmony', label: 'Harmony', group: 14, index: 42, icon: 'star', color: '#EFD28D' },
+    { id: 'guardian', label: 'Guardian', group: 14, index: 31, icon: 'shield', color: '#CDC6B9' },
     { id: 'gemstone', label: 'Gemstone', group: 14, index: 41, icon: 'gift', color: '#5B8DEF' },
-    { id: 'custom_jewels', label: 'Joyas Custom', icon: 'crown', color: '#E8C86A' },
-    { id: 'all_items', label: 'Cualquier Ítem', icon: 'cube-outline', color: '#C8BEAF' },
+    { id: 'custom_jewels', label: 'Joyas Custom', icon: 'crown', color: '#E0C380' },
+    { id: 'all_items', label: 'Cualquier Ítem', icon: 'cube-outline', color: '#CDC6B9' },
   ], []);
 
   const [jewelScope, setJewelScope] = useState<'all' | 'character' | 'account'>('all');
@@ -171,7 +175,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
         }
         Alert.alert(
           isDryRunParam ? 'Simulación Completada' : 'Depuración Exitosa',
-          res.message + (res.skippedOnlineCount > 0 ? `\n\n🛡️ Se protegieron ${res.skippedOnlineCount} cuentas conectadas al juego.` : '')
+          res.message + (res.skippedOnlineCount > 0 ? `\n\n[SEGURIDAD] Se protegieron ${res.skippedOnlineCount} cuentas conectadas al juego.` : '')
         );
       } else {
         Alert.alert('Error', res.message || 'Error al procesar depuración');
@@ -187,9 +191,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
     <ErrorBoundary tabName="Joyas">
       <View style={styles.tabContent}>
         {/* Tarjeta de Configuración de Filtros */}
-        <View style={[styles.card, { zIndex: 10 }]}>
+        <Panel tipo="gold" conEsquineros={true} style={[styles.card, { zIndex: 10 }]}>
           <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
+            <MuIcon name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
             <Text style={styles.cardTitle}>
               Gestor & Depurador de Joyas
             </Text>
@@ -201,17 +205,26 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           {/* 1. Selector de Ámbito */}
           <Text style={[styles.label, { marginTop: 10 }]}>1. Ámbito de Búsqueda:</Text>
           <View style={styles.pillsRow}>
-            {(['all', 'character', 'account'] as const).map((sc) => (
-              <TouchableOpacity
-                key={`jewel_scope_${sc}`}
-                style={[styles.filterPill, jewelScope === sc && styles.filterPillActive]}
-                onPress={() => setJewelScope(sc)}
-              >
-                <Text style={[styles.filterPillText, jewelScope === sc && styles.filterPillTextActive]}>
-                  {sc === 'all' ? '🌐 Todo el Servidor' : sc === 'character' ? '👤 Por Personaje' : '📁 Por Cuenta'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {(['all', 'character', 'account'] as const).map((sc) => {
+              const isScActive = jewelScope === sc;
+              return (
+                <TouchableOpacity
+                  key={`jewel_scope_${sc}`}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
+                  onPress={() => setJewelScope(sc)}
+                >
+                  <ImageBackground
+                    source={isScActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillText, isScActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      {sc === 'all' ? '[TODO] Servidor Completo' : sc === 'character' ? '[PJ] Por Personaje' : '[CUENTA] Por Cuenta'}
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* Input de Personaje / Cuenta si no es 'all' */}
@@ -236,45 +249,63 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           <Text style={[styles.label, { marginTop: 14 }]}>2. Ubicaciones a Incluir:</Text>
           <View style={styles.wrapRow}>
             <TouchableOpacity
-              style={[styles.filterPill, jewelIncInventory && styles.filterPillActive]}
+              style={{ borderRadius: 2, overflow: 'hidden' }}
               onPress={() => setJewelIncInventory(!jewelIncInventory)}
             >
-              <MaterialCommunityIcons
-                name={jewelIncInventory ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                size={16}
-                color={jewelIncInventory ? '#100D0B' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.filterPillText, jewelIncInventory && styles.filterPillTextActive, { marginLeft: 4 }]}>
-                Inventarios
-              </Text>
+              <ImageBackground
+                source={jewelIncInventory ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6 }}
+                resizeMode="stretch"
+              >
+                <MuIcon
+                  name={jewelIncInventory ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                  size={16}
+                  color={jewelIncInventory ? '#0D0E0D' : THEME.colors.textoSecundario}
+                />
+                <Text style={[styles.filterPillText, jewelIncInventory ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
+                  Inventarios
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.filterPill, jewelIncWarehouse && styles.filterPillActive]}
+              style={{ borderRadius: 2, overflow: 'hidden' }}
               onPress={() => setJewelIncWarehouse(!jewelIncWarehouse)}
             >
-              <MaterialCommunityIcons
-                name={jewelIncWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                size={16}
-                color={jewelIncWarehouse ? '#100D0B' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.filterPillText, jewelIncWarehouse && styles.filterPillTextActive, { marginLeft: 4 }]}>
-                Baúl Principal (0)
-              </Text>
+              <ImageBackground
+                source={jewelIncWarehouse ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6 }}
+                resizeMode="stretch"
+              >
+                <MuIcon
+                  name={jewelIncWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                  size={16}
+                  color={jewelIncWarehouse ? '#0D0E0D' : THEME.colors.textoSecundario}
+                />
+                <Text style={[styles.filterPillText, jewelIncWarehouse ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
+                  Baúl Principal (0)
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.filterPill, jewelIncExtWarehouse && styles.filterPillActive]}
+              style={{ borderRadius: 2, overflow: 'hidden' }}
               onPress={() => setJewelIncExtWarehouse(!jewelIncExtWarehouse)}
             >
-              <MaterialCommunityIcons
-                name={jewelIncExtWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                size={16}
-                color={jewelIncExtWarehouse ? '#100D0B' : THEME.colors.textoSecundario}
-              />
-              <Text style={[styles.filterPillText, jewelIncExtWarehouse && styles.filterPillTextActive, { marginLeft: 4 }]}>
-                Baúles Ext (1..N)
-              </Text>
+              <ImageBackground
+                source={jewelIncExtWarehouse ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6 }}
+                resizeMode="stretch"
+              >
+                <MuIcon
+                  name={jewelIncExtWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                  size={16}
+                  color={jewelIncExtWarehouse ? '#0D0E0D' : THEME.colors.textoSecundario}
+                />
+                <Text style={[styles.filterPillText, jewelIncExtWarehouse ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
+                  Baúles Ext (1..N)
+                </Text>
+              </ImageBackground>
             </TouchableOpacity>
           </View>
 
@@ -289,21 +320,23 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
               return (
                 <TouchableOpacity
                   key={`preset_${preset.id}`}
-                  style={[
-                    styles.filterPill,
-                    isSelected && styles.filterPillActive,
-                    { borderColor: isSelected ? preset.color : THEME.colors.borde },
-                  ]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setJewelFilterType(preset.id)}
                 >
-                  {jewelImg ? (
-                    <Image source={jewelImg} style={{ width: 16, height: 16, marginRight: 6 }} resizeMode="contain" />
-                  ) : (
-                    <MaterialCommunityIcons name={preset.icon as any} size={15} color={preset.color} style={{ marginRight: 4 }} />
-                  )}
-                  <Text style={[styles.filterPillText, isSelected && { color: preset.color, fontWeight: 'bold' }]}>
-                    {preset.label}
-                  </Text>
+                  <ImageBackground
+                    source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6 }}
+                    resizeMode="stretch"
+                  >
+                    {jewelImg ? (
+                      <Image source={jewelImg} style={{ width: 16, height: 16, marginRight: 6 }} resizeMode="contain" />
+                    ) : (
+                      <MuIcon name={preset.icon as any} size={15} color={isSelected ? '#0D0E0D' : preset.color} style={{ marginRight: 4 }} />
+                    )}
+                    <Text style={[styles.filterPillText, isSelected ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: preset.color }]}>
+                      {preset.label}
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               );
             })}
@@ -331,7 +364,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
               style={[styles.shieldCheckRow, jewelProtectEquipment && styles.shieldCheckRowActive]}
               onPress={() => setJewelProtectEquipment(!jewelProtectEquipment)}
             >
-              <MaterialCommunityIcons
+              <MuIcon
                 name={jewelProtectEquipment ? 'shield-check' : 'shield-alert-outline'}
                 size={20}
                 color={jewelProtectEquipment ? THEME.colors.jade : THEME.colors.brasa}
@@ -350,7 +383,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
               style={[styles.shieldCheckRow, jewelSkipOnline && styles.shieldCheckRowActive]}
               onPress={() => setJewelSkipOnline(!jewelSkipOnline)}
             >
-              <MaterialCommunityIcons
+              <MuIcon
                 name={jewelSkipOnline ? 'account-lock' : 'account-alert'}
                 size={20}
                 color={jewelSkipOnline ? THEME.colors.jade : THEME.colors.brasa}
@@ -370,21 +403,30 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           <Text style={[styles.label, { marginTop: 16 }]}>5. Operación a Ejecutar:</Text>
           <View style={styles.pillsRow}>
             {[
-              { id: 'audit', label: '📊 Solo Auditar' },
-              { id: 'cap_target', label: '📉 Tope por PJ / Baúl' },
-              { id: 'cap_server', label: '🌐 Tope Servidor' },
-              { id: 'purge_all', label: '🔥 Depurar Todo' },
-            ].map((act) => (
-              <TouchableOpacity
-                key={`jewel_act_${act.id}`}
-                style={[styles.filterPill, jewelActionMode === act.id && styles.filterPillActive]}
-                onPress={() => setJewelActionMode(act.id as any)}
-              >
-                <Text style={[styles.filterPillText, jewelActionMode === act.id && styles.filterPillTextActive]}>
-                  {act.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+              { id: 'audit', label: '[AUDITAR] Solo Auditar' },
+              { id: 'cap_target', label: '[TOPE] Por PJ / Baúl' },
+              { id: 'cap_server', label: '[TOPE] Servidor' },
+              { id: 'purge_all', label: '[DEPURAR] Depurar Todo' },
+            ].map((act) => {
+              const isActActive = jewelActionMode === act.id;
+              return (
+                <TouchableOpacity
+                  key={`jewel_act_${act.id}`}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
+                  onPress={() => setJewelActionMode(act.id as any)}
+                >
+                  <ImageBackground
+                    source={isActActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillText, isActActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      {act.label}
+                    </Text>
+                  </ImageBackground>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* Campos adicionales para capping */}
@@ -405,94 +447,109 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                   placeholderTextColor={THEME.colors.textMuted}
                 />
                 <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {(['5', '20', '50', '100'] as const).map((presetAmt) => (
-                    <TouchableOpacity
-                      key={`amt_p_${presetAmt}`}
-                      style={[styles.filterPill, jewelCapAmount === presetAmt && styles.filterPillActive]}
-                      onPress={() => setJewelCapAmount(presetAmt)}
-                    >
-                      <Text style={[styles.filterPillText, jewelCapAmount === presetAmt && styles.filterPillTextActive]}>
-                        {presetAmt}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {(['5', '20', '50', '100'] as const).map((presetAmt) => {
+                    const isAmtActive = jewelCapAmount === presetAmt;
+                    return (
+                      <TouchableOpacity
+                        key={`amt_p_${presetAmt}`}
+                        style={{ borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setJewelCapAmount(presetAmt)}
+                      >
+                        <ImageBackground
+                          source={isAmtActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.filterPillText, isAmtActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                            {presetAmt}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
               <Text style={[styles.label, { marginTop: 10 }]}>Contar por:</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                 <TouchableOpacity
-                  style={[styles.filterPill, jewelCountBy === 'units' && styles.filterPillActive]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setJewelCountBy('units')}
                 >
-                  <Text style={[styles.filterPillText, jewelCountBy === 'units' && styles.filterPillTextActive]}>
-                    Unidades Reales (Desempaqueta Bundles x10, x20, x30)
-                  </Text>
+                  <ImageBackground
+                    source={jewelCountBy === 'units' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillText, jewelCountBy === 'units' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Unidades Reales (Desempaqueta Bundles x10, x20, x30)
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.filterPill, jewelCountBy === 'slots' && styles.filterPillActive]}
+                  style={{ borderRadius: 2, overflow: 'hidden' }}
                   onPress={() => setJewelCountBy('slots')}
                 >
-                  <Text style={[styles.filterPillText, jewelCountBy === 'slots' && styles.filterPillTextActive]}>
-                    Slots Físicos (1 slot = 1 unidad)
-                  </Text>
+                  <ImageBackground
+                    source={jewelCountBy === 'slots' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                    style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={[styles.filterPillText, jewelCountBy === 'slots' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      Slots Físicos (1 slot = 1 unidad)
+                    </Text>
+                  </ImageBackground>
                 </TouchableOpacity>
               </View>
             </View>
           )}
 
           {/* Botones de Ejecución */}
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            <TouchableOpacity
-              style={[styles.searchBtn, { flex: 1 }]}
-              onPress={handleAuditJewels}
-              disabled={isAuditingJewels}
-            >
-              {isAuditingJewels ? (
-                <ActivityIndicator color={THEME.colors.oroClaro} size="small" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="chart-bar" size={18} color={THEME.colors.oroClaro} />
-                  <Text style={styles.searchBtnText}>Auditar / Censar</Text>
-                </>
-              )}
-            </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
+            <View style={{ flex: 1 }}>
+              <MuButton
+                titulo="Auditar / Censar"
+                icono="chart-bar"
+                variante="primary"
+                onPress={handleAuditJewels}
+                cargando={isAuditingJewels}
+                disabled={isAuditingJewels}
+                altura={44}
+              />
+            </View>
 
             {jewelActionMode !== 'audit' && (
-              <TouchableOpacity
-                style={[styles.scanDupesBtn, { flex: 1 }]}
-                onPress={() => handleExecutePurgeAction(true)}
-                disabled={isPurgingJewels}
-              >
-                {isPurgingJewels ? (
-                  <ActivityIndicator color={THEME.colors.brasa} size="small" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="test-tube" size={18} color={THEME.colors.brasa} />
-                    <Text style={styles.scanDupesBtnText}>Simular (Test)</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <MuButton
+                  titulo="Simular (Test)"
+                  icono="test-tube"
+                  variante="secondary"
+                  onPress={() => handleExecutePurgeAction(true)}
+                  cargando={isPurgingJewels}
+                  disabled={isPurgingJewels}
+                  altura={44}
+                />
+              </View>
             )}
 
             {jewelActionMode !== 'audit' && (
-              <TouchableOpacity
-                style={[styles.purgeBtn, { flex: 1.2 }]}
-                onPress={() => setShowJewelConfirmModal(true)}
-                disabled={isPurgingJewels}
-              >
-                <MaterialCommunityIcons name="fire" size={18} color="#100D0B" />
-                <Text style={styles.purgeBtnText}>
-                  {jewelActionMode === 'purge_all' ? 'Depurar Todo' : 'Aplicar Tope'}
-                </Text>
-              </TouchableOpacity>
+              <View style={{ flex: 1.2 }}>
+                <MuButton
+                  titulo={jewelActionMode === 'purge_all' ? 'Depurar Todo' : 'Aplicar Tope'}
+                  icono="fire"
+                  variante="danger"
+                  onPress={() => setShowJewelConfirmModal(true)}
+                  disabled={isPurgingJewels}
+                  altura={44}
+                />
+              </View>
             )}
           </View>
-        </View>
+        </Panel>
 
         {/* Resultados de la Auditoría */}
         {jewelAuditResult && (
-          <View style={styles.resultsCard}>
+          <Panel tipo="gold" conEsquineros={true} style={styles.resultsCard}>
             <Text style={styles.cardTitle}>Resultados del Censo de Joyas / Ítems</Text>
             <View style={styles.totalBadge}>
               <Text style={styles.totalBadgeLabel}>Stock Total Encontrado:</Text>
@@ -562,7 +619,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 )}
               </View>
             )}
-          </View>
+          </Panel>
         )}
 
         {/* Modal de Confirmación de Purga SQL */}
@@ -573,10 +630,10 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           onRequestClose={() => setShowJewelConfirmModal(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { maxWidth: 420, maxHeight: '90%' }]}>
+            <Panel tipo="gold" conEsquineros={true} style={[styles.modalContent, { maxWidth: 420, maxHeight: '90%' }]}>
               <ScrollView nestedScrollEnabled>
                 <View style={styles.modalHeader}>
-                  <MaterialCommunityIcons name="alert-octagon" size={26} color={THEME.colors.brasa} />
+                  <MuIcon name="alert-octagon" size={26} color={THEME.colors.brasa} />
                   <Text style={styles.modalTitle}>
                     Confirmar Depuración SQL
                   </Text>
@@ -618,37 +675,33 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                   autoCapitalize="characters"
                 />
 
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <TouchableOpacity
-                    style={[styles.filterPill, { flex: 1, justifyContent: 'center', alignItems: 'center', height: 44 }]}
-                    onPress={() => {
-                      setShowJewelConfirmModal(false);
-                      setJewelConfirmText('');
-                    }}
-                  >
-                    <Text style={styles.filterPillText}>Cancelar</Text>
-                  </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <MuButton
+                      titulo="Cancelar"
+                      variante="secondary"
+                      onPress={() => {
+                        setShowJewelConfirmModal(false);
+                        setJewelConfirmText('');
+                      }}
+                      altura={44}
+                    />
+                  </View>
 
-                  <TouchableOpacity
-                    style={[
-                      styles.scanDupesBtn,
-                      { flex: 1.4, opacity: jewelConfirmText.trim().toUpperCase() === 'DEPURAR' ? 1 : 0.5 }
-                    ]}
-                    onPress={() => handleExecutePurgeAction(false)}
-                    disabled={jewelConfirmText.trim().toUpperCase() !== 'DEPURAR' || isPurgingJewels}
-                  >
-                    {isPurgingJewels ? (
-                      <ActivityIndicator color={THEME.colors.brasa} size="small" />
-                    ) : (
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialCommunityIcons name="fire" size={18} color={THEME.colors.brasa} style={{ marginRight: 4 }} />
-                        <Text style={styles.scanDupesBtnText}>Confirmar Purga</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                  <View style={{ flex: 1.4 }}>
+                    <MuButton
+                      titulo="Confirmar Purga"
+                      icono="fire"
+                      variante="danger"
+                      onPress={() => handleExecutePurgeAction(false)}
+                      cargando={isPurgingJewels}
+                      disabled={jewelConfirmText.trim().toUpperCase() !== 'DEPURAR' || isPurgingJewels}
+                      altura={44}
+                    />
+                  </View>
                 </View>
               </ScrollView>
-            </View>
+            </Panel>
           </View>
         </Modal>
       </View>
@@ -659,14 +712,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
 const styles = StyleSheet.create({
   tabContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   card: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 14,
     marginBottom: 12,
   },
   cardHeader: {
@@ -714,14 +762,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#1E1915',
-    borderWidth: 1.5,
-    borderColor: 'rgba(107, 85, 51, 0.55)',
+    borderRadius: 2,
+    backgroundColor: '#1E1F1E',
+    borderWidth: 1,
+    borderTopColor: '#5A5242',
+    borderLeftColor: '#5A5242',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   filterPillActive: {
-    backgroundColor: 'rgba(232, 200, 106, 0.20)',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#26221A',
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
   },
   filterPillText: {
     fontSize: 12,
@@ -730,7 +784,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   filterPillTextActive: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontWeight: 'bold',
     ...THEME.effects.textShadow,
   },
@@ -738,14 +792,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#191512',
-    borderRadius: 6,
+    backgroundColor: '#111211',
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   shieldCheckRowActive: {
-    borderColor: 'rgba(63, 207, 142, 0.4)',
-    backgroundColor: 'rgba(63, 207, 142, 0.05)',
+    borderTopColor: '#3FCF8E',
+    borderLeftColor: '#3FCF8E',
+    borderRightColor: '#1E5A3E',
+    borderBottomColor: '#1E5A3E',
+    backgroundColor: 'rgba(63, 207, 142, 0.08)',
   },
   shieldCheckTitle: {
     fontSize: 12,
@@ -758,18 +818,24 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   capSettingsBox: {
-    backgroundColor: '#191512',
+    backgroundColor: '#0F100F',
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
     marginTop: 10,
   },
   textInput: {
-    backgroundColor: '#100D0B',
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     color: THEME.colors.texto,
     fontSize: 13,
     paddingHorizontal: 10,
@@ -780,62 +846,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.oroClaro,
+    backgroundColor: '#1E1F1E',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 10,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
   },
   searchBtnText: {
-    color: THEME.colors.oroClaro,
+    color: '#EFD28D',
     fontSize: 13,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   scanDupesBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#241E1A',
-    borderColor: THEME.colors.brasa,
+    backgroundColor: '#221515',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 10,
+    borderTopColor: '#E2703A',
+    borderLeftColor: '#E2703A',
+    borderRightColor: '#5A1A1A',
+    borderBottomColor: '#5A1A1A',
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
   },
   scanDupesBtnText: {
-    color: THEME.colors.brasa,
+    color: '#E2703A',
     fontSize: 13,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   purgeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: THEME.colors.oroClaro,
-    borderRadius: 6,
-    paddingVertical: 10,
+    backgroundColor: '#26221A',
+    borderWidth: 1.5,
+    borderTopColor: '#EFD28D',
+    borderLeftColor: '#EFD28D',
+    borderRightColor: '#5C4A22',
+    borderBottomColor: '#5C4A22',
+    borderRadius: 2,
+    minHeight: 48,
+    height: 48,
   },
   purgeBtnText: {
-    color: '#100D0B',
+    color: '#EFD28D',
     fontSize: 13,
     fontWeight: 'bold',
+    ...THEME.effects.textShadow,
   },
   resultsCard: {
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    padding: 14,
     marginBottom: 12,
   },
   totalBadge: {
     alignItems: 'center',
-    backgroundColor: '#191512',
+    backgroundColor: '#090A09',
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
     marginVertical: 10,
   },
   totalBadgeLabel: {
@@ -857,12 +938,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#191512',
+    backgroundColor: '#111211',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 5,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderRightColor: '#161716',
+    borderBottomColor: '#161716',
   },
   typeItemName: {
     fontSize: 11,
@@ -884,7 +968,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#241E1A',
+    borderBottomColor: THEME.colors.borde,
   },
   ownerName: {
     fontSize: 12,
@@ -921,10 +1005,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
-    backgroundColor: THEME.colors.superficie,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     padding: 16,
   },
   modalHeader: {
@@ -945,11 +1025,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   summaryBox: {
-    backgroundColor: '#191512',
+    backgroundColor: '#090A09',
     padding: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#4A463F',
+    borderBottomColor: '#4A463F',
     marginBottom: 12,
   },
   summaryTitle: {
@@ -968,12 +1051,15 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   confirmInput: {
-    backgroundColor: '#100D0B',
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#090A09',
     borderWidth: 1,
-    borderRadius: 6,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
     color: THEME.colors.texto,
-    height: 42,
+    height: 44,
     paddingHorizontal: 10,
     marginBottom: 16,
     fontSize: 13,

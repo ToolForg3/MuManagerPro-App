@@ -33,7 +33,7 @@ export const MU_SKILLS: Record<number, MuSkillDefinition> = {
   // =========================================================================
   1: { id: 1, name: 'Poison', nameEs: 'Veneno', category: 'Magia', races: ['DW', 'MG'], icon: 'bottle-tonic-skull', description: 'Envenena a los enemigos causando daño continuo de salud.' },
   2: { id: 2, name: 'Meteorite', nameEs: 'Meteorito', category: 'Magia', races: ['DW', 'MG'], icon: 'meteor', description: 'Invoca un meteoro ígneo concentrado que cae sobre el objetivo.' },
-  3: { id: 3, name: 'Lighting', nameEs: 'Rayo Eléctrico', category: 'Magia', races: ['DW', 'MG'], icon: 'flash', description: 'Descarga eléctrica que sacude y empuja al enemigo hacia atrás.' },
+  3: { id: 3, name: 'Lightning', nameEs: 'Rayo Eléctrico (Lightning)', category: 'Magia', races: ['DW', 'MG'], icon: 'flash', description: 'Descarga eléctrica que sacude y empuja al enemigo hacia atrás.' },
   4: { id: 4, name: 'Fire Ball', nameEs: 'Bola de Fuego', category: 'Magia', races: ['DW', 'MG'], icon: 'fire', description: 'Dispara una esfera ardiente veloz que estalla al contacto.' },
   5: { id: 5, name: 'Flame', nameEs: 'Columna de Llamas (Flame)', category: 'Magia', races: ['DW', 'MG'], icon: 'fire-alert', description: 'Pilar continuo de fuego abrasador en una posición fija.' },
   6: { id: 6, name: 'Teleport', nameEs: 'Teletransportación', category: 'Especial', races: ['DW'], icon: 'swap-horizontal-bold', description: 'Teletransporta al mago a otra posición visible en el mapa.' },
@@ -50,6 +50,7 @@ export const MU_SKILLS: Record<number, MuSkillDefinition> = {
   38: { id: 38, name: 'Decay', nameEs: 'Deterioro Tóxico (Decay)', category: 'Magia', races: ['DW', 'MG'], icon: 'skull', description: 'Nube tóxica corrosiva que corroe la resistencia de los enemigos en un área.' },
   39: { id: 39, name: 'Ice Storm', nameEs: 'Tormenta de Hielo (Ice Storm)', category: 'Magia', races: ['DW', 'MG'], icon: 'weather-snowy-heavy', description: 'Tormenta glacial masiva que causa gran daño de área y ralentización profunda.' },
   40: { id: 40, name: 'Nova', nameEs: 'Supernova (Nova)', category: 'Magia', races: ['DW'], icon: 'sun-compass', description: 'Concentración de poder arcano que culmina en una explosión monumental.' },
+  69: { id: 69, name: 'Swell Mana', nameEs: 'Aumento de Maná (Swell Mana)', category: 'Buff', races: ['DW', 'MG'], icon: 'water-plus', description: 'Incrementa temporalmente el maná máximo propio y de los aliados en grupo.' },
   233: { id: 233, name: 'Expansion of Wizardry', nameEs: 'Expansión Mágica (Wizardry)', category: 'Buff', races: ['DW'], icon: 'auto-fix', description: 'Incrementa el poder y la penetración del daño mágico del invocador.' },
 
   // =========================================================================
@@ -66,50 +67,48 @@ export const MU_SKILLS: Record<number, MuSkillDefinition> = {
   34: { id: 34, name: 'Summon Dark Knight', nameEs: 'Invocar Caballero Oscuro', category: 'Invocación', races: ['FE'], icon: 'shield-account', description: 'Invoca a un caballero de armadura oscura como guardián.' },
   35: { id: 35, name: 'Summon Bali', nameEs: 'Invocar Bali', category: 'Invocación', races: ['FE'], icon: 'spider', description: 'Invoca a una criatura Bali de las profundidades.' },
   36: { id: 36, name: 'Summon Soldier', nameEs: 'Invocar Soldado Dorado', category: 'Invocación', races: ['FE'], icon: 'account-supervisor-circle', description: 'Invoca al soldado dorado de élite con gran poder ofensivo.' },
-  51: { id: 51, name: 'Penetration', nameEs: 'Flecha de Penetración', category: 'Físico', races: ['FE'], icon: 'arrow-right-bold', description: 'Dispara una flecha mágica que atraviesa enemigos en línea recta.' },
-  52: { id: 52, name: 'Ice Arrow', nameEs: 'Flecha de Hielo (Ice Arrow)', category: 'Físico', races: ['FE'], icon: 'snowflake-melt', description: 'Dispara una saeta helada que inmoviliza y congela por completo al rival.' },
+  51: { id: 51, name: 'Ice Arrow', nameEs: 'Flecha de Hielo (Ice Arrow)', category: 'Físico', races: ['FE'], icon: 'snowflake-melt', description: 'Dispara una saeta helada que inmoviliza y congela por completo al rival.' },
+  52: { id: 52, name: 'Penetration', nameEs: 'Flecha de Penetración', category: 'Físico', races: ['FE'], icon: 'arrow-right-bold', description: 'Dispara una flecha mágica que atraviesa enemigos en línea recta.' },
+  77: { id: 77, name: 'Infinity Arrow', nameEs: 'Flecha Infinita (Infinity Arrow)', category: 'Buff', races: ['FE'], icon: 'infinity', description: 'Otorga munición mágica infinita sin requerir carcaj de flechas o virotes.' },
   234: { id: 234, name: 'Recovery', nameEs: 'Recuperación de SD (Recovery)', category: 'Buff', races: ['FE'], icon: 'shield-sync', description: 'Restaura puntos del escudo de protección (Shield Gauge - SD).' },
   235: { id: 235, name: 'Multi-Shot', nameEs: 'Disparo Múltiple (Five Shot)', category: 'Físico', races: ['FE'], icon: 'ray-start-arrow', description: 'Dispara una ráfaga de 5 flechas en abanico cubriendo una gran zona.' },
-  236: { id: 236, name: 'Infinity Arrow', nameEs: 'Flecha Infinita (Infinity Arrow)', category: 'Buff', races: ['FE'], icon: 'infinity', description: 'Otorga munición mágica infinita sin requerir carcaj de flechas o virotes.' },
 
   // =========================================================================
   // 4. MAGIC GLADIATOR / DUEL MASTER (MG / DM)
   // =========================================================================
   55: { id: 55, name: 'Fire Slash', nameEs: 'Corte de Fuego (Fire Slash)', category: 'Físico', races: ['MG'], icon: 'fire-hydrant', description: 'Corte rápido llameante que reduce drásticamente la defensa de la armadura enemiga.' },
   56: { id: 56, name: 'Power Slash', nameEs: 'Corte de Poder (Power Slash)', category: 'Físico', races: ['MG'], icon: 'lightning-bolt-circle', description: 'Dispara ondas de choque cortantes a distancia con espadas de dos manos.' },
-  230: { id: 230, name: 'Gigantic Storm', nameEs: 'Tormenta Gigante (Gigantic Storm)', category: 'Magia', races: ['MG'], icon: 'weather-lightning-rainy', description: 'Invoca rayos celestiales masivos que diezman un radio completo de enemigos.' },
-  237: { id: 237, name: 'Spiral Slash', nameEs: 'Tajo Espiral (Spiral Slash)', category: 'Físico', races: ['MG'], icon: 'flare', description: 'Giro veloz con espadas dobles que desgarra al contrincante.' },
-  238: { id: 238, name: 'Flame Strike', nameEs: 'Golpe de Llama (Flame Strike)', category: 'Físico', races: ['MG'], icon: 'firework', description: 'Ataque flamígero a distancia con trayectoria de fuego explosivo.' },
+  57: { id: 57, name: 'Spiral Slash', nameEs: 'Tajo Espiral (Spiral Slash)', category: 'Físico', races: ['MG'], icon: 'flare', description: 'Giro veloz con espadas dobles que desgarra al contrincante.' },
+  236: { id: 236, name: 'Flame Strike', nameEs: 'Golpe de Llama (Flame Strike)', category: 'Físico', races: ['MG'], icon: 'firework', description: 'Ataque flamígero a distancia con trayectoria de fuego explosivo.' },
+  237: { id: 237, name: 'Gigantic Storm', nameEs: 'Tormenta Gigante (Gigantic Storm)', category: 'Magia', races: ['MG'], icon: 'weather-lightning-rainy', description: 'Invoca rayos celestiales masivos que diezman un radio completo de enemigos.' },
 
   // =========================================================================
   // 5. DARK LORD / LORD EMPEROR (DL / LE)
   // =========================================================================
   60: { id: 60, name: 'Force', nameEs: 'Fuerza Espiritual (Force)', category: 'Magia', races: ['DL'], icon: 'radioactive', description: 'Disparo de energía sagrada pura concentrada del Dark Lord.' },
-  61: { id: 61, name: 'Fireburst', nameEs: 'Ráfaga de Cadenas (Fireburst)', category: 'Magia', races: ['DL'], icon: 'fire-alert', description: 'Explosión de cadenas de fuego en múltiples objetivos simultáneos.' },
-  62: { id: 62, name: 'Increase Critical Damage', nameEs: 'Aura de Daño Crítico (Critical)', category: 'Buff', races: ['DL'], icon: 'target', description: 'Incrementa enormemente el daño crítico y excelente propio y del clan.' },
-  63: { id: 63, name: 'Electric Spike', nameEs: 'Púa Eléctrica (Electric Spike)', category: 'Magia', races: ['DL'], icon: 'flash-alert', description: 'Púas de energía eléctrica concentrada que castigan al adversario.' },
-  64: { id: 64, name: 'Force Wave', nameEs: 'Ola de Fuerza (Force Wave)', category: 'Magia', races: ['DL'], icon: 'wave', description: 'Onda sagrada frontal que empuja y derriba enemigos.' },
-  65: { id: 65, name: 'Summon', nameEs: 'Llamado de Grupo (Summon Party)', category: 'Especial', races: ['DL'], icon: 'account-group', description: 'Convoca instantáneamente a todos los miembros del grupo a la ubicación del DL.' },
-  67: { id: 67, name: 'Earthquake', nameEs: 'Terremoto de Caballo (Earthquake)', category: 'Físico', races: ['DL'], icon: 'earth', description: 'Poderoso pisotón del Dark Horse que aturde y daña en área.' },
-  68: { id: 68, name: 'Raven Attack', nameEs: 'Ataque de Cuervo (Dark Raven)', category: 'Especial', races: ['DL'], icon: 'bird', description: 'Ordena al Dark Raven sobrevolar y ejecutar ataques continuos.' },
+  61: { id: 61, name: 'Fire Burst', nameEs: 'Ráfaga de Cadenas (Fire Burst)', category: 'Magia', races: ['DL'], icon: 'fire-alert', description: 'Explosión de cadenas de fuego en múltiples objetivos simultáneos.' },
+  62: { id: 62, name: 'Earthshake', nameEs: 'Pisotón de Caballo (Earthshake)', category: 'Físico', races: ['DL'], icon: 'earth', description: 'Poderoso pisotón del Dark Horse que aturde y daña en área.' },
+  63: { id: 63, name: 'Summon', nameEs: 'Llamado de Grupo (Summon Party)', category: 'Especial', races: ['DL'], icon: 'account-group', description: 'Convoca instantáneamente a todos los miembros del grupo a la ubicación del DL.' },
+  64: { id: 64, name: 'Increase Critical Damage', nameEs: 'Aura de Daño Crítico (Critical)', category: 'Buff', races: ['DL'], icon: 'target', description: 'Incrementa enormemente el daño crítico y excelente propio y del clan.' },
+  65: { id: 65, name: 'Electric Spike', nameEs: 'Púa Eléctrica (Electric Spike)', category: 'Magia', races: ['DL'], icon: 'flash-alert', description: 'Púas de energía eléctrica concentrada que castigan al adversario.' },
+  66: { id: 66, name: 'Force Wave', nameEs: 'Ola de Fuerza (Force Wave)', category: 'Magia', races: ['DL'], icon: 'wave', description: 'Onda sagrada frontal que empuja y derriba enemigos.' },
   78: { id: 78, name: 'Fire Scream', nameEs: 'Grito de Fuego (Fire Scream)', category: 'Magia', races: ['DL'], icon: 'bullhorn', description: 'Tres ondas de fuego expansivas simultáneas con daño letal masivo.' },
-  239: { id: 239, name: 'Iron Defense', nameEs: 'Defensa de Hierro (Iron Defense)', category: 'Buff', races: ['DL'], icon: 'shield-lock', description: 'Aumenta masivamente la defensa y la resistencia al daño a costa de movilidad.' },
+  238: { id: 238, name: 'Chaotic Diseier', nameEs: 'Deseo Caótico (Chaotic Diseier)', category: 'Magia', races: ['DL'], icon: 'ghost', description: 'Invoca espíritus sombríos de alta concentración para atacar al objetivo.' },
 
   // =========================================================================
   // 6. SUMMONER / BLOODY SUMMONER / DIMENSION MASTER (SU / BS / DM)
   // =========================================================================
   214: { id: 214, name: 'Drain Life', nameEs: 'Drenar Vida (Drain Life)', category: 'Magia', races: ['SU'], icon: 'vampire', description: 'Drena salud al oponente y regenera la vida de la invocadora.' },
   215: { id: 215, name: 'Chain Lightning', nameEs: 'Cadena de Rayos (Chain Lightning)', category: 'Magia', races: ['SU'], icon: 'flash-outline', description: 'Descarga eléctrica que encadena y salta hasta 3 objetivos consecutivos.' },
-  216: { id: 216, name: 'Electric Surge', nameEs: 'Sobrecarga Eléctrica (Electric Surge)', category: 'Magia', races: ['SU'], icon: 'lightning-bolt', description: 'Descarga penetrante concentrada en línea recta.' },
   217: { id: 217, name: 'Damage Reflection', nameEs: 'Reflejo de Daño (Reflect)', category: 'Buff', races: ['SU'], icon: 'mirror', description: 'Aura que refleja un porcentaje de todo el daño recibido de vuelta al agresor.' },
-  218: { id: 218, name: 'Innovation', nameEs: 'Innovación / Quitar Defensa', category: 'Magia', races: ['SU'], icon: 'shield-alert', description: 'Debilita la armadura y la defensa física y mágica de los enemigos cercanos.' },
+  218: { id: 218, name: 'Berserker', nameEs: 'Furia Berserker (Berserker)', category: 'Buff', races: ['SU'], icon: 'emoticon-angry', description: 'Aumenta salvajemente el ataque mágico a costa de reducir la defensa personal.' },
   219: { id: 219, name: 'Sleep', nameEs: 'Sueño Profundo (Sleep)', category: 'Magia', races: ['SU'], icon: 'bed', description: 'Duerme e inmoviliza a los enemigos en el área hasta recibir daño.' },
   221: { id: 221, name: 'Weakness', nameEs: 'Debilidad / Reducir Ataque', category: 'Magia', races: ['SU'], icon: 'sword-cross', description: 'Reduce considerablemente la potencia ofensiva del adversario.' },
-  222: { id: 222, name: 'Lightning Shock', nameEs: 'Choque Eléctrico (Lightning Shock)', category: 'Magia', races: ['SU'], icon: 'flash', description: 'Tormenta de rayos omnidireccional expansiva con gran poder de destrucción.' },
-  223: { id: 223, name: 'Blind', nameEs: 'Ceguera (Blind)', category: 'Magia', races: ['SU'], icon: 'eye-off', description: 'Ciega temporalmente al adversario reduciendo drásticamente su precisión de golpe.' },
-  224: { id: 224, name: 'Pollute', nameEs: 'Polución Maldita (Pollute)', category: 'Magia', races: ['SU'], icon: 'biohazard', description: 'Contamina el suelo creando un foso de corrupción que desintegra a los enemigos.' },
-  225: { id: 225, name: 'Berserker', nameEs: 'Furia Berserker (Berserker)', category: 'Buff', races: ['SU'], icon: 'emoticon-angry', description: 'Aumenta salvajemente el ataque mágico a costa de reducir la defensa personal.' },
-  231: { id: 231, name: 'Requiem', nameEs: 'Réquiem del Libro Neil (Requiem)', category: 'Magia', races: ['SU'], icon: 'skull-outline', description: 'Invoca al espíritu guardián Neil para proyectar púas fantasmales letales.' },
+  222: { id: 222, name: 'Innovation', nameEs: 'Innovación / Quitar Defensa', category: 'Magia', races: ['SU'], icon: 'shield-alert', description: 'Debilita la armadura y la defensa física y mágica de los enemigos cercanos.' },
+  223: { id: 223, name: 'Explosion', nameEs: 'Explosión de Sahamutt (Explosion)', category: 'Magia', races: ['SU'], icon: 'fire-spread', description: 'Explosión de fuego primordial desatada del Libro de Sahamutt.' },
+  224: { id: 224, name: 'Requiem', nameEs: 'Réquiem de Neil (Requiem)', category: 'Magia', races: ['SU'], icon: 'skull-outline', description: 'Invoca al espíritu guardián Neil para proyectar púas fantasmales letales.' },
+  225: { id: 225, name: 'Pollution', nameEs: 'Polución de Ghost Phantom', category: 'Magia', races: ['SU'], icon: 'biohazard', description: 'Contamina el suelo creando un foso de corrupción que desintegra a los enemigos.' },
+  230: { id: 230, name: 'Lightning Shock', nameEs: 'Choque Eléctrico (Lightning Shock)', category: 'Magia', races: ['SU'], icon: 'flash', description: 'Tormenta de rayos omnidireccional expansiva con gran poder de destrucción.' },
 
   // =========================================================================
   // 7. RAGE FIGHTER / FIST MASTER (RF / FM)
@@ -123,7 +122,8 @@ export const MU_SKILLS: Record<number, MuSkillDefinition> = {
   266: { id: 266, name: 'Ignore Defense', nameEs: 'Ignorar Defensa (Ignore Defense)', category: 'Buff', races: ['RF'], icon: 'shield-off', description: 'Otorga una probabilidad porcentual fija de ignorar la defensa enemiga.' },
   267: { id: 267, name: 'Increase Health', nameEs: 'Aumento de Salud (Fitness)', category: 'Buff', races: ['RF'], icon: 'heart-flash', description: 'Incrementa la vitalidad y la reserva máxima de salud propia y del grupo.' },
   268: { id: 268, name: 'Increase Block', nameEs: 'Aumento de Bloqueo (Defense Rate)', category: 'Buff', races: ['RF'], icon: 'shield-check', description: 'Incrementa la probabilidad de evadir y bloquear impactos enemigos.' },
-  269: { id: 269, name: 'Phoenix Shot', nameEs: 'Disparo Fénix (Phoenix Shot)', category: 'Físico', races: ['RF'], icon: 'fire-circle', description: 'Dispara un proyectil de energía ígnea en forma de fénix hacia el objetivo.' },
+  269: { id: 269, name: 'Charge', nameEs: 'Carga Ofensiva (Charge)', category: 'Físico', races: ['RF'], icon: 'run-fast', description: 'Embestida rápida hacia adelante que desestabiliza las defensas del enemigo.' },
+  270: { id: 270, name: 'Phoenix Shot', nameEs: 'Disparo Fénix (Phoenix Shot)', category: 'Físico', races: ['RF'], icon: 'fire-circle', description: 'Dispara un proyectil de energía ígnea en forma de fénix hacia el objetivo.' },
 };
 
 // Presets canónicos de Habilidades recomendadas por Raza
@@ -140,42 +140,42 @@ export const RACE_SKILL_PRESETS: Record<string, { label: string; code: string; c
     code: 'DW',
     color: '#5B8DEF',
     icon: 'magic-staff',
-    skillIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 38, 39, 40, 233],
+    skillIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 38, 39, 40, 69, 233],
   },
   FE: {
     label: 'Fairy Elf (ME / HE)',
     code: 'FE',
     color: '#3FCF8E',
     icon: 'bow-arrow',
-    skillIds: [24, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 51, 52, 234, 235, 236],
+    skillIds: [24, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 51, 52, 77, 234, 235],
   },
   MG: {
     label: 'Magic Gladiator (DM)',
     code: 'MG',
     color: '#FFA726',
     icon: 'lightning-bolt',
-    skillIds: [18, 19, 20, 21, 22, 23, 41, 55, 56, 230, 237, 238, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 38, 39],
+    skillIds: [18, 19, 20, 21, 22, 23, 41, 55, 56, 57, 236, 237, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 38, 39, 69],
   },
   DL: {
     label: 'Dark Lord (LE)',
     code: 'DL',
-    color: '#E8C86A',
+    color: '#E0C380',
     icon: 'shield-crown',
-    skillIds: [60, 61, 62, 63, 64, 65, 67, 68, 78, 239],
+    skillIds: [60, 61, 62, 63, 64, 65, 66, 78, 238],
   },
   SU: {
     label: 'Summoner (BS / DM)',
     code: 'SU',
     color: '#4DD0E1',
     icon: 'book-open-variant',
-    skillIds: [214, 215, 216, 217, 218, 219, 221, 222, 223, 224, 225, 231],
+    skillIds: [214, 215, 217, 218, 219, 221, 222, 223, 224, 225, 230],
   },
   RF: {
     label: 'Rage Fighter (FM)',
     code: 'RF',
     color: '#FF7043',
     icon: 'boxing-glove',
-    skillIds: [260, 261, 262, 263, 264, 265, 266, 267, 268, 269],
+    skillIds: [260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270],
   },
 };
 

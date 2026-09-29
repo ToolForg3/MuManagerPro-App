@@ -13,12 +13,15 @@ import {
   Modal,
   ScrollView,
   KeyboardAvoidingView,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../../components/ui/MuIcon';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { Panel, MuCornerOrnaments, MuButton } from '../../components/ui';
 import { ClassAvatar } from '../../components/common/ClassAvatar';
 import { CharacterSummary } from '../../types/character';
 import { SqlClient } from '../../services/database/sqlClient';
@@ -329,48 +332,60 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
     }
 
     return (
-      <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.8}
-        onPress={() => navigation.navigate('CharacterEdit', { characterName: item.Name })}
-      >
-        <View style={styles.cardTopRow}>
-          <View style={styles.avatarContainer}>
-            <ClassAvatar classId={item.Class} size={46} />
-            <View style={[styles.charOnlineDot, { backgroundColor: isOnline ? THEME.colors.jade : THEME.colors.textMuted }]} />
+      <View style={[styles.stitchCharCard, isBanned && styles.stitchCharCardBanned]}>
+        <MuCornerOrnaments size={12} />
+
+        {/* Fila Superior: Avatar + Nombre + Nivel/Resets + Eliminar */}
+        <View style={styles.stitchCardTopRow}>
+          <View style={styles.stitchAvatarContainer}>
+            <ClassAvatar classId={item.Class} size={44} />
+            <View
+              style={[
+                styles.stitchCharOnlineDot,
+                { backgroundColor: isOnline ? THEME.colors.jade : THEME.colors.textMuted },
+              ]}
+            />
           </View>
 
-          <View style={styles.nameClassCol}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.charName} numberOfLines={1}>{item.Name}</Text>
+          <View style={styles.stitchNameClassCol}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={styles.stitchCharName} numberOfLines={1}>
+                {item.Name}
+              </Text>
               {isGm && (
-                <View style={styles.gmTagBadge}>
-                  <Text style={styles.gmTagText}>GM</Text>
+                <View style={styles.stitchGmTagBadge}>
+                  <Text style={styles.stitchGmTagText}>GM</Text>
                 </View>
               )}
               {isBanned && (
-                <View style={styles.banTagBadge}>
-                  <Text style={styles.banTagText}>BAN</Text>
+                <View style={styles.stitchBanTagBadge}>
+                  <Text style={styles.stitchBanTagText}>BAN</Text>
                 </View>
               )}
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.charClass}>{classInfo.name}</Text>
-              <Text style={{ color: isOnline ? THEME.colors.jade : THEME.colors.textMuted, fontSize: 10, fontWeight: '700' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+              <Text style={styles.stitchCharClass}>{classInfo.name}</Text>
+              <Text
+                style={{
+                  color: isOnline ? THEME.colors.jade : THEME.colors.textMuted,
+                  fontSize: 10,
+                  fontWeight: '700',
+                }}
+              >
                 {isOnline ? 'ONLINE' : 'OFFLINE'}
               </Text>
             </View>
           </View>
 
-          <View style={styles.levelResetsCol}>
-            <Text style={styles.levelText}>Lv {item.cLevel}</Text>
-            <Text style={styles.resetsText}>
+          <View style={styles.stitchLevelResetsCol}>
+            <Text style={styles.stitchLevelText}>Lv {item.cLevel}</Text>
+            <Text style={styles.stitchResetsText}>
               {item.ResetCount || 0}R{item.MasterResetCount ? ` · ${item.MasterResetCount}MR` : ''}
             </Text>
           </View>
 
           <TouchableOpacity
-            style={styles.cardDeleteBtn}
+            style={styles.stitchCardDeleteBtn}
             onPress={() => promptDeleteCharacter(item)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             activeOpacity={0.7}
@@ -378,116 +393,152 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
             accessibilityLabel={`Eliminar personaje ${item.Name}`}
           >
             {deletingCharName === item.Name ? (
-              <ActivityIndicator size="small" color="#FF5252" />
+              <ActivityIndicator size="small" color={THEME.colors.brasa} />
             ) : (
-              <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF5252" />
+              <MuIcon name="trash" size={17} color={THEME.colors.brasa} />
             )}
           </TouchableOpacity>
         </View>
 
-        <View style={styles.cardBottomRow}>
+        {/* Cuadrícula de Datos de Estado */}
+        <View style={styles.stitchCardBottomGrid}>
           {/* Cuenta */}
-          <View style={styles.accountPill}>
-            <MaterialCommunityIcons name="account" size={14} color="#29B6F6" />
-            <Text style={styles.accountPillText} numberOfLines={1}>{item.AccountID}</Text>
+          <View style={styles.stitchPill}>
+            <MuIcon name="account" size={13} color={THEME.colors.arcano} />
+            <Text style={styles.stitchPillText} numberOfLines={1}>{item.AccountID}</Text>
           </View>
 
           {/* Ubicación Mapa */}
-          <View style={styles.locationPill}>
-            <MaterialCommunityIcons name="map-marker-outline" size={14} color="#FF9800" />
-            <Text style={styles.locationPillText} numberOfLines={1}>
+          <View style={styles.stitchPill}>
+            <MuIcon name="location" size={13} color={THEME.colors.amber} />
+            <Text style={styles.stitchPillText} numberOfLines={1}>
               {mapName} ({item.MapPosX ?? 125}, {item.MapPosY ?? 125})
             </Text>
           </View>
 
           {/* PK Status */}
-          <View style={[styles.pkPill, { borderColor: `${pkColor}40`, backgroundColor: `${pkColor}15` }]}>
-            <MaterialCommunityIcons name={pkIcon as any} size={13} color={pkColor} />
-            <Text style={[styles.pkPillText, { color: pkColor }]}>{pkLabel}</Text>
+          <View style={[styles.stitchPill, { borderColor: `${pkColor}40`, backgroundColor: `${pkColor}15` }]}>
+            <MuIcon name={pkIcon as any} size={12} color={pkColor} />
+            <Text style={[styles.stitchPillText, { color: pkColor }]}>{pkLabel}</Text>
           </View>
 
           {/* Guild / Clan */}
           {!!item.GuildName && (
-            <View style={styles.guildPill}>
-              <MaterialCommunityIcons name="shield-crown-outline" size={13} color={THEME.colors.oroClaro} />
-              <Text style={styles.guildPillText} numberOfLines={1}>{item.GuildName}</Text>
+            <View style={styles.stitchPill}>
+              <MuIcon name="guild" size={12} color={THEME.colors.oroClaro} />
+              <Text style={styles.stitchPillText} numberOfLines={1}>{item.GuildName}</Text>
             </View>
           )}
 
           {/* Zen */}
-          <View style={styles.zenPill}>
-            <MaterialCommunityIcons name="sack" size={14} color="#FFD700" />
-            <Text style={styles.zenPillText}>{formatZen(item.Money || 0)}</Text>
+          <View style={styles.stitchPill}>
+            <MuIcon name="zen" size={13} color={THEME.colors.oroClaro} />
+            <Text style={styles.stitchPillText}>{formatZen(item.Money || 0)}</Text>
           </View>
         </View>
-      </TouchableOpacity>
+
+        {/* Botón Táctil para Ver Detalle / Stats con texturas nativas MU */}
+        <MuButton
+          titulo="VER STATS Y GESTIONAR"
+          icono="edit"
+          variante="primary"
+          altura={40}
+          onPress={() => navigation.navigate('CharacterEdit', { characterName: item.Name })}
+          accessibilityLabel={`Gestionar stats de ${item.Name}`}
+          style={{ marginTop: 8 }}
+        />
+      </View>
     );
   };
 
   return (
-    <View style={[styles.container, { paddingTop: props?.hideTopPadding ? 6 : (topInset + 10) }]}>
-      {/* Header Principal con Botón de Crear Personaje (+) */}
-      <View style={styles.headerRow}>
-        <Text style={styles.mainTitle}>{t('tabPJs') || 'Personajes'}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={styles.counterBadge}>
-            <Text style={styles.counterBadgeText}>{filteredChars.length}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.floatingAddBtn}
-            onPress={() => openCreateModal(accountFilter || undefined)}
-            activeOpacity={0.8}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color="#070A0F" />
-          </TouchableOpacity>
+    <ImageBackground
+      source={STITCH_ASSETS.backgrounds.stone}
+      style={[styles.container, { paddingTop: props?.hideTopPadding ? 4 : (topInset + 6) }]}
+      imageStyle={{ opacity: 0.50 }}
+      resizeMode="repeat"
+    >
+      {/* Buscador y Botón Táctil Nuevo PJ (Stitch Ironforge) */}
+      <View style={styles.stitchSearchRow}>
+        <View style={styles.stitchSearchBox}>
+          <MuIcon name="search" size={18} color={THEME.colors.textMuted} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={handleSearchChange}
+            placeholder="Buscar personaje o cuenta..."
+            placeholderTextColor={THEME.colors.textMuted}
+            style={styles.stitchSearchInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => handleSearchChange('')} style={styles.stitchClearBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <MuIcon name="close" size={14} color={THEME.colors.textoSecundarioLuminoso} />
+            </TouchableOpacity>
+          )}
         </View>
+        <MuButton
+          titulo="NUEVO PJ"
+          icono="plus"
+          variante="primary"
+          compacto={true}
+          altura={48}
+          onPress={() => openCreateModal(accountFilter || undefined)}
+          accessibilityLabel="Crear Nuevo Personaje"
+        />
       </View>
-
-      {/* Barra de Búsqueda con Autocomplete */}
-      <AutocompleteInput
-        value={searchQuery}
-        onChangeText={handleSearchChange}
-        suggestions={charSuggestions}
-        placeholder="Buscar personaje o cuenta..."
-        icon="magnify"
-        clearable={true}
-        containerStyle={{ marginBottom: 14 }}
-      />
 
       {/* Indicador de filtro por cuenta */}
       {accountFilter && (
         <View style={styles.activeFilterBanner}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-            <MaterialCommunityIcons name="filter" size={16} color="#29B6F6" />
+            <MuIcon name="search" size={16} color={THEME.colors.arcano} />
             <Text style={styles.activeFilterText} numberOfLines={1}>
               Filtrando cuenta: <Text style={{ fontWeight: 'bold' }}>{accountFilter}</Text>
             </Text>
           </View>
           <TouchableOpacity onPress={clearAccountFilter} style={styles.clearFilterBtn}>
-            <MaterialCommunityIcons name="close" size={16} color="#FFF" />
+            <MuIcon name="close" size={16} color={THEME.colors.texto} />
           </TouchableOpacity>
         </View>
       )}
 
+      {/* Subtítulo de Tabla Character con Esquineros Metálicos NewUI */}
+      <View style={styles.stitchTableHeaderBanner}>
+        <MuCornerOrnaments size={10} />
+        <View style={styles.stitchTableHeaderLeft}>
+          <MuIcon name="character" size={16} color={THEME.colors.oroClaro} />
+          <Text style={styles.stitchTableHeaderTitle}>TABLA DE PERSONAJES (Character)</Text>
+        </View>
+        <View style={styles.stitchTableHeaderCountBadge}>
+          <Text style={styles.stitchTableHeaderCountText}>Total: {filteredChars.length}</Text>
+        </View>
+      </View>
+
       {/* Error Banner si no hay conexión real */}
       {errorMessage && (
         <View style={styles.errorCard}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF5252" />
+          <MuIcon name="close" size={20} color={THEME.colors.brasa} />
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.errorTitle}>Sin conexión a SQL Server</Text>
             <Text style={styles.errorSub}>{errorMessage}</Text>
           </View>
           {errorMessage.includes('NO_AUTORIZADO') || errorMessage.includes('Sesión') || errorMessage.includes('sesión') ? (
-            <TouchableOpacity
+            <MuButton
+              titulo="Iniciar Sesión"
+              variante="primary"
+              compacto={true}
+              altura={34}
               onPress={() => LicenseService.triggerSessionInvalidated('Tu sesión requiere reautenticación.')}
-              style={[styles.retryBtn, { backgroundColor: THEME.colors.primaryOrange }]}
-            >
-              <Text style={[styles.retryText, { color: '#100D0B', fontWeight: 'bold' }]}>Iniciar Sesión</Text>
-            </TouchableOpacity>
+            />
           ) : (
-            <TouchableOpacity onPress={() => fetchCharacters()} style={styles.retryBtn}>
-              <Text style={styles.retryText}>Reintentar</Text>
-            </TouchableOpacity>
+            <MuButton
+              titulo="Reintentar"
+              variante="secondary"
+              compacto={true}
+              altura={34}
+              onPress={() => fetchCharacters()}
+            />
           )}
         </View>
       )}
@@ -497,7 +548,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
         data={filteredChars}
         keyExtractor={(item) => item.Name}
         renderItem={renderCharacterCard}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 32 + insets.bottom }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 120 + insets.bottom }]}
         initialNumToRender={12}
         maxToRenderPerBatch={12}
         windowSize={5}
@@ -513,7 +564,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
           !loading ? (
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconWrap}>
-                <MaterialCommunityIcons
+                <MuIcon
                   name={accountFilter ? "account-question" : "sword-cross"}
                   size={42}
                   color={accountFilter ? "#FF9800" : THEME.colors.textoSecundario}
@@ -531,18 +582,13 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
               </Text>
 
               {/* Botón destacado para crear personaje en esta cuenta */}
-              <TouchableOpacity
-                style={styles.emptyActionBtn}
+              <MuButton
+                titulo={accountFilter ? `Crear Personaje en [${accountFilter}]` : 'Crear Nuevo Personaje'}
+                icono="plus-circle"
+                variante="primary"
+                altura={44}
                 onPress={() => openCreateModal(accountFilter || undefined)}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="plus-circle" size={18} color="#0D0D0D" />
-                <Text style={styles.emptyActionBtnText}>
-                  {accountFilter
-                    ? `Crear Personaje en [${accountFilter}]`
-                    : 'Crear Nuevo Personaje'}
-                </Text>
-              </TouchableOpacity>
+              />
             </View>
           ) : null
         }
@@ -561,23 +607,23 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
-          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+          <Panel style={[styles.modalCard, { maxHeight: '90%' }]}>
               {/* Header Modal */}
               <View style={styles.modalHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={styles.modalHeaderIconWrap}>
-                    <MaterialCommunityIcons name="shield-account" size={20} color="#FFD700" />
+                    <MuIcon name="shield-account" size={20} color="#FFD700" />
                   </View>
                   <View>
                     <Text style={styles.modalHeaderTitle}>Nuevo Personaje</Text>
-                    <Text style={styles.modalHeaderSub}>Season 6 Louis Update 40/50</Text>
+                    <Text style={styles.modalHeaderSub}>Creación Universal de Personaje</Text>
                   </View>
                 </View>
                 <TouchableOpacity
                   onPress={() => setCreateModalVisible(false)}
                   style={styles.modalCloseBtn}
                 >
-                  <MaterialCommunityIcons name="close" size={22} color="#8E9AA8" />
+                  <MuIcon name="close" size={22} color="#8E9AA8" />
                 </TouchableOpacity>
               </View>
 
@@ -625,24 +671,29 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                       return (
                         <TouchableOpacity
                           key={race.code}
-                          style={[
-                            styles.raceChip,
-                            isSelected && { borderColor: race.accentColor, backgroundColor: 'rgba(255, 255, 255, 0.08)' },
-                          ]}
                           onPress={() => {
                             setSelectedRaceIndex(idx);
                             setSelectedTier(1);
                           }}
                           activeOpacity={0.7}
                         >
-                          <MaterialCommunityIcons
-                            name={race.avatarIcon as any}
-                            size={22}
-                            color={isSelected ? race.accentColor : THEME.colors.textoSecundario}
-                          />
-                          <Text style={[styles.raceChipText, isSelected && { color: race.accentColor, fontWeight: 'bold' }]}>
-                            {race.code}
-                          </Text>
+                          <ImageBackground
+                            source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={[
+                              styles.raceChip,
+                              isSelected && { borderColor: race.accentColor },
+                            ]}
+                            resizeMode="stretch"
+                          >
+                            <MuIcon
+                              name={race.avatarIcon as any}
+                              size={20}
+                              color={isSelected ? race.accentColor : THEME.colors.textoSecundarioLuminoso}
+                            />
+                            <Text style={[styles.raceChipText, isSelected && { color: '#EFD28D', fontWeight: 'bold' }]}>
+                              {race.code}
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -658,17 +709,23 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                       return (
                         <TouchableOpacity
                           key={t.classId}
-                          style={[
-                            styles.tierBtn,
-                            isTierSelected && { borderColor: currentRace.accentColor, backgroundColor: 'rgba(255, 255, 255, 0.08)' },
-                          ]}
+                          style={{ flex: 1 }}
                           onPress={() => setSelectedTier(t.tier)}
                           activeOpacity={0.7}
                         >
-                          <Text style={[styles.tierBtnName, isTierSelected && { color: currentRace.accentColor, fontWeight: 'bold' }]}>
-                            {t.name}
-                          </Text>
-                          <Text style={styles.tierBtnSub}>Tier {t.tier}</Text>
+                          <ImageBackground
+                            source={isTierSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            style={[
+                              styles.tierBtn,
+                              isTierSelected && { borderColor: currentRace.accentColor },
+                            ]}
+                            resizeMode="stretch"
+                          >
+                            <Text style={[styles.tierBtnName, isTierSelected && { color: '#EFD28D', fontWeight: 'bold' }]}>
+                              {t.name}
+                            </Text>
+                            <Text style={[styles.tierBtnSub, isTierSelected && { color: '#EFD28D' }]}>Tier {t.tier}</Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -737,24 +794,20 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                   </View>
                 </View>
 
-                {/* Botón Crear Personaje */}
-                <TouchableOpacity
-                  style={styles.submitCreateBtn}
-                  onPress={handleCreateCharacter}
+                {/* Botón Crear Personaje (Stitch Texture) */}
+                <MuButton
+                  titulo="Crear Personaje en SQL Server"
+                  icono="sword"
+                  variante="primary"
+                  altura={48}
                   disabled={isCreatingChar}
-                  activeOpacity={0.8}
-                >
-                  {isCreatingChar ? (
-                    <ActivityIndicator size="small" color="#070A0F" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="sword" size={20} color="#070A0F" />
-                      <Text style={styles.submitCreateBtnText}>Crear Personaje en SQL Server</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                  cargando={isCreatingChar}
+                  onPress={handleCreateCharacter}
+                  accessibilityLabel="Crear Personaje en SQL Server"
+                  style={{ marginTop: 14 }}
+                />
             </ScrollView>
-          </View>
+          </Panel>
         </KeyboardAvoidingView>
       </Modal>
 
@@ -762,7 +815,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
         visible={licenseModalVisible}
         onClose={() => setLicenseModalVisible(false)}
       />
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -790,7 +843,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -802,7 +855,7 @@ const styles = StyleSheet.create({
   floatingAddBtn: {
     width: 44,
     height: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: THEME.colors.oro,
     alignItems: 'center',
     justifyContent: 'center',
@@ -818,7 +871,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingHorizontal: 14,
     height: 46,
     marginBottom: 16,
@@ -840,18 +893,254 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(91, 141, 239, 0.1)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: 'rgba(91, 141, 239, 0.3)',
     marginBottom: 14,
   },
+  /* ================= STITCH 02/03 ESTILOS PERSONAJES ================= */
+  stitchSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  stitchSearchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0C0D0C',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    paddingHorizontal: 10,
+    minHeight: 48,
+  },
+  stitchSearchInput: {
+    flex: 1,
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontWeight: '500',
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+  },
+  stitchClearBtn: {
+    padding: 4,
+  },
+  stitchAddCharBtn: {
+    height: 44,
+    paddingHorizontal: 12,
+    borderRadius: 2,
+    backgroundColor: '#252625',
+    borderWidth: 1,
+    borderColor: '#E0C380',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  stitchAddCharBtnText: {
+    color: '#EFD28D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    fontFamily: THEME.typography.fontTitle,
+  },
+  stitchTableHeaderBanner: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#111211',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#2D2E2D',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  stitchTableHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stitchTableHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E4E2E0',
+    letterSpacing: 0.5,
+  },
+  stitchTableHeaderCountBadge: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 195, 128, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  stitchTableHeaderCountText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.oroClaro,
+  },
+  stitchCharCard: {
+    position: 'relative',
+    backgroundColor: '#1F201F',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#4C463A',
+    padding: 12,
+    marginBottom: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  stitchCharCardBanned: {
+    borderColor: THEME.colors.brasa,
+    backgroundColor: 'rgba(226, 112, 58, 0.08)',
+  },
+  stitchCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  stitchAvatarContainer: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+    borderRadius: 2,
+    backgroundColor: '#0D0E0D',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 200, 106, 0.4)',
+  },
+  stitchCharOnlineDot: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5, /* círculo funcional (width/2): indicador online */
+    borderWidth: 1.5,
+    borderColor: '#0D0E0D',
+  },
+  stitchNameClassCol: {
+    flex: 1,
+  },
+  stitchCharName: {
+    color: THEME.colors.oroClaro,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    ...THEME.effects.textShadow,
+  },
+  stitchGmTagBadge: {
+    backgroundColor: THEME.colors.oroClaro,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 2,
+  },
+  stitchGmTagText: {
+    color: THEME.colors.textoOscuro,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  stitchBanTagBadge: {
+    backgroundColor: THEME.colors.brasa,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 2,
+  },
+  stitchBanTagText: {
+    color: '#E4E2E0',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  stitchCharClass: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 11,
+    fontWeight: '600',
+    ...THEME.effects.textShadowSubtle,
+  },
+  stitchLevelResetsCol: {
+    alignItems: 'flex-end',
+  },
+  stitchLevelText: {
+    color: THEME.colors.oroClaro,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  stitchResetsText: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 10.5,
+    fontWeight: '700',
+    marginTop: 1,
+  },
+  stitchCardDeleteBtn: {
+    padding: 6,
+    borderRadius: 2,
+    backgroundColor: 'rgba(226, 112, 58, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(226, 112, 58, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stitchCardBottomGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#2B2C2B',
+  },
+  stitchPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0E0F0E',
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#2B2C2B',
+  },
+  stitchPillText: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  stitchManageCharBtn: {
+    width: '100%',
+    height: 40,
+    borderRadius: 2,
+    backgroundColor: '#252625',
+    borderWidth: 1,
+    borderColor: '#E0C380',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  stitchManageCharBtnText: {
+    color: '#EFD28D',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+  },
+  /* ================= FIN STITCH PERSONAJES ================= */
   activeFilterText: {
     color: THEME.colors.arcano,
     fontSize: 12,
   },
   clearFilterBtn: {
     backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 6,
+    borderRadius: 2,
     padding: 4,
     marginLeft: 8,
   },
@@ -859,12 +1148,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   card: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
     padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -874,7 +1158,7 @@ const styles = StyleSheet.create({
   avatarContainer: {
     width: 46,
     height: 46,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: THEME.colors.casillaFondo,
     alignItems: 'center',
     justifyContent: 'center',
@@ -888,18 +1172,18 @@ const styles = StyleSheet.create({
     right: -2,
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 6, /* círculo funcional (width/2): indicador de presencia online */
     borderWidth: 2,
-    borderColor: '#2B2521',
+    borderColor: '#1F201F',
   },
   gmTagBadge: {
     backgroundColor: THEME.colors.oro,
     paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 2,
   },
   gmTagText: {
-    color: '#191512',
+    color: THEME.colors.textoOscuro,
     fontSize: 9,
     fontWeight: 'bold',
   },
@@ -907,7 +1191,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.brasa,
     paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 2,
   },
   banTagText: {
     color: '#FFFFFF',
@@ -951,7 +1235,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     width: 32,
     height: 32,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: 'rgba(255, 82, 82, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(255, 82, 82, 0.25)',
@@ -971,7 +1255,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -987,7 +1271,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -1002,7 +1286,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
   },
   pkPillText: {
@@ -1016,7 +1300,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -1032,7 +1316,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -1046,8 +1330,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 40,
     paddingHorizontal: 20,
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+    backgroundColor: '#1F201F',
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     marginTop: 20,
@@ -1055,8 +1339,8 @@ const styles = StyleSheet.create({
   emptyIconWrap: {
     width: 68,
     height: 68,
-    borderRadius: 6,
-    backgroundColor: 'rgba(232, 200, 106, 0.1)',
+    borderRadius: 2,
+    backgroundColor: 'rgba(224, 195, 128, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -1087,10 +1371,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
     minHeight: 44,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
   },
   emptyActionBtnText: {
-    color: '#191512',
+    color: THEME.colors.textoOscuro,
     fontFamily: THEME.typography.fontTitle,
     fontSize: 13,
     fontWeight: 'bold',
@@ -1099,7 +1383,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(226, 112, 58, 0.1)',
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: 'rgba(226, 112, 58, 0.3)',
     padding: 12,
@@ -1119,7 +1403,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(226, 112, 58, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 2,
   },
   retryText: {
     color: THEME.colors.brasa,
@@ -1135,11 +1419,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalCard: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
     padding: 16,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
@@ -1156,7 +1436,7 @@ const styles = StyleSheet.create({
   modalHeaderIconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: 'rgba(232, 200, 106, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1194,7 +1474,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderRadius: 2,
     paddingHorizontal: 12,
     height: 44,
     justifyContent: 'center',
@@ -1213,16 +1493,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.casillaFondo,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    minWidth: 54,
+    borderRadius: 2,
+    minWidth: 58,
+    overflow: 'hidden',
   },
   raceChipText: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 11,
     marginTop: 4,
+    ...THEME.effects.textShadowSubtle,
   },
   tierRow: {
     flexDirection: 'row',
@@ -1232,16 +1511,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 6,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.casillaFondo,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    borderRadius: 2,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   tierBtnName: {
-    color: THEME.colors.textoSecundario,
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 11,
     textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
   tierBtnSub: {
     color: THEME.colors.textoSecundario,
@@ -1253,22 +1531,22 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   submitCreateBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: 2,
+    backgroundColor: '#252625',
+    borderWidth: 1,
+    borderColor: '#E0C380',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: THEME.colors.oro,
-    paddingVertical: 14,
-    minHeight: 56,
-    borderRadius: 6,
     marginTop: 14,
-    borderWidth: 1,
-    borderColor: '#FFE866',
   },
   submitCreateBtnText: {
-    color: '#191512',
+    color: '#EFD28D',
     fontFamily: THEME.typography.fontTitle,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
   },
 });

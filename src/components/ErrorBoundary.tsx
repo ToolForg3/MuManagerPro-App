@@ -1,19 +1,31 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ImageBackground,
+} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { THEME } from '../constants/theme';
+import { STITCH_ASSETS } from '../constants/stitchAssets';
+import { MuCornerOrnaments } from './ui/MuCornerOrnaments';
+import { MuButton } from './ui/MuButton';
 
 interface Props {
   children: ReactNode;
   fallbackTitle?: string;
   fallbackMessage?: string;
   onReset?: () => void;
+  onGoHome?: () => void;
   tabName?: string;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  copied: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -22,6 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
+      copied: false,
     };
   }
 
@@ -29,6 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       error,
+      copied: false,
     };
   }
 
@@ -47,39 +61,100 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
+      copied: false,
     });
+  };
+
+  handleCopyError = async (errCode: string, safeMsg: string) => {
+    const errorDetails = `[MU MANAGER PRO - ERROR EN LA APLICACIÓN]\nCódigo: ${errCode}\nMódulo: ${this.props.tabName || 'General'}\nDetalle: ${this.state.error?.name || 'Error'}: ${this.state.error?.message || safeMsg}\nStack: ${this.state.error?.stack || 'No disponible'}`;
+    await Clipboard.setStringAsync(errorDetails);
+    this.setState({ copied: true });
+    setTimeout(() => {
+      this.setState({ copied: false });
+    }, 2500);
+  };
+
+  handleGoHome = () => {
+    if (this.props.onGoHome) {
+      this.props.onGoHome();
+    } else {
+      this.handleReset();
+    }
   };
 
   render() {
     if (this.state.hasError) {
-      const title = this.props.fallbackTitle || (this.props.tabName ? `Módulo ${this.props.tabName} Protegido` : 'Protección del Sistema Activa');
+      const title = this.props.fallbackTitle || 'ERROR EN LA APLICACIÓN';
       const errCode = 'ERR_UI_' + Math.abs(
         (this.state.error?.message || 'GENERIC')
           .split('')
           .reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 0)
       ).toString(16).toUpperCase();
-      const safeMsg = this.props.fallbackMessage || 'Se detectó una excepción no controlada en este módulo. Los datos y la sesión se mantuvieron protegidos.';
+      const safeMsg = this.props.fallbackMessage || 'La pantalla no pudo renderizarse correctamente.';
 
       return (
         <View style={styles.container}>
-          <View style={styles.card}>
-            <MaterialCommunityIcons name="shield-alert-outline" size={42} color="#FF6B6B" style={{ marginBottom: 12 }} />
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.desc}>
-              La aplicación evitó un cierre forzado. Puedes reintentar cargar este módulo de forma segura.
+          {/* Contenedor Gótico Stitch 12 */}
+          <View style={styles.panelBox}>
+            <MuCornerOrnaments size={12} />
+
+            {/* Cabecera de Estado con Icono Canónico de Alerta */}
+            <View style={styles.headerRow}>
+              <Image
+                source={STITCH_ASSETS.sprites.security}
+                style={styles.headerIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.headerTitle}>{title}</Text>
+              <Image
+                source={STITCH_ASSETS.sprites.security}
+                style={styles.headerIcon}
+                resizeMode="contain"
+              />
+            </View>
+
+            <Text style={styles.headerSubtitle}>
+              La pantalla no pudo renderizarse correctamente
             </Text>
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText} numberOfLines={2}>
-                {safeMsg}
+
+            {/* Cuadro de Registro Técnico Dinámico */}
+            <View style={styles.technicalBox}>
+              <Text style={styles.errorHighlightText} numberOfLines={2}>
+                [{this.state.error?.name || 'Error'}] : [{this.state.error?.message || safeMsg}]
               </Text>
-              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginTop: 4 }}>
-                Código de seguimiento: {errCode}
+              <Text style={styles.trackingCodeText}>
+                Código de auditoría: [{errCode}] · Módulo: [{this.props.tabName || 'General'}]
               </Text>
             </View>
-            <TouchableOpacity style={styles.btn} onPress={this.handleReset} activeOpacity={0.8}>
-              <MaterialCommunityIcons name="refresh" size={18} color="#100D0B" style={{ marginRight: 6 }} />
-              <Text style={styles.btnText}>Reintentar Módulo</Text>
-            </TouchableOpacity>
+
+            {/* Separador Ornamental Dorado NewUI */}
+            <Image
+              source={STITCH_ASSETS.decorations.goldDividerLine}
+              style={styles.dividerImg}
+              resizeMode="stretch"
+            />
+
+            {/* Acciones de Error con Botones Texturizados NewUI */}
+            <View style={styles.actionButtonsCol}>
+              <MuButton
+                titulo="Reiniciar Pantalla"
+                onPress={this.handleReset}
+                variante="primary"
+                altura={48}
+              />
+              <MuButton
+                titulo={this.state.copied ? '✓ Registro Copiado' : 'Copiar Registro de Error'}
+                onPress={() => this.handleCopyError(errCode, safeMsg)}
+                variante="secondary"
+                altura={48}
+              />
+              <MuButton
+                titulo="Volver al Inicio"
+                onPress={this.handleGoHome}
+                variante="secondary"
+                altura={48}
+              />
+            </View>
           </View>
         </View>
       );
@@ -91,65 +166,96 @@ export class ErrorBoundary extends Component<Props, State> {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 220,
+    backgroundColor: '#131413',
+    minHeight: 340,
   },
-  card: {
+  panelBox: {
     width: '100%',
-    backgroundColor: '#2B2521',
-    borderColor: '#E2703A',
+    maxWidth: 420,
+    backgroundColor: '#171817',
     borderWidth: 1,
-    borderRadius: 6,
+    borderColor: '#383938',
+    borderRadius: 2,
     padding: 18,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    elevation: 8,
+    position: 'relative',
   },
-  title: {
-    color: '#E8C86A',
-    fontSize: 16,
-    fontWeight: 'bold',
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginBottom: 6,
+  },
+  headerIcon: {
+    width: 18,
+    height: 18,
+    tintColor: '#E2703A',
+  },
+  headerTitle: {
+    color: '#E06868',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontFamily: THEME.typography.fontTitle,
     textAlign: 'center',
     ...THEME.effects.textShadow,
   },
-  desc: {
-    color: THEME.colors.texto,
-    fontSize: 12,
+  headerSubtitle: {
+    color: '#989081',
+    fontSize: 11,
     textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 17,
+    marginBottom: 14,
     ...THEME.effects.textShadowSubtle,
   },
-  errorBox: {
+  technicalBox: {
     width: '100%',
-    backgroundColor: '#100D0B',
-    padding: 10,
-    borderRadius: 6,
+    backgroundColor: '#0D0E0D',
+    padding: 12,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: '#6B5533',
-    marginBottom: 16,
+    borderColor: '#4C463A',
+    marginBottom: 14,
   },
-  errorText: {
-    color: '#E2703A',
+  errorHighlightText: {
+    color: '#FFB4AB',
     fontSize: 11,
     fontFamily: 'monospace',
+    fontWeight: '600',
+    lineHeight: 16,
   },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8C86A',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0D27A',
-    minHeight: 44,
-    justifyContent: 'center',
+  trackingCodeText: {
+    fontSize: 10,
+    color: '#989081',
+    marginTop: 6,
+    fontFamily: 'monospace',
   },
-  btnText: {
-    color: '#100D0B',
-    fontSize: 13,
-    fontWeight: 'bold',
+  dividerImg: {
+    width: '80%',
+    height: 3,
+    marginBottom: 14,
+    opacity: 0.85,
+  },
+  actionButtonsCol: {
+    width: '100%',
+    gap: 8,
+  },
+  actionTextSilver: {
+    color: '#E4E2E0',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+    letterSpacing: 0.6,
+    ...THEME.effects.textShadow,
   },
 });

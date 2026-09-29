@@ -1,97 +1,104 @@
 /**
- * SISTEMA DE DISEÑO OFICIAL MU ONLINE CLÁSICO CON CONTROLES TÁCTILES MODERNOS
- * Tokens globales de diseño: Colores, Tipografías, Formas y Ergonomía.
+ * SISTEMA DE DISEÑO OFICIAL: STITCH APPROVED IRONFORGE
+ * Tokens globales de diseño: Colores, Tipografías, Formas y Ergonomía (DESIGN.md).
  * Ningún componente o pantalla debe declarar colores sueltos.
  */
 
 export const THEME = {
   colors: {
-    // 1. Fondos y Superficies de Piedra MU
-    fondo: '#191512', // Piedra negra
-    fondoRadialTop: '#3A2E22', // Radial superior al 50%
-    superficie: '#2B2521', // Panel inicio degradado
-    superficieFin: '#1A1613', // Panel fin degradado
-    panelGradiente: ['#2B2521', '#1A1613'] as const,
-    borde: '#6B5533', // Grabado dorado tenue
-    bordeBrillante: '#A8894D', // Borde activo
-    casillaFondo: '#100D0B', // Fondo casi negro para slots e inputs
+    // 1. Fondos y Superficies Stitch Ironforge
+    deepForge: '#0D0E0D', // Recessed slots, input wells, modal shadow bands
+    fondo: '#131413', // Charcoal Canvas: aplicación y viewport global
+    fondoRadialTop: '#1B1C1B', // Iron Low
+    superficie: '#1F201F', // Iron Panel: paneles principales y contenedores
+    superficieFin: '#1B1C1B', // Iron Low: degradado secundario
+    panelGradiente: ['#1F201F', '#1B1C1B'] as const,
+    raisedIron: '#292A29', // Active headers, selected rows, raised controls
+    brightSteel: '#393938', // Bevel highlights
+    borde: '#4C463A', // Structural Outline: separadores, bordes inactivos
+    bordeBrillante: '#E0C380', // Antique Gold: borde activo / foco
+    casillaFondo: '#0D0E0D', // Deep Forge: slots, inputs, inventario
 
-    // 2. Jerarquía de Acentos Clásicos
-    oro: '#B58F3C', // Oro primario
-    oroClaro: '#E8C86A', // Oro resplandor
-    oroOscuro: '#7A5E22', // Oro profundo
-    oroGradiente: ['#E8C86A', '#B58F3C', '#7A5E22'] as const,
-    brasa: '#E2703A', // Acción secundaria / peligro / inyección
+    // 2. Jerarquía de Acentos Stitch Ironforge
+    oro: '#E0C380', // Antique Gold: acento visual único (títulos, foco, acciones primarias)
+    oroClaro: '#EFD28D', // Gold Bright: variante accesible para textos y detalles finos
+    oroOscuro: '#D2B674', // Gold Pressed: estado presionado / subdued
+    oroGradiente: ['#EFD28D', '#E0C380', '#D2B674'] as const,
+    brasa: '#E2703A', // Acción secundaria / inyección / alerta
     brasaGradiente: ['#FF884D', '#E2703A', '#B84514'] as const,
+    dangerIron: '#7A2E28', // Danger Iron: controles destructivos y fallos críticos
+    errorSurface: '#93000A', // Error Surface
+    errorText: '#FFDAD6', // Error Text
     arcano: '#5B8DEF', // Datos / valores mágicos / sub-stats
     jade: '#3FCF8E', // Éxito / ZEN / "Online"
+    amber: '#FFA87D', // Advertencias preventivas / Modo DEMO / licencias
 
     // 3. Tipografía (Alto Contraste WCAG AAA sobre fondo oscuro)
-    texto: '#FAF6EE', // Texto principal claro de alto contraste (blanco pergamino luminoso)
-    textoSecundario: '#C8BEAF', // Texto secundario de alta legibilidad (marfil cálido)
-    textoSecundarioLuminoso: '#D8CEBF', // Texto secundario de mayor claridad y nitidez
-    tituloTarjeta: '#E8C86A', // Títulos de tarjetas y secciones (11.89:1 AAA)
-    textoOscuro: '#100D0B', // Texto sobre oro brillante
+    texto: '#E4E2E0', // Ivory Text: texto principal y valores
+    textoSecundario: '#CDC6B9', // Weathered Silver: etiquetas secundarias y detalles metálicos
+    textoSecundarioLuminoso: '#E4E2E0', // Ivory Text de alta nitidez
+    tituloTarjeta: '#E0C380', // Antique Gold: títulos de tarjetas y ventanas
+    textoOscuro: '#0D0E0D', // Deep Forge: texto sobre superficies de acento
 
     // 4. Elementos y Remaches
-    remache: '#B58F3C',
-    remacheSombra: '#0A0807',
+    remache: '#E0C380', // Antique Gold
+    remacheSombra: '#0D0E0D', // Deep Forge
 
     // --- Mapeo de retrocompatibilidad estricta para código existente ---
-    background: '#191512',
-    surface: '#2B2521',
-    card: '#241E1A',
-    cardElevated: '#2B2521',
-    border: '#6B5533',
-    borderHighlight: '#B58F3C',
-    primaryOrange: '#B58F3C',
-    primaryOrangeHover: '#7A5E22',
-    accentGold: '#E8C86A',
-    accentGoldLight: '#E8C86A',
-    accentGoldDark: '#7A5E22',
-    accentGoldMuted: '#6B5533',
+    background: '#131413',
+    surface: '#1F201F',
+    card: '#1F201F',
+    cardElevated: '#292A29',
+    border: '#4C463A',
+    borderHighlight: '#E0C380',
+    primaryOrange: '#E0C380',
+    primaryOrangeHover: '#D2B674',
+    accentGold: '#E0C380',
+    accentGoldLight: '#EFD28D',
+    accentGoldDark: '#D2B674',
+    accentGoldMuted: '#4C463A',
     neonBlue: '#5B8DEF',
     neonBlueBright: '#5B8DEF',
     neonBlueGlow: 'rgba(91, 141, 239, 0.25)',
     accentBlue: '#5B8DEF',
     accentGreen: '#3FCF8E',
     accentGreenBright: '#3FCF8E',
-    accentPurple: '#E8C86A', // Purgado morado -> Oro Season 6
-    dangerRed: '#E2703A',
-    textPrimary: '#FAF6EE',
-    textSecondary: '#C8BEAF',
-    textMuted: '#BCB2A4',
-    textGold: '#F0D27A',
+    accentPurple: '#E0C380',
+    dangerRed: '#7A2E28',
+    textPrimary: '#E4E2E0',
+    textSecondary: '#CDC6B9',
+    textMuted: '#CDC6B9',
+    textGold: '#EFD28D',
     textNeon: '#7CA8FF',
-    textInverse: '#100D0B',
+    textInverse: '#0D0E0D',
 
     // Atributos y C-Window
     statStrength: '#E2703A',
     statAgility: '#3FCF8E',
-    statVitality: '#E8C86A',
+    statVitality: '#E0C380',
     statEnergy: '#5B8DEF',
-    statCommand: '#E8C86A',
+    statCommand: '#E0C380',
     statZen: '#3FCF8E',
     statRuud: '#5B8DEF',
 
     // Rarezas
-    itemNormal: '#FAF6EE',
+    itemNormal: '#E4E2E0',
     itemMagic: '#5B8DEF',
     itemExcellent: '#3FCF8E',
     itemAncient: '#5B8DEF',
-    itemSocket: '#E8C86A',
-    itemHarmony: '#E8C86A',
+    itemSocket: '#E0C380',
+    itemHarmony: '#E0C380',
     item380: '#E2703A',
-    itemPlus15: '#E8C86A',
+    itemPlus15: '#E0C380',
 
     // Celdas
-    slotEmpty: '#100D0B',
-    slotBorder: '#6B5533',
-    slotBorderHighlight: '#E8C86A',
-    slotActive: '#2B2521',
-    slotEquipped: '#1A1613',
-    slotMovingTarget: 'rgba(232, 200, 106, 0.15)',
-    slotMovingBorder: '#E8C86A',
+    slotEmpty: '#0D0E0D',
+    slotBorder: '#4C463A',
+    slotBorderHighlight: '#E0C380',
+    slotActive: '#1F201F',
+    slotEquipped: '#1B1C1B',
+    slotMovingTarget: 'rgba(224, 195, 128, 0.15)',
+    slotMovingBorder: '#E0C380',
   },
 
   typography: {
@@ -102,24 +109,24 @@ export const THEME = {
     weightSemiBold: '600' as const,
     weightMedium: '500' as const,
     weightRegular: '400' as const,
-    trackingWide: 2, // 0.15em aproximado
+    trackingWide: 2,
   },
 
   shapes: {
-    radioEsquina: 6, // 6 px estricto (nada redondeado tipo Material)
-    bordeAncho: 1, // 1 px
-    remacheSize: 6, // 6 px remaches
-    alturaMinima: 44, // 44 dp mínimo para cualquier control o campo
+    radioEsquina: 2, // 0-2 px rectangular gótico Stitch Ironforge
+    bordeAncho: 1,
+    remacheSize: 6,
+    alturaMinima: 48, // 48 dp mínimo universal para cualquier control o campo
     alturaBotonPrincipal: 56, // 56 dp para botones principales a todo el ancho
-    espaciadoBase: 14, // 12-16 dp entre tarjetas
+    espaciadoBase: 14,
   },
 
   borderRadius: {
-    sm: 6,
-    md: 6,
-    lg: 6,
-    xl: 6,
-    round: 6,
+    sm: 2,
+    md: 2,
+    lg: 2,
+    xl: 2,
+    round: 2,
   },
 
   spacing: {

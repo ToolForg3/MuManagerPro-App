@@ -1,21 +1,22 @@
 import React from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, useWindowDimensions, Text, Image } from 'react-native';
 import { THEME } from '../../constants/theme';
 import { PAPERDOLL_SLOTS, PaperdollSlotDefinition } from '../../constants/muConstants';
 import { PaperdollSlot } from './PaperdollSlot';
 import { ParsedItem } from '../../types/item';
 import { Panel } from '../ui/Panel';
-import { TituloSeccion } from '../ui/TituloSeccion';
 
 interface PaperdollViewProps {
   items: ParsedItem[];
   onSlotPress: (slotDef: PaperdollSlotDefinition, item?: ParsedItem) => void;
 }
 
+const goldDividerAsset = require('../../../assets/ui/mu_gold_divider.png');
+
 export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress }) => {
   const { width: windowWidth } = useWindowDimensions();
-  // 4 columnas uniformes centradas dentro del panel
-  const slotSize = Math.min(72, Math.max(58, Math.floor((windowWidth - 80) / 4)));
+  // Ergonomic slot size based on screen width
+  const slotSize = Math.min(68, Math.max(54, Math.floor((windowWidth - 72) / 4)));
 
   const getItemAtSlot = (slotIndex: number) => {
     return items.find((i) => i.slot === slotIndex);
@@ -26,22 +27,22 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
   };
 
   return (
-    <Panel style={styles.container}>
-      <TituloSeccion titulo="EQUIPAMIENTO" />
+    <Panel tipo="gold" conEsquineros={true} style={styles.dollPanel} sinRemaches={true}>
+      <View style={styles.headerArea}>
+        <Text style={styles.headerTitle}>EQUIPAMIENTO</Text>
+        <Image
+          source={goldDividerAsset}
+          style={styles.goldDivider}
+          resizeMode="stretch"
+        />
+      </View>
 
-      <View style={styles.gridContainer}>
-        {/* Fila 1 (4x3): Pet (8), Pendiente (9), Casco (2), Alas (7) */}
+      <View style={styles.dollContainer}>
+        {/* Fila 1: [Pet 8] --- [Casco 2] --- [Alas 7] */}
         <View style={styles.row}>
           <PaperdollSlot
             definition={getDef(8)}
             item={getItemAtSlot(8)}
-            onPress={onSlotPress}
-            width={slotSize}
-            height={slotSize}
-          />
-          <PaperdollSlot
-            definition={getDef(9)}
-            item={getItemAtSlot(9)}
             onPress={onSlotPress}
             width={slotSize}
             height={slotSize}
@@ -62,7 +63,20 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
           />
         </View>
 
-        {/* Fila 2 (4x3): Arma 1 (0), Pechera (3), Pantalón (4), Arma 2 / Escudo (1) */}
+        {/* Fila 2 (Cuello): [Colgante 9] centrado */}
+        <View style={styles.row}>
+          <View style={{ width: slotSize, margin: 3 }} />
+          <PaperdollSlot
+            definition={getDef(9)}
+            item={getItemAtSlot(9)}
+            onPress={onSlotPress}
+            width={slotSize}
+            height={slotSize}
+          />
+          <View style={{ width: slotSize, margin: 3 }} />
+        </View>
+
+        {/* Fila 3 (Torso): [Arma L 0] --- [Pechera 3] --- [Arma R / Escudo 1] */}
         <View style={styles.row}>
           <PaperdollSlot
             definition={getDef(0)}
@@ -79,13 +93,6 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
             height={slotSize}
           />
           <PaperdollSlot
-            definition={getDef(4)}
-            item={getItemAtSlot(4)}
-            onPress={onSlotPress}
-            width={slotSize}
-            height={slotSize}
-          />
-          <PaperdollSlot
             definition={getDef(1)}
             item={getItemAtSlot(1)}
             onPress={onSlotPress}
@@ -94,8 +101,22 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
           />
         </View>
 
-        {/* Fila 3 (4x3): Anillo 1 (10), Guantes (5), Botas (6), Anillo 2 (11) */}
+        {/* Fila 4 (Extremidades Superiores): [Guantes 5] --- [Pantalón 4] --- [Anillo 1 (10)] */}
         <View style={styles.row}>
+          <PaperdollSlot
+            definition={getDef(5)}
+            item={getItemAtSlot(5)}
+            onPress={onSlotPress}
+            width={slotSize}
+            height={slotSize}
+          />
+          <PaperdollSlot
+            definition={getDef(4)}
+            item={getItemAtSlot(4)}
+            onPress={onSlotPress}
+            width={slotSize}
+            height={slotSize}
+          />
           <PaperdollSlot
             definition={getDef(10)}
             item={getItemAtSlot(10)}
@@ -103,9 +124,13 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
             width={slotSize}
             height={slotSize}
           />
+        </View>
+
+        {/* Fila 5 (Extremidades Inferiores): [Anillo 2 (11)] --- [Botas 6] --- [Espacio] */}
+        <View style={styles.row}>
           <PaperdollSlot
-            definition={getDef(5)}
-            item={getItemAtSlot(5)}
+            definition={getDef(11)}
+            item={getItemAtSlot(11)}
             onPress={onSlotPress}
             width={slotSize}
             height={slotSize}
@@ -117,13 +142,7 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
             width={slotSize}
             height={slotSize}
           />
-          <PaperdollSlot
-            definition={getDef(11)}
-            item={getItemAtSlot(11)}
-            onPress={onSlotPress}
-            width={slotSize}
-            height={slotSize}
-          />
+          <View style={{ width: slotSize, margin: 3 }} />
         </View>
       </View>
     </Panel>
@@ -131,21 +150,37 @@ export const PaperdollView: React.FC<PaperdollViewProps> = ({ items, onSlotPress
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: THEME.shapes.espaciadoBase,
-    alignItems: 'center',
-    paddingVertical: 12,
+  dollPanel: {
+    marginVertical: 8,
   },
-  gridContainer: {
+  headerArea: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerTitle: {
+    color: '#E4E2E0',
+    fontFamily: THEME.typography.fontTitle,
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 1,
+    marginBottom: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  goldDivider: {
+    width: '100%',
+    height: 2,
+    marginBottom: 4,
+  },
+  dollContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    paddingTop: 8,
+    paddingVertical: 4,
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 2,
+    alignItems: 'center',
   },
 });

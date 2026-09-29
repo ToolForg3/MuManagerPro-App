@@ -7,12 +7,18 @@ import {
   TouchableOpacity,
   ScrollView,
   Linking,
+  Platform,
+  Image,
+  ImageBackground,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { AppUpdateInfo } from '../../services/database/sqlClient';
 import { RemoteConfigService } from '../../services/security/remoteConfigService';
+import { Panel } from '../ui/Panel';
+import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 
 interface UpdateModalProps {
   visible: boolean;
@@ -69,13 +75,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View style={styles.overlay}>
-        <View style={[styles.card, isRollback && { borderColor: THEME.colors.brasa }]}>
-          {/* Top Rivets */}
-          <View style={styles.topRivetRow}>
-            <View style={styles.rivetDot} />
-            <View style={styles.rivetDot} />
-          </View>
-
+        <Panel variant="box" style={[styles.card, isRollback && { borderColor: THEME.colors.brasa }]}>
+          <MuCornerOrnaments size={12} />
           <ScrollView
             style={styles.cardScroll}
             contentContainerStyle={styles.cardScrollContent}
@@ -83,19 +84,29 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
             showsVerticalScrollIndicator={false}
           >
             <View style={[styles.iconContainer, isRollback && { backgroundColor: 'rgba(226, 112, 58, 0.15)', borderColor: THEME.colors.brasa }, isBeta && { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
-              <MaterialCommunityIcons
-                name={isRollback ? 'alert-octagon' : isBeta ? 'flask-outline' : 'shield-crown'}
-                size={36}
-                color={isRollback ? THEME.colors.brasa : isBeta ? THEME.colors.arcano : THEME.colors.oroClaro}
+              <Image
+                source={isRollback ? STITCH_ASSETS.sprites.security : STITCH_ASSETS.sprites.options}
+                style={{ width: 38, height: 38 }}
+                resizeMode="contain"
               />
             </View>
 
             <Text style={[styles.title, isRollback && { color: THEME.colors.brasa }]}>
               {isRollback ? 'Directiva de Rollback' : isBeta ? 'Nueva Versión Beta Disponible' : 'Actualización Disponible'}
             </Text>
-            <Text style={[styles.versionBadge, isRollback && { backgroundColor: 'rgba(226,112,58,0.2)', color: THEME.colors.brasa, borderColor: THEME.colors.brasa }, isBeta && { backgroundColor: 'rgba(91,141,239,0.2)', color: THEME.colors.arcano, borderColor: THEME.colors.arcano }]}>
-              {isRollback ? `Restaurar a v${updateInfo.latestVersion}` : isBeta ? `Canal Beta • v${updateInfo.latestVersion}` : `Versión v${updateInfo.latestVersion}`}
-            </Text>
+
+            {/* Version Compare Panel (Stitch 08) */}
+            <View style={styles.versionCompareRow}>
+              <View style={styles.versionCompareCol}>
+                <Text style={styles.versionCompareLabel}>INSTALADA</Text>
+                <Text style={styles.versionCompareValCurrent}>v{updateInfo.currentVersion}</Text>
+              </View>
+              <View style={styles.versionCompareDivider} />
+              <View style={styles.versionCompareCol}>
+                <Text style={styles.versionCompareLabel}>ÚLTIMA DISPONIBLE</Text>
+                <Text style={styles.versionCompareValLatest}>v{updateInfo.latestVersion}</Text>
+              </View>
+            </View>
 
             {isRollback ? (
               <View style={[styles.forcedBanner, { borderColor: THEME.colors.brasa, backgroundColor: 'rgba(226, 112, 58, 0.12)' }]}>
@@ -128,38 +139,50 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
             {!!downloadError && (
               <View style={styles.errorBox}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                  <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#FF5252" style={{ marginRight: 6 }} />
+                  <MuIcon name="shield-alert" size={18} style={{ marginRight: 6 }} />
                   <Text style={styles.errorBoxTitle}>Error al iniciar descarga</Text>
                 </View>
                 <Text style={styles.errorBoxMsg}>{downloadError}</Text>
                 <View style={styles.errorActionsRow}>
                   <TouchableOpacity
-                    style={styles.retryActionBtn}
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                     onPress={handleDownload}
                     activeOpacity={0.8}
                     accessibilityRole="button"
                     accessibilityLabel="Reintentar descarga"
                   >
-                    <MaterialCommunityIcons name="reload" size={16} color={THEME.colors.texto} style={{ marginRight: 4 }} />
-                    <Text style={styles.retryActionText}>Reintentar</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.retryActionBtn}
+                      resizeMode="stretch"
+                    >
+                      <MuIcon name="refresh" size={16} color="#E0C380" style={{ marginRight: 4 }} />
+                      <Text style={styles.retryActionText}>Reintentar</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                   {!!updateInfo.apkUrl && (
                     <TouchableOpacity
-                      style={styles.copyActionBtn}
+                      style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                       onPress={handleCopyLink}
                       activeOpacity={0.8}
                       accessibilityRole="button"
                       accessibilityLabel="Copiar enlace de descarga"
                     >
-                      <MaterialCommunityIcons
-                        name={copied ? 'check' : 'content-copy'}
-                        size={16}
-                        color={copied ? THEME.colors.jade : THEME.colors.oroClaro}
-                        style={{ marginRight: 4 }}
-                      />
-                      <Text style={[styles.copyActionText, copied && { color: THEME.colors.jade }]}>
-                        {copied ? '¡Copiado!' : 'Copiar Enlace'}
-                      </Text>
+                      <ImageBackground
+                        source={STITCH_ASSETS.tabs.tabModeInactive}
+                        style={styles.copyActionBtn}
+                        resizeMode="stretch"
+                      >
+                        <MuIcon
+                          name={copied ? 'check' : 'save'}
+                          size={16}
+                          color={copied ? THEME.colors.jade : '#E0C380'}
+                          style={{ marginRight: 4 }}
+                        />
+                        <Text style={[styles.copyActionText, copied && { color: THEME.colors.jade }]}>
+                          {copied ? '¡Copiado!' : 'Copiar Enlace'}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -170,7 +193,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
             {downloadStarted && (
               <View style={styles.instructionBox}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <MaterialCommunityIcons name="information" size={18} color={THEME.colors.oroClaro} style={{ marginRight: 6 }} />
+                  <MuIcon name="tools" size={18} style={{ marginRight: 6 }} />
                   <Text style={styles.instructionTitle}>Pasos para Completar la Instalación</Text>
                 </View>
                 <Text style={styles.instructionMsg}>
@@ -182,31 +205,68 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
               </View>
             )}
 
-            <TouchableOpacity
-              style={[styles.downloadButton, isRollback && { backgroundColor: THEME.colors.brasa }]}
-              activeOpacity={0.8}
-              onPress={handleDownload}
-              accessibilityRole="button"
-              accessibilityLabel={isRollback ? 'Reinstalar Versión Anterior' : 'Descargar e Instalar Ahora'}
-            >
-              <Text style={[styles.downloadButtonText, isRollback && { color: THEME.colors.texto }]}>
-                {isRollback ? 'Reinstalar Versión Anterior (Rollback)' : isBeta ? 'Instalar Versión Beta' : 'Descargar e Instalar Ahora'}
-              </Text>
-            </TouchableOpacity>
+            {updateInfo.forceUpdate && !isRollback ? (
+              <TouchableOpacity
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 48, marginBottom: 10 }}
+                activeOpacity={0.8}
+                onPress={handleDownload}
+                accessibilityRole="button"
+                accessibilityLabel="Descargar e Instalar Ahora"
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.buttons.big}
+                  style={styles.crimsonButtonWrap}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.crimsonButtonText}>DESCARGAR E INSTALAR</Text>
+                </ImageBackground>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 48, marginBottom: 10 }}
+                activeOpacity={0.8}
+                onPress={handleDownload}
+                accessibilityRole="button"
+                accessibilityLabel={isRollback ? 'Reinstalar Versión Anterior' : 'Descargar e Instalar Ahora'}
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeActive}
+                  style={styles.downloadButtonWrap}
+                  resizeMode="stretch"
+                >
+                  <Text style={[styles.downloadButtonText, { color: '#0D0E0D' }]}>
+                    {isRollback ? 'Reinstalar Versión Anterior (Rollback)' : isBeta ? 'Instalar Versión Beta' : 'Descargar e Instalar Ahora'}
+                  </Text>
+                </ImageBackground>
+              </TouchableOpacity>
+            )}
 
             {!updateInfo.forceUpdate && !isRollback && (
               <TouchableOpacity
-                style={styles.laterButton}
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', minHeight: 44, marginTop: 4 }}
                 activeOpacity={0.7}
                 onPress={handleDismiss}
                 accessibilityRole="button"
                 accessibilityLabel="Recordarme más tarde"
               >
-                <Text style={styles.laterButtonText}>Recordarme más tarde</Text>
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeInactive}
+                  style={styles.laterButtonWrap}
+                  resizeMode="stretch"
+                >
+                  <Text style={styles.laterButtonText}>Recordarme más tarde</Text>
+                </ImageBackground>
               </TouchableOpacity>
             )}
+
+            {/* Faldón decorativo gótico */}
+            <Image
+              source={STITCH_ASSETS.decorations.gothicBottomFooter}
+              style={{ width: '100%', height: 32, marginTop: 14 }}
+              resizeMode="contain"
+            />
           </ScrollView>
-        </View>
+        </Panel>
       </View>
     </Modal>
   );
@@ -221,10 +281,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
     padding: 24,
     width: '100%',
     maxWidth: 420,
@@ -236,6 +292,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 15,
     position: 'relative',
+    overflow: 'hidden',
   },
   topRivetRow: {
     position: 'absolute',
@@ -248,14 +305,14 @@ const styles = StyleSheet.create({
   rivetDot: {
     width: 5,
     height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#B58F3C',
+    borderRadius: 2.5, /* círculo funcional (width/2) */
+    backgroundColor: '#E0C380',
   },
   iconContainer: {
     width: 60,
     height: 60,
-    borderRadius: 6,
-    backgroundColor: 'rgba(232, 200, 106, 0.15)',
+    borderRadius: 2,
+    backgroundColor: 'rgba(224, 195, 128, 0.15)',
     borderWidth: 1,
     borderColor: THEME.colors.oroClaro,
     justifyContent: 'center',
@@ -272,6 +329,48 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     ...THEME.effects.textShadow,
   },
+  versionCompareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0E1012',
+    borderWidth: 1,
+    borderColor: '#3D372E',
+    borderRadius: THEME.shapes.radioEsquina,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    width: '100%',
+  },
+  versionCompareCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  versionCompareDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#3D372E',
+  },
+  versionCompareLabel: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: THEME.colors.textoSecundarioLuminoso,
+    letterSpacing: 0.8,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+  },
+  versionCompareValCurrent: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    color: '#DCDFE3',
+  },
+  versionCompareValLatest: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    color: THEME.colors.oroClaro,
+  },
   versionBadge: {
     fontSize: 12,
     fontWeight: '700',
@@ -279,7 +378,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(63, 207, 142, 0.12)',
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     borderWidth: 1,
     borderColor: THEME.colors.jade,
     marginBottom: 14,
@@ -296,7 +395,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(226, 112, 58, 0.12)',
     borderWidth: 1,
     borderColor: THEME.colors.brasa,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 10,
     marginBottom: 14,
     width: '100%',
@@ -321,7 +420,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 12,
     marginBottom: 18,
   },
@@ -344,37 +443,51 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     ...THEME.effects.textShadowSubtle,
   },
-  downloadButton: {
+  crimsonButtonWrap: {
     width: '100%',
-    backgroundColor: THEME.colors.oroClaro,
-    minHeight: 56,
-    borderRadius: 6,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    paddingHorizontal: 12,
   },
-  downloadButtonText: {
-    fontSize: 14,
+  crimsonButtonText: {
+    fontSize: 12.5,
     fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: '#100D0B',
+    color: '#FFFFFF',
+    letterSpacing: 1,
     textTransform: 'uppercase',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  laterButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    minHeight: 44,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    backgroundColor: '#2B2521',
+  downloadButtonWrap: {
+    width: '100%',
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  downloadButtonText: {
+    fontSize: 13,
+    fontWeight: '900',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#0D0E0D',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  laterButtonWrap: {
+    width: '100%',
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
   },
   laterButtonText: {
     fontSize: 12,
-    color: THEME.colors.textoSecundarioLuminoso,
+    color: '#C5C8CD',
     fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
     ...THEME.effects.textShadowSubtle,
   },
   cardScroll: {
@@ -389,7 +502,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 82, 82, 0.12)',
     borderWidth: 1,
     borderColor: '#FF5252',
-    borderRadius: 6,
+    borderRadius: THEME.shapes.radioEsquina,
     padding: 12,
     marginBottom: 16,
   },
@@ -413,44 +526,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3A2E22',
-    borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
     minHeight: 44,
   },
   retryActionText: {
-    color: THEME.colors.texto,
+    color: '#E0C380',
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
     ...THEME.effects.textShadowSubtle,
   },
   copyActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3A2E22',
-    borderWidth: 1,
-    borderColor: THEME.colors.oroClaro,
-    borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 12,
     minHeight: 44,
   },
   copyActionText: {
-    color: THEME.colors.oroClaro,
+    color: '#E0C380',
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
     ...THEME.effects.textShadowSubtle,
   },
   instructionBox: {
     width: '100%',
-    backgroundColor: 'rgba(232, 200, 106, 0.1)',
+    backgroundColor: 'rgba(224, 195, 128, 0.1)',
     borderWidth: 1,
     borderColor: THEME.colors.oroClaro,
-    borderRadius: 6,
+    borderRadius: 2,
     padding: 12,
     marginBottom: 14,
   },

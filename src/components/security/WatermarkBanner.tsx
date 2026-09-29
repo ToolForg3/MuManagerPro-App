@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { LicenseService, LicenseStatus } from '../../services/security/licenseService';
 
 interface WatermarkBannerProps {
@@ -18,11 +19,11 @@ export const WatermarkBanner: React.FC<WatermarkBannerProps> = ({ onPressActivat
   if (status.isBlocked) {
     return (
       <TouchableOpacity style={styles.blockedBanner} onPress={onPressActivate} activeOpacity={0.85}>
-        <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFFFFF" />
+        <MuIcon name="shield-alert" size={18} />
         <Text style={styles.blockedText}>
           DISPOSITIVO BLOQUEADO • Toque para Soporte
         </Text>
-        <MaterialCommunityIcons name="chevron-right" size={16} color="#FF6B6B" />
+        <MuIcon name="arrow-right" size={16} />
       </TouchableOpacity>
     );
   }
@@ -36,16 +37,22 @@ export const WatermarkBanner: React.FC<WatermarkBannerProps> = ({ onPressActivat
       <View style={styles.content}>
         <View style={styles.left}>
           <View style={styles.crestWrap}>
-            <MaterialCommunityIcons name="shield-lock-outline" size={16} color="#FFD700" />
+            <MuIcon name="lock" size={16} />
           </View>
           <View>
             <Text style={styles.text}>MODO DEMO (SIN LICENCIA)</Text>
             <Text style={styles.subText}>Acceso restringido • Ingrese clave de licencia PRO</Text>
           </View>
         </View>
-        <View style={styles.badge}>
-          <MaterialCommunityIcons name="lightning-bolt" size={12} color="#0D0E12" />
-          <Text style={styles.badgeText}>ACTIVAR PRO</Text>
+        <View style={{ borderRadius: 2, overflow: 'hidden' }}>
+          <ImageBackground
+            source={STITCH_ASSETS.tabs.tabModeActive}
+            style={styles.badge}
+            resizeMode="stretch"
+          >
+            <MuIcon name="crown" size={12} color="#0D0E0D" />
+            <Text style={styles.badgeText}>ACTIVAR PRO</Text>
+          </ImageBackground>
         </View>
       </View>
     </TouchableOpacity>
@@ -95,17 +102,17 @@ const styles = StyleSheet.create({
   crestWrap: {
     width: 28,
     height: 28,
-    borderRadius: 4,
-    backgroundColor: '#1C1507',
+    borderRadius: 2,
+    backgroundColor: '#1B1C1B',
     borderWidth: 1,
-    borderColor: '#665220',
+    borderColor: '#4C463A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
     fontSize: 11.5,
     fontWeight: '900',
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 0.5,
     ...THEME.effects.textShadow,
   },
@@ -120,20 +127,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#E8C86A',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderTopColor: '#FFF2A8',
-    borderLeftColor: '#FFF2A8',
-    borderBottomColor: '#8A7338',
-    borderRightColor: '#8A7338',
   },
   badgeText: {
     fontSize: 10.5,
     fontWeight: '900',
-    color: '#100D0B',
+    color: '#0D0E0D',
     letterSpacing: 0.5,
+    fontFamily: THEME.typography.fontTitle,
   },
 });

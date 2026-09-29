@@ -8,14 +8,17 @@ import {
   TextInput,
   FlatList,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME } from '../../constants/theme';
 import { ItemDefinition, DEFAULT_ITEM_CATALOG } from '../../services/parser/itemDatabase';
 import { PAPERDOLL_SLOTS } from '../../constants/muConstants';
 import { ItemImage } from '../common/ItemImage';
 import { isItemAncientEligible } from '../../constants/ancientCatalog';
+import { Panel } from '../ui/Panel';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 
 export const GENERAL_CATEGORIES = [
   { id: 'all', label: 'Todos', groups: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] },
@@ -145,7 +148,7 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.card, { paddingBottom: bottomInset }]}>
+        <Panel style={[styles.card, { paddingBottom: bottomInset }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
@@ -157,7 +160,7 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
               </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <MaterialCommunityIcons name="close" size={22} color={THEME.colors.textSecondary} />
+              <MuIcon name="close" size={20} />
             </TouchableOpacity>
           </View>
 
@@ -169,14 +172,21 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
                 {quickJewels.map((j) => (
                   <TouchableOpacity
                     key={j.name}
-                    style={styles.quickJewelBtn}
+                    style={{ height: 38, borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => {
                       onSelectItem(j, slotIndex);
                       onClose();
                     }}
+                    activeOpacity={0.7}
                   >
-                    <MaterialCommunityIcons name={j.icon as any} size={16} color={THEME.colors.primaryOrange} />
-                    <Text style={styles.quickJewelText}>{j.name.replace('Jewel of ', '')}</Text>
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{ height: '100%', paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                      resizeMode="stretch"
+                    >
+                      <MuIcon name="coins" size={16} color={THEME.colors.oroClaro} />
+                      <Text style={styles.quickJewelText}>{j.name.replace('Jewel of ', '')}</Text>
+                    </ImageBackground>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -191,44 +201,34 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.filterRowScroll}
               >
-                <TouchableOpacity
-                  style={[styles.filterChip, overrideCategory === null && styles.filterChipActive]}
-                  onPress={() => setOverrideCategory(null)}
-                >
-                  <Text style={[styles.filterChipText, overrideCategory === null && styles.filterChipTextActive]}>
-                    {slotDef?.shortName || 'Compatible'}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterChip, overrideCategory === 7 && styles.filterChipActive]}
-                  onPress={() => setOverrideCategory(7)}
-                >
-                  <Text style={[styles.filterChipText, overrideCategory === 7 && styles.filterChipTextActive]}>Cascos</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterChip, overrideCategory === 8 && styles.filterChipActive]}
-                  onPress={() => setOverrideCategory(8)}
-                >
-                  <Text style={[styles.filterChipText, overrideCategory === 8 && styles.filterChipTextActive]}>Pecheras</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterChip, overrideCategory === 9 && styles.filterChipActive]}
-                  onPress={() => setOverrideCategory(9)}
-                >
-                  <Text style={[styles.filterChipText, overrideCategory === 9 && styles.filterChipTextActive]}>Pantalones (Pants)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterChip, overrideCategory === 10 && styles.filterChipActive]}
-                  onPress={() => setOverrideCategory(10)}
-                >
-                  <Text style={[styles.filterChipText, overrideCategory === 10 && styles.filterChipTextActive]}>Guantes</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterChip, overrideCategory === 11 && styles.filterChipActive]}
-                  onPress={() => setOverrideCategory(11)}
-                >
-                  <Text style={[styles.filterChipText, overrideCategory === 11 && styles.filterChipTextActive]}>Botas</Text>
-                </TouchableOpacity>
+                {[
+                  { cat: null, label: slotDef?.shortName || 'Compatible' },
+                  { cat: 7, label: 'Cascos' },
+                  { cat: 8, label: 'Pecheras' },
+                  { cat: 9, label: 'Pantalones (Pants)' },
+                  { cat: 10, label: 'Guantes' },
+                  { cat: 11, label: 'Botas' },
+                ].map((c) => {
+                  const isActive = overrideCategory === c.cat;
+                  return (
+                    <TouchableOpacity
+                      key={c.label}
+                      style={{ height: 36, borderRadius: 2, overflow: 'hidden' }}
+                      onPress={() => setOverrideCategory(c.cat)}
+                      activeOpacity={0.7}
+                    >
+                      <ImageBackground
+                        source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ height: '100%', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                          {c.label}
+                        </Text>
+                      </ImageBackground>
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
             </View>
           )}
@@ -246,12 +246,19 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
                   return (
                     <TouchableOpacity
                       key={cat.id}
-                      style={[styles.filterChip, isActive && styles.filterChipActive]}
+                      style={{ height: 36, borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => setSelectedGeneralCat(cat.id)}
+                      activeOpacity={0.7}
                     >
-                      <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-                        {cat.label}
-                      </Text>
+                      <ImageBackground
+                        source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                        style={{ height: '100%', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
+                        resizeMode="stretch"
+                      >
+                        <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                          {cat.label}
+                        </Text>
+                      </ImageBackground>
                     </TouchableOpacity>
                   );
                 })}
@@ -261,7 +268,7 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
 
           {/* Search Input */}
           <View style={styles.searchBox}>
-            <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textMuted} />
+            <MuIcon name="tools" size={18} />
             <TextInput
               style={styles.searchInput}
               placeholder="Buscar ítem o armadura..."
@@ -273,7 +280,7 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
             />
             {search.length > 0 && (
               <TouchableOpacity onPress={() => setSearch('')}>
-                <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textMuted} />
+                <MuIcon name="close" size={16} />
               </TouchableOpacity>
             )}
           </View>
@@ -282,14 +289,14 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
           <FlatList
             data={filteredItems}
             keyExtractor={(item) => `${item.group}_${item.index}_${item.id}`}
-            contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset + 16 }]}
+            contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset + 40 }]}
             showsVerticalScrollIndicator={false}
             initialNumToRender={20}
             maxToRenderPerBatch={25}
             windowSize={10}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <MaterialCommunityIcons name="cube-off-outline" size={42} color={THEME.colors.textMuted} />
+                <MuIcon name="chest" size={40} />
                 <Text style={styles.emptyText}>No se encontraron ítems para este slot.</Text>
               </View>
             }
@@ -320,14 +327,20 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
                     Grupo {item.group} • Index {item.index} • Tamaño: {item.width}x{item.height}
                   </Text>
                 </View>
-                <View style={styles.equipBtn}>
-                  <Text style={styles.equipBtnText}>EQUIPAR</Text>
-                  <MaterialCommunityIcons name="chevron-right" size={16} color={THEME.colors.primaryOrange} />
+                <View style={{ width: 84, height: 36, borderRadius: 2, overflow: 'hidden' }}>
+                  <ImageBackground
+                    source={STITCH_ASSETS.buttons.small}
+                    style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                    resizeMode="stretch"
+                  >
+                    <Text style={styles.equipBtnText}>EQUIPAR</Text>
+                    <MuIcon name="arrow-right" size={14} color="#0D0E0D" />
+                  </ImageBackground>
                 </View>
               </TouchableOpacity>
             )}
           />
-        </View>
+        </Panel>
       </View>
     </Modal>
   );
@@ -348,9 +361,6 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     minHeight: '60%',
     paddingBottom: 20,
-    borderTopWidth: 1.5,
-    backgroundColor: '#2B2521',
-    borderColor: THEME.colors.borde,
   },
   header: {
     flexDirection: 'row',
@@ -360,13 +370,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: THEME.colors.borde,
-    backgroundColor: '#1E1A16',
+    backgroundColor: '#1B1C1B',
   },
   title: {
     fontSize: 16,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
-    color: '#E8C86A',
+    color: '#E0C380',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     ...THEME.effects.textShadow,
@@ -379,10 +389,10 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    backgroundColor: '#2B2521',
+    width: 44,
+    height: 44,
+    borderRadius: 2,
+    backgroundColor: '#292A29',
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     alignItems: 'center',
@@ -391,13 +401,13 @@ const styles = StyleSheet.create({
   quickBar: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#1E1A16',
+    backgroundColor: '#1B1C1B',
     borderBottomWidth: 1,
     borderBottomColor: THEME.colors.borde,
   },
   quickLabel: {
     fontSize: 11.5,
-    color: '#E8C86A',
+    color: '#E0C380',
     fontFamily: THEME.typography.fontTitle,
     fontWeight: '800',
     marginBottom: 6,
@@ -416,7 +426,8 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.casillaFondo,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    minHeight: 44,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
@@ -439,7 +450,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: THEME.colors.borde,
     paddingVertical: 8,
-    backgroundColor: '#1E1A16',
+    backgroundColor: '#1B1C1B',
   },
   filterRowScroll: {
     paddingHorizontal: 16,
@@ -447,16 +458,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 2,
     backgroundColor: THEME.colors.casillaFondo,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
   },
   filterChipActive: {
     backgroundColor: THEME.colors.oroClaro,
-    borderColor: '#F0D27A',
+    borderColor: '#EFD28D',
   },
   filterChipText: {
     fontSize: 11.5,
@@ -465,7 +479,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   filterChipTextActive: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontWeight: '900',
   },
   searchBox: {
@@ -475,10 +489,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
-    height: 44,
+    minHeight: 44,
     gap: 8,
   },
   searchInput: {
@@ -494,9 +508,9 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2B2521',
+    backgroundColor: '#1F201F',
     padding: 10,
-    borderRadius: 6,
+    borderRadius: 2,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: THEME.colors.borde,
@@ -505,7 +519,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     backgroundColor: THEME.colors.casillaFondo,
-    borderRadius: 6,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -534,13 +548,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     minHeight: 44,
-    borderRadius: 6,
+    borderRadius: 2,
     backgroundColor: THEME.colors.oroClaro,
     borderWidth: 1,
-    borderColor: '#F0D27A',
+    borderColor: '#EFD28D',
   },
   equipBtnText: {
-    color: '#100D0B',
+    color: '#0D0E0D',
     fontFamily: THEME.typography.fontTitle,
     fontSize: 11,
     fontWeight: '900',

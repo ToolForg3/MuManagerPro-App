@@ -1,10 +1,10 @@
 {
-  "version": "2.2.6",
+  "version": "2.2.7",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-25T00:56:00.000Z",
+  "publishedAt": "2026-09-29T03:00:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 128,
+  "build": 129,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.6 (Build 128) - Unificación Visual Exhaustiva Season 6 Piedra & Oro:\n• CONTRASTE CERTIFICADO WCAG AAA (11.89:1): Sustitución sistemática del ocre apagado (#B58F3C) por Oro Resplandeciente Season 6 (#E8C86A) en todos los módulos, pantallas y modales de la APK.\n• NITIDEZ Y PROFUNDIDAD ANTI-DIFUMINADO: Implementación de sombra paralela sutil (drop shadow) y mayor peso tipográfico (Medium/Semi-bold/Bold) en textos secundarios, etiquetas de campos, subtítulos y cabeceras para máxima claridad sobre piedra oscura.\n• PÍLDORAS Y SELECTORES MEJORADOS: Erradicación del efecto caja marrón sobre marrón en selectores de baúles, categorías, rankings y badges [SIN PIN] / [MODO DEMO], ahora con fondo #1E1915 y bordes nítidos.\n• AUDITORÍA TOTAL DE MÓDULOS: Unificación completa en 32 componentes y pantallas (Dashboard, Config, Tools, Subtabs, Jugadores, Personajes, Cuentas, Login, PIN, Modales de Licencia, Kill-Switch, Ítems, Equipo, Actualización, Idioma, Avisos, Términos y ErrorBoundary)."
+  "changelog": "MuManager PRO v2.2.7 (Build 129) - Rediseño Oficial Stitch Approved Ironforge 100% Nativo & Blindaje de Seguridad:\n• SISTEMA VISUAL STITCH IRONFORGE NATIVO: Cobertura del 100% de texturas oficiales de MU Online (tabModeActive, tabModeInactive, btn_small, btn_big) en todas las pestañas, subnavegadores, switches y botones de acción.\n• ERRADICACIÓN DE BORDES PLANOS: Cero cajas lisas de CSS. Biselado chiseled multidireccional con relieve 3D y contenedores anti-sangrado con bordes redondeados y overflow oculto.\n• TIPOGRAFÍA Y CONTRASTE WCAG AA: Tipografía gótica oscura de alto contraste (#0D0E0D peso 900) sin sombras oscuras sobre oro brillante, y tonos acero (#CDC6B9/#E0C380) sobre superficies inactivas.\n• BLINDAJE DE SEGURIDAD INTEGRAL: Compilación Hermes Bytecode, ofuscación avanzada Metro JS, R8/ProGuard, defensas activas anti-debug y anti-hooking (detección Frida/Xposed/Tamper), certificate pinning Root CAs y telemetría forense anti-abuso."
 }

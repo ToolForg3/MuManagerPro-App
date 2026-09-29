@@ -7,10 +7,13 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { useLanguage, LANGUAGES, LanguageCode } from '../../context/LanguageContext';
+import { Panel } from '../ui/Panel';
 
 interface LanguageModalProps {
   floating?: boolean;
@@ -28,13 +31,21 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
   return (
     <>
       <TouchableOpacity
-        style={[styles.triggerBtn, floating && styles.floatingTrigger]}
+        style={[floating ? styles.floatingTrigger : { borderRadius: 2, overflow: 'hidden' }]}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Cambiar idioma"
       >
-        <Text style={styles.flagText}>{currentFlag}</Text>
-        <Text style={styles.langCode}>{language.toUpperCase()}</Text>
-        <MaterialCommunityIcons name="chevron-down" size={16} color={THEME.colors.textSecondary} />
+        <ImageBackground
+          source={STITCH_ASSETS.tabs.tabModeInactive}
+          style={styles.triggerBtn}
+          resizeMode="stretch"
+        >
+          <Text style={styles.flagText}>{currentFlag}</Text>
+          <Text style={styles.langCode}>{language.toUpperCase()}</Text>
+          <MuIcon name="chevron-down" size={14} color="#E0C380" />
+        </ImageBackground>
       </TouchableOpacity>
 
       <Modal
@@ -44,7 +55,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
         onRequestClose={() => setModalVisible(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          <Panel style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Seleccionar Idioma</Text>
               <TouchableOpacity
@@ -54,7 +65,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar selección de idioma"
               >
-                <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textSecondary} />
+                <MuIcon name="close" size={18} />
               </TouchableOpacity>
             </View>
 
@@ -64,26 +75,36 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
                 return (
                   <TouchableOpacity
                     key={lang.code}
-                    style={[styles.langOption, isSelected && styles.langOptionSelected]}
+                    style={{ borderRadius: 2, overflow: 'hidden', marginVertical: 3 }}
                     onPress={() => handleSelect(lang.code)}
                     accessibilityRole="button"
                     accessibilityLabel={`${lang.name}, ${lang.country}`}
+                    accessibilityState={{ selected: isSelected }}
+                    activeOpacity={0.8}
                   >
-                    <Text style={styles.optionFlag}>{lang.flag}</Text>
-                    <View style={styles.optionInfo}>
-                      <Text style={[styles.optionName, isSelected && styles.optionNameSelected]}>
-                        {lang.name}
-                      </Text>
-                      <Text style={styles.optionCountry}>{lang.country}</Text>
-                    </View>
-                    {isSelected && (
-                      <MaterialCommunityIcons name="check-circle" size={20} color={THEME.colors.oroClaro} />
-                    )}
+                    <ImageBackground
+                      source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.langOption}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.optionFlag}>{lang.flag}</Text>
+                      <View style={styles.optionInfo}>
+                        <Text style={[styles.optionName, isSelected && styles.optionNameSelected]}>
+                          {lang.name}
+                        </Text>
+                        <Text style={[styles.optionCountry, isSelected && styles.optionCountrySelected]}>
+                          {lang.country}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <MuIcon name="check" size={18} color="#0D0E0D" />
+                      )}
+                    </ImageBackground>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
-          </Pressable>
+          </Panel>
         </Pressable>
       </Modal>
     </>
@@ -94,13 +115,9 @@ const styles = StyleSheet.create({
   triggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2B2521',
-    borderWidth: 1,
-    borderColor: '#6B5533',
-    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    minHeight: 36,
+    minHeight: 44,
     gap: 6,
   },
   floatingTrigger: {
@@ -108,6 +125,8 @@ const styles = StyleSheet.create({
     top: 50,
     right: 20,
     zIndex: 99,
+    borderRadius: 2,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
@@ -120,7 +139,8 @@ const styles = StyleSheet.create({
   langCode: {
     fontSize: 12,
     fontWeight: THEME.typography.weightBold,
-    color: THEME.colors.texto,
+    color: '#E0C380',
+    fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.5,
     ...THEME.effects.textShadowSubtle,
   },
@@ -135,10 +155,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     maxHeight: '90%',
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#6B5533',
     padding: THEME.spacing.lg,
   },
   modalHeader: {
@@ -148,12 +164,12 @@ const styles = StyleSheet.create({
     marginBottom: THEME.spacing.md,
     paddingBottom: THEME.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#6B5533',
+    borderBottomColor: '#4C463A',
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: THEME.typography.weightBold,
-    color: '#E8C86A',
+    color: '#E0C380',
     fontFamily: THEME.typography.fontTitle,
     letterSpacing: 0.8,
     ...THEME.effects.textShadow,
@@ -163,16 +179,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 6,
-    marginVertical: 4,
     minHeight: 44,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  langOptionSelected: {
-    backgroundColor: 'rgba(232, 200, 106, 0.12)',
-    borderWidth: 1,
-    borderColor: '#6B5533',
   },
   optionFlag: {
     fontSize: 24,
@@ -182,20 +189,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionName: {
-    fontSize: 15,
-    fontWeight: THEME.typography.weightMedium,
-    color: THEME.colors.texto,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontTitle,
+    color: '#C5C8CD',
     ...THEME.effects.textShadowSubtle,
   },
   optionNameSelected: {
-    color: '#E8C86A',
-    fontWeight: THEME.typography.weightBold,
-    ...THEME.effects.textShadow,
+    color: '#0D0E0D',
+    fontWeight: '900',
   },
   optionCountry: {
-    fontSize: 12,
-    color: THEME.colors.textoSecundarioLuminoso,
-    ...THEME.effects.textShadowSubtle,
+    fontSize: 11,
+    color: '#8E939C',
+  },
+  optionCountrySelected: {
+    color: '#252625',
+    fontWeight: '700',
   },
   scrollList: {
     maxHeight: 380,

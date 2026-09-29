@@ -10,7 +10,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MuIcon } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
 
 export interface AutocompleteInputProps {
@@ -90,10 +90,9 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={styles.inputWrapper}>
         {icon && (
-          <MaterialCommunityIcons
+          <MuIcon
             name={icon as any}
             size={18}
-            color={THEME.colors.textMuted}
             style={styles.inputIcon}
           />
         )}
@@ -124,7 +123,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             style={styles.clearButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <MaterialCommunityIcons name="close-circle" size={16} color={THEME.colors.textMuted} />
+            <MuIcon name="close" size={16} />
           </TouchableOpacity>
         )}
       </View>
@@ -164,7 +163,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                 activeOpacity={0.7}
               >
                 {renderHighlightedText(item, value)}
-                <MaterialCommunityIcons name="chevron-right" size={14} color={THEME.colors.textMuted} />
+                <MuIcon name="arrow-right" size={14} />
               </TouchableOpacity>
             ))}
           </ScrollView>

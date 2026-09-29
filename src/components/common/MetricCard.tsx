@@ -1,16 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { MuIcon, MuIconName } from '../ui/MuIcon';
 import { THEME } from '../../constants/theme';
 
 interface MetricCardProps {
   label: string;
   value: number | string;
-  iconName: keyof typeof MaterialCommunityIcons.glyphMap;
+  iconName: MuIconName;
   iconColor: string;
   iconBgColor?: string;
   suffix?: string;
 }
+
+const stoneBackAsset = require('../../../assets/ui/mu_stone_back.png');
 
 export const MetricCard: React.FC<MetricCardProps> = ({
   label,
@@ -21,68 +23,84 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   suffix,
 }) => {
   return (
-    <View style={styles.card}>
-      {/* Corner rivets */}
-      <View style={[styles.rivet, styles.rivetTL]} />
-      <View style={[styles.rivet, styles.rivetTR]} />
-      <View style={[styles.rivet, styles.rivetBL]} />
-      <View style={[styles.rivet, styles.rivetBR]} />
+    <View style={styles.cardOuter}>
+      <ImageBackground
+        source={stoneBackAsset}
+        style={styles.cardBackground}
+        resizeMode="repeat"
+        imageStyle={styles.stoneImage}
+      >
+        {/* Remaches de hierro forjado Stitch Ironforge en las esquinas */}
+        <View style={[styles.rivet, styles.rivetTL]} />
+        <View style={[styles.rivet, styles.rivetTR]} />
+        <View style={[styles.rivet, styles.rivetBL]} />
+        <View style={[styles.rivet, styles.rivetBR]} />
 
-      <View style={styles.content}>
-        <View style={styles.labelRow}>
-          <Text style={styles.runeSymbol}>◆</Text>
-          <Text style={styles.label} numberOfLines={1}>{label}</Text>
+        <View style={styles.content}>
+          <View style={styles.labelRow}>
+            <Text style={styles.runeSymbol}>◆</Text>
+            <Text style={styles.label} numberOfLines={1}>{label}</Text>
+          </View>
+          <View style={styles.valueRow}>
+            <Text style={[styles.value, { color: iconColor === '#FFD700' ? '#EFD28D' : '#E4E2E0' }]}>
+              {typeof value === 'number' ? value.toLocaleString() : value}
+            </Text>
+            {suffix && <Text style={styles.suffix}>{suffix}</Text>}
+          </View>
         </View>
-        <View style={styles.valueRow}>
-          <Text style={[styles.value, { color: iconColor === '#FFD700' ? '#FFE066' : '#FFFFFF' }]}>
-            {typeof value === 'number' ? value.toLocaleString() : value}
-          </Text>
-          {suffix && <Text style={styles.suffix}>{suffix}</Text>}
-        </View>
-      </View>
 
-      {/* Forged Gem Socket */}
-      <View style={[styles.iconSocket, { borderColor: iconColor, shadowColor: iconColor }]}>
-        <View style={[styles.iconInnerGlow, { backgroundColor: iconBgColor || `${iconColor}22` }]}>
-          <MaterialCommunityIcons name={iconName} size={22} color={iconColor} />
+        {/* Socket de Gema Forjada con Bisel */}
+        <View style={[styles.iconSocket, { borderColor: iconColor, shadowColor: iconColor }]}>
+          <View style={[styles.iconInnerGlow, { backgroundColor: iconBgColor || `${iconColor}22` }]}>
+            <MuIcon name={iconName} size={22} />
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#2B2521',
-    borderRadius: 6,
+  cardOuter: {
+    borderRadius: 2,
+    borderTopColor: '#4C463A',
+    borderLeftColor: '#4C463A',
+    borderRightColor: '#0D0E0D',
+    borderBottomColor: '#0D0E0D',
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
+    backgroundColor: '#1F201F',
+    overflow: 'hidden',
+    minHeight: 84,
+    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+  },
+  cardBackground: {
+    width: '100%',
     paddingHorizontal: 12,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 84,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    position: 'relative',
-    overflow: 'hidden',
+    backgroundColor: '#1F201F',
+  },
+  stoneImage: {
+    opacity: 0.45,
   },
   rivet: {
     position: 'absolute',
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#B58F3C',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E0C380',
     opacity: 0.85,
   },
-  rivetTL: { top: 3, left: 3 },
-  rivetTR: { top: 3, right: 3 },
-  rivetBL: { bottom: 3, left: 3 },
-  rivetBR: { bottom: 3, right: 3 },
+  rivetTL: { top: 4, left: 4 },
+  rivetTR: { top: 4, right: 4 },
+  rivetBL: { bottom: 4, left: 4 },
+  rivetBR: { bottom: 4, right: 4 },
   content: {
     flex: 1,
     marginRight: 8,
@@ -94,16 +112,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   runeSymbol: {
-    color: THEME.colors.oro,
-    fontSize: 7,
+    color: '#E0C380',
+    fontSize: 8,
   },
   label: {
     fontSize: 11,
-    color: THEME.colors.textoSecundarioLuminoso,
+    color: '#CDC6B9',
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    ...THEME.effects.textShadowSubtle,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   valueRow: {
     flexDirection: 'row',
@@ -113,36 +133,33 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
-    color: THEME.colors.texto,
+    color: '#E4E2E0',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
     textShadowOffset: { width: 1, height: 2 },
     textShadowRadius: 3,
   },
   suffix: {
     fontSize: 11,
-    color: THEME.colors.oro,
+    color: '#E0C380',
     marginLeft: 5,
     fontWeight: '800',
   },
   iconSocket: {
-    width: 42,
-    height: 42,
-    borderRadius: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: THEME.colors.borde,
-    backgroundColor: THEME.colors.casillaFondo,
+    borderColor: '#4C463A',
+    backgroundColor: 'rgba(13, 14, 13, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
+    elevation: 2,
   },
   iconInnerGlow: {
-    width: 34,
-    height: 34,
-    borderRadius: 4,
+    width: 36,
+    height: 36,
+    borderRadius: THEME.shapes.radioEsquina,
     alignItems: 'center',
     justifyContent: 'center',
   },
