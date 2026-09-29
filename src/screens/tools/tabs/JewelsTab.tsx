@@ -218,7 +218,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillText, isScActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.filterPillText, isScActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       {sc === 'all' ? '[TODO] Servidor Completo' : sc === 'character' ? '[PJ] Por Personaje' : '[CUENTA] Por Cuenta'}
                     </Text>
                   </ImageBackground>
@@ -260,9 +260,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 <MuIcon
                   name={jewelIncInventory ? 'checkbox-marked' : 'checkbox-blank-outline'}
                   size={16}
-                  color={jewelIncInventory ? '#0D0E0D' : THEME.colors.textoSecundario}
+                  color={jewelIncInventory ? '#FEDF99' : THEME.colors.textoSecundario}
                 />
-                <Text style={[styles.filterPillText, jewelIncInventory ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
+                <Text style={[styles.filterPillText, jewelIncInventory ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
                   Inventarios
                 </Text>
               </ImageBackground>
@@ -280,9 +280,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 <MuIcon
                   name={jewelIncWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
                   size={16}
-                  color={jewelIncWarehouse ? '#0D0E0D' : THEME.colors.textoSecundario}
+                  color={jewelIncWarehouse ? '#FEDF99' : THEME.colors.textoSecundario}
                 />
-                <Text style={[styles.filterPillText, jewelIncWarehouse ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
+                <Text style={[styles.filterPillText, jewelIncWarehouse ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
                   Baúl Principal (0)
                 </Text>
               </ImageBackground>
@@ -300,9 +300,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 <MuIcon
                   name={jewelIncExtWarehouse ? 'checkbox-marked' : 'checkbox-blank-outline'}
                   size={16}
-                  color={jewelIncExtWarehouse ? '#0D0E0D' : THEME.colors.textoSecundario}
+                  color={jewelIncExtWarehouse ? '#FEDF99' : THEME.colors.textoSecundario}
                 />
-                <Text style={[styles.filterPillText, jewelIncExtWarehouse ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
+                <Text style={[styles.filterPillText, jewelIncExtWarehouse ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
                   Baúles Ext (1..N)
                 </Text>
               </ImageBackground>
@@ -331,9 +331,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     {jewelImg ? (
                       <Image source={jewelImg} style={{ width: 16, height: 16, marginRight: 6 }} resizeMode="contain" />
                     ) : (
-                      <MuIcon name={preset.icon as any} size={15} color={isSelected ? '#0D0E0D' : preset.color} style={{ marginRight: 4 }} />
+                      <MuIcon name={preset.icon as any} size={15} color={isSelected ? '#FEDF99' : preset.color} style={{ marginRight: 4 }} />
                     )}
-                    <Text style={[styles.filterPillText, isSelected ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: preset.color }]}>
+                    <Text style={[styles.filterPillText, isSelected ? { color: '#FEDF99', fontWeight: 'bold' } : { color: preset.color }]}>
                       {preset.label}
                     </Text>
                   </ImageBackground>
@@ -420,7 +420,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillText, isActActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.filterPillText, isActActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       {act.label}
                     </Text>
                   </ImageBackground>
@@ -460,7 +460,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                           style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                           resizeMode="stretch"
                         >
-                          <Text style={[styles.filterPillText, isAmtActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                          <Text style={[styles.filterPillText, isAmtActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                             {presetAmt}
                           </Text>
                         </ImageBackground>
@@ -481,7 +481,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillText, jewelCountBy === 'units' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.filterPillText, jewelCountBy === 'units' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Unidades Reales (Desempaqueta Bundles x10, x20, x30)
                     </Text>
                   </ImageBackground>
@@ -495,7 +495,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillText, jewelCountBy === 'slots' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.filterPillText, jewelCountBy === 'slots' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Slots Físicos (1 slot = 1 unidad)
                     </Text>
                   </ImageBackground>

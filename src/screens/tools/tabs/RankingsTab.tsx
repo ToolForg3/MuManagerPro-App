@@ -54,7 +54,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
                   <MuIcon
                     name={sub.icon}
                     size={16}
-                    color={isSel ? '#0D0E0D' : '#CDC6B9'}
+                    color={isSel ? '#FEDF99' : '#CDC6B9'}
                   />
                   <Text
                     style={[
@@ -195,8 +195,11 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   rankPillTextActive: {
-    color: '#0D0E0D',
-    fontWeight: 'bold',
+    color: '#FEDF99',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   refreshRankBtn: {
     flexDirection: 'row',

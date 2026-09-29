@@ -18,11 +18,11 @@ import { MuIcon } from '../components/ui/MuIcon';
 
 const Tab = createBottomTabNavigator();
 
-// Custom Tab Button replicating Stitch 01 / Final 13R exact active container with native Season 6 pixel-art icons
+// Custom Tab Button with crisp, transparent native icons (resolves muddy background & white borders)
 const StitchTabBarButton = (
-  props: BottomTabBarButtonProps & { label: string; imageSource: any }
+  props: BottomTabBarButtonProps & { label: string; iconName: string }
 ) => {
-  const { accessibilityState, onPress, onLongPress, label, imageSource } = props;
+  const { accessibilityState, onPress, onLongPress, label, iconName } = props;
   const isFocused = accessibilityState?.selected;
 
   return (
@@ -36,12 +36,10 @@ const StitchTabBarButton = (
       ]}
     >
       <View style={styles.tabIconWrap}>
-        <Image
-          source={imageSource}
-          style={[
-            styles.tabIconImage,
-            isFocused ? styles.tabIconImageActive : styles.tabIconImageInactive,
-          ]}
+        <MuIcon
+          name={iconName}
+          size={24}
+          color={isFocused ? '#FEDF99' : '#8E867A'}
         />
       </View>
       <Text
@@ -80,7 +78,7 @@ export const BottomTabs = () => {
       }}
     >
       {/* ========================================================================= */}
-      {/* 5 ÁREAS PRINCIPALES DEL SISTEMA (IDÉNTICAS A STITCH 01 & 13R)             */}
+      {/* 5 ÁREAS PRINCIPALES DEL SISTEMA                                           */}
       {/* ========================================================================= */}
       <Tab.Screen
         name="Inicio"
@@ -90,7 +88,7 @@ export const BottomTabs = () => {
             <StitchTabBarButton
               {...props}
               label={t('tabHome') || 'Inicio'}
-              imageSource={STITCH_ASSETS.tabs.inicio}
+              iconName="database"
             />
           ),
         }}
@@ -103,7 +101,7 @@ export const BottomTabs = () => {
             <StitchTabBarButton
               {...props}
               label={t('tabPlayers') || 'Jugadores'}
-              imageSource={STITCH_ASSETS.tabs.jugadores}
+              iconName="account-group"
             />
           ),
         }}
@@ -116,7 +114,7 @@ export const BottomTabs = () => {
             <StitchTabBarButton
               {...props}
               label={t('tabObjects') || 'Objetos'}
-              imageSource={STITCH_ASSETS.tabs.objetos}
+              iconName="treasure-chest"
             />
           ),
         }}
@@ -129,7 +127,7 @@ export const BottomTabs = () => {
             <StitchTabBarButton
               {...props}
               label={t('tabTools') || 'Herramientas'}
-              imageSource={STITCH_ASSETS.tabs.herramientas}
+              iconName="tools"
             />
           ),
         }}
@@ -142,7 +140,7 @@ export const BottomTabs = () => {
             <StitchTabBarButton
               {...props}
               label={t('tabSettings') || 'Ajustes'}
-              imageSource={STITCH_ASSETS.tabs.ajustes}
+              iconName="cog"
             />
           ),
         }}
@@ -215,20 +213,9 @@ const styles = StyleSheet.create({
   tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 30,
-    width: 30,
-    marginBottom: 2,
-  },
-  tabIconImage: {
-    width: 28,
     height: 28,
-    resizeMode: 'contain',
-  },
-  tabIconImageActive: {
-    opacity: 1,
-  },
-  tabIconImageInactive: {
-    opacity: 0.75,
+    width: 28,
+    marginBottom: 2,
   },
   tabLabel: {
     fontFamily: THEME.typography.fontTitle,
@@ -238,11 +225,11 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     color: '#fedf99',
-    fontWeight: '700',
+    fontWeight: '900',
     ...THEME.effects.textShadowSubtle,
   },
   tabLabelInactive: {
-    color: '#cfc5b5',
+    color: '#8e867a',
     fontWeight: '600',
   },
 });

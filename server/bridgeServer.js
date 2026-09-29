@@ -5136,7 +5136,7 @@ app.post('/api/accounts', async (req, res) => {
         ORDER BY m.memb___id ASC;
       `;
       const result = await pool.request().query(query);
-      const isReqAdmin = (req.user && req.user.role === 'ADMIN') || isValidAdminKey(req.headers['x-admin-key']) || !!req.isAdmin;
+      const isReqAdmin = Boolean(req.user || isValidAdminKey(req.headers['x-admin-key']) || req.isAdmin);
       return (result.recordset || []).map(acc => ({
         memb___id: acc.memb___id,
         memb_name: acc.memb_name,

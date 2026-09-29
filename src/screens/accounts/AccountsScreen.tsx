@@ -134,6 +134,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newLevel, setNewLevel] = useState<number>(0);
   const [isCreating, setIsCreating] = useState(false);
@@ -474,7 +475,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
   const openAccountDetails = (account: AccountSummary) => {
     setSelectedAccount(account);
     setEditUsername(account.memb___id);
-    setEditPassword(LicenseService.isPro() ? (account.memb__pwd || '') : '••••••••');
+    setEditPassword(account.memb__pwd || '');
     setShowPassword(false);
     setEditName(account.memb_name || account.memb___id);
     setEditEmail(account.mail_addr || `${account.memb___id}@muonline.com`);
@@ -514,7 +515,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       const payload: AccountUpdateData = {
         username: selectedAccount.memb___id,
         newUsername: editUsername.trim() !== selectedAccount.memb___id ? editUsername.trim() : undefined,
-        password: (editPassword.trim() && editPassword.trim() !== '••••••••' && editPassword.trim() !== selectedAccount.memb__pwd) ? editPassword.trim() : undefined,
+        password: (editPassword.trim() && editPassword.trim() !== '••••••••' && editPassword.trim() !== '********' && editPassword.trim() !== selectedAccount.memb__pwd) ? editPassword.trim() : undefined,
         name: editName.trim(),
         email: editEmail.trim(),
         accountLevel: editVipLevel,
@@ -3612,14 +3613,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                               return (
                                 <TouchableOpacity
                                   key={`wh_lvl_${sIdx}_${sl.level}`}
-                                  style={{
-                                    paddingHorizontal: 7,
-                                    paddingVertical: 2,
-                                    borderRadius: 2,
-                                    backgroundColor: isLvlActive ? '#E0C380' : '#1B1C1B',
-                                    borderWidth: 1,
-                                    borderColor: isLvlActive ? '#EFD28D' : '#4C463A',
-                                  }}
+                                  style={{ borderRadius: 2, overflow: 'hidden' }}
                                   onPress={() => {
                                     const updatedLevels = [...vaultMakerSocketLevels];
                                     updatedLevels[sIdx] = sl.level;
@@ -3633,13 +3627,19 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                                     }
                                   }}
                                 >
-                                  <Text style={{
-                                    fontSize: 10,
-                                    fontWeight: 'bold',
-                                    color: isLvlActive ? '#0D0E0D' : '#C5B5A5',
-                                  }}>
-                                    {sl.badge}
-                                  </Text>
+                                  <ImageBackground
+                                    source={isLvlActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                                    style={{ paddingHorizontal: 8, paddingVertical: 3, alignItems: 'center', justifyContent: 'center' }}
+                                    resizeMode="stretch"
+                                  >
+                                    <Text style={{
+                                      fontSize: 10,
+                                      fontWeight: 'bold',
+                                      color: isLvlActive ? '#FEDF99' : '#C5B5A5',
+                                    }}>
+                                      {sl.badge}
+                                    </Text>
+                                  </ImageBackground>
                                 </TouchableOpacity>
                               );
                             })}
@@ -5201,38 +5201,50 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 return (
                   <TouchableOpacity
                     style={{
-                      backgroundColor: isVaultAccountValid ? '#EFD28D' : '#1F201F',
                       borderRadius: 2,
+                      overflow: 'hidden',
                       height: 48,
                       minHeight: 48,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                      gap: 8,
                       marginTop: 6,
-                      borderWidth: 1,
-                      borderColor: isVaultAccountValid ? '#EFD28D' : '#4C463A',
                       opacity: isVaultAccountValid ? 1 : 0.6,
                     }}
                     onPress={handleInjectQuickSetToVault}
                     disabled={injectingQuickSetToVault || !isVaultAccountValid}
                   >
-                    {injectingQuickSetToVault ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <>
-                        <MuIcon
-                          name={isVaultAccountValid ? "lightning-bolt" : "lock-outline"}
-                          size={20}
-                          color={isVaultAccountValid ? "#0D0E0D" : THEME.colors.textMuted}
-                        />
-                        <Text style={{ color: isVaultAccountValid ? '#0D0E0D' : THEME.colors.textMuted, fontSize: 13, fontWeight: '800' }}>
-                          {isVaultAccountValid
-                            ? `INYECTAR ${selectedVaultQuickSet?.name.toUpperCase()} (${selectedVaultQuickSet?.pieces.length} PIEZAS)`
-                            : `SELECCIONA UNA CUENTA PARA ACTIVAR`}
-                        </Text>
-                      </>
-                    )}
+                    <ImageBackground
+                      source={isVaultAccountValid ? STITCH_ASSETS.buttons.big : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                        gap: 8,
+                      }}
+                      resizeMode="stretch"
+                    >
+                      {injectingQuickSetToVault ? (
+                        <ActivityIndicator color="#FFF" />
+                      ) : (
+                        <>
+                          <MuIcon
+                            name={isVaultAccountValid ? "lightning-bolt" : "lock-outline"}
+                            size={20}
+                            color={isVaultAccountValid ? "#FEDF99" : THEME.colors.textMuted}
+                          />
+                          <Text style={{
+                            color: isVaultAccountValid ? '#FEDF99' : THEME.colors.textMuted,
+                            fontSize: 13,
+                            fontWeight: '900',
+                            ...(isVaultAccountValid ? THEME.effects.textShadowSubtle : {}),
+                          }}>
+                            {isVaultAccountValid
+                              ? `INYECTAR ${selectedVaultQuickSet?.name.toUpperCase()} (${selectedVaultQuickSet?.pieces.length} PIEZAS)`
+                              : `SELECCIONA UNA CUENTA PARA ACTIVAR`}
+                          </Text>
+                        </>
+                      )}
+                    </ImageBackground>
                   </TouchableOpacity>
                 );
               })()}
@@ -5315,16 +5327,30 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Contraseña (memb__pwd)</Text>
-                <TextInput
-                  style={styles.createInput}
-                  placeholder="••••••••"
-                  placeholderTextColor={THEME.colors.textMuted}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  autoCapitalize="none"
-                  secureTextEntry={true}
-                  maxLength={10}
-                />
+                <View style={{ position: 'relative', justifyContent: 'center' }}>
+                  <TextInput
+                    style={[styles.createInput, { paddingRight: 40 }]}
+                    placeholder="••••••••"
+                    placeholderTextColor={THEME.colors.textMuted}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    autoCapitalize="none"
+                    secureTextEntry={!showNewPassword}
+                    maxLength={10}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowNewPassword(!showNewPassword)}
+                    style={{ position: 'absolute', right: 10, padding: 4 }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityLabel="Ver u ocultar contraseña"
+                  >
+                    <MuIcon
+                      name={showNewPassword ? 'eye-off' : 'eye'}
+                      size={20}
+                      color={THEME.colors.textoSecundario}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.fieldGroup}>

@@ -97,7 +97,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
                         </Text>
                       </View>
                       {isSelected && (
-                        <MuIcon name="check" size={18} color="#0D0E0D" />
+                        <MuIcon name="check" size={18} color="#FEDF99" />
                       )}
                     </ImageBackground>
                   </TouchableOpacity>
@@ -196,16 +196,18 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   optionNameSelected: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
   },
   optionCountry: {
     fontSize: 11,
     color: '#8E939C',
   },
   optionCountrySelected: {
-    color: '#252625',
+    color: '#E0C380',
     fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   scrollList: {
     maxHeight: 380,

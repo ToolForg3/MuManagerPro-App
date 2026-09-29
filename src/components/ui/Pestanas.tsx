@@ -110,8 +110,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   tabTextoActivo: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   tabTextoInactivo: {
     color: '#CDC6B9',

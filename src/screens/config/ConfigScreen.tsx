@@ -106,6 +106,7 @@ export const ConfigScreen = () => {
   const [database, setDatabase] = useState(config?.database || 'MuOnline');
   const [user, setUser] = useState(config?.user || 'sa');
   const [password, setPassword] = useState(config?.password || '');
+  const [showSqlPassword, setShowSqlPassword] = useState(false);
   const [encrypt, setEncrypt] = useState(config?.encrypt ?? false);
   const [emulator, setEmulator] = useState<'MSPro' | 'Louis'>(config?.emulatorType === 'Louis' ? 'Louis' : 'MSPro');
   const [bridgeUrl, setBridgeUrl] = useState(
@@ -749,7 +750,7 @@ export const ConfigScreen = () => {
                     <MuIcon
                       name="shield-check"
                       size={20}
-                      color={emulator === 'MSPro' ? '#0D0E0D' : THEME.colors.primaryOrange}
+                      color={emulator === 'MSPro' ? '#FEDF99' : THEME.colors.primaryOrange}
                     />
                     <View style={{ marginLeft: 8, flex: 1 }}>
                       <Text style={[styles.emuTitle, emulator === 'MSPro' && styles.emuTextActive]}>
@@ -773,7 +774,7 @@ export const ConfigScreen = () => {
                     <MuIcon
                       name="code-braces"
                       size={20}
-                      color={emulator === 'Louis' ? '#0D0E0D' : THEME.colors.primaryOrange}
+                      color={emulator === 'Louis' ? '#FEDF99' : THEME.colors.primaryOrange}
                     />
                     <View style={{ marginLeft: 8, flex: 1 }}>
                       <Text style={[styles.emuTitle, emulator === 'Louis' && styles.emuTextActive]}>
@@ -869,14 +870,28 @@ export const ConfigScreen = () => {
                 </View>
                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
                   <Text style={styles.label}>{t('sqlPassword')}</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="••••••••"
-                    placeholderTextColor={THEME.colors.textMuted}
-                    secureTextEntry={true}
-                  />
+                  <View style={{ position: 'relative', justifyContent: 'center' }}>
+                    <TextInput
+                      style={[styles.input, { paddingRight: 36 }]}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="••••••••"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      secureTextEntry={!showSqlPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowSqlPassword(!showSqlPassword)}
+                      style={{ position: 'absolute', right: 8, padding: 4 }}
+                      accessibilityLabel="Mostrar u ocultar contraseña SQL"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <MuIcon
+                        name={showSqlPassword ? 'eye-off' : 'eye'}
+                        size={18}
+                        color={THEME.colors.textoSecundario}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
@@ -1134,7 +1149,7 @@ export const ConfigScreen = () => {
                         <MuIcon
                           name="file-document-outline"
                           size={16}
-                          color={ipLimitAction === 'LOG' ? '#0D0E0D' : THEME.colors.textMuted}
+                          color={ipLimitAction === 'LOG' ? '#FEDF99' : THEME.colors.textMuted}
                           style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.ipActionBtnText, ipLimitAction === 'LOG' && styles.ipActionBtnTextActive]}>
@@ -1155,7 +1170,7 @@ export const ConfigScreen = () => {
                         <MuIcon
                           name="account-off"
                           size={16}
-                          color={ipLimitAction === 'DISCONNECT' ? '#0D0E0D' : THEME.colors.textMuted}
+                          color={ipLimitAction === 'DISCONNECT' ? '#FEDF99' : THEME.colors.textMuted}
                           style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.ipActionBtnText, ipLimitAction === 'DISCONNECT' && styles.ipActionBtnTextActive]}>
@@ -1510,14 +1525,8 @@ export const ConfigScreen = () => {
                   <Text style={styles.producedByBadgeText}>PRODUCIDO POR TOOLFORG3</Text>
                 </View>
                 <Text style={styles.brandingFooterVersionText}>
-                  Mu Manager PRO v{APP_VERSION} • Build {APP_BUILD} (Prueba local)
+                  Mu Manager PRO v{APP_VERSION} • Build {APP_BUILD}
                 </Text>
-                <View style={styles.liveStatusRow}>
-                  <View style={styles.liveStatusDot} />
-                  <Text style={styles.versionSubFooterText}>
-                    Gateway Vercel en Línea • Universal Edition
-                  </Text>
-                </View>
               </TouchableOpacity>
             </View>
           </>
@@ -1909,11 +1918,11 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   langBtnTextActive: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontWeight: '900',
-    textShadowColor: 'transparent',
-    textShadowRadius: 0,
-    textShadowOffset: { width: 0, height: 0 },
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
   },
   debugBanner: {
     flexDirection: 'row',
@@ -1967,10 +1976,11 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   emuTextActive: {
-    color: '#0D0E0D',
-    textShadowColor: 'transparent',
-    textShadowRadius: 0,
-    textShadowOffset: { width: 0, height: 0 },
+    color: '#FEDF99',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
   },
   emuSub: {
     fontSize: 10,
@@ -1978,7 +1988,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   emuSubActive: {
-    color: '#2B261D',
+    color: '#E0C380',
+    fontWeight: '700',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
   },
   inputGroup: {
     marginBottom: 10,
@@ -2553,11 +2567,11 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   ipActionBtnTextActive: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontWeight: '900',
-    textShadowColor: 'transparent',
-    textShadowRadius: 0,
-    textShadowOffset: { width: 0, height: 0 },
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
   },
   brandingFooterConfig: {
     alignItems: 'center',

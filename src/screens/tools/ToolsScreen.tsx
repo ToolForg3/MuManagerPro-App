@@ -2807,7 +2807,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                             resizeMode="stretch"
                           >
-                            <Text style={[styles.filterPillText, isWareActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                            <Text style={[styles.filterPillText, isWareActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                               {v.label}
                             </Text>
                           </ImageBackground>
@@ -3268,7 +3268,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       style={{ paddingHorizontal: 10, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.excQuickBtnText, makerExcFlags === 0 && { color: '#0D0E0D', fontWeight: 'bold' }]}>Normal (Sin Exc)</Text>
+                      <Text style={[styles.excQuickBtnText, makerExcFlags === 0 && { color: '#FEDF99', fontWeight: 'bold' }]}>Normal (Sin Exc)</Text>
                     </ImageBackground>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -3315,12 +3315,12 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         <MuIcon
                           name={isActive ? 'checkbox-marked' : 'checkbox-blank-outline'}
                           size={16}
-                          color={isActive ? '#0D0E0D' : THEME.colors.jade}
+                          color={isActive ? '#FEDF99' : THEME.colors.jade}
                         />
                         <Text
                           style={[
                             styles.excChipText,
-                            isActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }
+                            isActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }
                           ]}
                           numberOfLines={1}
                         >
@@ -3393,7 +3393,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                   <Text style={{
                                     fontSize: 10,
                                     fontWeight: 'bold',
-                                    color: isLvlActive ? '#0D0E0D' : '#C5B5A5',
+                                    color: isLvlActive ? '#FEDF99' : '#C5B5A5',
                                   }}>
                                     {sl.badge}
                                   </Text>
@@ -3430,7 +3430,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                     <Text
                                       style={[
                                         styles.socketOptionText,
-                                        isCurActive && { color: '#0D0E0D', fontWeight: 'bold' },
+                                        isCurActive && { color: '#FEDF99', fontWeight: 'bold' },
                                       ]}
                                     >
                                       {so.label}
@@ -3509,7 +3509,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                   style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                                   resizeMode="stretch"
                                 >
-                                  <Text style={[styles.harmonyBtnText, isSel && { color: '#0D0E0D', fontWeight: 'bold' }]}>
+                                  <Text style={[styles.harmonyBtnText, isSel && { color: '#FEDF99', fontWeight: 'bold' }]}>
                                     {h.name}
                                   </Text>
                                 </ImageBackground>
@@ -3556,7 +3556,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}
                               resizeMode="stretch"
                             >
-                              <Text style={[styles.counterBtnText, { color: '#0D0E0D' }]}>MAX</Text>
+                              <Text style={[styles.counterBtnText, { color: '#FEDF99', fontWeight: '900' }]}>MAX</Text>
                             </ImageBackground>
                           </TouchableOpacity>
                         </View>
@@ -3619,7 +3619,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                         style={{ paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
                         resizeMode="stretch"
                       >
-                        <Text style={[styles.filterPillText, isQtySel ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                        <Text style={[styles.filterPillText, isQtySel ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                           x{q}
                         </Text>
                       </ImageBackground>
@@ -3997,7 +3997,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillText, cleanHexType === 'warehouse' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.filterPillText, cleanHexType === 'warehouse' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Baúl de Cuenta
                     </Text>
                   </ImageBackground>
@@ -4011,7 +4011,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillText, cleanHexType === 'inventory' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.filterPillText, cleanHexType === 'inventory' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Inventario de PJ
                     </Text>
                   </ImageBackground>
@@ -5239,7 +5239,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                                 style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                                 resizeMode="stretch"
                               >
-                                <Text style={[styles.filterPillText, isWareActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                                <Text style={[styles.filterPillText, isWareActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                                   {v.label}
                                 </Text>
                               </ImageBackground>
@@ -5295,7 +5295,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                           resizeMode="stretch"
                         >
-                          <Text style={[styles.filterPillText, isCfActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                          <Text style={[styles.filterPillText, isCfActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                             {cf.label}
                           </Text>
                         </ImageBackground>
@@ -5329,7 +5329,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.filterPillTextActive, { color: '#0D0E0D', fontWeight: '800' }]}>
+                    <Text style={[styles.filterPillTextActive, { color: '#FEDF99', fontWeight: '800' }]}>
                       Seleccionar Todos ({prizeOnlinePlayers.length})
                     </Text>
                   </ImageBackground>
@@ -5684,7 +5684,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.filterPillText, bansFilter === 'all' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      <Text style={[styles.filterPillText, bansFilter === 'all' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                         Todos ({bansList.length})
                       </Text>
                     </ImageBackground>
@@ -5698,7 +5698,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.filterPillText, bansFilter === 'characters' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      <Text style={[styles.filterPillText, bansFilter === 'characters' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                         Personajes ({bansList.filter(b => b.type === 'character' || !!b.charName).length})
                       </Text>
                     </ImageBackground>
@@ -5712,7 +5712,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       style={{ paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.filterPillText, bansFilter === 'accounts' ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                      <Text style={[styles.filterPillText, bansFilter === 'accounts' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                         Cuentas ({bansList.filter(b => b.type === 'account' && !b.charName).length})
                       </Text>
                     </ImageBackground>
@@ -6069,7 +6069,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               style={{ paddingHorizontal: 9, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}
                               resizeMode="stretch"
                             >
-                              <Text style={{ color: isMatch ? '#0D0E0D' : THEME.colors.textoSecundarioLuminoso, fontSize: 11, fontWeight: 'bold' }}>
+                              <Text style={{ color: isMatch ? '#FEDF99' : THEME.colors.textoSecundarioLuminoso, fontSize: 11, fontWeight: 'bold' }}>
                                 {acc}
                               </Text>
                             </ImageBackground>
@@ -6114,7 +6114,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           <Text
                             style={[
                               styles.filterPillText,
-                              isFActive ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso },
+                              isFActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso },
                             ]}
                           >
                             {f.label}
@@ -6274,7 +6274,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.switchText, quickLuck ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.switchText, quickLuck ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Luck
                     </Text>
                   </ImageBackground>
@@ -6289,7 +6289,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.switchText, quickSkill ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.switchText, quickSkill ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Skill
                     </Text>
                   </ImageBackground>
@@ -6304,7 +6304,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.switchText, quickFullExc ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.switchText, quickFullExc ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Full Excelente
                     </Text>
                   </ImageBackground>
@@ -6319,7 +6319,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     style={{ paddingHorizontal: 12, paddingVertical: 7, alignItems: 'center', justifyContent: 'center' }}
                     resizeMode="stretch"
                   >
-                    <Text style={[styles.switchText, quick380 ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                    <Text style={[styles.switchText, quick380 ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                       Opción 380
                     </Text>
                   </ImageBackground>
@@ -6349,7 +6349,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                           resizeMode="stretch"
                         >
-                          <Text style={[styles.filterPillText, quickAncientTier === 0 ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                          <Text style={[styles.filterPillText, quickAncientTier === 0 ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                             Normal (Sin Ancient)
                           </Text>
                         </ImageBackground>
@@ -6368,7 +6368,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                               resizeMode="stretch"
                             >
-                              <Text style={[styles.filterPillText, isSelected ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                              <Text style={[styles.filterPillText, isSelected ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                                 {anc.name} (T{anc.tier})
                               </Text>
                             </ImageBackground>
@@ -6420,7 +6420,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           style={{ width: 44, height: 34, justifyContent: 'center', alignItems: 'center' }}
                           resizeMode="stretch"
                         >
-                          <Text style={{ color: '#0D0E0D', fontSize: 10, fontWeight: 'bold' }}>MAX</Text>
+                          <Text style={{ color: '#FEDF99', fontSize: 10, fontWeight: 'bold' }}>MAX</Text>
                         </ImageBackground>
                       </TouchableOpacity>
                     </View>
@@ -6452,7 +6452,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                             style={{ paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', justifyContent: 'center' }}
                             resizeMode="stretch"
                           >
-                            <Text style={[styles.filterPillText, isSel ? { color: '#0D0E0D', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
+                            <Text style={[styles.filterPillText, isSel ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
                               {h.label}
                             </Text>
                           </ImageBackground>

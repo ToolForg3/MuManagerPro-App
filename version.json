@@ -1,10 +1,10 @@
 {
-  "version": "2.2.7",
+  "version": "2.2.8",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-29T03:00:00.000Z",
+  "publishedAt": "2026-09-29T04:25:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 129,
+  "build": 130,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.7 (Build 129) - Rediseño Oficial Stitch Approved Ironforge 100% Nativo & Blindaje de Seguridad:\n• SISTEMA VISUAL STITCH IRONFORGE NATIVO: Cobertura del 100% de texturas oficiales de MU Online (tabModeActive, tabModeInactive, btn_small, btn_big) en todas las pestañas, subnavegadores, switches y botones de acción.\n• ERRADICACIÓN DE BORDES PLANOS: Cero cajas lisas de CSS. Biselado chiseled multidireccional con relieve 3D y contenedores anti-sangrado con bordes redondeados y overflow oculto.\n• TIPOGRAFÍA Y CONTRASTE WCAG AA: Tipografía gótica oscura de alto contraste (#0D0E0D peso 900) sin sombras oscuras sobre oro brillante, y tonos acero (#CDC6B9/#E0C380) sobre superficies inactivas.\n• BLINDAJE DE SEGURIDAD INTEGRAL: Compilación Hermes Bytecode, ofuscación avanzada Metro JS, R8/ProGuard, defensas activas anti-debug y anti-hooking (detección Frida/Xposed/Tamper), certificate pinning Root CAs y telemetría forense anti-abuso."
+  "changelog": "MuManager PRO v2.2.8 (Build 130) - Rediseño Oficial Stitch Approved Ironforge, Nitidez Tipográfica & Seguridad:\n• PULIDO VISUAL Y CONTRASTE WCAG AAA: Corrección integral de textos en pestañas activas (Louis S6, MSPro, Idiomas y Filtros) con oro radiante #FEDF99 y sombra sutil para legibilidad absoluta sobre texturas nativas.\n• VISIBILIDAD DE CONTRASEÑAS: Corrección del control del ojo para revelar contraseñas reales en edición de cuentas, creación de nuevas cuentas y configuración de conexión SQL.\n• NAVEGACIÓN INFERIOR MEJORADA: Nuevos iconos vectoriales nítidos y transparentes en la barra principal, erradicando recuadros blancos y fondos oscuros en el botón de Ajustes.\n• OPTIMIZACIÓN Y LIMPIEZA: Eliminación de atajos clásicos de teclado de escritorio y retiro de leyendas de prueba local.\n• SEGURIDAD TOTAL: Compilación Hermes Bytecode, R8/ProGuard, defensas anti-debug y anti-hooking activas, y certificado pinning estricto."
 }

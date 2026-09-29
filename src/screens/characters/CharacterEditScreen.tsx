@@ -1822,68 +1822,6 @@ export const CharacterEditScreen = () => {
                   </View>
                 </View>
               </View>
-
-              {/* Sección 4: ATAJOS CLÁSICOS MU (Stitch 03) */}
-              <View style={styles.stitchShortcutsCard}>
-                <Text style={styles.stitchShortcutsLabel}>ATAJOS CLÁSICOS MU:</Text>
-                <View style={styles.stitchShortcutsRow}>
-                  <TouchableOpacity
-                    style={styles.stitchShortcutKeyBtn}
-                    onPress={() => navigation.goBack()}
-                    activeOpacity={0.8}
-                    accessibilityLabel="Atajo X Cash Shop"
-                  >
-                    <Image
-                      source={STITCH_ASSETS.sprites.cashShop}
-                      style={styles.stitchShortcutSpriteImg}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.stitchShortcutKeySub}>[X] SHOP</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.stitchShortcutKeyBtn}
-                    onPress={() => setActiveTab('Stats')}
-                    activeOpacity={0.8}
-                    accessibilityLabel="Atajo C Personaje"
-                  >
-                    <Image
-                      source={STITCH_ASSETS.sprites.knightHelm}
-                      style={styles.stitchShortcutSpriteImg}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.stitchShortcutKeySub}>[C] CHAR</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.stitchShortcutKeyBtn}
-                    onPress={() => setActiveTab('Skills')}
-                    activeOpacity={0.8}
-                    accessibilityLabel="Atajo P Party"
-                  >
-                    <Image
-                      source={STITCH_ASSETS.sprites.party}
-                      style={styles.stitchShortcutSpriteImg}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.stitchShortcutKeySub}>[P] PARTY</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.stitchShortcutKeyBtn}
-                    onPress={() => setActiveTab('Ubicacion')}
-                    activeOpacity={0.8}
-                    accessibilityLabel="Atajo M Move Map"
-                  >
-                    <Image
-                      source={STITCH_ASSETS.sprites.warp}
-                      style={styles.stitchShortcutSpriteImg}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.stitchShortcutKeySub}>[M] MOVE</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             </View>
         );
       })()}
