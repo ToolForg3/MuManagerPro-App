@@ -1827,15 +1827,30 @@
         </label>
       </div>
 
-      <div class="form-row">
-        <div class="form-group" style="flex: 1;">
-          <label>Canal / Proveedor de Envío:</label>
-          <select id="wa-provider" class="form-control" onchange="toggleWaProviderInputs()">
-            <option value="telegram">Telegram Bot (100% Gratuito e Ilimitado - Recomendado)</option>
-            <option value="discord">Discord Webhook (100% Gratuito en tu Servidor/Canal)</option>
-            <option value="callmebot">WhatsApp (CallMeBot Gratuito)</option>
-            <option value="webhook">Webhook Personalizado (API Propia / Twilio / Evolution API)</option>
-          </select>
+      <div style="background: #111114; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+        <label style="font-size: 14px; font-weight: 700; margin-bottom: 8px; display: block; color: var(--gold-radiant);">
+          📡 Canales de Alerta Activos (Puedes marcar más de uno a la vez):
+        </label>
+        <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px;">
+          Activa todas las plataformas donde deseas recibir las alertas en vivo simultáneamente:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #FFF; background: #18191E; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(41, 182, 246, 0.35); cursor: pointer;">
+            <input type="checkbox" id="wa-channel-telegram" onchange="toggleWaChannelBoxes()" checked style="transform: scale(1.3); cursor: pointer;" />
+            <span>✈️ <strong>Telegram Bot</strong><br><small style="color: #29B6F6;">100% Gratis e Ilimitado</small></span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #FFF; background: #18191E; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(114, 137, 218, 0.35); cursor: pointer;">
+            <input type="checkbox" id="wa-channel-discord" onchange="toggleWaChannelBoxes()" style="transform: scale(1.3); cursor: pointer;" />
+            <span>🎮 <strong>Discord Webhook</strong><br><small style="color: #7289DA;">Gratis en tu Servidor</small></span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #FFF; background: #18191E; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(63, 207, 142, 0.35); cursor: pointer;">
+            <input type="checkbox" id="wa-channel-callmebot" onchange="toggleWaChannelBoxes()" style="transform: scale(1.3); cursor: pointer;" />
+            <span>📲 <strong>WhatsApp</strong><br><small style="color: #3FCF8E;">CallMeBot Gratuito</small></span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #FFF; background: #18191E; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); cursor: pointer;">
+            <input type="checkbox" id="wa-channel-webhook" onchange="toggleWaChannelBoxes()" style="transform: scale(1.3); cursor: pointer;" />
+            <span>🌐 <strong>Webhook Propio</strong><br><small style="color: var(--muted);">API REST / Twilio / etc.</small></span>
+          </label>
         </div>
       </div>
 
@@ -6312,17 +6327,25 @@
     /* ========================================================
        ALERTAS Y NOTIFICACIONES MULTI-CANAL (TELEGRAM / DISCORD / WA)
        ======================================================== */
-    function toggleWaProviderInputs() {
-      const provider = document.getElementById('wa-provider').value;
-      const callmebotContainer = document.getElementById('wa-callmebot-container');
+    function toggleWaChannelBoxes() {
+      const tgChecked = document.getElementById('wa-channel-telegram')?.checked;
+      const dcChecked = document.getElementById('wa-channel-discord')?.checked;
+      const cmChecked = document.getElementById('wa-channel-callmebot')?.checked;
+      const whChecked = document.getElementById('wa-channel-webhook')?.checked;
+
       const telegramBox = document.getElementById('wa-telegram-box');
       const discordBox = document.getElementById('wa-discord-box');
+      const callmebotContainer = document.getElementById('wa-callmebot-container');
       const webhookBox = document.getElementById('wa-webhook-box');
 
-      if (callmebotContainer) callmebotContainer.style.display = provider === 'callmebot' ? 'block' : 'none';
-      if (telegramBox) telegramBox.style.display = provider === 'telegram' ? 'block' : 'none';
-      if (discordBox) discordBox.style.display = provider === 'discord' ? 'block' : 'none';
-      if (webhookBox) webhookBox.style.display = provider === 'webhook' ? 'block' : 'none';
+      if (telegramBox) telegramBox.style.display = tgChecked ? 'block' : 'none';
+      if (discordBox) discordBox.style.display = dcChecked ? 'block' : 'none';
+      if (callmebotContainer) callmebotContainer.style.display = cmChecked ? 'block' : 'none';
+      if (webhookBox) webhookBox.style.display = whChecked ? 'block' : 'none';
+    }
+
+    function toggleWaProviderInputs() {
+      toggleWaChannelBoxes();
     }
 
     async function loadWhatsAppSettings() {
@@ -6335,8 +6358,19 @@
         if (res.ok) {
           const wa = await res.json();
           document.getElementById('wa-enabled').checked = wa.enabled !== false;
+
+          const channels = wa.channels || {};
+          const tgEl = document.getElementById('wa-channel-telegram');
+          const dcEl = document.getElementById('wa-channel-discord');
+          const cmEl = document.getElementById('wa-channel-callmebot');
+          const whEl = document.getElementById('wa-channel-webhook');
+
+          if (tgEl) tgEl.checked = channels.telegram !== undefined ? !!channels.telegram : (wa.provider === 'telegram');
+          if (dcEl) dcEl.checked = channels.discord !== undefined ? !!channels.discord : (wa.provider === 'discord');
+          if (cmEl) cmEl.checked = channels.callmebot !== undefined ? !!channels.callmebot : (wa.provider === 'callmebot');
+          if (whEl) whEl.checked = channels.webhook !== undefined ? !!channels.webhook : (wa.provider === 'webhook');
+
           if (document.getElementById('wa-phone')) document.getElementById('wa-phone').value = wa.phone || '';
-          document.getElementById('wa-provider').value = wa.provider || 'telegram';
           if (document.getElementById('wa-apikey')) document.getElementById('wa-apikey').value = wa.apiKey || '';
           if (document.getElementById('wa-telegram-token')) document.getElementById('wa-telegram-token').value = wa.telegramBotToken || '';
           if (document.getElementById('wa-telegram-chatid')) document.getElementById('wa-telegram-chatid').value = wa.telegramChatId || '';
@@ -6352,7 +6386,7 @@
             document.getElementById('wa-evt-pro').checked = evts.proRequest !== false;
           }
 
-          toggleWaProviderInputs();
+          toggleWaChannelBoxes();
         }
       } catch (e) {
         console.error('Error cargando ajustes de alertas', e);
@@ -6361,10 +6395,19 @@
 
     async function saveWhatsAppSettings() {
       const key = getAdminKey();
+      const channels = {
+        telegram: document.getElementById('wa-channel-telegram')?.checked || false,
+        discord: document.getElementById('wa-channel-discord')?.checked || false,
+        callmebot: document.getElementById('wa-channel-callmebot')?.checked || false,
+        webhook: document.getElementById('wa-channel-webhook')?.checked || false
+      };
+      const primaryProvider = channels.telegram ? 'telegram' : (channels.discord ? 'discord' : (channels.callmebot ? 'callmebot' : 'webhook'));
+
       const payload = {
         enabled: document.getElementById('wa-enabled').checked,
+        channels,
+        provider: primaryProvider,
         phone: document.getElementById('wa-phone') ? document.getElementById('wa-phone').value.trim() : '',
-        provider: document.getElementById('wa-provider').value,
         apiKey: document.getElementById('wa-apikey') ? document.getElementById('wa-apikey').value.trim() : '',
         telegramBotToken: document.getElementById('wa-telegram-token') ? document.getElementById('wa-telegram-token').value.trim() : '',
         telegramChatId: document.getElementById('wa-telegram-chatid') ? document.getElementById('wa-telegram-chatid').value.trim() : '',
@@ -6387,7 +6430,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('Configuración de alertas guardada exitosamente.');
+          showToast('Configuración de alertas multi-canal guardada exitosamente.');
           loadAuditLogs();
         } else {
           showToast('Error al guardar configuración: ' + (data.error || 'Desconocido'), true);
@@ -6399,12 +6442,26 @@
 
     async function testWhatsAppAlert() {
       const statusEl = document.getElementById('wa-test-status');
+      const channels = {
+        telegram: document.getElementById('wa-channel-telegram')?.checked || false,
+        discord: document.getElementById('wa-channel-discord')?.checked || false,
+        callmebot: document.getElementById('wa-channel-callmebot')?.checked || false,
+        webhook: document.getElementById('wa-channel-webhook')?.checked || false
+      };
+
+      const hasActive = Object.values(channels).some(Boolean);
+      if (!hasActive) {
+        statusEl.style.color = '#E2703A';
+        statusEl.innerText = '❌ Marca al menos un canal de alerta (Telegram, Discord, WhatsApp o Webhook)';
+        return;
+      }
+
       statusEl.style.color = '#FFA726';
-      statusEl.innerText = '⏳ Enviando mensaje de prueba...';
+      statusEl.innerText = '⏳ Enviando mensaje de prueba multi-canal...';
       const key = getAdminKey();
 
       const phone = document.getElementById('wa-phone') ? document.getElementById('wa-phone').value.trim() : '';
-      const provider = document.getElementById('wa-provider').value;
+      const primaryProvider = channels.telegram ? 'telegram' : (channels.discord ? 'discord' : (channels.callmebot ? 'callmebot' : 'webhook'));
       const apiKey = document.getElementById('wa-apikey') ? document.getElementById('wa-apikey').value.trim() : '';
       const telegramBotToken = document.getElementById('wa-telegram-token') ? document.getElementById('wa-telegram-token').value.trim() : '';
       const telegramChatId = document.getElementById('wa-telegram-chatid') ? document.getElementById('wa-telegram-chatid').value.trim() : '';
@@ -6415,12 +6472,13 @@
         const res = await fetch('/api/admin/whatsapp/test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ phone, provider, apiKey, telegramBotToken, telegramChatId, discordWebhookUrl, webhookUrl })
+          body: JSON.stringify({ channels, phone, provider: primaryProvider, apiKey, telegramBotToken, telegramChatId, discordWebhookUrl, webhookUrl })
         });
         const data = await res.json();
         if (data.success) {
           statusEl.style.color = '#3FCF8E';
-          statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito!';
+          const sentTo = data.channel ? ` [Canal(es): ${data.channel}]` : '';
+          statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito!' + sentTo;
           showToast('¡Alerta de prueba enviada con éxito!');
         } else {
           statusEl.style.color = '#E2703A';

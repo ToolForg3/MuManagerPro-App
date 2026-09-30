@@ -67,13 +67,19 @@ assert(dashboardCode.includes('id="wa-evt-pro"'), 'adminDashboard.html debe cont
 assert(dashboardCode.includes('proRequest: document.getElementById(\'wa-evt-pro\')'), 'saveWhatsAppSettings debe incluir proRequest');
 assert(!dashboardCode.includes("wa.phone || '5521971217376'"), 'loadWhatsAppSettings NO debe contener el teléfono hardcodeado');
 assert(!dashboardCode.includes("showToast('Alerta enviada a +5521971217376')"), 'testWhatsAppAlert NO debe mostrar teléfono hardcodeado en toast');
-assert(dashboardCode.includes("body: JSON.stringify({ phone, provider, apiKey, telegramBotToken, telegramChatId, discordWebhookUrl, webhookUrl })"), 'testWhatsAppAlert debe enviar parámetros multi-canal en vivo en el POST');
-console.log('  [PASS] Panel web limpio: controles proRequest, envío en vivo y cero teléfonos fijos.');
+assert(dashboardCode.includes("body: JSON.stringify({ channels, phone, provider: primaryProvider, apiKey, telegramBotToken, telegramChatId, discordWebhookUrl, webhookUrl })"), 'testWhatsAppAlert debe enviar parámetros multi-canal en vivo en el POST');
+assert(dashboardCode.includes('id="wa-channel-telegram"'), 'adminDashboard.html debe contener el checkbox wa-channel-telegram');
+assert(dashboardCode.includes('id="wa-channel-discord"'), 'adminDashboard.html debe contener el checkbox wa-channel-discord');
+assert(dashboardCode.includes('id="wa-channel-callmebot"'), 'adminDashboard.html debe contener el checkbox wa-channel-callmebot');
+assert(dashboardCode.includes('id="wa-channel-webhook"'), 'adminDashboard.html debe contener el checkbox wa-channel-webhook');
+console.log('  [PASS] Panel web limpio: controles multi-canal por checkboxes, envío en vivo y cero teléfonos fijos.');
 
 // Test 7: settings.json schema verification
 console.log('\n[Test 7] Verificación de esquema en settings.json...');
 assert.strictEqual(settingsJson.whatsapp.events.proRequest, true, 'data/settings.json debe incluir proRequest: true');
 assert.strictEqual(serverSettingsJson.whatsapp.events.proRequest, true, 'server/data/settings.json debe incluir proRequest: true');
+assert(settingsJson.whatsapp.hasOwnProperty('channels'), 'data/settings.json debe incluir objeto channels');
+assert(serverSettingsJson.whatsapp.hasOwnProperty('channels'), 'server/data/settings.json debe incluir objeto channels');
 assert(settingsJson.whatsapp.hasOwnProperty('telegramBotToken'), 'data/settings.json debe incluir telegramBotToken');
 assert(settingsJson.whatsapp.hasOwnProperty('telegramChatId'), 'data/settings.json debe incluir telegramChatId');
 assert(settingsJson.whatsapp.hasOwnProperty('discordWebhookUrl'), 'data/settings.json debe incluir discordWebhookUrl');
@@ -86,12 +92,14 @@ console.log('  [PASS] Esquemas de configuración en data/ y server/data/ 100% si
 console.log('\n[Test 8] Verificación de canal Telegram Bot y Discord Webhook...');
 assert(bridgeCode.includes("api.telegram.org"), 'bridgeServer debe soportar la API oficial de Telegram');
 assert(bridgeCode.includes("discordWebhookUrl"), 'bridgeServer debe despachar a Discord Webhooks con Embed');
+assert(bridgeCode.includes("activeChannels.map"), 'bridgeServer debe despachar alertas multi-canal en paralelo');
 assert(connectorCode.includes("api.telegram.org"), 'Connector debe soportar la API de Telegram');
 assert(connectorCode.includes("discordWebhookUrl"), 'Connector debe despachar a Discord Webhooks');
+assert(connectorCode.includes("activeChannels.map"), 'Connector debe despachar alertas multi-canal en paralelo');
 assert(dashboardCode.includes('id="wa-telegram-token"'), 'adminDashboard.html debe incluir input wa-telegram-token');
 assert(dashboardCode.includes('id="wa-telegram-chatid"'), 'adminDashboard.html debe incluir input wa-telegram-chatid');
 assert(dashboardCode.includes('id="wa-discord-url"'), 'adminDashboard.html debe incluir input wa-discord-url');
-console.log('  [PASS] Motor multi-canal Telegram Bot y Discord Webhook verificado con éxito en backend, conector y panel web.');
+console.log('  [PASS] Motor multi-canal con checkboxes y despacho paralelo verificado con éxito en backend, conector y panel web.');
 
 console.log('\n====================================================');
 console.log(' ALL 8/8 MULTI-CHANNEL ALERTS REMEDIATION TESTS PASSED!');

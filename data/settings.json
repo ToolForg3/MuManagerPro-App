@@ -20,12 +20,18 @@
   },
   "whatsapp": {
     "enabled": true,
+    "channels": {
+      "telegram": true,
+      "discord": false,
+      "callmebot": false,
+      "webhook": false
+    },
     "phone": "",
     "apiKey": "",
     "telegramBotToken": "",
-    "telegramChatId": "",
+    "telegramChatId": "5316576437",
     "discordWebhookUrl": "",
-    "provider": "callmebot",
+    "provider": "telegram",
     "webhookUrl": "",
     "events": {
       "tamper": true,

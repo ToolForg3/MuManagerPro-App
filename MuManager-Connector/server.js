@@ -265,187 +265,244 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
       `📝 *Detalles:* ${details}\n` +
       `🛑 *Estado:* Tráfico protegido / Acción registrada`;
 
-    if (wa.provider === 'telegram') {
-      const token = String(wa.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '').trim();
-      const chatId = String(wa.telegramChatId || process.env.TELEGRAM_CHAT_ID || '').trim();
-      if (!token || !chatId) {
-        return { success: false, error: 'Falta Bot Token o Chat ID de Telegram en la configuración (consíguelos gratis con @BotFather y @userinfobot).' };
-      }
-      return new Promise((resolve) => {
-        try {
-          const postData = JSON.stringify({
-            chat_id: chatId,
-            text: messageText,
-            parse_mode: 'Markdown'
-          });
-          const parsed = new URL(`https://api.telegram.org/bot${token}/sendMessage`);
-          const req = httpsMod.request(parsed, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(postData)
-            },
-            timeout: 10000
-          }, (res) => {
-            let data = '';
-            res.on('data', chunk => { data += chunk; });
-            res.on('end', () => {
-              try {
-                const parsedRes = JSON.parse(data);
-                if (parsedRes.ok) {
-                  resolve({ success: true, statusCode: res.statusCode, response: data });
-                } else {
-                  resolve({ success: false, statusCode: res.statusCode, error: `Telegram Error: ${parsedRes.description || data}` });
-                }
-              } catch (_) {
-                resolve({ success: res.statusCode === 200, statusCode: res.statusCode, response: data, error: res.statusCode === 200 ? undefined : data });
-              }
-            });
-          });
-          req.on('error', (err) => resolve({ success: false, error: err.message }));
-          req.setTimeout(10000, () => req.destroy(new Error('Timeout de conexión contactando Telegram API (10s)')));
-          req.write(postData);
-          req.end();
-        } catch (e) {
-          resolve({ success: false, error: e.message });
-        }
-      });
-    } else if (wa.provider === 'discord') {
-      const discordUrl = String(wa.discordWebhookUrl || process.env.DISCORD_WEBHOOK_URL || '').trim();
-      if (!discordUrl) {
-        return { success: false, error: 'Falta la URL del Webhook de Discord en la configuración.' };
-      }
-      return new Promise((resolve) => {
-        try {
-          const parsed = new URL(discordUrl);
-          const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
-          const postData = JSON.stringify({
-            username: 'Mu Manager PRO Shield',
-            avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
-            embeds: [
-              {
-                title: `🚨 ${title}`,
-                description: details,
-                color: 15830060,
-                fields: [
-                  { name: '📱 Dispositivo (HWID)', value: `\`${hwid}\``, inline: true },
-                  { name: '🌐 IP Cliente', value: `\`${ip}\``, inline: true },
-                  { name: '⏰ Hora (Sao Paulo)', value: timeStr, inline: false }
-                ],
-                footer: { text: 'Mu Manager PRO Security • Tráfico Protegido' },
-                timestamp: new Date().toISOString()
-              }
-            ]
-          });
-          const req = lib.request(parsed, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(postData)
-            },
-            timeout: 10000
-          }, (res) => {
-            let data = '';
-            res.on('data', chunk => { data += chunk; });
-            res.on('end', () => {
-              const isOk = res.statusCode >= 200 && res.statusCode < 300;
-              resolve({
-                success: isOk,
-                statusCode: res.statusCode,
-                response: data,
-                error: isOk ? undefined : (data || `HTTP ${res.statusCode}`)
-              });
-            });
-          });
-          req.on('error', (err) => resolve({ success: false, error: err.message }));
-          req.setTimeout(10000, () => req.destroy(new Error('Timeout de conexión contactando Discord Webhook (10s)')));
-          req.write(postData);
-          req.end();
-        } catch (e) {
-          resolve({ success: false, error: e.message });
-        }
-      });
-    } else if (wa.provider === 'webhook' && wa.webhookUrl) {
-      return new Promise((resolve) => {
-        try {
-          const parsed = new URL(wa.webhookUrl);
-          const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
-          const postData = JSON.stringify({
-            phone,
-            message: messageText,
-            event: eventKey,
-            title,
-            details,
-            hwid,
-            ip,
-            timestamp: new Date().toISOString()
-          });
-          const req = lib.request(parsed, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(postData)
-            },
-            timeout: 8000
-          }, (res) => {
-            resolve({ success: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode });
-          });
-          req.on('error', (err) => resolve({ success: false, error: err.message }));
-          req.write(postData);
-          req.end();
-        } catch (e) {
-          resolve({ success: false, error: e.message });
-        }
-      });
+    // Determinar canales activos (soporta selección múltiple por checkboxes)
+    let activeChannels = [];
+    if (wa.channels && typeof wa.channels === 'object') {
+      if (wa.channels.telegram) activeChannels.push('telegram');
+      if (wa.channels.discord) activeChannels.push('discord');
+      if (wa.channels.callmebot) activeChannels.push('callmebot');
+      if (wa.channels.webhook) activeChannels.push('webhook');
+    }
+    if (activeChannels.length === 0) {
+      activeChannels.push(wa.provider || 'telegram');
+    }
+
+    const dispatches = activeChannels.map(channel => {
+      if (channel === 'telegram') return dispatchTelegramAlert(wa, messageText, httpsMod);
+      if (channel === 'discord') return dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, httpMod);
+      if (channel === 'callmebot') return dispatchCallMeBotAlert(wa, phone, messageText, httpsMod);
+      if (channel === 'webhook') return dispatchWebhookAlert(wa, eventKey, title, details, hwid, ip, messageText, httpsMod, httpMod);
+      return Promise.resolve({ success: false, channel, error: `Canal desconocido: ${channel}` });
+    });
+
+    const results = await Promise.allSettled(dispatches);
+    const outcomes = results.map(r => r.status === 'fulfilled' ? r.value : { success: false, error: r.reason?.message || 'Error de despacho' });
+    const successes = outcomes.filter(o => o && o.success);
+    const failures = outcomes.filter(o => !o || !o.success);
+
+    if (successes.length > 0) {
+      return {
+        success: true,
+        channel: successes.map(s => s.channel).join(', '),
+        deliveredChannels: successes.map(s => s.channel),
+        errors: failures.length > 0 ? failures.map(f => `${f.channel}: ${f.error}`).join(' | ') : undefined,
+        response: successes[0].response
+      };
     } else {
-      // CallMeBot WhatsApp API
-      if (!phone) return { success: false, reason: 'Número de WhatsApp no configurado' };
-      return new Promise((resolve) => {
-        if (!wa.apiKey) {
-          return resolve({
-            success: false,
-            error: 'Falta la API Key de CallMeBot. Para obtenerla gratis: agrega a tus contactos de WhatsApp el número oficial (+34 684 728 023) y envíale el mensaje: I allow callmebot to send me messages'
-          });
-        }
-        const apiKeyParam = `&apikey=${encodeURIComponent(wa.apiKey)}`;
-        const callmeUrl = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(messageText)}${apiKeyParam}`;
-        const req = httpsMod.get(callmeUrl, (res) => {
-          let data = '';
-          res.on('data', chunk => { data += chunk; });
-          res.on('end', () => {
-            const lower = data.toLowerCase();
-            const hasFailure = lower.includes('error') || 
-                               lower.includes('not allowed') || 
-                               lower.includes('not sent') || 
-                               lower.includes('0 messages left') || 
-                               lower.includes('subscribe');
-            const isOk = res.statusCode === 200 && !hasFailure;
-            let failureReason;
-            if (!isOk) {
-              if (lower.includes('0 messages left') || lower.includes('subscribe')) {
-                failureReason = 'Cuota gratuita de CallMeBot agotada para este número (0 mensajes restantes). Requiere renovar cuota o suscribirse en CallMeBot.';
-              } else if (lower.includes('invalid') || lower.includes('apikey')) {
-                failureReason = 'API Key de CallMeBot inválida o no coincide con este número telefónico.';
-              } else {
-                failureReason = data ? data.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : `HTTP ${res.statusCode}`;
-              }
+      return {
+        success: false,
+        error: failures.map(f => `${f.channel}: ${f.error || f.reason || 'Fallo desconocido'}`).join(' | ') || 'Ningún canal pudo entregar la alerta'
+      };
+    }
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+function dispatchTelegramAlert(wa, messageText, httpsMod) {
+  return new Promise((resolve) => {
+    const token = String(wa.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '').trim();
+    const chatId = String(wa.telegramChatId || process.env.TELEGRAM_CHAT_ID || '').trim();
+    if (!token || !chatId) {
+      return resolve({ success: false, channel: 'telegram', error: 'Falta Bot Token o Chat ID de Telegram' });
+    }
+    try {
+      const postData = JSON.stringify({
+        chat_id: chatId,
+        text: messageText,
+        parse_mode: 'Markdown'
+      });
+      const parsed = new URL(`https://api.telegram.org/bot${token}/sendMessage`);
+      const req = httpsMod.request(parsed, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        },
+        timeout: 10000
+      }, (res) => {
+        let data = '';
+        res.on('data', chunk => { data += chunk; });
+        res.on('end', () => {
+          try {
+            const parsedRes = JSON.parse(data);
+            if (parsedRes.ok) {
+              resolve({ success: true, channel: 'telegram', statusCode: res.statusCode, response: data });
+            } else {
+              resolve({ success: false, channel: 'telegram', statusCode: res.statusCode, error: `Telegram Error: ${parsedRes.description || data}` });
             }
-            resolve({
-              success: isOk,
-              statusCode: res.statusCode,
-              response: data,
-              error: isOk ? undefined : failureReason
-            });
+          } catch (_) {
+            resolve({ success: res.statusCode === 200, channel: 'telegram', statusCode: res.statusCode, response: data, error: res.statusCode === 200 ? undefined : data });
+          }
+        });
+      });
+      req.on('error', (err) => resolve({ success: false, channel: 'telegram', error: err.message }));
+      req.setTimeout(10000, () => req.destroy(new Error('Timeout de conexión contactando Telegram API (10s)')));
+      req.write(postData);
+      req.end();
+    } catch (e) {
+      resolve({ success: false, channel: 'telegram', error: e.message });
+    }
+  });
+}
+
+function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, httpMod) {
+  return new Promise((resolve) => {
+    const discordUrl = String(wa.discordWebhookUrl || process.env.DISCORD_WEBHOOK_URL || '').trim();
+    if (!discordUrl) {
+      return resolve({ success: false, channel: 'discord', error: 'Falta la URL del Webhook de Discord' });
+    }
+    try {
+      const parsed = new URL(discordUrl);
+      const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
+      const postData = JSON.stringify({
+        username: 'Mu Manager PRO Shield',
+        avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
+        embeds: [
+          {
+            title: `🚨 ${title}`,
+            description: details,
+            color: 15830060,
+            fields: [
+              { name: '📱 Dispositivo (HWID)', value: `\`${hwid}\``, inline: true },
+              { name: '🌐 IP Cliente', value: `\`${ip}\``, inline: true },
+              { name: '⏰ Hora (Sao Paulo)', value: timeStr, inline: false }
+            ],
+            footer: { text: 'Mu Manager PRO Security • Tráfico Protegido' },
+            timestamp: new Date().toISOString()
+          }
+        ]
+      });
+      const req = lib.request(parsed, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        },
+        timeout: 10000
+      }, (res) => {
+        let data = '';
+        res.on('data', chunk => { data += chunk; });
+        res.on('end', () => {
+          const isOk = res.statusCode >= 200 && res.statusCode < 300;
+          resolve({
+            success: isOk,
+            channel: 'discord',
+            statusCode: res.statusCode,
+            response: data,
+            error: isOk ? undefined : (data || `HTTP ${res.statusCode}`)
           });
         });
-        req.setTimeout(10000, () => {
-          req.destroy(new Error('Timeout de conexión contactando CallMeBot (10s)'));
-        });
-        req.on('error', (err) => {
-          resolve({ success: false, error: err.message });
-        });
+      });
+      req.on('error', (err) => resolve({ success: false, channel: 'discord', error: err.message }));
+      req.setTimeout(10000, () => req.destroy(new Error('Timeout de conexión contactando Discord Webhook (10s)')));
+      req.write(postData);
+      req.end();
+    } catch (e) {
+      resolve({ success: false, channel: 'discord', error: e.message });
+    }
+  });
+}
+
+function dispatchCallMeBotAlert(wa, phone, messageText, httpsMod) {
+  return new Promise((resolve) => {
+    if (!phone) return resolve({ success: false, channel: 'callmebot', reason: 'Número de WhatsApp no configurado' });
+    if (!wa.apiKey) {
+      return resolve({
+        success: false,
+        channel: 'callmebot',
+        error: 'Falta la API Key de CallMeBot. Para obtenerla gratis: agrega a tus contactos de WhatsApp el número oficial (+34 684 728 023) y envíale el mensaje: I allow callmebot to send me messages'
       });
     }
+    try {
+      const apiKeyParam = `&apikey=${encodeURIComponent(wa.apiKey)}`;
+      const callmeUrl = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(messageText)}${apiKeyParam}`;
+      const req = httpsMod.get(callmeUrl, (res) => {
+        let data = '';
+        res.on('data', chunk => { data += chunk; });
+        res.on('end', () => {
+          const lower = data.toLowerCase();
+          const hasFailure = lower.includes('error') || 
+                             lower.includes('not allowed') || 
+                             lower.includes('not sent') || 
+                             lower.includes('0 messages left') || 
+                             lower.includes('subscribe');
+          const isOk = res.statusCode === 200 && !hasFailure;
+          let failureReason;
+          if (!isOk) {
+            if (lower.includes('0 messages left') || lower.includes('subscribe')) {
+              failureReason = 'Cuota gratuita de CallMeBot agotada para este número (0 mensajes restantes). Requiere renovar cuota o suscribirse en CallMeBot.';
+            } else if (lower.includes('invalid') || lower.includes('apikey')) {
+              failureReason = 'API Key de CallMeBot inválida o no coincide con este número telefónico.';
+            } else {
+              failureReason = data ? data.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : `HTTP ${res.statusCode}`;
+            }
+          }
+          resolve({
+            success: isOk,
+            channel: 'callmebot',
+            statusCode: res.statusCode,
+            response: data,
+            error: isOk ? undefined : failureReason
+          });
+        });
+      });
+      req.setTimeout(10000, () => {
+        req.destroy(new Error('Timeout de conexión contactando CallMeBot (10s)'));
+      });
+      req.on('error', (err) => {
+        resolve({ success: false, channel: 'callmebot', error: err.message });
+      });
+    } catch (e) {
+      resolve({ success: false, channel: 'callmebot', error: e.message });
+    }
+  });
+}
+
+function dispatchWebhookAlert(wa, eventKey, title, details, hwid, ip, messageText, httpsMod, httpMod) {
+  return new Promise((resolve) => {
+    if (!wa.webhookUrl) return resolve({ success: false, channel: 'webhook', error: 'URL de webhook no configurada' });
+    try {
+      const parsed = new URL(wa.webhookUrl);
+      const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
+      const postData = JSON.stringify({
+        phone: wa.phone,
+        message: messageText,
+        event: eventKey,
+        title,
+        details,
+        hwid,
+        ip,
+        timestamp: new Date().toISOString()
+      });
+      const req = lib.request(parsed, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        },
+        timeout: 8000
+      }, (res) => {
+        resolve({ success: res.statusCode >= 200 && res.statusCode < 300, channel: 'webhook', statusCode: res.statusCode });
+      });
+      req.on('error', (err) => resolve({ success: false, channel: 'webhook', error: err.message }));
+      req.write(postData);
+      req.end();
+    } catch (e) {
+      resolve({ success: false, channel: 'webhook', error: e.message });
+    }
+  });
+}
   } catch (e) {
     return { success: false, error: e.message };
   }
@@ -10381,19 +10438,29 @@ app.get('/api/admin/whatsapp', (req, res) => {
   res.json(wa);
 });
 
-// Guardar Configuración de Alertas (WhatsApp / Telegram / Discord / Webhook)
+// Guardar Configuración de Alertas Multi-Canal (Telegram / Discord / WhatsApp / Webhook)
 app.post('/api/admin/whatsapp/settings', (req, res) => {
-  const { enabled, phone, apiKey, provider, webhookUrl, telegramBotToken, telegramChatId, discordWebhookUrl, events } = req.body;
+  const { enabled, channels, phone, apiKey, provider, webhookUrl, telegramBotToken, telegramChatId, discordWebhookUrl, events } = req.body;
   const settings = loadSettings();
   const validProviders = ['callmebot', 'telegram', 'discord', 'webhook'];
+  
+  const currentChannels = settings.whatsapp?.channels || { telegram: true, discord: false, callmebot: false, webhook: false };
+  const newChannels = {
+    telegram: channels && channels.telegram !== undefined ? !!channels.telegram : (currentChannels.telegram !== undefined ? currentChannels.telegram : (provider === 'telegram')),
+    discord: channels && channels.discord !== undefined ? !!channels.discord : (currentChannels.discord !== undefined ? currentChannels.discord : (provider === 'discord')),
+    callmebot: channels && channels.callmebot !== undefined ? !!channels.callmebot : (currentChannels.callmebot !== undefined ? currentChannels.callmebot : (provider === 'callmebot')),
+    webhook: channels && channels.webhook !== undefined ? !!channels.webhook : (currentChannels.webhook !== undefined ? currentChannels.webhook : (provider === 'webhook'))
+  };
+
   settings.whatsapp = {
     enabled: enabled !== undefined ? !!enabled : true,
+    channels: newChannels,
     phone: (phone !== undefined ? phone : (process.env.ADMIN_PHONE || '')).trim(),
     apiKey: (apiKey !== undefined ? apiKey : '').trim(),
     telegramBotToken: (telegramBotToken !== undefined ? telegramBotToken : (settings.whatsapp?.telegramBotToken || '')).trim(),
     telegramChatId: (telegramChatId !== undefined ? telegramChatId : (settings.whatsapp?.telegramChatId || '')).trim(),
     discordWebhookUrl: (discordWebhookUrl !== undefined ? discordWebhookUrl : (settings.whatsapp?.discordWebhookUrl || '')).trim(),
-    provider: validProviders.includes(provider) ? provider : 'callmebot',
+    provider: validProviders.includes(provider) ? provider : 'telegram',
     webhookUrl: (webhookUrl !== undefined ? webhookUrl : '').trim(),
     events: {
       tamper: events && events.tamper !== undefined ? !!events.tamper : true,
@@ -10404,21 +10471,23 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
     }
   };
   saveSettings(settings);
-  addAuditLog('WHATSAPP_CONFIG', 'ADMIN', req.socket.remoteAddress || '127.0.0.1', `Ajustes de alertas (${settings.whatsapp.provider}) guardados.`);
+  const activeList = Object.entries(newChannels).filter(([_, v]) => v).map(([k]) => k.toUpperCase()).join('+') || 'NINGUNO';
+  addAuditLog('WHATSAPP_CONFIG', 'ADMIN', req.socket.remoteAddress || '127.0.0.1', `Ajustes de alertas multi-canal (${activeList}) guardados.`);
   res.json({ success: true, whatsapp: settings.whatsapp });
 });
 
 // Enviar Alerta de Prueba Multi-Canal
 app.post('/api/admin/whatsapp/test', async (req, res) => {
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
-  const { phone, apiKey, provider, webhookUrl, telegramBotToken, telegramChatId, discordWebhookUrl } = req.body || {};
+  const { channels, phone, apiKey, provider, webhookUrl, telegramBotToken, telegramChatId, discordWebhookUrl } = req.body || {};
   let customWaConfig = null;
-  if (phone || apiKey || webhookUrl || telegramBotToken || telegramChatId || discordWebhookUrl || provider) {
+  if (channels || phone || apiKey || webhookUrl || telegramBotToken || telegramChatId || discordWebhookUrl || provider) {
     const currentSettings = loadSettings();
     const currentWa = currentSettings.whatsapp || DEFAULT_SETTINGS.whatsapp;
     customWaConfig = {
       ...currentWa,
       enabled: true,
+      channels: channels || currentWa.channels || { telegram: true, discord: false, callmebot: false, webhook: false },
       phone: phone !== undefined ? String(phone).trim() : currentWa.phone,
       apiKey: apiKey !== undefined ? String(apiKey).trim() : currentWa.apiKey,
       telegramBotToken: telegramBotToken !== undefined ? String(telegramBotToken).trim() : (currentWa.telegramBotToken || ''),
@@ -10429,10 +10498,10 @@ app.post('/api/admin/whatsapp/test', async (req, res) => {
     };
   }
 
-  const prov = customWaConfig?.provider || 'WhatsApp';
+  const prov = customWaConfig?.channels ? Object.entries(customWaConfig.channels).filter(([_, v]) => v).map(([k]) => k.toUpperCase()).join('+') || 'TEST' : (customWaConfig?.provider || 'WhatsApp');
   const result = await sendWhatsAppAlert(
     'test',
-    `PRUEBA DE SEGURIDAD (${prov.toUpperCase()})`,
+    `PRUEBA DE SEGURIDAD (${prov})`,
     'Esta es una alerta de prueba generada desde el Panel de Administración de Mu Manager PRO.',
     'TEST-DEVICE-CEL',
     clientIp,
