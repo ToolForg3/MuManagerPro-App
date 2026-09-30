@@ -11,10 +11,19 @@ data/users.json
 data/devices.json
 data/devices.json.bak
 data/tombstones.json
+data/proRequests.json
+data/securityLogs.json
 server/data/users.json
 server/data/devices.json
 server/data/devices.json.bak
 server/data/tombstones.json
+server/data/proRequests.json
+server/data/securityLogs.json
+MuManager-Connector/data/connector-secrets.json
+MuManager-Connector/data/devices.json
+MuManager-Connector/data/users.json
+MuManager-Connector/data/proRequests.json
+MuManager-Connector/data/securityLogs.json
 
 # Binarios APK: ÚNICAMENTE se permite el APK canónico oficial en la raíz
 *.apk
