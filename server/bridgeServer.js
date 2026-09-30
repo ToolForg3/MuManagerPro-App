@@ -241,6 +241,9 @@ const DEFAULT_SETTINGS = {
     enabled: true,
     phone: process.env.ADMIN_PHONE || '',
     apiKey: '',
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    telegramChatId: process.env.TELEGRAM_CHAT_ID || '',
+    discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL || '',
     provider: 'callmebot',
     webhookUrl: '',
     events: {
@@ -364,7 +367,6 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
 
     const rawPhone = String(wa.phone || process.env.ADMIN_PHONE || '').trim();
     const phone = rawPhone.replace(/[^0-9]/g, '');
-    if (!phone) return { success: false, reason: 'Número de WhatsApp no configurado' };
 
     const timeStr = new Date().toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' });
     const messageText = 
@@ -377,7 +379,107 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
       `📝 *Detalles:* ${details}\n` +
       `🛑 *Estado:* Tráfico protegido / Acción registrada`;
 
-    if (wa.provider === 'webhook' && wa.webhookUrl) {
+    if (wa.provider === 'telegram') {
+      const token = String(wa.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '').trim();
+      const chatId = String(wa.telegramChatId || process.env.TELEGRAM_CHAT_ID || '').trim();
+      if (!token || !chatId) {
+        return { success: false, error: 'Falta Bot Token o Chat ID de Telegram en la configuración (consíguelos gratis con @BotFather y @userinfobot).' };
+      }
+      return new Promise((resolve) => {
+        try {
+          const postData = JSON.stringify({
+            chat_id: chatId,
+            text: messageText,
+            parse_mode: 'Markdown'
+          });
+          const parsed = new URL(`https://api.telegram.org/bot${token}/sendMessage`);
+          const req = httpsMod.request(parsed, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(postData)
+            },
+            timeout: 10000
+          }, (res) => {
+            let data = '';
+            res.on('data', chunk => { data += chunk; });
+            res.on('end', () => {
+              try {
+                const parsedRes = JSON.parse(data);
+                if (parsedRes.ok) {
+                  resolve({ success: true, statusCode: res.statusCode, response: data });
+                } else {
+                  resolve({ success: false, statusCode: res.statusCode, error: `Telegram Error: ${parsedRes.description || data}` });
+                }
+              } catch (_) {
+                resolve({ success: res.statusCode === 200, statusCode: res.statusCode, response: data, error: res.statusCode === 200 ? undefined : data });
+              }
+            });
+          });
+          req.on('error', (err) => resolve({ success: false, error: err.message }));
+          req.setTimeout(10000, () => req.destroy(new Error('Timeout de conexión contactando Telegram API (10s)')));
+          req.write(postData);
+          req.end();
+        } catch (e) {
+          resolve({ success: false, error: e.message });
+        }
+      });
+    } else if (wa.provider === 'discord') {
+      const discordUrl = String(wa.discordWebhookUrl || process.env.DISCORD_WEBHOOK_URL || '').trim();
+      if (!discordUrl) {
+        return { success: false, error: 'Falta la URL del Webhook de Discord en la configuración.' };
+      }
+      return new Promise((resolve) => {
+        try {
+          const parsed = new URL(discordUrl);
+          const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
+          const postData = JSON.stringify({
+            username: 'Mu Manager PRO Shield',
+            avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
+            embeds: [
+              {
+                title: `🚨 ${title}`,
+                description: details,
+                color: 15830060,
+                fields: [
+                  { name: '📱 Dispositivo (HWID)', value: `\`${hwid}\``, inline: true },
+                  { name: '🌐 IP Cliente', value: `\`${ip}\``, inline: true },
+                  { name: '⏰ Hora (Sao Paulo)', value: timeStr, inline: false }
+                ],
+                footer: { text: 'Mu Manager PRO Security • Tráfico Protegido' },
+                timestamp: new Date().toISOString()
+              }
+            ]
+          });
+          const req = lib.request(parsed, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(postData)
+            },
+            timeout: 10000
+          }, (res) => {
+            let data = '';
+            res.on('data', chunk => { data += chunk; });
+            res.on('end', () => {
+              const isOk = res.statusCode >= 200 && res.statusCode < 300;
+              resolve({
+                success: isOk,
+                statusCode: res.statusCode,
+                response: data,
+                error: isOk ? undefined : (data || `HTTP ${res.statusCode}`)
+              });
+            });
+          });
+          req.on('error', (err) => resolve({ success: false, error: err.message }));
+          req.setTimeout(10000, () => req.destroy(new Error('Timeout de conexión contactando Discord Webhook (10s)')));
+          req.write(postData);
+          req.end();
+        } catch (e) {
+          resolve({ success: false, error: e.message });
+        }
+      });
+    } else if (wa.provider === 'webhook' && wa.webhookUrl) {
       return new Promise((resolve) => {
         try {
           const parsed = new URL(wa.webhookUrl);
@@ -411,6 +513,7 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
       });
     } else {
       // CallMeBot WhatsApp API
+      if (!phone) return { success: false, reason: 'Número de WhatsApp no configurado' };
       return new Promise((resolve) => {
         if (!wa.apiKey) {
           return resolve({
@@ -424,12 +527,28 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
           let data = '';
           res.on('data', chunk => { data += chunk; });
           res.on('end', () => {
-            const isOk = res.statusCode === 200 && !data.toLowerCase().includes('error') && !data.toLowerCase().includes('not allowed');
+            const lower = data.toLowerCase();
+            const hasFailure = lower.includes('error') || 
+                               lower.includes('not allowed') || 
+                               lower.includes('not sent') || 
+                               lower.includes('0 messages left') || 
+                               lower.includes('subscribe');
+            const isOk = res.statusCode === 200 && !hasFailure;
+            let failureReason;
+            if (!isOk) {
+              if (lower.includes('0 messages left') || lower.includes('subscribe')) {
+                failureReason = 'Cuota gratuita de CallMeBot agotada para este número (0 mensajes restantes). Requiere renovar cuota o suscribirse en CallMeBot.';
+              } else if (lower.includes('invalid') || lower.includes('apikey')) {
+                failureReason = 'API Key de CallMeBot inválida o no coincide con este número telefónico.';
+              } else {
+                failureReason = data ? data.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() : `HTTP ${res.statusCode}`;
+              }
+            }
             resolve({
               success: isOk,
               statusCode: res.statusCode,
               response: data,
-              error: isOk ? undefined : (data || `HTTP ${res.statusCode}`)
+              error: isOk ? undefined : failureReason
             });
           });
         });
@@ -13897,15 +14016,19 @@ app.get('/api/admin/whatsapp', (req, res) => {
   res.json(wa);
 });
 
-// Guardar Configuración de WhatsApp
+// Guardar Configuración de Alertas (WhatsApp / Telegram / Discord / Webhook)
 app.post('/api/admin/whatsapp/settings', (req, res) => {
-  const { enabled, phone, apiKey, provider, webhookUrl, events } = req.body;
+  const { enabled, phone, apiKey, provider, webhookUrl, telegramBotToken, telegramChatId, discordWebhookUrl, events } = req.body;
   const settings = loadSettings();
+  const validProviders = ['callmebot', 'telegram', 'discord', 'webhook'];
   settings.whatsapp = {
     enabled: enabled !== undefined ? !!enabled : true,
     phone: (phone !== undefined ? phone : (process.env.ADMIN_PHONE || '')).trim(),
     apiKey: (apiKey !== undefined ? apiKey : '').trim(),
-    provider: provider === 'webhook' ? 'webhook' : 'callmebot',
+    telegramBotToken: (telegramBotToken !== undefined ? telegramBotToken : (settings.whatsapp?.telegramBotToken || '')).trim(),
+    telegramChatId: (telegramChatId !== undefined ? telegramChatId : (settings.whatsapp?.telegramChatId || '')).trim(),
+    discordWebhookUrl: (discordWebhookUrl !== undefined ? discordWebhookUrl : (settings.whatsapp?.discordWebhookUrl || '')).trim(),
+    provider: validProviders.includes(provider) ? provider : 'callmebot',
     webhookUrl: (webhookUrl !== undefined ? webhookUrl : '').trim(),
     events: {
       tamper: events && events.tamper !== undefined ? !!events.tamper : true,
@@ -13916,37 +14039,41 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
     }
   };
   saveSettings(settings);
-  addAuditLog('WHATSAPP_CONFIG', 'ADMIN', req.socket.remoteAddress || '127.0.0.1', `Ajustes WhatsApp guardados.`);
+  addAuditLog('WHATSAPP_CONFIG', 'ADMIN', req.socket.remoteAddress || '127.0.0.1', `Ajustes de alertas (${settings.whatsapp.provider}) guardados.`);
   res.json({ success: true, whatsapp: settings.whatsapp });
 });
 
-// Enviar Alerta de Prueba a WhatsApp
+// Enviar Alerta de Prueba Multi-Canal
 app.post('/api/admin/whatsapp/test', async (req, res) => {
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
-  const { phone, apiKey, provider, webhookUrl } = req.body || {};
+  const { phone, apiKey, provider, webhookUrl, telegramBotToken, telegramChatId, discordWebhookUrl } = req.body || {};
   let customWaConfig = null;
-  if (phone || apiKey || webhookUrl) {
+  if (phone || apiKey || webhookUrl || telegramBotToken || telegramChatId || discordWebhookUrl || provider) {
     const currentSettings = loadSettings();
     const currentWa = currentSettings.whatsapp || DEFAULT_SETTINGS.whatsapp;
     customWaConfig = {
       ...currentWa,
       enabled: true,
-      phone: phone ? String(phone).trim() : currentWa.phone,
+      phone: phone !== undefined ? String(phone).trim() : currentWa.phone,
       apiKey: apiKey !== undefined ? String(apiKey).trim() : currentWa.apiKey,
+      telegramBotToken: telegramBotToken !== undefined ? String(telegramBotToken).trim() : (currentWa.telegramBotToken || ''),
+      telegramChatId: telegramChatId !== undefined ? String(telegramChatId).trim() : (currentWa.telegramChatId || ''),
+      discordWebhookUrl: discordWebhookUrl !== undefined ? String(discordWebhookUrl).trim() : (currentWa.discordWebhookUrl || ''),
       provider: provider || currentWa.provider,
       webhookUrl: webhookUrl !== undefined ? String(webhookUrl).trim() : currentWa.webhookUrl
     };
   }
 
+  const prov = customWaConfig?.provider || 'WhatsApp';
   const result = await sendWhatsAppAlert(
     'test',
-    'PRUEBA DE SEGURIDAD WHATSAPP',
+    `PRUEBA DE SEGURIDAD (${prov.toUpperCase()})`,
     'Esta es una alerta de prueba generada desde el Panel de Administración de Mu Manager PRO.',
     'TEST-DEVICE-CEL',
     clientIp,
     customWaConfig
   );
-  addAuditLog('WHATSAPP_TEST', 'ADMIN', clientIp, `Prueba de alerta WhatsApp ejecutada: ${result.success ? 'EXITOSA' : (result.error || result.reason || 'Completado')}`);
+  addAuditLog('WHATSAPP_TEST', 'ADMIN', clientIp, `Prueba de alerta (${prov}) ejecutada: ${result.success ? 'EXITOSA' : (result.error || result.reason || 'Completado')}`);
   res.json(result);
 });
 

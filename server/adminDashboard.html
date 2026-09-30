@@ -1589,7 +1589,7 @@
     <div class="submodule-group" id="subgroup-mod-security" style="display: none; gap: 8px; flex-wrap: wrap; width: 100%; align-items: center;">
       <button class="submodule-pill active" data-tab="tab-security" onclick="switchTab('tab-security')">🛡️ Bugs & Anti-Hack <span id="sec-alert-badge" class="badge badge-pulse" style="background:#E2703A; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
       <button class="submodule-pill" data-tab="tab-masters" onclick="switchTab('tab-masters')">⚡ Kill-Switch Maestro</button>
-      <button class="submodule-pill" data-tab="tab-whatsapp" onclick="switchTab('tab-whatsapp')">📲 Alertas WhatsApp</button>
+      <button class="submodule-pill" data-tab="tab-whatsapp" onclick="switchTab('tab-whatsapp')">📲 Alertas en Vivo (Telegram / Discord)</button>
       <button class="submodule-pill" data-tab="tab-email" onclick="switchTab('tab-email')">📧 Servidor Correo (SMTP / OTP)</button>
     </div>
 
@@ -1808,18 +1808,18 @@
     </div>
   </div>
 
-  <!-- Tab: Alertas WhatsApp -->
+  <!-- Tab: Alertas (Telegram / Discord / WhatsApp) -->
   <div id="tab-whatsapp" class="tab-content">
     <div class="main-section">
-      <div class="section-title" style="margin-bottom: 8px;">📲 Notificaciones y Alertas de Seguridad en WhatsApp</div>
+      <div class="section-title" style="margin-bottom: 8px;">📲 Notificaciones y Alertas de Seguridad en Vivo</div>
       <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
-        Recibe alertas instantáneas en tu celular cada vez que ocurra un intento de modificación (tamper), inyección SQL, ataque de fuerza bruta o bloqueo de usuario.
+        Recibe alertas instantáneas en tu celular o servidor cada vez que ocurra un intento de modificación (tamper), inyección SQL, ataque de fuerza bruta o bloqueo de usuario.
       </p>
 
       <div class="switch-container">
         <div class="switch-info">
-          <h4>Activar Notificaciones a WhatsApp</h4>
-          <p>Habilita o pausa el envío automático de alertas a tu número móvil.</p>
+          <h4>Activar Notificaciones de Seguridad</h4>
+          <p>Habilita o pausa el envío automático de alertas en tiempo real.</p>
         </div>
         <label class="switch">
           <input type="checkbox" id="wa-enabled" checked />
@@ -1828,38 +1828,81 @@
       </div>
 
       <div class="form-row">
-        <div class="form-group">
-          <label>Número de WhatsApp Destinatario (Con código de país, solo números):</label>
-          <input type="text" id="wa-phone" class="form-control" placeholder="5521971217376" value="5521971217376" />
-          <small style="color: var(--muted); font-size: 11px;">Configurado para: <strong>Brasil (+55 21 97121-7376)</strong></small>
-        </div>
-        <div class="form-group">
-          <label>Proveedor de Envío:</label>
+        <div class="form-group" style="flex: 1;">
+          <label>Canal / Proveedor de Envío:</label>
           <select id="wa-provider" class="form-control" onchange="toggleWaProviderInputs()">
-            <option value="callmebot">CallMeBot (Directo Gratuito - Recomendado)</option>
-            <option value="webhook">Webhook Personalizado (Evolution API / UltraMsg / Twilio / Baileys)</option>
+            <option value="telegram">Telegram Bot (100% Gratuito e Ilimitado - Recomendado)</option>
+            <option value="discord">Discord Webhook (100% Gratuito en tu Servidor/Canal)</option>
+            <option value="callmebot">WhatsApp (CallMeBot Gratuito)</option>
+            <option value="webhook">Webhook Personalizado (API Propia / Twilio / Evolution API)</option>
           </select>
         </div>
       </div>
 
-      <div id="wa-callmebot-box" class="form-group">
-        <label style="color: #3FCF8E; font-weight: 800;">🔑 API Key de CallMeBot (Obligatoria para recibir alertas):</label>
-        <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
-          <input type="text" id="wa-apikey" class="form-control" style="flex: 1; min-width: 200px;" placeholder="Ej: 987654 (Código de 6 dígitos que te envía el bot)" />
-          <a href="https://wa.me/34684728023?text=I%20allow%20callmebot%20to%20send%20me%20messages" target="_blank" class="btn btn-green" style="white-space: nowrap;">
-            📲 Obtener API Key Gratis en WhatsApp
-          </a>
+      <!-- Telegram Bot Box -->
+      <div id="wa-telegram-box" class="form-group">
+        <label style="color: #29B6F6; font-weight: 800;">✈️ Telegram Bot Token & Chat ID (100% Gratis e Ilimitado):</label>
+        <div class="form-row" style="margin-bottom: 8px;">
+          <div class="form-group" style="flex: 2;">
+            <label style="font-size: 11px; color: var(--muted);">Bot Token (obtenido de @BotFather):</label>
+            <input type="text" id="wa-telegram-token" class="form-control" placeholder="Ej: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" />
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label style="font-size: 11px; color: var(--muted);">Tu Chat ID (obtenido de @userinfobot):</label>
+            <input type="text" id="wa-telegram-chatid" class="form-control" placeholder="Ej: 987654321 o -1001234567890" />
+          </div>
         </div>
-        <div style="background: rgba(63, 207, 142, 0.08); border: 1px solid rgba(63, 207, 142, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
-          <strong>📖 Pasos para recibir las alertas en WhatsApp:</strong><br>
-          1. Pulsa el botón verde <strong>"Obtener API Key Gratis en WhatsApp"</strong> (o abre un chat con el bot oficial <code>+34 684 728 023</code>).<br>
-          2. Envíale el mensaje pre-cargado: <code>I allow callmebot to send me messages</code>.<br>
-          3. El bot te responderá de inmediato con tu <strong>apikey</strong> personal (código de 6 o 7 dígitos).<br>
-          4. Pégala en el campo de arriba, ingresa tu número con código de país (ej: <code>5491122334455</code> o <code>5521999999999</code>) y pulsa <strong>"Guardar Configuración WhatsApp"</strong>.<br>
-          5. Pulsa <strong>"Enviar Alerta de Prueba"</strong> para verificar la recepción en tu teléfono.
+        <div style="background: rgba(41, 182, 246, 0.08); border: 1px solid rgba(41, 182, 246, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
+          <strong>📖 Pasos sencillos para configurar Telegram (2 minutos):</strong><br>
+          1. En Telegram, busca <strong>@BotFather</strong> y envíale <code>/newbot</code>. Dale un nombre a tu bot y te responderá con tu <strong>Bot Token</strong>.<br>
+          2. Pega el Token arriba. Luego abre un chat con tu nuevo bot en Telegram y pulsa <strong>INICIAR</strong> (<code>/start</code>).<br>
+          3. Busca el bot <strong>@userinfobot</strong> en Telegram para ver tu <strong>Chat ID</strong> numérico y pégalo arriba.<br>
+          4. Pulsa <strong>"Guardar Configuración de Alertas"</strong> y luego <strong>"Enviar Alerta de Prueba"</strong>. ¡Recibirás la alerta de inmediato sin cuotas ni límites!
         </div>
       </div>
 
+      <!-- Discord Webhook Box -->
+      <div id="wa-discord-box" class="form-group" style="display: none;">
+        <label style="color: #7289DA; font-weight: 800;">🎮 Discord Webhook URL (100% Gratis en tu Servidor):</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+          <input type="url" id="wa-discord-url" class="form-control" style="flex: 1; min-width: 200px;" placeholder="https://discord.com/api/webhooks/1234567890/abcdefghijklmnopqrstuvwxyz" />
+        </div>
+        <div style="background: rgba(114, 137, 218, 0.08); border: 1px solid rgba(114, 137, 218, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
+          <strong>📖 Pasos para configurar Discord Webhook:</strong><br>
+          1. En tu servidor de Discord, entra en los ajustes del canal donde deseas recibir las alertas (ej: <code>#alertas-seguridad</code>).<br>
+          2. Ve a <strong>Integraciones</strong> ➔ <strong>Webhooks</strong> ➔ <strong>Nuevo Webhook</strong>.<br>
+          3. Copia la <strong>URL del Webhook</strong> y pégala en el campo de arriba.<br>
+          4. Pulsa <strong>"Guardar Configuración de Alertas"</strong> y <strong>"Enviar Alerta de Prueba"</strong>. Llegará una notificación con formato enriquecido (Embed).
+        </div>
+      </div>
+
+      <!-- WhatsApp CallMeBot Box -->
+      <div id="wa-callmebot-container" style="display: none;">
+        <div class="form-group" id="wa-phone-box">
+          <label>Número de WhatsApp Destinatario (Con código de país, solo números):</label>
+          <input type="text" id="wa-phone" class="form-control" placeholder="5521971217376" value="5521971217376" />
+          <small style="color: var(--muted); font-size: 11px;">Configurado para: <strong>Brasil (+55 21 97121-7376)</strong></small>
+        </div>
+        <div id="wa-callmebot-box" class="form-group">
+          <label style="color: #3FCF8E; font-weight: 800;">🔑 API Key de CallMeBot (Obligatoria para recibir alertas):</label>
+          <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+            <input type="text" id="wa-apikey" class="form-control" style="flex: 1; min-width: 200px;" placeholder="Ej: 987654 (Código de 6 dígitos que te envía el bot)" />
+            <a href="https://wa.me/34684728023?text=I%20allow%20callmebot%20to%20send%20me%20messages" target="_blank" class="btn btn-green" style="white-space: nowrap;">
+              📲 Obtener API Key Gratis en WhatsApp
+            </a>
+          </div>
+          <div style="background: rgba(63, 207, 142, 0.08); border: 1px solid rgba(63, 207, 142, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
+            <strong>📖 Pasos para recibir las alertas en WhatsApp:</strong><br>
+            1. Pulsa el botón verde <strong>"Obtener API Key Gratis en WhatsApp"</strong> (o abre un chat con el bot oficial <code>+34 684 728 023</code>).<br>
+            2. Envíale el mensaje pre-cargado: <code>I allow callmebot to send me messages</code>.<br>
+            3. El bot te responderá de inmediato con tu <strong>apikey</strong> personal (código de 6 o 7 dígitos).<br>
+            4. Pégala en el campo de arriba, ingresa tu número con código de país (ej: <code>5491122334455</code> o <code>5521999999999</code>) y pulsa <strong>"Guardar Configuración de Alertas"</strong>.<br>
+            5. Pulsa <strong>"Enviar Alerta de Prueba"</strong> para verificar la recepción en tu teléfono.
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Webhook Box -->
       <div id="wa-webhook-box" class="form-group" style="display: none;">
         <label>URL del Webhook (POST JSON):</label>
         <input type="url" id="wa-webhook-url" class="form-control" placeholder="https://mi-api-whatsapp.com/send-message" />
@@ -1892,8 +1935,8 @@
       </div>
 
       <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-        <button class="btn btn-green" onclick="saveWhatsAppSettings()">💾 Guardar Configuración WhatsApp</button>
-        <button class="btn btn-dark" onclick="testWhatsAppAlert()">🧪 Enviar Alerta de Prueba a WhatsApp</button>
+        <button class="btn btn-green" onclick="saveWhatsAppSettings()">💾 Guardar Configuración de Alertas</button>
+        <button class="btn btn-dark" onclick="testWhatsAppAlert()">🧪 Enviar Alerta de Prueba</button>
         <span id="wa-test-status" style="font-size: 13px; font-weight: 600; margin-left: 10px;"></span>
       </div>
     </div>
@@ -6267,12 +6310,19 @@
     }
 
     /* ========================================================
-       ALERTAS Y NOTIFICACIONES WHATSAPP (+5521971217376)
+       ALERTAS Y NOTIFICACIONES MULTI-CANAL (TELEGRAM / DISCORD / WA)
        ======================================================== */
     function toggleWaProviderInputs() {
       const provider = document.getElementById('wa-provider').value;
-      document.getElementById('wa-callmebot-box').style.display = provider === 'callmebot' ? 'block' : 'none';
-      document.getElementById('wa-webhook-box').style.display = provider === 'webhook' ? 'block' : 'none';
+      const callmebotContainer = document.getElementById('wa-callmebot-container');
+      const telegramBox = document.getElementById('wa-telegram-box');
+      const discordBox = document.getElementById('wa-discord-box');
+      const webhookBox = document.getElementById('wa-webhook-box');
+
+      if (callmebotContainer) callmebotContainer.style.display = provider === 'callmebot' ? 'block' : 'none';
+      if (telegramBox) telegramBox.style.display = provider === 'telegram' ? 'block' : 'none';
+      if (discordBox) discordBox.style.display = provider === 'discord' ? 'block' : 'none';
+      if (webhookBox) webhookBox.style.display = provider === 'webhook' ? 'block' : 'none';
     }
 
     async function loadWhatsAppSettings() {
@@ -6285,10 +6335,13 @@
         if (res.ok) {
           const wa = await res.json();
           document.getElementById('wa-enabled').checked = wa.enabled !== false;
-          document.getElementById('wa-phone').value = wa.phone || '';
-          document.getElementById('wa-provider').value = wa.provider || 'callmebot';
-          document.getElementById('wa-apikey').value = wa.apiKey || '';
-          document.getElementById('wa-webhook-url').value = wa.webhookUrl || '';
+          if (document.getElementById('wa-phone')) document.getElementById('wa-phone').value = wa.phone || '';
+          document.getElementById('wa-provider').value = wa.provider || 'telegram';
+          if (document.getElementById('wa-apikey')) document.getElementById('wa-apikey').value = wa.apiKey || '';
+          if (document.getElementById('wa-telegram-token')) document.getElementById('wa-telegram-token').value = wa.telegramBotToken || '';
+          if (document.getElementById('wa-telegram-chatid')) document.getElementById('wa-telegram-chatid').value = wa.telegramChatId || '';
+          if (document.getElementById('wa-discord-url')) document.getElementById('wa-discord-url').value = wa.discordWebhookUrl || '';
+          if (document.getElementById('wa-webhook-url')) document.getElementById('wa-webhook-url').value = wa.webhookUrl || '';
 
           const evts = wa.events || {};
           document.getElementById('wa-evt-tamper').checked = evts.tamper !== false;
@@ -6302,7 +6355,7 @@
           toggleWaProviderInputs();
         }
       } catch (e) {
-        console.error('Error cargando ajustes WhatsApp', e);
+        console.error('Error cargando ajustes de alertas', e);
       }
     }
 
@@ -6310,10 +6363,13 @@
       const key = getAdminKey();
       const payload = {
         enabled: document.getElementById('wa-enabled').checked,
-        phone: document.getElementById('wa-phone').value.trim(),
+        phone: document.getElementById('wa-phone') ? document.getElementById('wa-phone').value.trim() : '',
         provider: document.getElementById('wa-provider').value,
-        apiKey: document.getElementById('wa-apikey').value.trim(),
-        webhookUrl: document.getElementById('wa-webhook-url').value.trim(),
+        apiKey: document.getElementById('wa-apikey') ? document.getElementById('wa-apikey').value.trim() : '',
+        telegramBotToken: document.getElementById('wa-telegram-token') ? document.getElementById('wa-telegram-token').value.trim() : '',
+        telegramChatId: document.getElementById('wa-telegram-chatid') ? document.getElementById('wa-telegram-chatid').value.trim() : '',
+        discordWebhookUrl: document.getElementById('wa-discord-url') ? document.getElementById('wa-discord-url').value.trim() : '',
+        webhookUrl: document.getElementById('wa-webhook-url') ? document.getElementById('wa-webhook-url').value.trim() : '',
         events: {
           tamper: document.getElementById('wa-evt-tamper').checked,
           sqlExploit: document.getElementById('wa-evt-sql').checked,
@@ -6331,10 +6387,10 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('Configuración de WhatsApp guardada exitosamente.');
+          showToast('Configuración de alertas guardada exitosamente.');
           loadAuditLogs();
         } else {
-          showToast('Error al guardar configuración', true);
+          showToast('Error al guardar configuración: ' + (data.error || 'Desconocido'), true);
         }
       } catch (e) {
         showToast('Error de red: ' + e.message, true);
@@ -6347,21 +6403,24 @@
       statusEl.innerText = '⏳ Enviando mensaje de prueba...';
       const key = getAdminKey();
 
-      const phone = document.getElementById('wa-phone').value.trim();
+      const phone = document.getElementById('wa-phone') ? document.getElementById('wa-phone').value.trim() : '';
       const provider = document.getElementById('wa-provider').value;
-      const apiKey = document.getElementById('wa-apikey').value.trim();
-      const webhookUrl = document.getElementById('wa-webhook-url').value.trim();
+      const apiKey = document.getElementById('wa-apikey') ? document.getElementById('wa-apikey').value.trim() : '';
+      const telegramBotToken = document.getElementById('wa-telegram-token') ? document.getElementById('wa-telegram-token').value.trim() : '';
+      const telegramChatId = document.getElementById('wa-telegram-chatid') ? document.getElementById('wa-telegram-chatid').value.trim() : '';
+      const discordWebhookUrl = document.getElementById('wa-discord-url') ? document.getElementById('wa-discord-url').value.trim() : '';
+      const webhookUrl = document.getElementById('wa-webhook-url') ? document.getElementById('wa-webhook-url').value.trim() : '';
 
       try {
         const res = await fetch('/api/admin/whatsapp/test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ phone, provider, apiKey, webhookUrl })
+          body: JSON.stringify({ phone, provider, apiKey, telegramBotToken, telegramChatId, discordWebhookUrl, webhookUrl })
         });
         const data = await res.json();
         if (data.success) {
           statusEl.style.color = '#3FCF8E';
-          statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito a WhatsApp!';
+          statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito!';
           showToast('¡Alerta de prueba enviada con éxito!');
         } else {
           statusEl.style.color = '#E2703A';

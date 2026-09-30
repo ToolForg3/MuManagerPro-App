@@ -22,6 +22,9 @@
     "enabled": true,
     "phone": "",
     "apiKey": "",
+    "telegramBotToken": "",
+    "telegramChatId": "",
+    "discordWebhookUrl": "",
     "provider": "callmebot",
     "webhookUrl": "",
     "events": {
