@@ -152,7 +152,8 @@ const DEFAULT_SETTINGS = {
       tamper: true,
       sqlExploit: true,
       bruteForce: true,
-      deviceBlocked: true
+      deviceBlocked: true,
+      proRequest: true
     }
   },
   beta: {
@@ -227,7 +228,7 @@ function loadSettings() {
 }
 
 // Servicio de Alertas WhatsApp en Tiempo Real
-async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '127.0.0.1') {
+async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '127.0.0.1', customWaConfig = null) {
   try {
     let httpsMod, httpMod;
     try {
@@ -237,9 +238,15 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
     if (!httpsMod) return { success: false, reason: 'Módulos de red no disponibles' };
 
     const settings = loadSettings();
-    const wa = settings.whatsapp || DEFAULT_SETTINGS.whatsapp;
-    if (!wa || !wa.enabled) return { success: false, reason: 'Alertas de WhatsApp desactivadas' };
-    if (wa.events && wa.events[eventKey] === false) return { success: false, reason: 'Evento desactivado' };
+    const wa = customWaConfig || settings.whatsapp || DEFAULT_SETTINGS.whatsapp;
+    if (eventKey !== 'test' && (!wa || !wa.enabled)) {
+      return { success: false, reason: 'Alertas de WhatsApp desactivadas' };
+    }
+    if (eventKey !== 'test' && eventKey !== 'system') {
+      if (wa.events && wa.events[eventKey] === false) {
+        return { success: false, reason: `Evento '${eventKey}' desactivado en la configuración` };
+      }
+    }
 
     const rawPhone = String(wa.phone || process.env.ADMIN_PHONE || '').trim();
     const phone = rawPhone.replace(/[^0-9]/g, '');
@@ -294,12 +301,12 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
         if (!wa.apiKey) {
           return resolve({
             success: false,
-            error: 'Falta la API Key de CallMeBot. Para obtenerla gratis: agrega a tus contactos de WhatsApp el número oficial (+34 644 10 55 84 o +34 644 76 66 43) y envíale el mensaje: I allow callmebot to send me messages'
+            error: 'Falta la API Key de CallMeBot. Para obtenerla gratis: agrega a tus contactos de WhatsApp el número oficial (+34 684 728 023) y envíale el mensaje: I allow callmebot to send me messages'
           });
         }
         const apiKeyParam = `&apikey=${encodeURIComponent(wa.apiKey)}`;
         const callmeUrl = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(messageText)}${apiKeyParam}`;
-        httpsMod.get(callmeUrl, (res) => {
+        const req = httpsMod.get(callmeUrl, (res) => {
           let data = '';
           res.on('data', chunk => { data += chunk; });
           res.on('end', () => {
@@ -311,7 +318,11 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
               error: isOk ? undefined : (data || `HTTP ${res.statusCode}`)
             });
           });
-        }).on('error', (err) => {
+        });
+        req.setTimeout(10000, () => {
+          req.destroy(new Error('Timeout de conexión contactando CallMeBot (10s)'));
+        });
+        req.on('error', (err) => {
           resolve({ success: false, error: err.message });
         });
       });
@@ -8742,6 +8753,19 @@ app.post('/api/auth/validate-session', (req, res) => {
       }
     }
 
+    const effectiveHwid = clientHwid;
+    if (effectiveHwid && decoded.sub && decoded.sub !== 'demo@muonline.local') {
+      const cleanSub = String(decoded.sub).toLowerCase().trim();
+      const devices = loadDevices();
+      if (devices[effectiveHwid]) {
+        if (!devices[effectiveHwid].currentUser || devices[effectiveHwid].currentUser !== cleanSub) {
+          devices[effectiveHwid].currentUser = cleanSub;
+          devices[effectiveHwid].lastSeen = new Date().toISOString();
+          saveDevices(devices);
+        }
+      }
+    }
+
     return res.json({
       success: true,
       valid: true,
@@ -8852,6 +8876,43 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
   user.activeSessionAt = new Date().toISOString();
   saveUsers(users);
 
+  if (cleanHwid) {
+    const userAccountIdentifier = (user.email || user.username || loginIdentifier || '').trim();
+    if (devices[cleanHwid]) {
+      devices[cleanHwid].currentUser = userAccountIdentifier;
+      devices[cleanHwid].lastSeen = new Date().toISOString();
+      saveDevices(devices);
+    } else {
+      devices[cleanHwid] = {
+        hwid: cleanHwid,
+        mode: 'DEMO',
+        licenseKey: '',
+        firstSeen: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        totalPings: 1,
+        ip: clientIp,
+        platform: 'Android',
+        appVersion: '1.0.0',
+        blocked: false,
+        blockReason: '',
+        note: '',
+        currentUser: userAccountIdentifier,
+        expiresAt: new Date(Date.now() + 72 * 3600000).toISOString(),
+        isLifetime: false,
+        isEmulator: false,
+        deviceModel: '',
+        deviceBrand: '',
+        demoExtendedHours: 0,
+        isTest: false,
+        forceDemo: false,
+        authRevision: 1,
+        authUpdatedAt: Date.now(),
+        authAction: 'LOGIN_REGISTER'
+      };
+      saveDevices(devices);
+    }
+  }
+
   const token = generateSessionToken(user.email, user.role || 'USER', cleanHwid);
   addAuditLog('USER_LOGIN', cleanHwid, clientIp, `Inicio de sesión: ${user.email}`);
 
@@ -8861,6 +8922,57 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
     token,
     user: { email: user.email, username: user.username }
   });
+});
+
+// Cierre de sesión voluntario desde el dispositivo (Logout)
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    const { hwid, email, username } = req.body || {};
+    const cleanHwid = hwid ? String(hwid).trim().toUpperCase() : '';
+    const cleanEmail = (email || username || '').trim().toLowerCase();
+    const clientIp = getClientIp(req);
+    let changed = false;
+
+    if (cleanHwid) {
+      const devices = loadDevices();
+      if (devices[cleanHwid]) {
+        devices[cleanHwid].currentUser = '';
+        devices[cleanHwid].lastSeen = new Date().toISOString();
+        saveDevices(devices);
+        changed = true;
+      }
+    }
+
+    const users = loadUsers();
+    let usersChanged = false;
+    users.forEach(u => {
+      const matchesHwid = cleanHwid && (
+        (u.activeHwid && u.activeHwid.toUpperCase() === cleanHwid) ||
+        (u.hwid && u.hwid.toUpperCase() === cleanHwid)
+      );
+      const matchesEmail = cleanEmail && (
+        (u.email && u.email.toLowerCase() === cleanEmail) ||
+        (u.username && u.username.toLowerCase() === cleanEmail)
+      );
+      if (matchesHwid || matchesEmail) {
+        u.activeHwid = null;
+        u.activeSessionAt = null;
+        u.sessionVersion = (typeof u.sessionVersion === 'number' ? u.sessionVersion : 1) + 1;
+        usersChanged = true;
+      }
+    });
+
+    if (usersChanged) {
+      saveUsers(users);
+    }
+
+    addAuditLog('USER_LOGOUT', cleanHwid || 'DESCONOCIDO', clientIp, `Cierre de sesión: ${cleanEmail || cleanHwid || 'Dispositivo desvinculado'}`);
+
+    return res.json({ success: true, message: 'Sesión cerrada correctamente' });
+  } catch (err) {
+    console.error('[AUTH LOGOUT ERROR]', err);
+    return res.status(500).json({ success: false, error: 'Error interno al cerrar sesión' });
+  }
 });
 
 // Listar usuarios registrados para el panel web
@@ -9278,6 +9390,25 @@ app.post('/api/admin/logs/clear', (req, res) => {
 app.get('/api/admin/devices', (req, res) => {
   const devices = loadDevices();
   let modified = false;
+  const users = loadUsers();
+
+  // Reconciliación proactiva: Si dev.currentUser está vacío o ausente, autovincular con el usuario de users.json
+  Object.values(devices).forEach(dev => {
+    if (!dev.currentUser || String(dev.currentUser).trim() === '') {
+      const devHwidUpper = String(dev.hwid || '').toUpperCase();
+      const linkedUser = users.find(u =>
+        u && u.status !== 'DELETED' && (
+          (u.activeHwid && String(u.activeHwid).toUpperCase() === devHwidUpper) ||
+          (u.hwid && String(u.hwid).toUpperCase() === devHwidUpper && u.status === 'ACTIVE')
+        )
+      );
+      if (linkedUser) {
+        dev.currentUser = (linkedUser.email || linkedUser.username || '').toLowerCase().trim();
+        modified = true;
+      }
+    }
+  });
+
   const now = new Date();
   const nowMs = Date.now();
   const list = Object.values(devices).map(dev => {
@@ -9790,12 +9921,13 @@ app.post('/api/admin/device/invalidate-session', (req, res) => {
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
-  const { hwid, email } = req.body;
+  const { hwid, email } = req.body || {};
+  const cleanHwid = hwid ? String(hwid).trim().toUpperCase() : '';
   const users = loadUsers();
   let found = false;
 
   users.forEach(u => {
-    if ((email && u.email.toLowerCase() === String(email).toLowerCase()) || (hwid && u.activeHwid === hwid)) {
+    if ((email && u.email.toLowerCase() === String(email).toLowerCase()) || (cleanHwid && u.activeHwid === cleanHwid)) {
       u.activeHwid = null;
       u.activeSessionAt = null;
       found = true;
@@ -9803,6 +9935,15 @@ app.post('/api/admin/device/invalidate-session', (req, res) => {
   });
 
   if (found) saveUsers(users);
+
+  if (cleanHwid) {
+    const devices = loadDevices();
+    if (devices[cleanHwid]) {
+      devices[cleanHwid].currentUser = '';
+      devices[cleanHwid].lastSeen = new Date().toISOString();
+      saveDevices(devices);
+    }
+  }
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
   addAuditLog('SESSION_INVALIDATED', hwid || 'N/A', clientIp, `Sesión forzosamente cerrada por Admin para ${email || hwid}`);
@@ -9866,7 +10007,7 @@ app.post('/api/license/request-pro', async (req, res) => {
 
   // Notificar al WhatsApp del Administrador inmediatamente
   sendWhatsAppAlert(
-    'tamper',
+    'proRequest',
     '⭐ NUEVA SOLICITUD DE LICENCIA PRO ⭐',
     `Cliente: ${newReq.name}\nWhatsApp: ${newReq.phone}\nEmail: ${newReq.email || 'N/A'}\nServidor: ${newReq.serverName || 'N/A'}\nHWID: ${newReq.hwid}\nNotas: ${newReq.notes || 'Sin notas adicionales'}`,
     hwidTrim,
@@ -10135,7 +10276,8 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
       tamper: events && events.tamper !== undefined ? !!events.tamper : true,
       sqlExploit: events && events.sqlExploit !== undefined ? !!events.sqlExploit : true,
       bruteForce: events && events.bruteForce !== undefined ? !!events.bruteForce : true,
-      deviceBlocked: events && events.deviceBlocked !== undefined ? !!events.deviceBlocked : true
+      deviceBlocked: events && events.deviceBlocked !== undefined ? !!events.deviceBlocked : true,
+      proRequest: events && events.proRequest !== undefined ? !!events.proRequest : true
     }
   };
   saveSettings(settings);
@@ -10146,12 +10288,28 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
 // Enviar Alerta de Prueba a WhatsApp
 app.post('/api/admin/whatsapp/test', async (req, res) => {
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
+  const { phone, apiKey, provider, webhookUrl } = req.body || {};
+  let customWaConfig = null;
+  if (phone || apiKey || webhookUrl) {
+    const currentSettings = loadSettings();
+    const currentWa = currentSettings.whatsapp || DEFAULT_SETTINGS.whatsapp;
+    customWaConfig = {
+      ...currentWa,
+      enabled: true,
+      phone: phone ? String(phone).trim() : currentWa.phone,
+      apiKey: apiKey !== undefined ? String(apiKey).trim() : currentWa.apiKey,
+      provider: provider || currentWa.provider,
+      webhookUrl: webhookUrl !== undefined ? String(webhookUrl).trim() : currentWa.webhookUrl
+    };
+  }
+
   const result = await sendWhatsAppAlert(
-    'tamper',
+    'test',
     'PRUEBA DE SEGURIDAD WHATSAPP',
     'Esta es una alerta de prueba generada desde el Panel de Administración de Mu Manager PRO.',
     'TEST-DEVICE-CEL',
-    clientIp
+    clientIp,
+    customWaConfig
   );
   addAuditLog('WHATSAPP_TEST', 'ADMIN', clientIp, `Prueba de alerta WhatsApp ejecutada: ${result.success ? 'EXITOSA' : (result.error || result.reason || 'Completado')}`);
   res.json(result);

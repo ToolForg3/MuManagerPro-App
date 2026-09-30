@@ -1353,6 +1353,23 @@
     </div>
   </div>
 
+  <!-- Modal Canónico Gótico de Confirmación Ironforge -->
+  <div id="gothic-confirm-modal" class="modal-overlay" style="display:none; z-index: 10005;">
+    <div class="modal-box" style="max-width: 460px; border: 1px solid #5A5242; box-shadow: 0 20px 60px rgba(0,0,0,0.95); padding: 24px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; border-bottom:1px solid #332F28; padding-bottom:12px;">
+        <span id="gothic-confirm-icon" style="font-size:24px; filter: drop-shadow(0 0 6px rgba(239,210,141,0.4));">⚠️</span>
+        <h3 id="gothic-confirm-title" style="color:var(--gold); font-size:16px; margin:0; text-transform:uppercase; letter-spacing:0.8px; font-weight:800;">Confirmación</h3>
+      </div>
+      <div id="gothic-confirm-message" style="color:#FAF6EE; font-size:13px; line-height:1.6; margin-bottom:22px; white-space:pre-line; max-height:260px; overflow-y:auto;">
+        ¿Estás seguro de realizar esta acción?
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button id="gothic-confirm-cancel" class="btn btn-dark btn-sm" style="min-width:96px; padding: 7px 16px;">Cancelar</button>
+        <button id="gothic-confirm-ok" class="btn btn-red btn-sm" style="min-width:120px; padding: 7px 16px; font-weight:700;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <div class="header">
     <div class="brand">
@@ -1829,16 +1846,16 @@
         <label style="color: #3FCF8E; font-weight: 800;">🔑 API Key de CallMeBot (Obligatoria para recibir alertas):</label>
         <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
           <input type="text" id="wa-apikey" class="form-control" style="flex: 1; min-width: 200px;" placeholder="Ej: 987654 (Código de 6 dígitos que te envía el bot)" />
-          <a href="https://wa.me/34644105584?text=I%20allow%20callmebot%20to%20send%20me%20messages" target="_blank" class="btn btn-green" style="white-space: nowrap;">
+          <a href="https://wa.me/34684728023?text=I%20allow%20callmebot%20to%20send%20me%20messages" target="_blank" class="btn btn-green" style="white-space: nowrap;">
             📲 Obtener API Key Gratis en WhatsApp
           </a>
         </div>
         <div style="background: rgba(63, 207, 142, 0.08); border: 1px solid rgba(63, 207, 142, 0.25); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;">
-          <strong>📖 Pasos para recibir las alertas en WhatsApp (+55 21 97121-7376):</strong><br>
-          1. Pulsa el botón verde <strong>"Obtener API Key Gratis en WhatsApp"</strong> (o abre un chat con el bot oficial <code>+34 644 10 55 84</code>).<br>
+          <strong>📖 Pasos para recibir las alertas en WhatsApp:</strong><br>
+          1. Pulsa el botón verde <strong>"Obtener API Key Gratis en WhatsApp"</strong> (o abre un chat con el bot oficial <code>+34 684 728 023</code>).<br>
           2. Envíale el mensaje pre-cargado: <code>I allow callmebot to send me messages</code>.<br>
           3. El bot te responderá de inmediato con tu <strong>apikey</strong> personal (código de 6 o 7 dígitos).<br>
-          4. Pégala en el campo de arriba y pulsa <strong>"Guardar Configuración WhatsApp"</strong>.<br>
+          4. Pégala en el campo de arriba, ingresa tu número con código de país (ej: <code>5491122334455</code> o <code>5521999999999</code>) y pulsa <strong>"Guardar Configuración WhatsApp"</strong>.<br>
           5. Pulsa <strong>"Enviar Alerta de Prueba"</strong> para verificar la recepción en tu teléfono.
         </div>
       </div>
@@ -1866,6 +1883,10 @@
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
             <input type="checkbox" id="wa-evt-block" checked />
             <span>🚫 Celulares o Cuentas Bloqueadas</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
+            <input type="checkbox" id="wa-evt-pro" checked />
+            <span>⭐ Nuevas Solicitudes de Licencia PRO</span>
           </label>
         </div>
       </div>
@@ -2354,7 +2375,8 @@
       <div class="section-header" style="flex-wrap: wrap; gap: 10px;">
         <div class="section-title">📜 Registro de Auditoría y Telemetría</div>
         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-          <div style="display:flex; gap:4px; margin-right:8px; flex-wrap:wrap;">
+          <input type="text" id="log-search-input" class="form-control" placeholder="🔍 Buscar en logs..." style="width: 200px; font-size: 12px; padding: 4px 10px; height: 31px;" oninput="filterAuditLogsBox()">
+          <div style="display:flex; gap:4px; margin-right:4px; flex-wrap:wrap;">
             <button class="btn btn-dark btn-sm log-cat-btn active" id="log-btn-ALL" onclick="setLogCategoryFilter('ALL')">Todos</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-SECURITY" onclick="setLogCategoryFilter('SECURITY')">🛡️ Seguridad</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-LICENSE" onclick="setLogCategoryFilter('LICENSE')">🔑 Licencias</button>
@@ -2362,6 +2384,12 @@
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-USERS" onclick="setLogCategoryFilter('USERS')">👥 Usuarios</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-SYSTEM" onclick="setLogCategoryFilter('SYSTEM')">⚙️ Sistema</button>
           </div>
+          <select id="log-autorefresh-select" class="form-control" style="width: auto; font-size: 12px; padding: 3px 6px; height: 31px;" onchange="toggleAuditLogAutoRefresh(this.value)">
+            <option value="0">⏱️ Auto: OFF</option>
+            <option value="5" selected>⏱️ Auto: 5s</option>
+            <option value="15">⏱️ Auto: 15s</option>
+            <option value="30">⏱️ Auto: 30s</option>
+          </select>
           <button class="btn btn-dark btn-sm" onclick="clearAuditLogs()">🗑️ Limpiar</button>
           <button class="btn btn-dark btn-sm" onclick="loadAuditLogs()">🔄 Refrescar</button>
         </div>
@@ -2536,6 +2564,8 @@
     const dismissedNotificationIds = new Set();
     const locallyDeletedHwids = new Set();
     const locallyDeletedUserIds = new Set();
+    const locallyDeletedTombstones = new Set();
+    const locallyDeletedProRequests = new Set();
 
     try {
       // H12: Migración de caché a sessionStorage con ciclo de vida vinculado a la sesión
@@ -2554,12 +2584,28 @@
         const parsed = JSON.parse(savedDismissed);
         if (Array.isArray(parsed)) parsed.forEach(id => dismissedNotificationIds.add(id));
       }
-      // Purgar residuos persistentes en localStorage
+      // Cargar celulares, usuarios, tombstones y solicitudes explícitamente eliminados en esta sesión
       try {
-        localStorage.removeItem('mumanager_devices_cache');
-        localStorage.removeItem('mumanager_users_cache');
-        localStorage.removeItem('mumanager_deleted_hwids');
-        localStorage.removeItem('mumanager_deleted_users');
+        const savedDelHwids = sessionStorage.getItem('mumanager_deleted_hwids') || localStorage.getItem('mumanager_deleted_hwids');
+        if (savedDelHwids) {
+          const parsed = JSON.parse(savedDelHwids);
+          if (Array.isArray(parsed)) parsed.forEach(h => locallyDeletedHwids.add(String(h).toUpperCase()));
+        }
+        const savedDelUsers = sessionStorage.getItem('mumanager_deleted_users') || localStorage.getItem('mumanager_deleted_users');
+        if (savedDelUsers) {
+          const parsed = JSON.parse(savedDelUsers);
+          if (Array.isArray(parsed)) parsed.forEach(u => locallyDeletedUserIds.add(String(u).toLowerCase()));
+        }
+        const savedDelTombstones = sessionStorage.getItem('mumanager_deleted_tombstones') || localStorage.getItem('mumanager_deleted_tombstones');
+        if (savedDelTombstones) {
+          const parsed = JSON.parse(savedDelTombstones);
+          if (Array.isArray(parsed)) parsed.forEach(h => locallyDeletedTombstones.add(String(h).toUpperCase()));
+        }
+        const savedDelProReqs = sessionStorage.getItem('mumanager_deleted_pro_reqs') || localStorage.getItem('mumanager_deleted_pro_reqs');
+        if (savedDelProReqs) {
+          const parsed = JSON.parse(savedDelProReqs);
+          if (Array.isArray(parsed)) parsed.forEach(id => locallyDeletedProRequests.add(String(id)));
+        }
       } catch (_) {}
     } catch (_) {}
 
@@ -2581,6 +2627,49 @@
       setTimeout(() => { toast.style.display = 'none'; }, 3500);
     }
 
+    /* Modal canónico asíncrono para confirmaciones con estética Season 6 Dark Gothic Ironforge */
+    function showGothicConfirm({ title = 'Confirmar Acción', message = '', icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', isDanger = true }) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('gothic-confirm-modal');
+        if (!modal) {
+          resolve(window.confirm(message));
+          return;
+        }
+        const titleEl = document.getElementById('gothic-confirm-title');
+        const msgEl = document.getElementById('gothic-confirm-message');
+        const iconEl = document.getElementById('gothic-confirm-icon');
+        const cancelBtn = document.getElementById('gothic-confirm-cancel');
+        const okBtn = document.getElementById('gothic-confirm-ok');
+
+        if (titleEl) titleEl.innerText = title;
+        if (msgEl) msgEl.innerText = message;
+        if (iconEl) iconEl.innerText = icon;
+        if (cancelBtn) cancelBtn.innerText = cancelText;
+        if (okBtn) {
+          okBtn.innerText = confirmText;
+          okBtn.className = `btn ${isDanger ? 'btn-red' : 'btn-green'} btn-sm`;
+        }
+
+        modal.style.display = 'flex';
+
+        function cleanup(result) {
+          modal.style.display = 'none';
+          document.removeEventListener('keydown', onKeyDown);
+          resolve(result);
+        }
+        function onOk(e) { e.preventDefault(); cleanup(true); }
+        function onCancel(e) { e.preventDefault(); cleanup(false); }
+        function onKeyDown(e) {
+          if (e.key === 'Escape') cleanup(false);
+          else if (e.key === 'Enter') cleanup(true);
+        }
+
+        okBtn.onclick = onOk;
+        cancelBtn.onclick = onCancel;
+        document.addEventListener('keydown', onKeyDown);
+      });
+    }
+
     /* ========================================================
        CENTRO DE NOTIFICACIONES & EVENTOS EN VIVO
        ======================================================== */
@@ -2590,7 +2679,8 @@
       // 1. Solicitudes PRO de clientes (Pendientes)
       if (Array.isArray(allProRequestsCache)) {
         allProRequestsCache.forEach(req => {
-          if (req && req.status === 'PENDING') {
+          const reqKey = String(req?.id || req?.hwid || '');
+          if (req && req.status === 'PENDING' && !locallyDeletedProRequests.has(reqKey)) {
             const id = `req_${req.id || req.hwid}`;
             const reqTime = req.createdAt ? new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             const reqName = req.name || req.email || req.hwid || 'Cliente';
@@ -2671,7 +2761,7 @@
       // 3. Licencias Revocadas & Dispositivos Excluidos (Tombstones)
       if (Array.isArray(excludedDevicesCache)) {
         excludedDevicesCache.forEach(ex => {
-          if (ex && ex.hwid) {
+          if (ex && ex.hwid && !locallyDeletedTombstones.has(String(ex.hwid).toUpperCase())) {
             const id = `excl_${ex.hwid}`;
             const exclTime = ex.deletedAt && ex.deletedAt !== 'N/A' ? new Date(ex.deletedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             events.push({
@@ -2979,11 +3069,19 @@
         localStorage.removeItem('mumanager_users_cache');
         localStorage.removeItem('mumanager_deleted_hwids');
         localStorage.removeItem('mumanager_deleted_users');
+        localStorage.removeItem('mumanager_deleted_tombstones');
+        localStorage.removeItem('mumanager_deleted_pro_reqs');
+        sessionStorage.removeItem('mumanager_deleted_hwids');
+        sessionStorage.removeItem('mumanager_deleted_users');
+        sessionStorage.removeItem('mumanager_deleted_tombstones');
+        sessionStorage.removeItem('mumanager_deleted_pro_reqs');
       } catch (_) {}
       if (typeof allDevicesCache !== 'undefined') allDevicesCache = [];
       if (typeof allUsersCache !== 'undefined') allUsersCache = [];
       if (typeof locallyDeletedHwids !== 'undefined' && locallyDeletedHwids.clear) locallyDeletedHwids.clear();
       if (typeof locallyDeletedUserIds !== 'undefined' && locallyDeletedUserIds.clear) locallyDeletedUserIds.clear();
+      if (typeof locallyDeletedTombstones !== 'undefined' && locallyDeletedTombstones.clear) locallyDeletedTombstones.clear();
+      if (typeof locallyDeletedProRequests !== 'undefined' && locallyDeletedProRequests.clear) locallyDeletedProRequests.clear();
       const devTbody = document.getElementById('devices-tbody');
       if (devTbody) devTbody.innerHTML = '';
       const usrTbody = document.getElementById('users-tbody');
@@ -3148,7 +3246,15 @@
       if (tabId === 'tab-email') loadEmailSettings();
       if (tabId === 'tab-beta') loadBetaRequests();
       if (tabId === 'tab-updates' || tabId === 'tab-beta' || tabId === 'tab-broadcast' || tabId === 'tab-masters') loadGlobalSettings();
-      if (tabId === 'tab-logs') { loadAuditLogs(); checkCloudStorageStatus(); }
+      if (tabId === 'tab-logs') {
+        loadAuditLogs();
+        checkCloudStorageStatus();
+        const selVal = document.getElementById('log-autorefresh-select')?.value || 5;
+        toggleAuditLogAutoRefresh(selVal);
+      } else {
+        // Pausar timer de terminal al salir de la pestaña para optimizar recursos si no es visible
+        toggleAuditLogAutoRefresh(0);
+      }
     }
 
     function closeModal(modalId) {
@@ -3251,7 +3357,7 @@
 
     async function toggleUserRole(id, email, currentRole) {
       const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
-      if (!confirm(`¿Deseas cambiar el rol de "${email}" a ${newRole}?`)) return;
+      if (!await showGothicConfirm({ title: 'Cambiar Rol de Usuario', message: `¿Deseas cambiar el rol de "${email}" a ${newRole}?`, icon: '🛡️', confirmText: 'Cambiar Rol', isDanger: false })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/user/change-role', {
@@ -3347,11 +3453,16 @@
         ? `<span class="badge" style="background: rgba(63, 207, 142, 0.15); color: #3FCF8E; border: 1px solid rgba(63, 207, 142, 0.4); font-weight: 700;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#3FCF8E; margin-right:4px;"></span>EN LÍNEA</span>`
         : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: #C8BEAF;">⚪ Desconectado</span>`;
 
-      const createdDate = new Date(u.createdAt).toLocaleDateString() + ' ' + new Date(u.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      const isGoogle = u.authProvider === 'google' || !!u.googleId;
+      const googleBadge = isGoogle
+        ? `<span class="badge" style="background: rgba(66, 133, 244, 0.15); color: #4285F4; border: 1px solid rgba(66, 133, 244, 0.4); font-size: 10px; margin-left: 6px; padding: 1px 6px; font-weight: 700;">🌐 GOOGLE</span>`
+        : '';
 
       return `
         <td>
-          <strong>${safeUser}</strong><br>
+          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+            <strong>${safeUser}</strong>${googleBadge}
+          </div>
           <small style="color: var(--muted);">${safeEmail}</small>
         </td>
         <td>${presenceHtml}</td>
@@ -3513,7 +3624,7 @@
 
     async function toggleUserBlock(id, email, isBlocked) {
       const action = isBlocked ? 'desbloquear' : 'bloquear';
-      if (!confirm(`¿Confirmas que deseas ${action} la cuenta de "${email}"?`)) return;
+      if (!await showGothicConfirm({ title: isBlocked ? 'Desbloquear Cuenta' : 'Bloquear Cuenta', message: `¿Confirmas que deseas ${action} la cuenta de "${email}"?`, icon: isBlocked ? '🔓' : '⛔', confirmText: isBlocked ? 'Desbloquear' : 'Bloquear', isDanger: !isBlocked })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/user/toggle-block', {
@@ -3533,7 +3644,7 @@
     }
 
     async function deleteUserAccount(id, email) {
-      if (!confirm(`¿Deseas eliminar definitivamente la cuenta de "${email || id}"?`)) return;
+      if (!await showGothicConfirm({ title: 'Eliminar Cuenta de Usuario', message: `¿Deseas eliminar definitivamente la cuenta de "${email || id}"?\n\nEsta acción no se puede deshacer y revoca cualquier sesión activa.`, icon: '🗑️', confirmText: 'Eliminar Definitivamente', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/user/delete', {
@@ -3685,7 +3796,7 @@
     }
 
     async function unlinkUserHwid(id, email) {
-      if (!confirm(`¿Desvincular el celular/HWID de "${email}" para permitirle registrarse en otro teléfono?`)) return;
+      if (!await showGothicConfirm({ title: 'Desvincular Celular / HWID', message: `¿Desvincular el celular/HWID de "${email}" para permitirle registrarse en otro teléfono?`, icon: '📱', confirmText: 'Desvincular Celular', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/user/update', {
@@ -3854,7 +3965,7 @@
     }
 
     async function purgeTestDevices() {
-      if (!confirm('¿Estás seguro de purgar definitivamente TODOS los dispositivos de prueba? Los celulares de clientes reales no se borrarán.')) {
+      if (!await showGothicConfirm({ title: 'Purgar Dispositivos de Prueba', message: '¿Estás seguro de purgar definitivamente TODOS los dispositivos de prueba? Los celulares de clientes reales no se borrarán.', icon: '🧪', confirmText: 'Purgar Pruebas', isDanger: true })) {
         return;
       }
       const key = getAdminKey();
@@ -3972,7 +4083,7 @@
       return `
         <td>
           <div style="font-weight: 800; font-size: 13px; color: #FFF; display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
-            <span>👤</span> ${dev.currentUser ? escapeHtml(dev.currentUser) : '<span style="color:#777; font-weight:normal; font-style:italic;">Sin cuenta vinculada</span>'}
+            <span>👤</span> <span class="dev-user-text">${dev.currentUser ? escapeHtml(dev.currentUser) : '<span style="color:#777; font-weight:normal; font-style:italic;">Sin cuenta vinculada</span>'}</span>
           </div>
           <div>
             <span class="hwid-code" style="font-size:11px;">${safeHwid}</span>
@@ -4190,6 +4301,13 @@
               if (remBadge.innerText !== expectedText) {
                 remBadge.innerText = expectedText;
               }
+            }
+            // 5. Actualizar cuenta vinculada quirúrgicamente sin pestañeo
+            const userTextEl = tr.querySelector('.dev-user-text');
+            const expectedUserHtml = dev.currentUser ? escapeHtml(dev.currentUser) : '<span style="color:#777; font-weight:normal; font-style:italic;">Sin cuenta vinculada</span>';
+            if (userTextEl && userTextEl.innerHTML !== expectedUserHtml) {
+              userTextEl.innerHTML = expectedUserHtml;
+              tr.dataset.currentUser = dev.currentUser || '';
             }
           } else {
             // El estado estructural cambió (modo PRO, bloqueo, notas, etc.): actualizar silenciosamente solo esta fila
@@ -4442,7 +4560,7 @@
             const durText = data.durationText || (data.isLifetime ? 'Vitalicia (Permanente)' : (data.expiresAt ? `hasta ${new Date(data.expiresAt).toLocaleString()}` : '30 Días'));
             showToast(`⚡ Licencia PRO (${durText}) ACTIVADA para ${currentActiveHwid}`);
             alert(`✅ ¡Licencia PRO Activada con Éxito!\n\n👤 Cliente: ${data.name || 'Cliente'}\n📱 Dispositivo HWID: ${data.hwid}\n⏳ Tiempo Activado: ${durText}\n${data.expiresAt ? '📅 Vence: ' + new Date(data.expiresAt).toLocaleString() : '♾️ Licencia Vitalicia (Permanente)'}\n\n🔑 Clave Oficial:\n${data.generatedKey || 'Generada para el dispositivo'}`);
-            if (data.generatedKey && confirm('¿Deseas copiar el mensaje de bienvenida y activación para enviárselo al cliente por WhatsApp?')) {
+            if (data.generatedKey && await showGothicConfirm({ title: 'Enviar WhatsApp al Cliente', message: '¿Deseas copiar el mensaje de bienvenida y activación para enviárselo al cliente por WhatsApp?', icon: '💬', confirmText: 'Copiar Mensaje', isDanger: false })) {
               copyWhatsAppMessage(data.hwid, data.generatedKey, durText);
             }
             currentProRequestId = null;
@@ -4604,7 +4722,7 @@
       const key = getAdminKey();
 
       if (isExclude) {
-        if (!confirm(`¿Estás SEGURO de BLOQUEAR y EXCLUIR el dispositivo "${currentActiveHwid}"?\n\nEl teléfono perderá el acceso de inmediato.`)) return;
+        if (!await showGothicConfirm({ title: 'Bloquear y Excluir Dispositivo', message: `¿Estás SEGURO de BLOQUEAR y EXCLUIR el dispositivo "${currentActiveHwid}"?\n\nEl teléfono perderá el acceso de inmediato.`, icon: '🚫', confirmText: 'Bloquear y Excluir', isDanger: true })) return;
         const reason = document.getElementById('downgrade-exclude-reason')?.value?.trim() || 'Dispositivo excluido por el administrador';
         try {
           const res = await fetch('/api/admin/device/toggle-plan', {
@@ -4696,7 +4814,7 @@
 
     async function toggleBlock(hwid, isBlocked) {
       const action = isBlocked ? 'desbloquear' : 'BLOQUEAR';
-      if (!confirm(`¿Confirmas que deseas ${action} el celular "${hwid}" inmediatamente?`)) return;
+      if (!await showGothicConfirm({ title: isBlocked ? 'Desbloquear Celular' : 'Bloquear Celular (Kill-Switch)', message: `¿Confirmas que deseas ${action} el celular "${hwid}" inmediatamente?`, icon: isBlocked ? '🔓' : '⛔', confirmText: isBlocked ? 'Desbloquear' : 'Bloquear', isDanger: !isBlocked })) return;
       
       const key = getAdminKey();
       try {
@@ -4896,21 +5014,25 @@
     }
 
     async function deleteDevice(hwid) {
-      if (!confirm(`¿Deseas limpiar el celular "${hwid}" del panel?\n\nEl dispositivo se eliminará de la lista para limpiar registros, sin ser bloqueado.`)) return;
+      if (!await showGothicConfirm({ title: 'Limpiar Registro de Celular', message: `¿Deseas limpiar el celular "${hwid}" del panel?\n\nEl dispositivo se eliminará de la lista activa y pasará al historial de excluidos (sin ser bloqueado).`, icon: '🗑️', confirmText: 'Limpiar Celular', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/device/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ hwid })
+          body: JSON.stringify({ hwid, exclude: true })
         });
         const data = await res.json().catch(() => ({}));
         if ((res.ok && data.success) || res.status === 404) {
-          showToast(res.status === 404 ? 'El dispositivo no existía en el servidor. Registro local limpiado.' : 'Registro de celular limpiado exitosamente (sin bloqueo).');
+          showToast(res.status === 404 ? 'El dispositivo no existía en el servidor. Registro local limpiado.' : 'Registro de celular limpiado exitosamente (pasó al historial de excluidos).');
           const cleanHwid = String(hwid).trim().toUpperCase();
           locallyDeletedHwids.add(cleanHwid);
+          locallyDeletedTombstones.delete(cleanHwid);
           try {
+            sessionStorage.setItem('mumanager_deleted_hwids', JSON.stringify(Array.from(locallyDeletedHwids)));
             localStorage.setItem('mumanager_deleted_hwids', JSON.stringify(Array.from(locallyDeletedHwids)));
+            sessionStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
+            localStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
           } catch (_) {}
           allDevicesCache = allDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
           try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
@@ -5093,7 +5215,7 @@
     }
 
     async function invalidateSession(hwid, email) {
-      if (!confirm(`¿Deseas invalidar la sesión y desvincular este celular (${hwid})? Si el usuario está dentro del APK, será expulsado inmediatamente.`)) return;
+      if (!await showGothicConfirm({ title: 'Invalidar Sesión de Celular', message: `¿Deseas invalidar la sesión y desvincular este celular (${hwid})? Si el usuario está dentro del APK, será expulsado inmediatamente.`, icon: '🚪', confirmText: 'Expulsar e Invalidar', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/device/invalidate-session', {
@@ -5134,14 +5256,19 @@
           console.warn('Respuesta inesperada al consultar solicitudes PRO:', list);
           return;
         }
-        allProRequestsCache = list;
+        allProRequestsCache = list.filter(r => {
+          if (!r) return false;
+          const reqId = String(r.id || r.hwid || '');
+          if (locallyDeletedProRequests.has(reqId)) return false;
+          return true;
+        });
         updateNotificationBadges();
 
         const tbody = document.getElementById('pro-requests-body');
         if (!tbody) return;
 
         const badge = document.getElementById('pro-badge');
-        const pendingCount = list.filter(r => r.status === 'PENDING').length;
+        const pendingCount = allProRequestsCache.filter(r => r.status === 'PENDING').length;
         if (badge) {
           badge.innerText = pendingCount;
           badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
@@ -5320,7 +5447,7 @@
           if (action === 'approve') {
             const durText = data.durationText || '30 Días';
             alert(`✅ ¡Licencia PRO Activada con Éxito!\n\n👤 Cliente: ${data.name || 'Cliente'}\n📱 Dispositivo: ${data.hwid}\n⏳ Tiempo Activado: ${durText}\n${data.expiresAt ? '📅 Vence: ' + new Date(data.expiresAt).toLocaleString() : '♾️ Licencia Vitalicia (Permanente)'}\n\n🔑 Clave Oficial:\n${data.generatedKey || 'Generada para el dispositivo'}`);
-            if (data.generatedKey && confirm('¿Deseas copiar el mensaje de activación para enviárselo al cliente por WhatsApp?')) {
+            if (data.generatedKey && await showGothicConfirm({ title: 'Enviar WhatsApp al Cliente', message: '¿Deseas copiar el mensaje de activación para enviárselo al cliente por WhatsApp?', icon: '💬', confirmText: 'Copiar Mensaje', isDanger: false })) {
               copyWhatsAppMessage(data.hwid, data.generatedKey, durText);
             }
           }
@@ -5337,16 +5464,24 @@
     }
 
     async function deleteProRequest(id) {
-      if (!confirm('¿Estás seguro de que deseas eliminar permanentemente esta solicitud del panel?')) return;
+      if (!await showGothicConfirm({ title: 'Eliminar Solicitud PRO', message: '¿Estás seguro de que deseas eliminar permanentemente esta solicitud del panel?', icon: '🗑️', confirmText: 'Eliminar Solicitud', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch(`/api/admin/pro-request/${encodeURIComponent(id)}`, {
           method: 'DELETE',
           headers: { 'X-Admin-Key': key }
         });
-        const data = await res.json();
-        if (data.success) {
+        const data = await res.json().catch(() => ({}));
+        if ((res.ok && data.success) || res.status === 404) {
           showToast('🗑️ Solicitud eliminada correctamente.');
+          const cleanId = String(id).trim();
+          locallyDeletedProRequests.add(cleanId);
+          try {
+            sessionStorage.setItem('mumanager_deleted_pro_reqs', JSON.stringify(Array.from(locallyDeletedProRequests)));
+            localStorage.setItem('mumanager_deleted_pro_reqs', JSON.stringify(Array.from(locallyDeletedProRequests)));
+          } catch (_) {}
+          allProRequestsCache = allProRequestsCache.filter(r => String(r.id || '') !== cleanId && String(r.hwid || '') !== cleanId);
+          renderProRequestsTable(allProRequestsCache);
           loadProRequests();
         } else {
           showToast('Error: ' + (data.error || 'No se pudo eliminar'), true);
@@ -5462,7 +5597,7 @@
         alert('No se puede bloquear un HWID anónimo o vacío.');
         return;
       }
-      if (!confirm(`¿Estás SEGURO de ejecutar el Kill-Switch de emergencia contra el dispositivo '${hwid}'? Esto revoca y bloquea su acceso en vivo inmediatamente.`)) return;
+      if (!await showGothicConfirm({ title: 'Kill-Switch de Emergencia', message: `¿Estás SEGURO de ejecutar el Kill-Switch de emergencia contra el dispositivo '${hwid}'?\n\nEsto revoca y bloquea su acceso en vivo inmediatamente.`, icon: '⛔', confirmText: 'Ejecutar Kill-Switch', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/device/emergency-lock', {
@@ -5671,7 +5806,7 @@
     }
 
     async function clearSecurityLogs() {
-      if (!confirm('¿Deseas limpiar todos los reportes de bugs y eventos de seguridad?')) return;
+      if (!await showGothicConfirm({ title: 'Limpiar Registros de Seguridad', message: '¿Deseas limpiar todos los reportes de bugs y eventos de seguridad?', icon: '🛡️', confirmText: 'Limpiar Registros', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/security-logs/clear', {
@@ -5739,7 +5874,7 @@
       const reason = document.getElementById('rollback-reason').value.trim();
 
       if (active) {
-        const confirmed = confirm("¿Estás seguro de forzar el Rollback a todos los usuarios?");
+        const confirmed = await showGothicConfirm({ title: 'Rollback de Emergencia', message: '¿Estás seguro de forzar el Rollback a todos los usuarios?', icon: '🚨', confirmText: 'Forzar Rollback', isDanger: true });
         if (!confirmed) {
           document.getElementById('rollback-active-toggle').checked = false;
           return;
@@ -5798,7 +5933,7 @@
       const reason = document.getElementById('beta-rollback-reason').value.trim();
 
       if (active) {
-        const confirmed = confirm("¿Estás seguro de forzar el Rollback a los evaluadores del Canal Beta?");
+        const confirmed = await showGothicConfirm({ title: 'Rollback Canal Beta', message: '¿Estás seguro de forzar el Rollback a los evaluadores del Canal Beta?', icon: '↩️', confirmText: 'Forzar Rollback Beta', isDanger: true });
         if (!confirmed) {
           document.getElementById('beta-rollback-active-toggle').checked = false;
           return;
@@ -5831,10 +5966,13 @@
         return alert('No hay una versión Beta activa disponible para promover.');
       }
 
-      const confirmed = confirm(
-        `¿Deseas promover la versión Beta (${currentBeta}) a Versión Oficial para el 100% de los usuarios?\n\n` +
-        `Esta acción graduará la versión y actualizará la configuración oficial de la APK.`
-      );
+      const confirmed = await showGothicConfirm({
+        title: 'Promover Beta a Oficial',
+        message: `¿Deseas promover la versión Beta (${currentBeta}) a Versión Oficial para el 100% de los usuarios?\n\nEsta acción graduará la versión y actualizará la configuración oficial de la APK.`,
+        icon: '🎉',
+        confirmText: 'Promover a Oficial',
+        isDanger: false
+      });
       if (!confirmed) return;
 
       const key = getAdminKey();
@@ -6147,7 +6285,7 @@
         if (res.ok) {
           const wa = await res.json();
           document.getElementById('wa-enabled').checked = wa.enabled !== false;
-          document.getElementById('wa-phone').value = wa.phone || '5521971217376';
+          document.getElementById('wa-phone').value = wa.phone || '';
           document.getElementById('wa-provider').value = wa.provider || 'callmebot';
           document.getElementById('wa-apikey').value = wa.apiKey || '';
           document.getElementById('wa-webhook-url').value = wa.webhookUrl || '';
@@ -6157,6 +6295,9 @@
           document.getElementById('wa-evt-sql').checked = evts.sqlExploit !== false;
           document.getElementById('wa-evt-brute').checked = evts.bruteForce !== false;
           document.getElementById('wa-evt-block').checked = evts.deviceBlocked !== false;
+          if (document.getElementById('wa-evt-pro')) {
+            document.getElementById('wa-evt-pro').checked = evts.proRequest !== false;
+          }
 
           toggleWaProviderInputs();
         }
@@ -6178,6 +6319,7 @@
           sqlExploit: document.getElementById('wa-evt-sql').checked,
           bruteForce: document.getElementById('wa-evt-brute').checked,
           deviceBlocked: document.getElementById('wa-evt-block').checked,
+          proRequest: document.getElementById('wa-evt-pro') ? document.getElementById('wa-evt-pro').checked : true
         }
       };
 
@@ -6205,20 +6347,30 @@
       statusEl.innerText = '⏳ Enviando mensaje de prueba...';
       const key = getAdminKey();
 
+      const phone = document.getElementById('wa-phone').value.trim();
+      const provider = document.getElementById('wa-provider').value;
+      const apiKey = document.getElementById('wa-apikey').value.trim();
+      const webhookUrl = document.getElementById('wa-webhook-url').value.trim();
+
       try {
         const res = await fetch('/api/admin/whatsapp/test', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key }
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ phone, provider, apiKey, webhookUrl })
         });
         const data = await res.json();
         if (data.success) {
           statusEl.style.color = '#3FCF8E';
           statusEl.innerText = '✅ ¡Mensaje de prueba enviado con éxito a WhatsApp!';
-          showToast('Alerta enviada a +5521971217376');
+          showToast('¡Alerta de prueba enviada con éxito!');
         } else {
           statusEl.style.color = '#E2703A';
-          statusEl.innerText = '❌ ' + (data.error || data.reason || 'Revisa tu conexión');
-          showToast('Alerta enviada (Revisa estado)', true);
+          let errText = data.error || data.reason || 'Revisa tu conexión';
+          if (typeof errText === 'string') {
+            errText = errText.replace(/<[^>]*>?/gm, '').trim();
+          }
+          statusEl.innerText = '❌ ' + errText;
+          showToast('Fallo al enviar alerta (Revisa estado)', true);
         }
       } catch (e) {
         statusEl.style.color = '#E2703A';
@@ -6482,7 +6634,15 @@
           });
           allLicensesCache = Array.from(licenseMap.values());
         }
-        if (Array.isArray(data.excludedDevices)) excludedDevicesCache = data.excludedDevices;
+        if (Array.isArray(data.excludedDevices)) {
+          excludedDevicesCache = data.excludedDevices.filter(d => {
+            if (!d || !d.hwid) return false;
+            const h = String(d.hwid).toUpperCase();
+            if (h === 'DELETEDDEVICES' || h === 'DELETEDUSERS' || h === 'REVOKEDKEYS' || h.startsWith('_')) return false;
+            if (locallyDeletedTombstones.has(h)) return false;
+            return true;
+          });
+        }
         if (Array.isArray(data.revokedKeys)) revokedKeysCache = data.revokedKeys;
         updateNotificationBadges();
 
@@ -6491,7 +6651,7 @@
         const lifeCount = allLicensesCache.filter(l => l.isLifetime).length;
         const daysCount = allLicensesCache.filter(l => l.mode === 'PRO' && !l.isLifetime && !l.isExpired).length;
         const expCount = allLicensesCache.filter(l => l.isExpired).length;
-        const exclCount = (data.summary && data.summary.excludedCount !== undefined) ? data.summary.excludedCount : excludedDevicesCache.length;
+        const exclCount = excludedDevicesCache.length;
 
         updateTextIfDifferent('lic-metric-total', totalLic);
         updateTextIfDifferent('lic-metric-pro', proCount);
@@ -6636,7 +6796,7 @@
     }
 
     async function deleteLicense(hwid, licenseKey) {
-      if (!confirm(`¿Confirmas que deseas ELIMINAR y REVOCAR permanentemente esta licencia emitida?\n\nDispositivo: ${hwid}\nClave: ${licenseKey || 'N/A'}\n\nLa clave quedará registrada en la lista negra (revocada permanentemente). El celular pasará de inmediato a DEMO y se limpiará de su almacenamiento local.`)) return;
+      if (!await showGothicConfirm({ title: 'Revocar y Eliminar Licencia', message: `¿Confirmas que deseas ELIMINAR y REVOCAR permanentemente esta licencia emitida?\n\nDispositivo: ${hwid}\nClave: ${licenseKey || 'N/A'}\n\nLa clave quedará registrada en la lista negra (revocada permanentemente). El celular pasará de inmediato a DEMO.`, icon: '🗑️', confirmText: 'Revocar Licencia', isDanger: true })) return;
 
       const key = getAdminKey();
       try {
@@ -6782,7 +6942,7 @@
     }
 
     async function deleteTombstoneRecord(hwid) {
-      if (!confirm(`¿Deseas eliminar definitivamente el registro de "${hwid}" del historial?\n\nEl dispositivo ya no figurará como excluido y NO estará bloqueado.`)) return;
+      if (!await showGothicConfirm({ title: 'Eliminar Registro de Exclusión', message: `¿Deseas eliminar definitivamente el registro de "${hwid}" del historial?\n\nEl dispositivo ya no figurará como excluido y NO estará bloqueado.`, icon: '🗑️', confirmText: 'Eliminar Registro', isDanger: true })) return;
       const key = getAdminKey();
       if (!key) return;
       try {
@@ -6791,10 +6951,16 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
           body: JSON.stringify({ hwid })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
+        const data = await res.json().catch(() => ({}));
+        if ((res.ok && data.success) || res.status === 404) {
           showToast(`🗑️ Registro de ${hwid} eliminado del historial.`);
-          excludedDevicesCache = excludedDevicesCache.filter(d => d.hwid !== hwid && String(d.hwid).toUpperCase() !== String(hwid).toUpperCase());
+          const cleanHwid = String(hwid).trim().toUpperCase();
+          locallyDeletedTombstones.add(cleanHwid);
+          try {
+            sessionStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
+            localStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
+          } catch (_) {}
+          excludedDevicesCache = excludedDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
           renderExcludedDevicesTable(excludedDevicesCache);
           updateTextIfDifferent('lic-metric-excluded', excludedDevicesCache.length);
           loadAllLicensesModule();
@@ -6812,7 +6978,7 @@
         showToast('No hay registros en el historial de exclusiones.');
         return;
       }
-      if (!confirm(`¿Deseas vaciar TODO el historial de exclusiones (${excludedDevicesCache.length} dispositivos)?\n\nTodos los registros se limpiarán y los celulares NO estarán bloqueados.`)) return;
+      if (!await showGothicConfirm({ title: 'Vaciar Historial de Exclusiones', message: `¿Deseas vaciar TODO el historial de exclusiones (${excludedDevicesCache.length} dispositivos)?\n\nTodos los registros se limpiarán y los celulares NO estarán bloqueados.`, icon: '🧹', confirmText: 'Vaciar Historial', isDanger: true })) return;
       const key = getAdminKey();
       if (!key) return;
       try {
@@ -6821,9 +6987,18 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
           body: JSON.stringify({})
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          showToast(`🧹 Se limpiaron ${data.clearedCount || 0} registros del historial.`);
+        const data = await res.json().catch(() => ({}));
+        if ((res.ok && data.success) || res.status === 404) {
+          showToast(`🧹 Se limpiaron ${data.clearedCount || excludedDevicesCache.length} registros del historial.`);
+          if (excludedDevicesCache && Array.isArray(excludedDevicesCache)) {
+            excludedDevicesCache.forEach(d => {
+              if (d && d.hwid) locallyDeletedTombstones.add(String(d.hwid).trim().toUpperCase());
+            });
+            try {
+              sessionStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
+              localStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
+            } catch (_) {}
+          }
           excludedDevicesCache = [];
           renderExcludedDevicesTable(excludedDevicesCache);
           updateTextIfDifferent('lic-metric-excluded', 0);
@@ -6838,7 +7013,7 @@
     }
 
     async function unexcludeDevice(hwid) {
-      if (!confirm(`¿Deseas RESTAURAR y quitar de la lista de exclusión al celular "${hwid}"?\n\nAl restaurarlo, podrá volver a registrarse y conectarse normalmente.`)) return;
+      if (!await showGothicConfirm({ title: 'Restaurar Celular Excluido', message: `¿Deseas RESTAURAR y quitar de la lista de exclusión al celular "${hwid}"?\n\nAl restaurarlo, podrá volver a registrarse y conectarse normalmente.`, icon: '♻️', confirmText: 'Restaurar Celular', isDanger: false })) return;
       const key = getAdminKey();
       if (!key) return;
       try {
@@ -6847,15 +7022,25 @@
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
           body: JSON.stringify({ hwid })
         });
-        const data = await res.json();
-        if (data.success) {
+        const data = await res.json().catch(() => ({}));
+        if ((res.ok && data.success) || res.status === 404) {
           showToast(`♻️ Dispositivo ${hwid} restaurado exitosamente.`);
+          const cleanHwid = String(hwid).trim().toUpperCase();
+          locallyDeletedTombstones.delete(cleanHwid);
           if (typeof locallyDeletedHwids !== 'undefined' && locallyDeletedHwids.delete) {
             locallyDeletedHwids.delete(String(hwid).toUpperCase());
             try {
               localStorage.setItem('mumanager_deleted_hwids', JSON.stringify([...locallyDeletedHwids]));
+              sessionStorage.setItem('mumanager_deleted_hwids', JSON.stringify([...locallyDeletedHwids]));
             } catch (_) {}
           }
+          try {
+            localStorage.setItem('mumanager_deleted_tombstones', JSON.stringify([...locallyDeletedTombstones]));
+            sessionStorage.setItem('mumanager_deleted_tombstones', JSON.stringify([...locallyDeletedTombstones]));
+          } catch (_) {}
+          excludedDevicesCache = excludedDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
+          renderExcludedDevicesTable(excludedDevicesCache);
+          updateTextIfDifferent('lic-metric-excluded', excludedDevicesCache.length);
           loadAllLicensesModule();
           refreshDevices();
           loadAuditLogs();
@@ -6905,6 +7090,26 @@
        ======================================================== */
     let currentLogCategoryFilter = 'ALL';
     let allAuditLogsCache = [];
+    let logSearchQuery = '';
+    let auditLogAutoRefreshTimer = null;
+
+    function filterAuditLogsBox() {
+      logSearchQuery = (document.getElementById('log-search-input')?.value || '').toLowerCase().trim();
+      renderAuditLogsBox(allAuditLogsCache);
+    }
+
+    function toggleAuditLogAutoRefresh(seconds) {
+      if (auditLogAutoRefreshTimer) {
+        clearInterval(auditLogAutoRefreshTimer);
+        auditLogAutoRefreshTimer = null;
+      }
+      const s = parseInt(seconds, 10) || 0;
+      if (s > 0) {
+        auditLogAutoRefreshTimer = setInterval(() => {
+          loadAuditLogs();
+        }, s * 1000);
+      }
+    }
 
     function setLogCategoryFilter(cat) {
       currentLogCategoryFilter = cat;
@@ -6916,10 +7121,10 @@
 
     function getLogCategoryFallback(type) {
       const t = String(type || '').toUpperCase();
-      if (t.includes('SQL') || t.includes('TAMPER') || t.includes('REPLAY') || t.includes('SIG_') || t.includes('AUTH_') || t.includes('EMERGENCY') || t.includes('THREAT') || t.includes('FIREWALL')) return 'SECURITY';
-      if (t.includes('KEY') || t.includes('PLAN') || t.includes('PRO') || t.includes('DEMO') || t.includes('EXPIR')) return 'LICENSE';
-      if (t.includes('USER') || t.includes('SESSION') || t.includes('LOGIN') || t.includes('PW_') || t.includes('ROLE')) return 'USERS';
-      if (t.includes('DEVICE') || t.includes('BLOCK') || t.includes('NOTE') || t.includes('PURGE')) return 'DEVICES';
+      if (t.includes('SQL') || t.includes('TAMPER') || t.includes('REPLAY') || t.includes('SIG_') || t.includes('AUTH_') || t.includes('EMERGENCY') || t.includes('THREAT') || t.includes('FIREWALL') || t.includes('WAF') || t.includes('BOT')) return 'SECURITY';
+      if (t.includes('KEY') || t.includes('PLAN') || t.includes('PRO') || t.includes('DEMO') || t.includes('EXPIR') || t.includes('LICENSE')) return 'LICENSE';
+      if (t.includes('USER') || t.includes('SESSION') || t.includes('LOGIN') || t.includes('PW_') || t.includes('ROLE') || t.includes('GOOGLE') || t.includes('OAUTH')) return 'USERS';
+      if (t.includes('DEVICE') || t.includes('BLOCK') || t.includes('NOTE') || t.includes('PURGE') || t.includes('TOMBSTONE') || t.includes('EMULATOR')) return 'DEVICES';
       return 'SYSTEM';
     }
 
@@ -6930,9 +7135,18 @@
       if (currentLogCategoryFilter !== 'ALL') {
         displayLogs = logs.filter(l => (l.category || getLogCategoryFallback(l.type)) === currentLogCategoryFilter);
       }
+      if (logSearchQuery) {
+        displayLogs = displayLogs.filter(l => 
+          (l.type && l.type.toLowerCase().includes(logSearchQuery)) ||
+          (l.hwid && l.hwid.toLowerCase().includes(logSearchQuery)) ||
+          (l.ip && l.ip.toLowerCase().includes(logSearchQuery)) ||
+          (l.message && l.message.toLowerCase().includes(logSearchQuery)) ||
+          (l.category && l.category.toLowerCase().includes(logSearchQuery))
+        );
+      }
       const auditSig = (displayLogs.length > 0)
-        ? `${displayLogs.length}_${displayLogs[0].timestamp || ''}_${currentLogCategoryFilter}`
-        : `empty_${currentLogCategoryFilter}`;
+        ? `${displayLogs.length}_${displayLogs[0].timestamp || ''}_${currentLogCategoryFilter}_${logSearchQuery}`
+        : `empty_${currentLogCategoryFilter}_${logSearchQuery}`;
       if (box.dataset.renderedSig === auditSig) return;
       box.dataset.renderedSig = auditSig;
 
@@ -6985,7 +7199,7 @@
     }
 
     async function clearAuditLogs() {
-      if (!confirm('¿Deseas limpiar el historial de eventos de la terminal?')) return;
+      if (!await showGothicConfirm({ title: 'Limpiar Registro de Auditoría', message: '¿Deseas limpiar el historial de eventos de la terminal de auditoría?', icon: '🗑️', confirmText: 'Limpiar Eventos', isDanger: true })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/logs/clear', {

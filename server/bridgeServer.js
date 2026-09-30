@@ -37,6 +37,7 @@ try {
 }
 
 const app = express();
+app.set('trust proxy', 1); // Confiar en proxies inversos (Vercel, Cloudflare, AWS) para extraer IP real del cliente
 
 app.get('/api/ping', (req, res) => {
   res.json({
@@ -246,7 +247,8 @@ const DEFAULT_SETTINGS = {
       tamper: true,
       sqlExploit: true,
       bruteForce: true,
-      deviceBlocked: true
+      deviceBlocked: true,
+      proRequest: true
     }
   },
   beta: {
@@ -340,7 +342,7 @@ function loadSettings() {
 }
 
 // Servicio de Alertas WhatsApp en Tiempo Real
-async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '127.0.0.1') {
+async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '127.0.0.1', customWaConfig = null) {
   try {
     let httpsMod, httpMod;
     try {
@@ -350,9 +352,15 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
     if (!httpsMod) return { success: false, reason: 'Módulos de red no disponibles' };
 
     const settings = loadSettings();
-    const wa = settings.whatsapp || DEFAULT_SETTINGS.whatsapp;
-    if (!wa || !wa.enabled) return { success: false, reason: 'Alertas de WhatsApp desactivadas' };
-    if (wa.events && wa.events[eventKey] === false) return { success: false, reason: 'Evento desactivado' };
+    const wa = customWaConfig || settings.whatsapp || DEFAULT_SETTINGS.whatsapp;
+    if (eventKey !== 'test' && (!wa || !wa.enabled)) {
+      return { success: false, reason: 'Alertas de WhatsApp desactivadas' };
+    }
+    if (eventKey !== 'test' && eventKey !== 'system') {
+      if (wa.events && wa.events[eventKey] === false) {
+        return { success: false, reason: `Evento '${eventKey}' desactivado en la configuración` };
+      }
+    }
 
     const rawPhone = String(wa.phone || process.env.ADMIN_PHONE || '').trim();
     const phone = rawPhone.replace(/[^0-9]/g, '');
@@ -407,12 +415,12 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
         if (!wa.apiKey) {
           return resolve({
             success: false,
-            error: 'Falta la API Key de CallMeBot. Para obtenerla gratis: agrega a tus contactos de WhatsApp el número oficial (+34 644 10 55 84 o +34 644 76 66 43) y envíale el mensaje: I allow callmebot to send me messages'
+            error: 'Falta la API Key de CallMeBot. Para obtenerla gratis: agrega a tus contactos de WhatsApp el número oficial (+34 684 728 023) y envíale el mensaje: I allow callmebot to send me messages'
           });
         }
         const apiKeyParam = `&apikey=${encodeURIComponent(wa.apiKey)}`;
         const callmeUrl = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(messageText)}${apiKeyParam}`;
-        httpsMod.get(callmeUrl, (res) => {
+        const req = httpsMod.get(callmeUrl, (res) => {
           let data = '';
           res.on('data', chunk => { data += chunk; });
           res.on('end', () => {
@@ -424,7 +432,11 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
               error: isOk ? undefined : (data || `HTTP ${res.statusCode}`)
             });
           });
-        }).on('error', (err) => {
+        });
+        req.setTimeout(10000, () => {
+          req.destroy(new Error('Timeout de conexión contactando CallMeBot (10s)'));
+        });
+        req.on('error', (err) => {
           resolve({ success: false, error: err.message });
         });
       });
@@ -586,6 +598,8 @@ function loadTombstones() {
   if (!result || typeof result !== 'object') result = {};
   if (!result.revokedKeys) result.revokedKeys = {};
   if (!result.deletedUsers) result.deletedUsers = {};
+  if (!result.deletedDevices) result.deletedDevices = {};
+  if (!result._deletedTombstones) result._deletedTombstones = {};
   return result;
 }
 
@@ -662,6 +676,35 @@ function loadDevices() {
   // 1. Conserva todos los dispositivos que hayan sido registrados en disco, memoria o semillas.
   // 2. Si un celular se actualizó en runtime (pings, lastSeen, ip, vigencia), preserva los datos más recientes.
   const merged = { ...DEFAULT_SEED_DEVICES, ...diskDevs, ...memDevs };
+
+  // Filtrar dispositivos explícitamente eliminados o excluidos por el administrador
+  try {
+    const tombstones = loadTombstones();
+    const deletedDevs = (tombstones && tombstones.deletedDevices && typeof tombstones.deletedDevices === 'object')
+      ? tombstones.deletedDevices
+      : {};
+    for (const h of Object.keys(deletedDevs)) {
+      delete merged[h];
+      delete merged[h.toLowerCase()];
+      delete merged[h.toUpperCase()];
+    }
+    // Dispositivos en la lista de exclusión activa jamás deben aparecer en la lista de celulares activos
+    for (const [k, v] of Object.entries(tombstones)) {
+      if (k !== 'revokedKeys' && k !== 'deletedUsers' && k !== 'deletedDevices' && !k.startsWith('_') && typeof v === 'object') {
+        delete merged[k];
+        delete merged[k.toLowerCase()];
+        delete merged[k.toUpperCase()];
+      }
+    }
+  } catch (_) {}
+
+  // Excluir probes de verificación automatizada del registro de celulares
+  for (const k of Object.keys(merged)) {
+    if (k.toUpperCase().startsWith('PROBE-')) {
+      delete merged[k];
+    }
+  }
+
   inMemoryFallback[DATA_FILE] = merged;
   return merged;
 }
@@ -957,43 +1000,33 @@ async function syncCloudStorage(force = false) {
       const data = await CLOUD_STORAGE.mget(keys);
       lastCloudSyncTime = Date.now();
 
-      // 1. DISPOSITIVOS: Conciliación autoritativa basada en revisión/versión
+      // 1. DISPOSITIVOS: Conciliación autoritativa (La nube es la fuente autoritativa de verdad)
       const cloudDevs = data['mumanager:devices'];
       if (cloudDevs && typeof cloudDevs === 'object') {
         const currentDevs = inMemoryFallback[DATA_FILE] || {};
-        const mergedDevs = { ...currentDevs };
+        // Inicializar con la verdad de la nube para no resucitar dispositivos eliminados
+        const mergedDevs = { ...cloudDevs };
 
-        for (const [hwid, cDev] of Object.entries(cloudDevs)) {
+        // Conciliar actualizaciones locales en vuelo solo si son más recientes y no están eliminadas
+        for (const [hwid, lDev] of Object.entries(currentDevs)) {
           if (!mergedDevs[hwid]) {
-            mergedDevs[hwid] = cDev;
+            // Preservar registro local únicamente si fue registrado hace menos de 10 minutos y no fue borrado
+            const lTs = Number(lDev.authUpdatedAt) || 0;
+            if (now - lTs < 600000 && lDev.authAction === 'REGISTER') {
+              mergedDevs[hwid] = lDev;
+            }
           } else {
-            const lDev = mergedDevs[hwid];
+            const cDev = mergedDevs[hwid];
             const lRev = Number(lDev.authRevision) || 0;
             const cRev = Number(cDev.authRevision) || 0;
             const lTs = Number(lDev.authUpdatedAt) || 0;
             const cTs = Number(cDev.authUpdatedAt) || 0;
 
-            // Determinación autoritativa del ganador:
-            // 1. Mayor authRevision
-            // 2. Si las revisiones son iguales, mayor authUpdatedAt
-            // 3. En caso de empate o registros legacy sin revisión:
-            //    La nube tiene autoridad administrativa sobre el estado de autorización.
             let winner = cDev;
-            if (lRev > cRev) {
-              winner = lDev;
-            } else if (cRev > lRev) {
-              winner = cDev;
-            } else if (lTs > cTs) {
-              winner = lDev;
-            } else if (cTs > lTs) {
-              winner = cDev;
-            } else {
-              if (lDev.blocked && !cDev.blocked) {
-                winner = lDev;
-              } else {
-                winner = cDev;
-              }
-            }
+            if (lRev > cRev) winner = lDev;
+            else if (cRev > lRev) winner = cDev;
+            else if (lTs > cTs) winner = lDev;
+            else winner = cDev;
 
             const isPro = winner.mode === 'PRO' && !winner.forceDemo && !winner.blocked && (!winner.expiresAt || new Date(winner.expiresAt).getTime() > now);
             const chosenKey = isPro ? (winner.licenseKey || winner.generatedKey || '') : '';
@@ -1019,6 +1052,34 @@ async function syncCloudStorage(force = false) {
             };
           }
         }
+
+        // Purgar dispositivos eliminados explícitamente y probes de verificación
+        try {
+          const tomData = data['mumanager:tombstones'] || inMemoryFallback[TOMBSTONES_FILE] || {};
+          const allDeletedDevs = {
+            ...((tomData && tomData.deletedDevices) || {}),
+            ...((inMemoryFallback[TOMBSTONES_FILE] && inMemoryFallback[TOMBSTONES_FILE].deletedDevices) || {})
+          };
+          for (const delH of Object.keys(allDeletedDevs)) {
+            delete mergedDevs[delH];
+            delete mergedDevs[delH.toUpperCase()];
+            delete mergedDevs[delH.toLowerCase()];
+          }
+          // Purgar también cualquier dispositivo actualmente listado en tombstones como excluido
+          for (const [k, v] of Object.entries(tomData)) {
+            if (k !== 'revokedKeys' && k !== 'deletedUsers' && k !== 'deletedDevices' && !k.startsWith('_') && typeof v === 'object') {
+              delete mergedDevs[k];
+              delete mergedDevs[k.toUpperCase()];
+              delete mergedDevs[k.toLowerCase()];
+            }
+          }
+          for (const k of Object.keys(mergedDevs)) {
+            if (k.toUpperCase().startsWith('PROBE-')) {
+              delete mergedDevs[k];
+            }
+          }
+        } catch (_) {}
+
         inMemoryFallback[DATA_FILE] = mergedDevs;
         safeAtomicWriteJson(DATA_FILE, mergedDevs);
       }
@@ -1056,15 +1117,24 @@ async function syncCloudStorage(force = false) {
         const cTomTs = Number(cloudTom.updatedAt) || 0;
         const lTomTs = Number(currentTom.updatedAt) || 0;
 
-        let mergedRevokedKeys;
-        let mergedDeletedUsers;
+        const allDeletedTombstones = {
+          ...(cloudTom._deletedTombstones || {}),
+          ...(currentTom._deletedTombstones || {})
+        };
+        const allDeletedDevices = {
+          ...(cloudTom.deletedDevices || {}),
+          ...(currentTom.deletedDevices || {})
+        };
+        const allDeletedUsers = {
+          ...(cloudTom.deletedUsers || {}),
+          ...(currentTom.deletedUsers || {})
+        };
 
+        let mergedRevokedKeys;
         if (cTomVer > lTomVer || (cTomVer === lTomVer && cTomTs >= lTomTs)) {
           mergedRevokedKeys = { ...(cloudTom.revokedKeys || {}) };
-          mergedDeletedUsers = { ...(cloudTom.deletedUsers || {}) };
         } else {
           mergedRevokedKeys = { ...(currentTom.revokedKeys || {}) };
-          mergedDeletedUsers = { ...(currentTom.deletedUsers || {}) };
         }
 
         // Invariante de coherencia: ninguna clave de un dispositivo que esté activo en PRO puede coexistir como revocada
@@ -1080,16 +1150,46 @@ async function syncCloudStorage(force = false) {
           }
         }
 
+        // Conciliación autoritativa de dispositivos excluidos:
+        // La versión más reciente (authorTom) tiene la verdad absoluta. CERO copiado ciego de versiones viejas.
+        const isCloudAuthoritative = (cTomVer > lTomVer || (cTomVer === lTomVer && cTomTs >= lTomTs));
+        const authorTom = isCloudAuthoritative ? cloudTom : currentTom;
+
+        const mergedHwids = {};
+        for (const [k, v] of Object.entries(authorTom)) {
+          if (k !== 'revokedKeys' && k !== 'deletedUsers' && k !== 'deletedDevices' && !k.startsWith('_') && typeof v === 'object') {
+            mergedHwids[k] = v;
+          }
+        }
+
+        // Purgar de forma absoluta cualquier dispositivo excluido que haya sido eliminado de la lista (_deletedTombstones)
+        for (const delH of Object.keys(allDeletedTombstones)) {
+          delete mergedHwids[delH];
+          delete mergedHwids[delH.toUpperCase()];
+          delete mergedHwids[delH.toLowerCase()];
+          for (const mk of Object.keys(mergedHwids)) {
+            if (mk.toUpperCase() === delH.toUpperCase()) {
+              delete mergedHwids[mk];
+            }
+          }
+        }
+
         const mergedTom = {
-          ...currentTom,
-          ...cloudTom,
+          ...mergedHwids,
           version: Math.max(lTomVer, cTomVer, 1),
           updatedAt: Math.max(lTomTs, cTomTs, now),
           revokedKeys: mergedRevokedKeys,
-          deletedUsers: mergedDeletedUsers
+          deletedUsers: allDeletedUsers,
+          deletedDevices: allDeletedDevices,
+          _deletedTombstones: allDeletedTombstones
         };
         inMemoryFallback[TOMBSTONES_FILE] = mergedTom;
         safeAtomicWriteJson(TOMBSTONES_FILE, mergedTom);
+
+        // Si la copia local era más reciente, sincronizar de vuelta a la nube
+        if (!isCloudAuthoritative && CLOUD_STORAGE.enabled) {
+          queueCloudWrite(CLOUD_STORAGE.set('mumanager:tombstones', mergedTom));
+        }
       }
 
     // 4. SETTINGS (Preservación estricta de nuevas versiones)
@@ -1116,15 +1216,11 @@ async function syncCloudStorage(force = false) {
       cachedSettings = { ...DEFAULT_SETTINGS, ...cloudSet };
     }
 
-    // 5. PRO REQUESTS
+    // 5. PRO REQUESTS: La nube es la fuente autoritativa
     const cloudProReqs = data['mumanager:proRequests'];
     if (cloudProReqs && Array.isArray(cloudProReqs)) {
-      const currentReqs = loadProRequests();
-      const reqMap = new Map();
-      currentReqs.forEach(r => { if (r && r.id) reqMap.set(r.id, r); });
-      cloudProReqs.forEach(r => { if (r && r.id) reqMap.set(r.id, { ...(reqMap.get(r.id) || {}), ...r }); });
-      const mergedReqs = Array.from(reqMap.values());
-      safeAtomicWriteJson(PRO_REQUESTS_FILE, mergedReqs);
+      inMemoryFallback[PRO_REQUESTS_FILE] = cloudProReqs;
+      safeAtomicWriteJson(PRO_REQUESTS_FILE, cloudProReqs);
     }
 
     // 6. SECURITY LOGS
@@ -1415,16 +1511,16 @@ if (typeof setInterval === 'function') {
 
 function getLogCategory(type) {
   const t = String(type || '').toUpperCase();
-  if (t.includes('SQL') || t.includes('TAMPER') || t.includes('REPLAY') || t.includes('SIG_') || t.includes('AUTH_') || t.includes('EMERGENCY') || t.includes('THREAT') || t.includes('FIREWALL')) {
+  if (t.includes('SQL') || t.includes('TAMPER') || t.includes('REPLAY') || t.includes('SIG_') || t.includes('AUTH_') || t.includes('EMERGENCY') || t.includes('THREAT') || t.includes('FIREWALL') || t.includes('WAF') || t.includes('BOT')) {
     return 'SECURITY';
   }
-  if (t.includes('KEY') || t.includes('PLAN') || t.includes('PRO') || t.includes('DEMO') || t.includes('EXPIR')) {
+  if (t.includes('KEY') || t.includes('PLAN') || t.includes('PRO') || t.includes('DEMO') || t.includes('EXPIR') || t.includes('LICENSE')) {
     return 'LICENSE';
   }
-  if (t.includes('USER') || t.includes('SESSION') || t.includes('LOGIN') || t.includes('PW_') || t.includes('ROLE')) {
+  if (t.includes('USER') || t.includes('SESSION') || t.includes('LOGIN') || t.includes('PW_') || t.includes('ROLE') || t.includes('OAUTH') || t.includes('GOOGLE')) {
     return 'USERS';
   }
-  if (t.includes('DEVICE') || t.includes('BLOCK') || t.includes('NOTE') || t.includes('PURGE')) {
+  if (t.includes('DEVICE') || t.includes('BLOCK') || t.includes('NOTE') || t.includes('PURGE') || t.includes('TOMBSTONE') || t.includes('EMULATOR')) {
     return 'DEVICES';
   }
   return 'SYSTEM';
@@ -1461,35 +1557,75 @@ const BLOCKED_USER_AGENTS = [
   'wpscan', 'zgrab', 'censys', 'shodan', 'acunetix'
 ];
 
+function isLoopbackIp(ip) {
+  if (!ip) return true;
+  const clean = String(ip).trim().toLowerCase();
+  return clean === '127.0.0.1' || clean === '::1' || clean === '::ffff:127.0.0.1' || clean === 'localhost' || clean.startsWith('127.') || clean === 'unknown';
+}
+
+function getClientIp(req) {
+  if (req && req.headers) {
+    const xForwarded = req.headers['x-forwarded-for'];
+    if (xForwarded) {
+      const parts = String(xForwarded).split(',');
+      const candidate = parts[0].trim();
+      if (candidate) return candidate;
+    }
+    const xReal = req.headers['x-real-ip'];
+    if (xReal) {
+      const candidate = String(xReal).trim();
+      if (candidate) return candidate;
+    }
+  }
+  return req && req.socket ? (req.socket.remoteAddress || '127.0.0.1') : '127.0.0.1';
+}
+
 // Middleware WAF: Filtrado de bots, escáneres y honeypot de rutas trampa
 app.use((req, res, next) => {
   const clientIp = getClientIp(req);
   const now = Date.now();
+  const isLoopback = isLoopbackIp(clientIp);
 
-  // 1. Verificar si la IP está en la lista de baneadas por WAF
-  const banExpires = BANNED_IPS.get(clientIp);
-  if (banExpires) {
-    if (now < banExpires) {
-      return res.status(403).json({ error: 'Access denied by WAF security shield.' });
+  // Bypass y auto-desbloqueo de emergencia para el Administrador si provee su clave de acceso
+  const providedAdminKey = (req.headers && (req.headers['x-admin-key'] || req.headers['authorization'])) || (req.query && req.query.adminKey);
+  const cleanKey = providedAdminKey ? String(providedAdminKey).replace(/^Bearer\s+/i, '').trim() : '';
+  if (cleanKey && typeof isValidAdminKey === 'function' && isValidAdminKey(cleanKey)) {
+    if (!isLoopback && BANNED_IPS.has(clientIp)) {
+      BANNED_IPS.delete(clientIp);
     }
-    BANNED_IPS.delete(clientIp);
+    return next();
+  }
+
+  // 1. Verificar si la IP está en la lista de baneadas por WAF (nunca bloquear loopback/localhost)
+  if (!isLoopback) {
+    const banExpires = BANNED_IPS.get(clientIp);
+    if (banExpires) {
+      if (now < banExpires) {
+        return res.status(403).json({ error: 'Access denied by WAF security shield.' });
+      }
+      BANNED_IPS.delete(clientIp);
+    }
   }
 
   // 2. Detección de herramientas de escaneo por User-Agent
   const userAgent = String(req.headers['user-agent'] || '').toLowerCase();
   for (const bot of BLOCKED_USER_AGENTS) {
     if (userAgent.includes(bot)) {
-      BANNED_IPS.set(clientIp, now + 60 * 60 * 1000); // Baneo de 1 hora
+      if (!isLoopback) {
+        BANNED_IPS.set(clientIp, now + 60 * 60 * 1000); // Baneo de 1 hora
+      }
       addAuditLog('SECURITY_BOT_BLOCKED', 'N/A', clientIp, `Bloqueada herramienta de penetración: ${bot} (${userAgent})`, 'WARN');
       return res.status(403).json({ error: 'Automated vulnerability scanners are strictly blocked.' });
     }
   }
 
-  // 3. Honeypot anti-scanners: Cualquier petición a rutas de PHP/WordPress/env banea la IP por 24 horas
+  // 3. Honeypot anti-scanners: Peticiones a rutas de exploits banea la IP por 24 horas (excluyendo loopback)
   const reqPath = (req.path || '').toLowerCase();
   for (const trap of HONEYPOT_PATHS) {
-    if (reqPath.startsWith(trap) || reqPath.includes(trap)) {
-      BANNED_IPS.set(clientIp, now + 24 * 60 * 60 * 1000); // Baneo de 24 horas
+    if (reqPath === trap || reqPath.startsWith(trap + '/') || (trap.startsWith('/.') && reqPath.includes(trap))) {
+      if (!isLoopback) {
+        BANNED_IPS.set(clientIp, now + 24 * 60 * 60 * 1000); // Baneo de 24 horas
+      }
       addAuditLog('SECURITY_HONEYPOT_TRIGGERED', 'N/A', clientIp, `Honeypot activado por ruta sospechosa: ${req.path}`, 'ALERT');
       return res.status(403).json({ error: 'Forbidden. Security intrusion attempt logged.' });
     }
@@ -1519,15 +1655,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-function getClientIp(req) {
-  const isTrusted = req.app && req.app.get && req.app.get('trust proxy');
-  if (isTrusted && req.headers['x-forwarded-for']) {
-    const parts = String(req.headers['x-forwarded-for']).split(',');
-    return parts[0].trim();
-  }
-  return req.socket ? (req.socket.remoteAddress || '127.0.0.1') : '127.0.0.1';
-}
 
 // Rate Limiting global seguro en memoria (H28)
 const requestCounts = new Map();
@@ -2318,7 +2445,7 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
       }
     }
 
-    sendWhatsAppAlert('tamper', 'ATAQUE SQL BLOQUEADO', threatMsg, hwid, clientIp);
+    sendWhatsAppAlert('sqlExploit', 'ATAQUE SQL BLOQUEADO', threatMsg, hwid, clientIp);
 
     return res.status(403).json({
       success: false,
@@ -9118,7 +9245,27 @@ app.post('/api/telemetry/ping', async (req, res) => {
   const { hwid, mode, appVersion, platform, licenseKey, userEmail, username, isEmulator, deviceModel, deviceBrand } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID missing' });
 
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const settings = loadSettings();
+
+  // Interceptar pruebas y sondas de verificación de despliegue para no ensuciar la base de datos de celulares
+  if (cleanHwid.startsWith('PROBE-')) {
+    return res.json({
+      success: true,
+      hwid,
+      mode: 'DEMO',
+      licenseKey: '',
+      isProbe: true,
+      serverTime: new Date().toISOString(),
+      updateInfo: {
+        latestVersion: settings.latestVersion || '1.0.0',
+        versionCode: settings.versionCode || 1,
+        forceUpdate: !!settings.forceUpdate,
+        apkUrl: settings.latestApkUrl || ''
+      }
+    });
+  }
+
   const devices = loadDevices();
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Desconocida';
   const now = new Date().toISOString();
@@ -9127,15 +9274,37 @@ app.post('/api/telemetry/ping', async (req, res) => {
   let sessionInvalidated = false;
   let sessionInvalidatedReason = '';
 
-  // [H04-B FIX] Solo asociar identidad (email/username) si hay sesión autenticada válida.
-  // El tracking de HWID y licencia se permite siempre; la creación de usuarios requiere token.
-  const _telAuthHeader = req.headers['authorization'] || req.headers['x-session-token'] || '';
-  const _telToken = _telAuthHeader.replace(/^Bearer\s+/i, '').trim();
-  const _telAdminKey = req.headers['x-admin-key'] || '';
-  const canAssociateIdentity = (_telToken && !!verifySessionToken(_telToken)) || isValidAdminKey(_telAdminKey);
-
   const tombstones = loadTombstones();
-  const isRevokedByAdmin = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object' && tombstones[hwid].blocked !== false);
+  // Si el dispositivo fue explícitamente eliminado o excluido por el administrador:
+  // Rechazar re-registro automático en la lista activa de celulares.
+  const isDeletedByAdmin = !!(tombstones.deletedDevices && (tombstones.deletedDevices[cleanHwid] || tombstones.deletedDevices[hwid]));
+  const isExcludedByAdmin = !!(tombstones[cleanHwid] || tombstones[hwid]);
+  const isRevokedByAdmin = !!(isDeletedByAdmin || (isExcludedByAdmin && (tombstones[cleanHwid] || tombstones[hwid]).blocked !== false));
+  const effectiveLicenseKey = (licenseKey || '').trim().toUpperCase();
+  const isKeyRevoked = !!(effectiveLicenseKey && tombstones.revokedKeys && tombstones.revokedKeys[effectiveLicenseKey]);
+  const _telAuthHeader = (req.headers && req.headers['authorization']) || '';
+  const _telToken = _telAuthHeader.replace(/^Bearer\s+/i, '').trim();
+  const _telAdminKey = (req.headers && req.headers['x-admin-key']) || '';
+  const canAssociateIdentity = (_telToken && !!(typeof verifySessionToken === 'function' && verifySessionToken(_telToken))) || (typeof isValidAdminKey === 'function' && isValidAdminKey(_telAdminKey));
+
+  if (isDeletedByAdmin || isExcludedByAdmin) {
+    const excReason = (tombstones[cleanHwid]?.reason) || (tombstones[hwid]?.reason) || 'Dispositivo excluido del registro por el administrador.';
+    return res.json({
+      success: true,
+      hwid: cleanHwid,
+      mode: 'DEMO',
+      blocked: true,
+      forceDemo: true,
+      blockReason: excReason,
+      isDeleted: true,
+      updateInfo: {
+        latestVersion: settings.latestVersion || '1.0.0',
+        versionCode: settings.versionCode || 1,
+        forceUpdate: !!settings.forceUpdate,
+        apkUrl: settings.latestApkUrl || ''
+      }
+    });
+  }
 
   // [H04-B FIX] Asociar identidad de usuario SOLO si hay sesión autenticada válida.
   // Un ping sin token solo actualiza estado del dispositivo; no crea ni modifica users.json.
@@ -9200,8 +9369,6 @@ app.post('/api/telemetry/ping', async (req, res) => {
   }
 
   const isAutoBlocked = settings.whitelistOnly;
-  let effectiveLicenseKey = (licenseKey || '').trim().toUpperCase();
-  const isKeyRevoked = !!(effectiveLicenseKey && tombstones.revokedKeys && tombstones.revokedKeys[effectiveLicenseKey]);
 
   // Server-side authoritative check: El modo PRO solo puede ser otorgado por el servidor/administrador
   // Jamás se promueve a PRO mediante auto-activación matemática en telemetría pública
@@ -10268,6 +10435,10 @@ app.get('/api/auth/oauth/google', (req, res) => {
 // Callback receptor de autorización de Google OAuth
 app.get('/api/auth/oauth/google/callback', async (req, res) => {
   try {
+    if (typeof syncCloudStorage === 'function') {
+      await syncCloudStorage(true);
+    }
+
     if (!isGoogleOAuthEnabled) {
       return res.status(503).send(renderActivationHtmlPage({
         success: false,
@@ -10384,6 +10555,7 @@ app.get('/api/auth/oauth/google/callback', async (req, res) => {
           lastSeen: new Date().toISOString(),
           ip: clientIp,
           mode: 'DEMO',
+          currentUser: cleanEmail,
           expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
           expireReason: 'new_registration',
           authRevision: 1,
@@ -10394,11 +10566,17 @@ app.get('/api/auth/oauth/google/callback', async (req, res) => {
       } else {
         dev.lastSeen = new Date().toISOString();
         dev.ip = clientIp;
-        saveDevices(devices, { skipCloudWrite: true });
+        if (!dev.currentUser) dev.currentUser = cleanEmail;
+        saveDevices(devices);
       }
     }
 
     addAuditLog('GOOGLE_LOGIN_SUCCESS', clientHwid || 'OAUTH', clientIp, `Acceso exitoso con Google: ${user.username} (${cleanEmail})`);
+
+    // Garantizar que la base de datos distribuida en la nube persista antes de devolver la respuesta
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
 
     const token = generateSessionToken(user.email, user.role || 'USER', clientHwid || 'GOOGLE_APP');
     const deepLink = `mumanager://oauth-callback?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}&username=${encodeURIComponent(user.username)}`;
@@ -10557,6 +10735,19 @@ app.post('/api/auth/validate-session', (req, res) => {
       const tokenSv = typeof decoded.sessionVersion === 'number' ? decoded.sessionVersion : 1;
       if (tokenSv < userSv) {
         return res.status(401).json({ success: false, valid: false, error: 'SESION_EXPIRADA_O_REVOCADA' });
+      }
+    }
+
+    const effectiveHwid = clientHwid || tokenHwid;
+    if (effectiveHwid && decoded.sub && decoded.sub !== 'demo@muonline.local') {
+      const cleanSub = String(decoded.sub).toLowerCase().trim();
+      const devices = loadDevices();
+      if (devices[effectiveHwid]) {
+        if (!devices[effectiveHwid].currentUser || devices[effectiveHwid].currentUser !== cleanSub) {
+          devices[effectiveHwid].currentUser = cleanSub;
+          devices[effectiveHwid].lastSeen = new Date().toISOString();
+          saveDevices(devices);
+        }
       }
     }
 
@@ -10910,6 +11101,43 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
   user.activeSessionAt = new Date().toISOString();
   saveUsers(users);
 
+  if (cleanHwid) {
+    const userAccountIdentifier = (user.email || user.username || cleanIdentifier || '').trim();
+    if (devices[cleanHwid]) {
+      devices[cleanHwid].currentUser = userAccountIdentifier;
+      devices[cleanHwid].lastSeen = new Date().toISOString();
+      saveDevices(devices);
+    } else {
+      devices[cleanHwid] = {
+        hwid: cleanHwid,
+        mode: 'DEMO',
+        licenseKey: '',
+        firstSeen: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        totalPings: 1,
+        ip: clientIp,
+        platform: 'Android',
+        appVersion: '1.0.0',
+        blocked: false,
+        blockReason: '',
+        note: '',
+        currentUser: userAccountIdentifier,
+        expiresAt: new Date(Date.now() + 72 * 3600000).toISOString(),
+        isLifetime: false,
+        isEmulator: false,
+        deviceModel: '',
+        deviceBrand: '',
+        demoExtendedHours: 0,
+        isTest: false,
+        forceDemo: false,
+        authRevision: 1,
+        authUpdatedAt: Date.now(),
+        authAction: 'LOGIN_REGISTER'
+      };
+      saveDevices(devices);
+    }
+  }
+
   const token = generateSessionToken(user.email, user.role || 'USER', cleanHwid);
   addAuditLog('USER_LOGIN', cleanHwid, clientIp, `Inicio de sesión: ${user.email}`);
 
@@ -10919,6 +11147,63 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
     token,
     user: { email: user.email, username: user.username }
   });
+});
+
+// Cierre de sesión voluntario desde el dispositivo (Logout)
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    const { hwid, email, username } = req.body || {};
+    const cleanHwid = hwid ? String(hwid).trim().toUpperCase() : '';
+    const cleanEmail = (email || username || '').trim().toLowerCase();
+    const clientIp = getClientIp(req);
+    let changed = false;
+
+    if (cleanHwid) {
+      const devices = loadDevices();
+      if (devices[cleanHwid]) {
+        devices[cleanHwid].currentUser = '';
+        devices[cleanHwid].lastSeen = new Date().toISOString();
+        saveDevices(devices);
+        changed = true;
+      }
+    }
+
+    const users = loadUsers();
+    let usersChanged = false;
+    users.forEach(u => {
+      const matchesHwid = cleanHwid && (
+        (u.activeHwid && u.activeHwid.toUpperCase() === cleanHwid) ||
+        (u.hwid && u.hwid.toUpperCase() === cleanHwid)
+      );
+      const matchesEmail = cleanEmail && (
+        (u.email && u.email.toLowerCase() === cleanEmail) ||
+        (u.username && u.username.toLowerCase() === cleanEmail)
+      );
+      if (matchesHwid || matchesEmail) {
+        u.activeHwid = null;
+        u.activeSessionAt = null;
+        u.sessionVersion = (typeof u.sessionVersion === 'number' ? u.sessionVersion : 1) + 1;
+        usersChanged = true;
+      }
+    });
+
+    if (usersChanged) {
+      saveUsers(users);
+    }
+
+    if (changed || usersChanged) {
+      if (typeof flushCloudWrites === 'function') {
+        await flushCloudWrites();
+      }
+    }
+
+    addAuditLog('USER_LOGOUT', cleanHwid || 'DESCONOCIDO', clientIp, `Cierre de sesión: ${cleanEmail || cleanHwid || 'Dispositivo desvinculado'}`);
+
+    return res.json({ success: true, message: 'Sesión cerrada correctamente' });
+  } catch (err) {
+    console.error('[AUTH LOGOUT ERROR]', err);
+    return res.status(500).json({ success: false, error: 'Error interno al cerrar sesión' });
+  }
 });
 
 // ==========================================
@@ -11441,10 +11726,14 @@ app.get('/api/admin/storage/status', async (req, res) => {
 });
 
 // Purgar dispositivos inactivos o de prueba
-app.post('/api/admin/devices/purge-inactive', (req, res) => {
+app.post('/api/admin/devices/purge-inactive', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
+  }
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
   }
 
   const { days = 7, purgeTests = false } = req.body;
@@ -11453,6 +11742,7 @@ app.post('/api/admin/devices/purge-inactive', (req, res) => {
 
   const devices = loadDevices();
   const tombstones = loadTombstones();
+  tombstones.deletedDevices = tombstones.deletedDevices || {};
   const purgedHwids = [];
 
   for (const [hwid, dev] of Object.entries(devices)) {
@@ -11463,11 +11753,16 @@ app.post('/api/admin/devices/purge-inactive', (req, res) => {
     if (isTest || isInactive) {
       delete devices[hwid];
       purgedHwids.push(hwid);
+      tombstones.deletedDevices[String(hwid).toUpperCase()] = Date.now();
     }
   }
 
   if (purgedHwids.length > 0) {
     saveDevices(devices);
+    saveTombstones(tombstones);
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
     addAuditLog('PURGE_INACTIVE', 'ADMIN', getClientIp(req), `Purga ejecutada: ${purgedHwids.length} registros limpiados (${purgedHwids.join(', ')})`);
   }
 
@@ -11755,7 +12050,7 @@ app.post('/api/admin/user/reset-password', async (req, res) => {
 });
 
 // Cambiar rol de usuario desde el panel
-app.post('/api/admin/user/change-role', (req, res) => {
+app.post('/api/admin/user/change-role', async (req, res) => {
   const { id, email, role } = req.body;
   const users = loadUsers();
   const user = users.find(u => (id && u.id === id) || (email && u.email.toLowerCase() === String(email).toLowerCase()));
@@ -11763,12 +12058,15 @@ app.post('/api/admin/user/change-role', (req, res) => {
 
   user.role = role === 'ADMIN' ? 'ADMIN' : 'USER';
   saveUsers(users);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
   addAuditLog('USER_ROLE_CHANGED', user.hwid || 'PANEL', req.socket.remoteAddress || '127.0.0.1', `Rol de ${user.email} cambiado a ${user.role}`);
   res.json({ success: true, role: user.role, message: `Rol actualizado a ${user.role}` });
 });
 
 // Bloquear / Desbloquear usuario desde el panel
-app.post('/api/admin/user/toggle-block', (req, res) => {
+app.post('/api/admin/user/toggle-block', async (req, res) => {
   const { id, email } = req.body;
   const users = loadUsers();
   const user = users.find(u => (id && u.id === id) || (email && u.email.toLowerCase() === String(email).toLowerCase()));
@@ -11776,6 +12074,9 @@ app.post('/api/admin/user/toggle-block', (req, res) => {
 
   user.status = user.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED';
   saveUsers(users);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
   addAuditLog(user.status === 'BLOCKED' ? 'USER_BLOCKED' : 'USER_UNBLOCKED', user.hwid, clientIp, `Usuario ${user.status}: ${user.email}`);
@@ -11784,7 +12085,7 @@ app.post('/api/admin/user/toggle-block', (req, res) => {
 });
 
 // Eliminar usuario desde el panel con registro de revocación (Tombstone)
-app.post('/api/admin/user/delete', (req, res) => {
+app.post('/api/admin/user/delete', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
@@ -11793,6 +12094,10 @@ app.post('/api/admin/user/delete', (req, res) => {
   const { id, email } = req.body;
   if (!id && !email) {
     return res.status(400).json({ success: false, error: 'ID o Email de usuario requerido para eliminar.' });
+  }
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
   }
 
   let users = loadUsers();
@@ -11844,6 +12149,10 @@ app.post('/api/admin/user/delete', (req, res) => {
   }
   if (devicesChanged) {
     saveDevices(devices);
+  }
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
   }
 
   addAuditLog('USER_DELETED', (targetUser && targetUser.hwid) || 'PANEL', getClientIp(req), `Cuenta de usuario eliminada permanentemente: ${targetEmail || targetId}`);
@@ -12176,9 +12485,12 @@ app.post('/api/admin/change-key', (req, res) => {
 });
 
 // Limpiar Registro de Auditoría
-app.post('/api/admin/logs/clear', (req, res) => {
+app.post('/api/admin/logs/clear', async (req, res) => {
   auditLogs.length = 0;
   addAuditLog('LOGS_CLEARED', 'PANEL', req.socket.remoteAddress || '127.0.0.1', 'Registro de auditoría limpiado por el administrador');
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
   res.json({ success: true, message: 'Logs limpiados con éxito.' });
 });
 
@@ -12189,6 +12501,25 @@ app.get('/api/admin/devices', async (req, res) => {
   }
   const devices = loadDevices();
   let modified = false;
+  const users = loadUsers();
+
+  // Reconciliación proactiva: Si dev.currentUser está vacío o ausente, autovincular con el usuario de users.json
+  Object.values(devices).forEach(dev => {
+    if (!dev.currentUser || String(dev.currentUser).trim() === '') {
+      const devHwidUpper = String(dev.hwid || '').toUpperCase();
+      const linkedUser = users.find(u =>
+        u && u.status !== 'DELETED' && (
+          (u.activeHwid && String(u.activeHwid).toUpperCase() === devHwidUpper) ||
+          (u.hwid && String(u.hwid).toUpperCase() === devHwidUpper && u.status === 'ACTIVE')
+        )
+      );
+      if (linkedUser) {
+        dev.currentUser = (linkedUser.email || linkedUser.username || '').toLowerCase().trim();
+        modified = true;
+      }
+    }
+  });
+
   const now = new Date();
   const nowMs = Date.now();
   const list = Object.values(devices).map(dev => {
@@ -12418,61 +12749,72 @@ app.post('/api/admin/device/update-note', async (req, res) => {
   res.json({ success: true, hwid, note: devices[hwid].note });
 });
 
-// Eliminar dispositivo del registro para limpieza (sin bloquear el celular)
-app.post('/api/admin/device/delete', (req, res) => {
+// Eliminar dispositivo del registro y enviarlo a la lista de exclusión (Tombstones)
+app.post('/api/admin/device/delete', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
   }
 
-  const { hwid } = req.body;
+  const { hwid, exclude } = req.body;
   if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
   const cleanHwid = String(hwid).trim().toUpperCase();
-  const devices = loadDevices();
-  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || hwid;
 
-  if (!devices[targetKey]) {
-    // Si ya no está en devices, limpiar cualquier tombstone residual
-    const tombstones = loadTombstones();
-    if (tombstones[cleanHwid] || tombstones[hwid] || tombstones[targetKey]) {
-      delete tombstones[cleanHwid];
-      delete tombstones[hwid];
-      delete tombstones[targetKey];
-      saveTombstones(tombstones);
-    }
-    return res.json({ success: true, hwid: cleanHwid, message: 'El dispositivo no se encontraba activo o ya fue limpiado del sistema.' });
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
   }
 
-  // Limpiar de la lista de dispositivos activos
-  delete devices[targetKey];
+  const devices = loadDevices();
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || hwid;
+  const targetDev = devices[targetKey] || devices[cleanHwid];
+
+  const tombstones = loadTombstones();
+  tombstones.deletedDevices = tombstones.deletedDevices || {};
+  tombstones.deletedDevices[cleanHwid] = Date.now();
+  tombstones._deletedTombstones = tombstones._deletedTombstones || {};
+
+  // Al eliminar un celular del panel, pasa a la lista de excluidos (tombstones)
+  // para evitar que los pings automáticos de la APK vuelvan a crearlo en la lista activa
+  if (exclude !== false) {
+    const oldKey = targetDev ? (targetDev.licenseKey || targetDev.generatedKey) : '';
+    if (!tombstones.revokedKeys) tombstones.revokedKeys = {};
+    if (oldKey) {
+      tombstones.revokedKeys[oldKey] = {
+        revokedAt: new Date().toISOString(),
+        hwid: cleanHwid,
+        reason: 'Licencia revocada por eliminación del panel'
+      };
+    }
+    tombstones[cleanHwid] = {
+      deletedAt: new Date().toISOString(),
+      revokedKey: oldKey || '',
+      previousModel: targetDev ? (targetDev.deviceModel || targetDev.platform || 'N/A') : 'N/A',
+      previousUser: targetDev ? (targetDev.currentUser || 'N/A') : 'N/A',
+      reason: req.body.reason || 'Eliminado del panel por el administrador'
+    };
+    delete tombstones._deletedTombstones[cleanHwid];
+  } else {
+    tombstones._deletedTombstones[cleanHwid] = Date.now();
+    delete tombstones[cleanHwid];
+    delete tombstones[hwid];
+    delete tombstones[targetKey];
+  }
+  saveTombstones(tombstones);
+
+  if (devices[targetKey]) delete devices[targetKey];
   if (devices[cleanHwid]) delete devices[cleanHwid];
   saveDevices(devices);
 
-  // Limpiar cualquier tombstone previo si existía, garantizando que el celular NO quede bloqueado
-  const tombstones = loadTombstones();
-  let tombstonesChanged = false;
-  if (tombstones[cleanHwid]) {
-    delete tombstones[cleanHwid];
-    tombstonesChanged = true;
-  }
-  if (tombstones[hwid]) {
-    delete tombstones[hwid];
-    tombstonesChanged = true;
-  }
-  if (tombstones[targetKey]) {
-    delete tombstones[targetKey];
-    tombstonesChanged = true;
-  }
-  if (tombstonesChanged) {
-    saveTombstones(tombstones);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
   }
 
-  addAuditLog('DEVICE_CLEARED', cleanHwid, 'N/A', 'Registro de dispositivo eliminado para limpieza (sin bloqueo).');
-  res.json({ success: true, hwid: cleanHwid, message: 'Registro de celular limpiado exitosamente. El dispositivo no ha sido bloqueado.' });
+  addAuditLog('DEVICE_CLEARED', cleanHwid, getClientIp(req), 'Registro de celular eliminado y movido a la lista de exclusión.');
+  res.json({ success: true, hwid: cleanHwid, message: 'Registro de celular eliminado con éxito y movido a exclusión.' });
 });
 
 // Eliminar un registro específico de la lista de exclusión (Tombstones) sin bloquear el celular
-app.post('/api/admin/tombstone/delete', (req, res) => {
+app.post('/api/admin/tombstone/delete', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
@@ -12481,39 +12823,66 @@ app.post('/api/admin/tombstone/delete', (req, res) => {
   const { hwid } = req.body;
   if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
   const cleanHwid = String(hwid).trim().toUpperCase();
-  const tombstones = loadTombstones();
 
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
+  const tombstones = loadTombstones();
+  tombstones._deletedTombstones = tombstones._deletedTombstones || {};
+  tombstones._deletedTombstones[cleanHwid] = Date.now();
+
+  // Borrado exhaustivo case-insensitive de cualquier key que coincida
+  for (const k of Object.keys(tombstones)) {
+    if (k.toUpperCase() === cleanHwid) {
+      delete tombstones[k];
+    }
+  }
   delete tombstones[cleanHwid];
   delete tombstones[hwid];
   saveTombstones(tombstones);
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
 
   addAuditLog('TOMBSTONE_DELETED', cleanHwid, getClientIp(req), `Registro de exclusión eliminado: ${cleanHwid} (sin bloqueo).`);
   res.json({ success: true, hwid: cleanHwid, message: 'Registro de exclusión eliminado con éxito. El celular no está bloqueado.' });
 });
 
 // Vaciar todo el historial de dispositivos excluidos (Tombstones)
-app.post('/api/admin/tombstones/clear-all', (req, res) => {
+app.post('/api/admin/tombstones/clear-all', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
   }
 
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
   const tombstones = loadTombstones();
+  tombstones._deletedTombstones = tombstones._deletedTombstones || {};
   let clearedCount = 0;
   for (const key of Object.keys(tombstones)) {
-    if (key !== 'revokedKeys' && key !== 'deletedUsers' && !key.startsWith('_')) {
+    if (key !== 'revokedKeys' && key !== 'deletedUsers' && key !== 'deletedDevices' && !key.startsWith('_')) {
+      tombstones._deletedTombstones[key.toUpperCase()] = Date.now();
       delete tombstones[key];
       clearedCount++;
     }
   }
   saveTombstones(tombstones);
 
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
+
   addAuditLog('TOMBSTONES_CLEARED_ALL', 'ADMIN', getClientIp(req), `Historial de exclusión vaciado: ${clearedCount} registros eliminados.`);
   res.json({ success: true, clearedCount, message: `Se limpiaron ${clearedCount} registros del historial de exclusión con éxito.` });
 });
 
 // Restaurar dispositivo excluido / remover de la lista negra de tombstones
-app.post('/api/admin/device/unexclude', (req, res) => {
+app.post('/api/admin/device/unexclude', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado' });
@@ -12522,12 +12891,34 @@ app.post('/api/admin/device/unexclude', (req, res) => {
   const { hwid } = req.body;
   if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
   const cleanHwid = String(hwid).trim().toUpperCase();
-  const tombstones = loadTombstones();
-  if (!tombstones[cleanHwid] && !tombstones[hwid]) {
-    return res.status(404).json({ success: false, error: 'Dispositivo no encontrado en la lista de exclusión' });
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
   }
 
+  const tombstones = loadTombstones();
+  tombstones._deletedTombstones = tombstones._deletedTombstones || {};
+  tombstones._deletedTombstones[cleanHwid] = Date.now();
+
+  for (const k of Object.keys(tombstones)) {
+    if (k.toUpperCase() === cleanHwid) {
+      delete tombstones[k];
+    }
+  }
+  delete tombstones[cleanHwid];
+  delete tombstones[hwid];
+  if (tombstones.deletedDevices) {
+    delete tombstones.deletedDevices[cleanHwid];
+    delete tombstones.deletedDevices[hwid];
+  }
+  saveTombstones(tombstones);
+
   if (typeof revokeAllImpediments === 'function') revokeAllImpediments(cleanHwid);
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
+
   addAuditLog('DEVICE_UNEXCLUDED', cleanHwid, getClientIp(req), 'Dispositivo restaurado de la lista de exclusión.');
   res.json({ success: true, hwid: cleanHwid, message: 'Dispositivo restaurado con éxito. Ahora podrá volver a conectarse.' });
 });
@@ -12554,7 +12945,7 @@ app.get('/api/admin/licenses', async (req, res) => {
     // Excluir también si el HWID está directamente en tombstones (dispositivo eliminado/degradado)
     const isHwidTombstoned = !!(dev.hwid && tombstones[dev.hwid] && 
       typeof tombstones[dev.hwid] === 'object' &&
-      dev.hwid !== 'deletedUsers' && dev.hwid !== 'revokedKeys');
+      dev.hwid !== 'deletedUsers' && dev.hwid !== 'revokedKeys' && dev.hwid !== 'deletedDevices');
     // Solo listar si está en modo PRO activo, su clave no fue revocada, y su HWID no está en tombstones
     if (dev.mode === 'PRO' && !isRevokedKey && !isHwidTombstoned) {
       const isLifetime = !!(dev.mode === 'PRO' && dev.isLifetime === true && !dev.expiresAt);
@@ -12589,7 +12980,8 @@ app.get('/api/admin/licenses', async (req, res) => {
   // Dispositivos Excluidos (Tombstones)
   const excludedDevices = [];
   for (const [hwid, data] of Object.entries(tombstones)) {
-    if (hwid === 'deletedUsers' || hwid === 'revokedKeys' || hwid.startsWith('_')) continue;
+    if (hwid === 'deletedUsers' || hwid === 'revokedKeys' || hwid === 'deletedDevices' || hwid.startsWith('_')) continue;
+    if (!data || typeof data !== 'object') continue;
     excludedDevices.push({
       hwid,
       deletedAt: data.deletedAt || 'N/A',
@@ -12653,10 +13045,14 @@ app.get('/api/admin/licenses', async (req, res) => {
 });
 
 // Eliminar y revocar permanentemente una licencia emitida
-app.post('/api/admin/license/delete', (req, res) => {
+app.post('/api/admin/license/delete', async (req, res) => {
   const { hwid, licenseKey } = req.body || {};
   if (!hwid && !licenseKey) {
     return res.status(400).json({ success: false, error: 'HWID o licenseKey requerido' });
+  }
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
   }
 
   const tombstones = loadTombstones();
@@ -12683,6 +13079,10 @@ app.post('/api/admin/license/delete', (req, res) => {
     devices[targetHwid].expiresAt = null;
     devices[targetHwid].isLifetime = false;
     saveDevices(devices);
+  }
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
   }
 
   addAuditLog('LICENSE_DELETED', targetHwid || 'N/A', getClientIp(req), `Licencia revocada y eliminada permanentemente: ${targetKey || 'N/A'}`);
@@ -13116,17 +13516,18 @@ app.post('/api/admin/device/extend-demo', async (req, res) => {
 });
 
 // 2. Forzar Cierre de Sesión / Desvincular Cuenta de Celular
-app.post('/api/admin/device/invalidate-session', (req, res) => {
+app.post('/api/admin/device/invalidate-session', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
   const { hwid, email } = req.body || {};
+  const cleanHwid = hwid ? String(hwid).trim().toUpperCase() : '';
   const users = loadUsers();
   let found = false;
 
   users.forEach(u => {
-    if ((email && u.email && u.email.toLowerCase() === String(email).toLowerCase()) || (hwid && u.activeHwid === hwid)) {
+    if ((email && u.email && u.email.toLowerCase() === String(email).toLowerCase()) || (cleanHwid && u.activeHwid === cleanHwid)) {
       u.activeHwid = null;
       u.activeSessionAt = null;
       u.sessionVersion = (typeof u.sessionVersion === 'number' ? u.sessionVersion : 1) + 1;
@@ -13134,7 +13535,22 @@ app.post('/api/admin/device/invalidate-session', (req, res) => {
     }
   });
 
-  if (found) saveUsers(users);
+  if (found) {
+    saveUsers(users);
+  }
+
+  if (cleanHwid) {
+    const devices = loadDevices();
+    if (devices[cleanHwid]) {
+      devices[cleanHwid].currentUser = '';
+      devices[cleanHwid].lastSeen = new Date().toISOString();
+      saveDevices(devices);
+    }
+  }
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
   addAuditLog('SESSION_INVALIDATED', hwid || 'N/A', clientIp, `Sesión forzosamente cerrada por Admin para ${email || hwid}`);
@@ -13205,7 +13621,7 @@ app.post('/api/license/request-pro', async (req, res) => {
 
   // Notificar al WhatsApp del Administrador inmediatamente
   sendWhatsAppAlert(
-    'tamper',
+    'proRequest',
     '⭐ NUEVA SOLICITUD DE LICENCIA PRO ⭐',
     `Cliente: ${newReq.name}\nWhatsApp: ${newReq.phone}\nEmail: ${newReq.email || 'N/A'}\nServidor: ${newReq.serverName || 'N/A'}\nHWID: ${newReq.hwid}\nNotas: ${newReq.notes || 'Sin notas adicionales'}`,
     hwidTrim,
@@ -13495,7 +13911,8 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
       tamper: events && events.tamper !== undefined ? !!events.tamper : true,
       sqlExploit: events && events.sqlExploit !== undefined ? !!events.sqlExploit : true,
       bruteForce: events && events.bruteForce !== undefined ? !!events.bruteForce : true,
-      deviceBlocked: events && events.deviceBlocked !== undefined ? !!events.deviceBlocked : true
+      deviceBlocked: events && events.deviceBlocked !== undefined ? !!events.deviceBlocked : true,
+      proRequest: events && events.proRequest !== undefined ? !!events.proRequest : true
     }
   };
   saveSettings(settings);
@@ -13506,12 +13923,28 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
 // Enviar Alerta de Prueba a WhatsApp
 app.post('/api/admin/whatsapp/test', async (req, res) => {
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
+  const { phone, apiKey, provider, webhookUrl } = req.body || {};
+  let customWaConfig = null;
+  if (phone || apiKey || webhookUrl) {
+    const currentSettings = loadSettings();
+    const currentWa = currentSettings.whatsapp || DEFAULT_SETTINGS.whatsapp;
+    customWaConfig = {
+      ...currentWa,
+      enabled: true,
+      phone: phone ? String(phone).trim() : currentWa.phone,
+      apiKey: apiKey !== undefined ? String(apiKey).trim() : currentWa.apiKey,
+      provider: provider || currentWa.provider,
+      webhookUrl: webhookUrl !== undefined ? String(webhookUrl).trim() : currentWa.webhookUrl
+    };
+  }
+
   const result = await sendWhatsAppAlert(
-    'tamper',
+    'test',
     'PRUEBA DE SEGURIDAD WHATSAPP',
     'Esta es una alerta de prueba generada desde el Panel de Administración de Mu Manager PRO.',
     'TEST-DEVICE-CEL',
-    clientIp
+    clientIp,
+    customWaConfig
   );
   addAuditLog('WHATSAPP_TEST', 'ADMIN', clientIp, `Prueba de alerta WhatsApp ejecutada: ${result.success ? 'EXITOSA' : (result.error || result.reason || 'Completado')}`);
   res.json(result);
@@ -13925,7 +14358,7 @@ app.get('/api/items/image/:name', (req, res) => {
 });
 
 // Endpoint para alternar manualmente entre EMULADOR y CELULAR FÍSICO
-app.post('/api/admin/device/toggle-emulator', (req, res) => {
+app.post('/api/admin/device/toggle-emulator', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'NO_AUTORIZADO' });
@@ -13944,7 +14377,11 @@ app.post('/api/admin/device/toggle-emulator', (req, res) => {
     devices[hwid].deviceModel = 'Emulador PC';
   }
   saveDevices(devices);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
 
+  addAuditLog('DEVICE_EMULATOR_TOGGLED', hwid, getClientIp(req), `Dispositivo clasificado como: ${isEmulator ? 'EMULADOR' : 'CELULAR FÍSICO'}`);
   res.json({ success: true, hwid, isEmulator: !!isEmulator, message: 'Entorno actualizado correctamente' });
 });
 

@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.2.9",
+  "latestVersion": "2.3.0",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.2.9 (Build 131) - Cobertura 100% Texturas Nativas Ironforge, Zócalo Gótico Completo & Blindaje de Encabezados:\n• TEXTURAS NATIVAS MU AL 100%: Erradicación total de bordes lisos en chips de teletransporte rápido, selector de mapas, presets de premios, catálogo de sets rápidos, enlaces a módulos y gestión de clanes/GMs.\n• ZÓCALOS GÓTICOS BORDE A BORDE: Estiramiento completo al 100% de la base en modales de actualización, licencias, login y pantalla de PIN sin huecos laterales.\n• ENCABEZADOS BLINDADOS ANTI-APLASTAMIENTO: Corrección del header de personajes en móvil para evitar compresión de texto y solapamiento de badges.\n• MODAL DE NIVEL: Eliminación del bug de estiramiento en Yoga con alturas numéricas rígidas y textos en oro radiante #FEDF99.\n• SEGURIDAD Y ESTABILIDAD: Cero fugas de claves, Hermes Bytecode, R8/ProGuard y protección estricta anti-debug.",
+  "updateChangelog": "MuManager PRO v2.3.0 (Build 132) - Solución Global de Persistencia y Reconciliación Autoritativa:\n• PERSISTENCIA Y RECONCILIACIÓN EN NUBE: Erradicación del bucle de auto-resurrección en telemetría de celulares y prevención de duplicidad en sincronización con Upstash Redis.\n• HISTORIAL DE EXCLUSIONES (TOMBSTONES): Limpieza y vaciado de registros garantizados con consistencia inmediata en disco y nube persistente ante refrescos de página.\n• GESTIÓN DE SOLICITUDES PRO: Actualización reactiva y optimista en panel administrativo eliminando registros zombi.\n• BLINDAJE Y SEGURIDAD: 100% de suites de seguridad y arquitectura aprobadas, Hermes Bytecode y R8/ProGuard.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -28,7 +28,8 @@
       "tamper": true,
       "sqlExploit": true,
       "bruteForce": true,
-      "deviceBlocked": true
+      "deviceBlocked": true,
+      "proRequest": true
     }
   },
   "beta": {
@@ -57,15 +58,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.2.9 (Build 131)",
+  "updateTitle": "MuManager PRO v2.3.0 (Build 132)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 131,
+  "versionCode": 132,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.2.9 (Build 131) - Cobertura 100% Texturas Nativas Ironforge, Zócalo Gótico Completo & Blindaje de Encabezados:\n• TEXTURAS NATIVAS MU AL 100%: Erradicación total de bordes lisos en chips de teletransporte rápido, selector de mapas, presets de premios, catálogo de sets rápidos, enlaces a módulos y gestión de clanes/GMs.\n• ZÓCALOS GÓTICOS BORDE A BORDE: Estiramiento completo al 100% de la base en modales de actualización, licencias, login y pantalla de PIN sin huecos laterales.\n• ENCABEZADOS BLINDADOS ANTI-APLASTAMIENTO: Corrección del header de personajes en móvil para evitar compresión de texto y solapamiento de badges.\n• MODAL DE NIVEL: Eliminación del bug de estiramiento en Yoga con alturas numéricas rígidas y textos en oro radiante #FEDF99.\n• SEGURIDAD Y ESTABILIDAD: Cero fugas de claves, Hermes Bytecode, R8/ProGuard y protección estricta anti-debug.",
+  "releaseNotes": "MuManager PRO v2.3.0 (Build 132) - Solución Global de Persistencia y Reconciliación Autoritativa:\n• PERSISTENCIA Y RECONCILIACIÓN EN NUBE: Erradicación del bucle de auto-resurrección en telemetría de celulares y prevención de duplicidad en sincronización con Upstash Redis.\n• HISTORIAL DE EXCLUSIONES (TOMBSTONES): Limpieza y vaciado de registros garantizados con consistencia inmediata en disco y nube persistente ante refrescos de página.\n• GESTIÓN DE SOLICITUDES PRO: Actualización reactiva y optimista en panel administrativo eliminando registros zombi.\n• BLINDAJE Y SEGURIDAD: 100% de suites de seguridad y arquitectura aprobadas, Hermes Bytecode y R8/ProGuard.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.2.9",
-  "buildNumber": 131,
+  "appVersion": "2.3.0",
+  "buildNumber": 132,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -77,6 +78,6 @@
       "pass": ""
     }
   },
-  "version": "2.2.9",
-  "build": 131
+  "version": "2.3.0",
+  "build": 132
 }

@@ -1720,6 +1720,23 @@ export class SqlClient {
     }
   }
 
+  /**
+   * 11. Notificar al servidor el cierre de sesión voluntario en este dispositivo (Logout)
+   */
+  static async logoutDevice(hwid: string, email?: string): Promise<boolean> {
+    try {
+      const cleanHwid = (hwid || '').trim().toUpperCase();
+      if (!cleanHwid) return false;
+      const res = await this.sendSecureRequest('/api/auth/logout', {
+        hwid: cleanHwid,
+        email: (email || this.activeUserEmail || '').trim(),
+      }, 4000);
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
   // ==========================================
   // SUPER-HERRAMIENTAS (LOUIS S6)
   // ==========================================

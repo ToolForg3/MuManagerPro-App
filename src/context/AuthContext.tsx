@@ -186,7 +186,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setIsDemoSession(false);
             setUserEmail(storedEmail);
             setUserName(storedUser);
-            SqlClient.setActiveUser(storedUser || storedEmail);
+            SqlClient.setActiveUser(storedEmail || storedUser);
             setIsAuthenticated(true);
             SecurityService.getDeviceHwid().then(hwid => {
               const currentLicense = LicenseService.getStatus();
@@ -374,7 +374,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true);
       setUserName(resolvedUser);
       setUserEmail(resolvedEmail || resolvedUser);
-      SqlClient.setActiveUser(resolvedUser);
+      SqlClient.setActiveUser(resolvedEmail || resolvedUser);
       setRememberUser(remember);
       setRememberEmail(remember);
       setIsDemoSession(false);
@@ -424,7 +424,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true);
       setUserName(cleanUser);
       setUserEmail(cleanEmail || `${cleanUser}@muonline.local`);
-      SqlClient.setActiveUser(cleanUser);
+      SqlClient.setActiveUser(cleanEmail || cleanUser);
       setIsDemoSession(false);
       setIsDemoExpired(false);
 
@@ -673,6 +673,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
+    const priorUser = userEmail || userName;
     setIsAuthenticated(false);
     setUserEmail('');
     setUserName('');
@@ -681,6 +682,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     SqlClient.setActiveUser('');
     SqlClient.setSessionToken('');
     try {
+      const hwid = await SecurityService.getDeviceHwid().catch(() => '');
+      if (hwid) {
+        SqlClient.logoutDevice(hwid, priorUser).catch(() => {});
+      }
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
       await AsyncStorage.removeItem('@mumanager_auth_password');
       await AsyncStorage.removeItem(DEMO_SESSION_KEY);
@@ -699,6 +704,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     SqlClient.setActiveUser('');
     SqlClient.setSessionToken('');
     try {
+      const hwid = await SecurityService.getDeviceHwid().catch(() => '');
+      if (hwid) {
+        SqlClient.logoutDevice(hwid, 'Demo').catch(() => {});
+      }
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
       await AsyncStorage.removeItem(DEMO_SESSION_KEY);
       await AsyncStorage.removeItem(DEMO_START_TIME_KEY);
