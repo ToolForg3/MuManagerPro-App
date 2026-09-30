@@ -1,0 +1,295 @@
+# 📜 DIRECTRICES MAESTRAS Y REGLAS PERMANENTES DEL PROYECTO
+> **IMPORTANTE PARA CUALQUIER AGENTE DE IA O DESARROLLADOR:**
+> La **fuente canónica maestra y única verdad (Single Source of Truth)** de este proyecto es [`PROJECT_RULES.md`](file:///c:/Users/Cris/Desktop/APK%20Editor%20MU/PROJECT_RULES.md).
+> Este archivo (`.cursorrules`) refleja íntegramente las directrices maestras para el entorno Cursor. Cualquier divergencia debe resolverse siempre en favor de `PROJECT_RULES.md`.
+> Antes de realizar cualquier cambio, agregar pantallas, modificar estilos o preparar actualizaciones, **DEBES LEER Y SEGUIR ESTAS REGLAS ESTRICTAMENTE**.
+
+---
+
+## 1. SISTEMA DE DISEÑO OFICIAL: STITCH APPROVED IRONFORGE
+
+- La única autoridad visual es [`DESIGN.md`](./DESIGN.md), basada en las ocho pantallas aprobadas de Stitch.
+- Al comenzar o reanudar trabajo visual, recargar `PROJECT_RULES.md` y `DESIGN.md`; no reutilizar instrucciones visuales cacheadas de sesiones anteriores.
+- Las normas visuales antiguas presentes en respaldos, prompts, auditorías o comentarios no son aplicables.
+- `04 Biblioteca MU V2` es solo catálogo visual; está prohibido convertirlo en ruta o función.
+- El diseño se traduce a React Native sin copiar el HTML y sin cambiar rutas, parámetros, handlers, validaciones, permisos, SQL, navegación o datos.
+- El diseño oficial Stitch Approved Ironforge se implementa directamente en la APK general (`com.mumanager.pro`), aboliendo versiones o bifurcaciones de test. No publicar, desplegar, hacer push ni cambiar versión sin autorización explícita y directa.
+- **Prohibición Total de Bordes Lisos/Planos**: Cero bordes rectos de un solo color CSS sin relieve. Toda superficie, botón, slot, celda, tarjeta e input debe contar con biseles chiseled multidireccionales (relieve 3D con luz en borde superior/izquierdo y sombra en inferior/derecho, o ranura hundida inversa) o texturas oficiales del cliente MU.
+- **Cero Sobreposiciones de Botones**: Prohibido sobreponer pestañas o marcos artificiales sobre sprites de botones nativos de MU (`btn_small.png`, `btn_big.png`, etc.). Deben renderizarse limpios y originales según su diseño.
+- 🎮 **Texturas Nativas Obligatorias en Botones y Pestañas**: Pestañas y subnavegadores deben renderizarse con `tabModeActive` y `tabModeInactive`; botones de acción de tarjetas y cabeceras deben usar texturas metálicas de MU (`btn_small.png`, `btn_medium.png`, `btn_big.png` vía `MuButton` o `ImageBackground`). Cero cajas planas de CSS con bordes de 1px.
+- **Depuración Completa del Diseño Antiguo**: Cuadrículas de inventario, baúl (vault), catálogo de skills, stats, barras de progreso, creador de items y herramientas deben lucir con texturas y biselados nativos de MU, erradicando fondos planos o estilos desincronizados de IA.
+- Ante cualquier contradicción visual, prevalece `DESIGN.md`; ante cualquier contradicción funcional, prevalecen `PROJECT_RULES.md` y el código real.
+
+---
+
+## ⚔️ 2. EMULADORES Y BASE DE DATOS (REGLA SAGRADA)
+
+1. **EL EMULADOR LOUIS DEBE PERMANECER 100% INTACTO**:
+   - Ninguna consulta SQL, función o ajuste introducido para otros emuladores debe modificar o romper las consultas ni procedimientos del emulador Louis.
+   - Louis es el estándar principal del proyecto.
+
+2. **COMPATIBILIDAD DUAL LOUIS & MSPRO**:
+   - El emulador MSPro y Louis conviven armónicamente.
+   - Siempre que se consulten columnas o tablas exclusivas de MSPro (por ejemplo, `RuudToken` en `Character` o `AccountCharacter.ExtWarehouse`), se deben utilizar consultas SQL dinámicas o de detección segura (`COL_LENGTH`, `OBJECT_ID`, o `CASE WHEN`) para que jamás fallen en bases de datos Louis estándar.
+
+3. **INTEGRIDAD DE ESQUEMA Y ENTORNO PRODUCTIVO**:
+   - ❌ **Prohibición de DDL en Caliente**: Cero `ALTER TABLE`, `DROP`, `TRUNCATE` o mutaciones de esquema en tiempo de ejecución.
+   - ❌ **Cero Pruebas sobre Datos o Servicios Productivos**: Queda terminantemente prohibido ejecutar pruebas automatizadas o comandos destructivos contra bases de datos reales o servicios en producción.
+
+---
+
+## 📦 3. PROTOCOLO DE ACTUALIZACIÓN DE VERSIONES (6 ARCHIVOS OBLIGATORIOS)
+
+Cada vez que se suba una versión, **DEBES ACTUALIZAR SIMULTÁNEAMENTE ESTOS 6 ARCHIVOS**:
+1. **`package.json`**: `version: 'X.X.X'`
+2. **`src/constants/appVersion.ts`**: `APP_VERSION = ... || 'X.X.X';` y `APP_BUILD = ... || 'XX';`
+3. **`app.json`**: `expo.version = 'X.X.X'` y `expo.android.versionCode = XX`
+4. **`android/app/build.gradle`**: `versionCode XX` y `versionName 'X.X.X'`
+5. **`version.json`**: `version: 'X.X.X'`, `build: XX`, y `downloadUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/vX.X.X/MuManagerPro.apk'`
+6. **`data/settings.json` y `server/data/settings.json`**: `latestVersion: 'X.X.X'`, `versionCode: XX`, `latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/vX.X.X/MuManagerPro.apk'`
+
+---
+
+## 🚀 4. PIPELINE DE COMPILACIÓN Y DESPLIEGUE
+
+1. **Verificar tipado y pruebas**:
+   - `npm run ts:check` (0 errores de tipado)
+   - `npm run check:contrast` como control técnico; la autoridad de paleta es `DESIGN.md`.
+   - `npm test` (todas las pruebas pasan 100%)
+2. **Compilar el Release APK (Hermes Bytecode)**:
+   - `cd android && ./gradlew.bat assembleRelease`
+   - Genera el binario en: `android/app/build/outputs/apk/release/app-release.apk`
+3. **Condición Obligatoria de Autorización Explícita del Usuario para Publicar o Desplegar**:
+   - ⚠️ **PROHIBICIÓN TOTAL DE AUTO-PUBLICACIÓN**: Queda **TERMINANTEMENTE PROHIBIDO** ejecutar `node scripts/release-update.js`, realizar `git push`, desplegar a producción (Vercel/servidores) o sincronizar repositorios hermanos (`MuManagerPro-App`, `MuManagerPro-Gateway`) sin una orden explícita, directa e inequívoca del usuario en el turno actual ("publica", "despliega", "haz push", "lanza la actualización").
+   - Preparar una versión, compilar artefactos o ejecutar suites de pruebas **NO constituye autorización para publicar**. Todo binario y cambio permanece estrictamente local hasta recibir aprobación expresa.
+   - **Bloqueo Incondicional de Publicación**: Si existen defectos comprobados de severidad Crítica o Alta en seguridad, integridad de datos o flujos esenciales, queda estrictamente bloqueada cualquier recomendación o ejecución de publicación.
+4. **Ejecución del Pipeline (Exclusivamente tras Autorización Expresa)**:
+   - Una vez recibida la instrucción directa del usuario:
+     `node scripts/release-update.js`
+   - Copia a Escritorio, sincroniza repositorios `MuManagerPro-App` y `MuManagerPro-Gateway`, hace push a GitHub y actualiza la pasarela.
+
+---
+
+## 📱 5. ERGONOMÍA MÓVIL Y MODALES
+
+- Adaptación al viewport y áreas seguras, acciones siempre alcanzables y `ScrollView` con `nestedScrollEnabled` cuando sea necesario.
+- Tamaño y geometría visual proceden únicamente de `DESIGN.md`.
+
+---
+
+## 💎 6. SISTEMA DE SOCKETS SEASON 6
+
+- Implementado en `src/constants/socketCatalog.ts`.
+- Fórmula matemática: `Byte = OptionID + (Nivel - 1) * 50`.
+- Valores especiales: `0xFF` (inactivo), `0xFE` (ranura libre/gris).
+- Mapeo 100% idéntico a las bonificaciones del cliente oficial del juego.
+
+---
+
+## 🛡️ 7. DIRECTRICES DE SEGURIDAD, CRIPTOGRAFÍA Y ANTI-FUGA (REGLAS INQUEBRANTABLES)
+
+1. **PROHIBICIÓN TOTAL DE CREDENCIALES Y SALTS EN TEXTO PLANO**:
+   - ❌ **JAMÁS escribir contraseñas reales, tokens, app passwords, API keys o salts maestros** en archivos `.json`, `.js`, `.ts`, `.bat`, `.sql` o `.md`.
+   - 🔒 `MASTER_SECURITY_SALT`: En producción, el servidor **DEBE abortar con `process.exit(1)`** si la variable no existe.
+   - 🔒 El campo `"pass"` en `settings.json` **DEBE permanecer siempre vacío (`""`)**.
+   - 🔒 Los secretos JWT deben configurarse en producción vía `process.env.JWT_SECRET`.
+
+2. **PROTECCIÓN DE LA CLAVE ADMINISTRATIVA (`ADMIN_KEY`)**:
+   - ❌ **PROHIBIDO usar claves de administración por defecto conocidas**.
+   - 🔒 **Canal estricto**: La clave administrativa **SOLO se acepta mediante el header HTTP `X-Admin-Key`**. Queda **estrictamente prohibido aceptarla en el body de la petición (`req.body.adminKey`)**.
+
+3. **PROTECCIÓN DE DATOS DE USUARIOS Y TELEMETRÍA EN GIT**:
+   - ❌ **PROHIBIDO commitear o trackear en Git** (`git add`) cualquiera de estos archivos:
+     `data/users.json`, `data/devices.json`, `data/tombstones.json`, `data/securityLogs.json`, `data/proRequests.json`, `server/data/`, `*.bak`, `.env*`.
+
+4. **RATE LIMITING Y AUTORIZACIÓN**:
+   - 🔒 Rate limiter estricto en todos los endpoints `/api/auth/*` (máximo 5 intentos por ventana de 15 minutos por IP) con header `Retry-After`.
+
+5. **LONGITUD MÍNIMA DE CONTRASEÑAS**:
+   - 🔒 Mínimo **8 caracteres** para todas las operaciones (registro, cambio, reset por OTP).
+
+6. **CABECERAS DE SEGURIDAD Y HSTS**:
+   - 🔒 `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`.
+
+7. **PROHIBICIÓN ESTRICTA DE BACKDOORS O BYPASSES EN CLIENTE**:
+   - ❌ **PROHIBIDO introducir listas de bypass de usuario** (`isLocalTestUser`) o tokens simulados (`LOCAL_DEV_...`).
+
+8. **BLINDAJE DE CÓDIGOS OTP / 2FA EN LA API**:
+   - 🔒 En entornos de producción (`process.env.NODE_ENV === 'production'`), **los códigos de 6 dígitos NUNCA deben devolverse en el JSON (`devCode`)**.
+
+9. **AUTORIDAD EXCLUSIVA DEL SERVIDOR SOBRE SECRETOS MAESTROS**:
+   - 🔒 El secreto `MASTER_SECURITY_SALT` reside **exclusivamente en variables de entorno del servidor** (`process.env.MASTER_SECURITY_SALT`). Queda terminantemente prohibida la exigencia o práctica de distribuir el salt dentro del APK mediante ofuscación XOR (en `stringObfuscator.ts` o cualquier otro módulo), dado que la ofuscación en binarios cliente no protege un secreto distribuido. La validación, firma y autorización criptográfica es potestad exclusiva e inmutable del servidor.
+   - 🔒 **Firma Android sin secretos en archivos**: `mumanager-release.keystore`, contraseñas y alias privados no pueden aparecer en `gradle.properties`, `.env`, código, scripts, documentación, respaldos ni Git. Gradle release solo lee `RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS` y `RELEASE_KEY_PASSWORD` del entorno seguro de compilación y debe abortar si faltan.
+   - 🔒 Vercel solo administra secretos de backend; no asumir que proporciona secretos a Gradle local. Verificar el dashboard únicamente con autorización explícita.
+   - 🔒 Cualquier secreto hallado en claro es un incidente: bloquear publicación, no mostrarlo y requerir revocación/rotación por infraestructura antes de distribuir.
+   - 🔒 Google OAuth: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` llegan exclusivamente por variables de entorno del backend. No permitir valores fallback, fragmentos, concatenaciones ni clientes OAuth eliminados en código; producción aborta si falta cualquiera y desarrollo mantiene OAuth deshabilitado.
+   - 🔒 Antes de distribuir: escaneo sin secretos, sin `.env` ni source maps dentro del APK; R8/Hermes/ofuscación JS solo elevan el costo de ingeniería inversa y siempre requieren prueba real en dispositivo.
+
+10. **CUARENTENA OBLIGATORIA**:
+    - La carpeta `_SEGURIDAD_ARCHIVOS_ORIGINALES/` jamás debe incluirse en Git, `tsconfig.json` ni respaldos en la nube.
+
+---
+
+## ⚡ 8. REGLAS DE DESPLIEGUE EN VERCEL / NUBE Y COMPILACIÓN LOCAL (ANTI-CUOTAS)
+
+1. **PROHIBICIÓN ESTRICTA DE BINARIOS PESADOS EN REPOSITORIOS DE DESPLIEGUE**:
+   - ❌ **PROHIBIDO subir archivos `.apk`, `.aab`, `.zip` pesados a `MuManagerPro-Gateway` o Vercel**.
+   - `.vercelignore` debe excluir permanentemente binarios y descargas.
+2. **COMPILACIÓN LOCAL DE APK (ZERO CONSUMO DE NUBE / EAS)**:
+   - ✅ Utilizar `COMPILAR-APK-LOCAL.bat` para compilaciones ilimitadas y gratuitas.
+3. **GESTIÓN DE SECRETOS EN VERCEL**:
+   - 🔒 Secretos configurados exclusivamente en el panel de Vercel Environment Variables.
+4. **DISTRIBUCIÓN DE APKs VÍA GITHUB RELEASES / CDN**:
+   - Entrega a usuarios finales vía redirección HTTP 302 hacia GitHub Releases.
+5. **MANTENIMIENTO DE ALMACENAMIENTO EN VERCEL**:
+   - Depurar periódicamente despliegues históricos obsoletos para mantener cuotas óptimas.
+
+---
+
+## 📦 9. GESTIÓN DE REPOSITORIO DE APLICACIÓN (MuManagerPro-App) Y ACTUALIZACIONES
+
+1. **CANAL OFICIAL DE DESCARGAS Y ZERO SOBRECARGA EN GIT**:
+   - Mantener el repositorio ligero (< 100 MB).
+2. **PROTECCIÓN ESTRICTA DE PRIVACIDAD EN REPOSITORIO DE APP**:
+   - `data/users.json`, `data/devices.json` y `server/data/` permanentemente ignorados en `.gitignore`.
+3. **INTEGRIDAD DEL FLUJO DE ACTUALIZACIONES AUTOMÁTICAS**:
+   - Manifiesto canónico en `version.json` con `downloadUrl` apuntando a GitHub Releases.
+
+---
+
+## 🔑 10. SISTEMA DE LICENCIAS Y PANEL DE CONTROL (REGLAS INQUEBRANTABLES)
+
+1. **FORMATO CANÓNICO DE LICENCIAS**:
+   - Formato oficial: `MUMANAGER-[PLAN]-[SIG1]-[SIG2]-[SIG3]`.
+   - Firma SHA-256 de 12 caracteres hex.
+   - Verificación multinivel en servidor: firma canónica, claves pre-asignadas en Upstash Redis y claves históricas HMAC.
+
+2. **AUTORIDAD ABSOLUTA DEL SERVIDOR Y VERIFICACIÓN DE LICENCIAS EN TELEMETRÍA**:
+   - 🔒 **Autoridad Estricta del Servidor**: La condición de licencia `PRO` y los permisos asociados dependen exclusivamente de la autorización registrada y validada en el servidor (Upstash Redis / `devices.json`).
+   - ❌ **Prohibición Total de Autoactivación por el Cliente**: Una clave matemáticamente válida enviada unilateralmente por el cliente (`verifyKey`) en `/api/telemetry/ping` **JAMÁS concede modo PRO ni desactiva el modo demo**. El servidor no confía en aserciones criptográficas emitidas por el cliente sin un registro de licencia previamente autorizado y asignado por el administrador.
+   - 🛡️ Si el cliente envía una clave no autorizada o ausente en el almacén central del servidor, el servidor deniega el estado PRO y ordena el saneamiento de la clave (`forceWipeKey: true`).
+   - 🔒 En el cliente APK (`licenseService.ts`), el borrado local de licencia en `AsyncStorage` solo debe ejecutarse si el servidor ordena explícitamente `forceWipeKey: true` o `forceDemo: true`.
+
+3. **ACCESO AUTORIZADO AL MODO DEMO (PRUEBA DE 72 HORAS)**:
+   - 🛡️ Middleware Zero-Trust permite a dispositivos en prueba activa (`isDemoActive`) acceder a consultas de datos estándar (`/api/accounts`, `/api/character`, `/api/warehouse`, `/api/guilds`, `/api/pk`, `/api/players`, `/api/items`, `/api/mu`).
+   - Rutas críticas de sistema (`/api/tools`, `/api/gm`, `/api/ip`, `/api/prizes`) permanecen exclusivas para licencias `PRO` o rol `ADMIN`.
+
+4. **SEGURIDAD DEL PANEL DE CONTROL Y RATE LIMITING ADMINISTRATIVO**:
+   - 🔒 Rate Limiting de 15 minutos ante 10 intentos fallidos en `/api/admin/*`.
+   - 🔒 Clave administrativa transmitida exclusivamente por cabecera `X-Admin-Key`.
+   - 🔒 `timingSafeEqual` para verificación de clave administrativa contra Vercel env y settings.
+
+---
+
+## ⏱️ 11. POLÍTICA DE ACCESO RÁPIDO DEMO (10 MIN HWID LOCK) Y PRESERVACIÓN PERMANENTE DE USUARIOS
+
+1. **ACCESO RÁPIDO DEMO DE 10 MINUTOS (BLOQUEO ESTRICTO POR HWID)**:
+   - 🛡️ Acceso de evaluación temporal sin registro por un lapso improrrogable de **10 minutos**.
+   - 🔒 **1 Único Uso por Dispositivo Físico (`HWID`)**: El servidor registra `quickDemoStartedAt`, `quickDemoExpiresAt`, y `quickDemoUsed: true`.
+   - 🚫 Intentos posteriores desde el mismo celular reciben inmediatamente **HTTP 403 `QUICK_DEMO_EXPIRED`**.
+
+2. **PRUEBA DE 72 HORAS PARA CUENTAS REGISTRADAS**:
+   - ✅ Todo usuario que completa el registro con correo y contraseña obtiene 72 horas completas de evaluación (`settings.demoDurationHours = 72`).
+
+3. **PRESERVACIÓN ABSOLUTA DE CUENTAS DE USUARIO (ZERO PURGAS)**:
+   - ❌ **TERMINANTEMENTE PROHIBIDO purgar, vaciar o truncar cuentas de usuarios registrados (`users.json` o Upstash Redis `mumanager:users`)** al expirar demos, reiniciar el servicio o ejecutar sincronizaciones.
+   - ❌ **Abolición de Banderas de Purga**: Banderas automáticas como `usersPurgedV168` están eliminadas y prohibidas.
+   - 🔒 Las cuentas registradas persisten de por vida. Solo el administrador puede dar de baja una cuenta específica mediante `DELETE /api/admin/users/:username`.
+
+4. **BLINDAJE DE CREDENCIALES EN CIERRE DE SESIÓN DEMO (`logoutDemo`)**:
+   - 🔒 Al expirar el demo rápido o salir voluntariamente del modo demo, el cliente móvil **DEBE ejecutar obligatoriamente `logoutDemo()`**.
+   - ❌ **PROHIBIDO invocar `logout(true)` en flujos demo**: Las credenciales saladas de la cuenta real guardadas en `SecureStorage` (`@mumanager_auth_pwhash`, `@mumanager_auth_user_saved`) no deben borrarse jamás por una sesión de demo, permitiendo al usuario volver a ingresar a su cuenta registrada sin tener que reescribir su clave.
+
+---
+
+## 🛡️ 12. SOLICITUDES DE PRUEBA PRO Y TELEMETRÍA FORENSE ANTI-ABUSO
+
+1. **ENDPOINT OFICIAL DE SOLICITUD PRO (`POST /api/license/request-pro`)**:
+   - 📋 La app móvil cuenta con un modal interactivo nativo donde el usuario solicita una prueba extendida PRO indicando su WhatsApp, correo y motivo.
+   - 🔒 La solicitud se vincula irrevocablemente al `HWID` y a la telemetría del dispositivo en `data/proRequests.json` (y Upstash Redis), impidiendo spam de solicitudes y auditando el estado `PENDING_REVIEW`.
+
+2. **TELEMETRÍA FORENSE DE DISPOSITIVOS**:
+   - 🔍 Toda conexión a la pasarela registra y preserva forensemente: `hwid`, `deviceBrand`, `deviceModel`, `isEmulator`, `clientIp` y `lastActiveAt`.
+   - 🔒 **Bloqueo Total de Mutaciones SQL en Modo Demo**: Cualquier intento de mutación SQL (`INSERT`, `UPDATE`, `DELETE`, procedimientos almacenados críticos) sin licencia PRO activa es interceptado por el middleware y denegado con **HTTP 403 `FUNCION_RESTRINGIDA_PRO`**.
+   - 🚨 **WAF y Anti-Explotación**: Intentos reiterados de violación de permisos o patrones de inyección conllevan baneo automático de IP por 24 horas y registro de evento de seguridad en `securityLogs.json`.
+
+---
+
+## 📐 13. PRINCIPIOS DE INGENIERÍA, CONTROL DE CALIDAD Y GESTIÓN DE CAMBIOS
+
+1. **CAMBIOS PEQUEÑOS, REVERSIBLES Y CON BASE IDENTIFICADA**:
+   - Toda intervención técnica debe ser modular, atómica y con alcance estrictamente acotado.
+   - Cada entrega debe documentar la línea base previa (hashes de commit, versiones o estado previo de archivos), los archivos modificados exactos, las limitaciones conocidas del cambio y un procedimiento paso a paso para la reversión (*rollback*).
+
+2. **REPRODUCCIÓN PREVIA Y PRUEBAS DE COMPORTAMIENTO**:
+   - **Antes**: Reproducir o aislar fehacientemente el defecto antes de aplicar cualquier modificación sobre el código.
+   - **Después**: Implementar y ejecutar pruebas de comportamiento (*behavioral assertions*) que certifiquen la solución del problema en escenarios dinámicos, no limitándose a validar que el código compile sin errores sintácticos.
+
+3. **PRUEBAS SOBRE CÓDIGO REAL Y AISLAMIENTO DE FALLOS DE ENTORNO**:
+   - Las pruebas deben ejecutarse directamente sobre los módulos y funciones reales del sistema (sin sustituir la lógica crítica con mocks artificiales triviales).
+   - Se deben diferenciar con precisión los fallos atribuibles a infraestructura o entorno local (puertos saturados, caídas transitorias de red, timeouts de sandbox) de fallos genuinos de lógica del software.
+
+4. **MODELO ZERO-TRUST EN DEMO, VINCULACIÓN TOKEN/HWID Y REVOCACIÓN EFECTIVA**:
+   - **Denegación Predeterminada (Default-Deny)**: Ante cualquier estado ambiguo, token malformado o ruta sin permisos explícitos, el sistema debe denegar el acceso (HTTP 401/403).
+   - **Vinculación Estricta Token/HWID**: Todo token emitido debe estar vinculado criptográficamente al identificador físico (`hwid`) del dispositivo (`req.body.hwid === token.hwid`). Si falta o hay discrepancia, se rechaza inmediatamente con HTTP 403 `HWID_MISMATCH`.
+   - **Revocación Inmediata y Efectiva**: El incremento de `sessionVersion` o el bloqueo administrativo de un usuario debe invalidar inmediatamente todos los tokens vigentes en circulación, sin depender de la expiración temporal cronológica del JWT.
+
+5. **IDEMPOTENCIA, CONCURRENCIA Y RESILIENCIA ANTE REINICIOS**:
+   - Toda operación de mutación sensible debe implementar claves de idempotencia gestionadas mediante una máquina de estados estricta (`PENDING` -> `COMPLETED`).
+   - **Aislamiento de Ámbito**: La unicidad de la clave debe aislarse a nivel de usuario, ruta y hash del payload (`user:path:bodyHash`) para evitar colisiones cruzadas o fuga de datos entre cuentas.
+   - **Políticas de Capacidad**: Los almacenes de idempotencia en memoria deben implementar límites de tamaño con políticas de desalojo que **NUNCA descarten claves en estado `PENDING`** (operaciones en vuelo).
+   - El sistema debe ser tolerante a concurrencia elevada (bloqueos atómicos de exclusión mutua) y reiniciar de forma segura sin dejar registros transaccionales corruptos o inconclusos.
+
+6. **INTEGRIDAD DE BASE DE DATOS Y ENTORNO PRODUCTIVO**:
+   - **Compatibilidad Dual Louis S6 & MSPro**: Louis S6 es el estándar de referencia inmutable. Las consultas deben ser dinámicas y utilizar introspección segura (`COL_LENGTH`, `OBJECT_ID`).
+   - ❌ **Prohibición de DDL en Caliente**: Cero `ALTER TABLE`, `DROP` o mutaciones de esquema en tiempo de ejecución.
+   - ❌ **Prohibición Estricta de Pruebas sobre Entornos Productivos**: Queda terminantemente prohibido ejecutar scripts de prueba, tests de carga o comandos de verificación destructivos contra bases de datos reales o servicios en producción. Las pruebas se ejecutan exclusivamente en bases de prueba aisladas o arneses de test locales.
+
+7. **VERIFICACIÓN DEL PANEL ADMINISTRATIVO DE EXTREMO A EXTREMO (E2E)**:
+   - Toda funcionalidad o ajuste en el panel de control administrativo debe auditarse verificando integralmente sus 5 fases:
+     1. *Acción*: Disparo correcto desde el control de la interfaz (botón, toggle, formulario).
+     2. *Autorización*: Validación estricta de credenciales en el backend (`X-Admin-Key` / JWT con rol ADMIN).
+     3. *Persistencia*: Confirmación de escritura atómica en almacenamiento (Upstash Redis / archivo JSON).
+     4. *Respuesta*: Emisión del código HTTP correspondiente y carga útil saneada sin exposición de secretos.
+     5. *Estado Visible*: Actualización reactiva inmediata en la interfaz sin requerir recarga forzada ni dejar estados desincronizados.
+
+8. **MEDICIONES DE DESEMPEÑO RIGUROSAS**:
+   - Al medir o reportar métricas de rendimiento, se debe distinguir taxativamente entre pruebas sintéticas locales (micro-benchmarks en memoria / sandbox) y métricas de desempeño en producción (latencia real de internet, cold starts de serverless, cuellos de botella de red y contención del pool de conexiones SQL).
+
+9. **VALIDACIÓN MULTINIVEL OBLIGATORIA**:
+   - Todo cambio debe superar satisfactoriamente:
+     1. Verificación de sintaxis y tipos estáticos: `npm run ts:check` (0 errores).
+     2. Verificación de reglas de contraste y accesibilidad visual: `npm run check:contrast`.
+     3. Suite completa de no-regresión: `npm test` (100% pruebas pasando).
+     4. Verificación funcional específica del componente modificado.
+
+10. **CRITERIOS DE CLASIFICACIÓN DE HALLAZGOS Y AUDITORÍA**:
+    - Todo informe de auditoría, verificación o checklist debe categorizar de manera explícita cada hallazgo en una de tres clasificaciones:
+      - `PASS`: Verificado y validado empíricamente de forma completa.
+      - `FAIL`: No cumple el estándar o presenta discrepancias demostrables.
+      - `NO VERIFICADO`: No pudo comprobarse por limitaciones del entorno o requiere validación bajo condiciones especiales no disponibles.
+
+11. **BLOQUEO INCONDICIONAL DE PUBLICACIÓN ANTE DEFECTOS CRÍTICOS O ALTOS**:
+    - Si se detecta un defecto comprobado de severidad Crítica o Alta que afecte la seguridad, la integridad de los datos o los flujos esenciales del sistema (autenticación, licenciamiento, transacciones SQL), queda **TERMINANTEMENTE BLOQUEADA cualquier recomendación o ejecución de publicación** hasta que dicho defecto esté 100% subsanado y validado.
+
+12. **PROHIBICIÓN DE DECLARAR SEGURIDAD TOTAL BASÁNDOSE EN PRUEBAS AUTOMÁTICAS**:
+    - Queda estrictamente prohibido emitir declaraciones de "seguridad absoluta", "cero vulnerabilidades" o "blindaje impenetrable" fundamentadas únicamente en el resultado exitoso de suites de pruebas automáticas. Las pruebas automáticas únicamente confirman el comportamiento ante los casos y vectores explícitamente programados, pero no garantizan la inexistencia de vectores de ataque imprevistos.
+
+---
+
+## 14. SISTEMA COMPARTIDO DE AVISOS Y DIÁLOGOS
+
+- Se conservan `GothicAlertManager`, `<GothicAlertContainer />`, `GothicAlert.installGlobal()` y la API compatible con `Alert.alert`.
+- El nombre `GothicAlert` es un identificador funcional; toda apariencia se rige por `DESIGN.md` y la pantalla aprobada `FINAL 12 Estados comunes`.
+- Se conservan variantes, textos, iconos, callbacks, cancelación, cola FIFO, idempotencia y apilamiento sobre otros modales.
+- `promptDemoAccess` mantiene sus cuatro acciones existentes sin pérdidas ni cambios semánticos.
+- Textos largos desplazables, adaptación a pantallas pequeñas y área táctil mínima de 44 dp.
+- Solo se exceptúan los diálogos de permisos controlados directamente por Android Runtime.
+
+---
+
+## 15. ALERTAS WHATSAPP, BLINDAJE WAF Y SESIONES DE DISPOSITIVOS
+
+- **Alertas WhatsApp (CallMeBot)**: Bot oficial exclusivo **`+34 684 728 023`** (`https://wa.me/34684728023`). Abolido el número revocado `+34 644 10 55 84`. Exige consentimiento opt-in (`I allow callmebot to send me messages`) y API Key personal vinculada al número. Pruebas desacopladas con reporte en vivo de errores remotos y paridad entre `bridgeServer.js`, `adminDashboard.html`, `MuManager-Connector` y `MuManagerPro-Gateway`.
+- **Blindaje WAF y Proxies Inversos**: Mandatorio `app.set('trust proxy', 1)` para resolver IPs reales desde `x-forwarded-for` / `x-real-ip`. Inmunidad estricta para loopback (`127.0.0.1`, `::1`, `localhost` jamás entran a `BANNED_IPS`). Desbloqueo y bypass automático con `X-Admin-Key` o `?adminKey=`.
+- **Sincronización y Cierre de Sesión Silencioso**: En login y validación de token se asocia `devices[hwid].currentUser`. `GET /api/admin/devices` reconcilia dispositivos sin usuario contra `users.json`. `POST /api/auth/logout` invocado por `sqlClient.logoutDevice()` limpia de inmediato `currentUser` y `activeHwid`. `adminDashboard.html` actualiza exclusivamente el nodo `.dev-user-text` in-situ sin parpadeos ni reconstrucción de filas.
