@@ -503,10 +503,6 @@ function dispatchWebhookAlert(wa, eventKey, title, details, hwid, ip, messageTex
     }
   });
 }
-  } catch (e) {
-    return { success: false, error: e.message };
-  }
-}
 
 function safeAtomicWriteJson(filePath, data) {
   try {
