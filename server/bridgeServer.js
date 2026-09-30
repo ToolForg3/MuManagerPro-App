@@ -2083,6 +2083,8 @@ app.use((req, res, next) => {
   if (
     req.path === '/' ||
     req.path === '/admin' ||
+    req.path === '/discord' ||
+    req.path === '/telegram' ||
     req.path.startsWith('/admin/') ||
     req.path.startsWith('/api/admin') ||
     req.path === '/api/ping' ||
