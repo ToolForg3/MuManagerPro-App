@@ -22,7 +22,7 @@
     "enabled": true,
     "channels": {
       "telegram": true,
-      "discord": false,
+      "discord": true,
       "callmebot": false,
       "webhook": false
     },
@@ -30,7 +30,7 @@
     "apiKey": "",
     "telegramBotToken": "",
     "telegramChatId": "5316576437",
-    "discordWebhookUrl": "",
+    "discordWebhookUrl": "https://discord.com/api/webhooks/1554963868160233584/DlPqfzVgKo19lvQUflIr_YO1zcZtmJZrgkdqBYRJOhXgWBJmatd8PbMbRguK4v2umXwc",
     "provider": "telegram",
     "webhookUrl": "",
     "events": {
@@ -39,7 +39,8 @@
       "bruteForce": true,
       "deviceBlocked": true,
       "proRequest": true
-    }
+    },
+    "panelDiscordWebhookUrl": "https://discord.com/api/webhooks/1554984680476901480/rskgSSL2kFZLGlyXAVUi5OMttpqLQ2RMq8ICRhXJxW75GlhTqp4szYwnkKv2i2zzApqX"
   },
   "beta": {
     "enabled": true,

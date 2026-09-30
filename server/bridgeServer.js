@@ -14273,6 +14273,15 @@ app.get('/', (req, res) => {
   res.send('<h1>Mu Manager PRO Gateway Activo</h1>');
 });
 
+// Redirecciones cortas de marca a canales oficiales (Vanity URLs)
+app.get('/discord', (req, res) => {
+  res.redirect(302, 'https://discord.gg/4YXguuBFV');
+});
+
+app.get('/telegram', (req, res) => {
+  res.redirect(302, 'https://t.me/ToolForg3');
+});
+
 // Dashboard Web de Monitoreo y Administración (Ruta Privada con Login Maestro)
 app.get('/admin', (req, res) => {
   const htmlPath = path.join(__dirname, 'adminDashboard.html');
