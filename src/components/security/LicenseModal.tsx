@@ -20,8 +20,9 @@ import { Panel, MuCornerOrnaments } from '../ui';
 import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { LicenseService, LicenseStatus } from '../../services/security/licenseService';
 import { RemoteConfigService, RemoteConfigState } from '../../services/security/remoteConfigService';
+import { SecurityService } from '../../services/security/securityService';
 import { SqlClient } from '../../services/database/sqlClient';
-import { APP_VERSION } from '../../constants/appVersion';
+import { APP_VERSION, DISCORD_URL, TELEGRAM_URL } from '../../constants/appVersion';
 
 interface LicenseModalProps {
   visible: boolean;
@@ -52,6 +53,20 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   useEffect(() => {
     const unsubLicense = LicenseService.subscribe(setStatus);
     const unsubConfig = RemoteConfigService.subscribe(setRemoteConfig);
+
+    // Refresco en tiempo real al abrir el modal para validar estado autoritativo con el servidor
+    SecurityService.getDeviceHwid().then((deviceHwid) => {
+      if (deviceHwid) {
+        const cur = LicenseService.getStatus();
+        SqlClient.sendTelemetryPing(deviceHwid, cur.plan || 'DEMO', cur.licenseKey)
+          .then((res) => {
+            RemoteConfigService.handleTelemetryPingResult(res);
+            LicenseService.handleTelemetryResponse(res, deviceHwid);
+          })
+          .catch(() => {});
+      }
+    }).catch(() => {});
+
     return () => {
       unsubLicense();
       unsubConfig();
@@ -88,48 +103,20 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
       await Clipboard.setStringAsync(status.hwid);
       Alert.alert(
         '¡Código Copiado!',
-        `El código de tu celular:\n\n${status.hwid}\n\nHa sido copiado al portapapeles. Pégalo en tu conversación de WhatsApp con el equipo de soporte.`
+        `El código de tu celular:\n\n${status.hwid}\n\nHa sido copiado al portapapeles. Pégalo en tu conversación de soporte con nuestro equipo.`
       );
     }
   };
 
-  const handleOpenWhatsApp = () => {
-    Alert.alert(
-      'Contacto por WhatsApp',
-      '¿Deseas incluir el identificador de tu dispositivo (HWID) en el mensaje para agilizar la activación de tu licencia?',
-      [
-        {
-          text: 'No incluir',
-          onPress: () => {
-            const text = 'Hola equipo MuManager PRO! Me gustaría consultar sobre la Licencia PRO.';
-            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-            Linking.openURL(url).catch(() => {
-              Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
-            });
-          },
-        },
-        {
-          text: 'Incluir HWID',
-          onPress: () => {
-            const hwidCode = status.hwid || 'N/A';
-            const text = `Hola equipo MuManager PRO! Me gustaría adquirir mi Licencia PRO para mi celular.\n\nID de Dispositivo: ${hwidCode}`;
-            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-            Linking.openURL(url).catch(() => {
-              Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
-            });
-          },
-        },
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-      ]
-    );
+  const handleOpenDiscord = () => {
+    Linking.openURL(DISCORD_URL).catch(() => {
+      Alert.alert('Discord', `Comunidad oficial de soporte: ${DISCORD_URL}`);
+    });
   };
 
   const handleOpenTelegram = () => {
-    Linking.openURL('https://t.me/mumanagerpro').catch(() => {
-      Alert.alert('Telegram', 'Canal oficial de soporte: @mumanagerpro');
+    Linking.openURL(TELEGRAM_URL).catch(() => {
+      Alert.alert('Telegram', `Canal oficial de soporte: ${TELEGRAM_URL}`);
     });
   };
 
@@ -311,17 +298,18 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                 <View style={styles.dualButtonRow}>
                   <TouchableOpacity
                     style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
-                    onPress={handleOpenWhatsApp}
+                    onPress={handleOpenDiscord}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Soporte WhatsApp"
+                    accessibilityLabel="Servidor Discord"
                   >
                     <ImageBackground
                       source={STITCH_ASSETS.tabs.tabModeInactive}
                       style={styles.halfBtnWrap}
                       resizeMode="stretch"
                     >
-                      <Text style={styles.mediumBtnTextWhite}>WHATSAPP</Text>
+                      <MuIcon name={"discord" as any} size={15} color="#5865F2" style={{ marginRight: 6 }} />
+                      <Text style={styles.mediumBtnTextWhite}>DISCORD</Text>
                     </ImageBackground>
                   </TouchableOpacity>
 
@@ -337,6 +325,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       style={styles.halfBtnWrap}
                       resizeMode="stretch"
                     >
+                      <MuIcon name={"send" as any} size={15} color="#5B8DEF" style={{ marginRight: 6 }} />
                       <Text style={styles.mediumBtnTextWhite}>TELEGRAM</Text>
                     </ImageBackground>
                   </TouchableOpacity>
@@ -412,7 +401,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       style={styles.bigBtnWrap}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.bigBtnTextGold, { color: '#0D0E0D' }]}>
+                      <Text style={styles.bigBtnTextGold}>
                         {loading ? 'VERIFICANDO...' : 'ACTIVAR LICENCIA'}
                       </Text>
                     </ImageBackground>
@@ -450,7 +439,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       style={styles.bigBtnWrap}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.bigBtnTextGold, { color: '#0D0E0D' }]}>
+                      <Text style={styles.bigBtnTextGold}>
                         {sendingReq ? 'ENVIANDO...' : '⚡ ENVIAR SOLICITUD DIRECTA (1 CLIC)'}
                       </Text>
                     </ImageBackground>
@@ -600,7 +589,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.halfBtnGoldWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={[styles.mediumBtnTextGoldSmall, { color: '#0D0E0D' }]}>DESCARGAR E INSTALAR</Text>
+                        <Text style={styles.mediumBtnTextGoldSmall}>DESCARGAR E INSTALAR</Text>
                       </ImageBackground>
                     </TouchableOpacity>
 
@@ -708,7 +697,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.halfBtnGoldWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={[styles.mediumBtnTextGold, { color: '#0D0E0D' }]}>REINTENTAR</Text>
+                        <Text style={styles.mediumBtnTextGold}>REINTENTAR</Text>
                       </ImageBackground>
                     </TouchableOpacity>
 
@@ -761,7 +750,7 @@ const styles = StyleSheet.create({
   windowWrapper: {
     width: '100%',
     maxWidth: 410,
-    maxHeight: '94%',
+    maxHeight: '92%',
     backgroundColor: '#131413',
     borderWidth: 1,
     borderColor: '#3C352A',
@@ -772,6 +761,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.9,
     shadowRadius: 14,
     elevation: 20,
+    flexDirection: 'column',
   },
   headerContainer: {
     width: '100%',
@@ -817,11 +807,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   cardScroll: {
+    flex: 1,
     width: '100%',
   },
   cardScrollContent: {
     padding: 12,
-    paddingBottom: 20,
+    paddingBottom: 60,
+    flexGrow: 1,
   },
   sectionPanel: {
     position: 'relative',
@@ -1004,10 +996,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: '#EFD28D',
+    color: '#FEDF99',
     letterSpacing: 1,
     textTransform: 'uppercase',
     textAlign: 'center',
+    ...THEME.effects.textShadowHigh,
   },
   bigBtnTextSilver: {
     fontSize: 12,
@@ -1017,6 +1010,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     textAlign: 'center',
+    ...THEME.effects.textShadowSubtle,
   },
   dualButtonRow: {
     flexDirection: 'row',
@@ -1053,19 +1047,21 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: '#FEF08A',
+    color: '#FEDF99',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     textAlign: 'center',
+    ...THEME.effects.textShadowHigh,
   },
   mediumBtnTextGoldSmall: {
     fontSize: 10,
     fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: '#FEF08A',
+    color: '#FEDF99',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     textAlign: 'center',
+    ...THEME.effects.textShadowHigh,
   },
   mediumBtnTextWhiteSmall: {
     fontSize: 10,
@@ -1100,7 +1096,8 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     fontWeight: '900',
-    color: '#0D0E0D',
+    color: '#FEDF99',
+    ...THEME.effects.textShadowHigh,
   },
   tabTextInactive: {
     fontWeight: '700',

@@ -326,7 +326,7 @@ function initClassShowcase() {
       title: 'Magic Gladiator • Duel Master',
       subtitle: 'Híbrido de Poder Destructivo • Tarkan',
       desc: 'Nacido de la conjunción prohibida entre el acero y la magia negra. Puede blandir dos espadas gigantes o canalizar hechizos arcanos con 7 puntos por nivel, prescindiendo del uso de yelmo para mayor agilidad bélica.',
-      power: '<strong>Capacidad Mu Manager PRO:</strong> Ajuste balanceado de Fuerza/Energía sin penalizaciones, inyección de Rune Bastard Sword, Volcano Set y calibración de daño elemental para PvP Season 6.'
+      power: '<strong>Capacidad Mu Manager PRO:</strong> Ajuste balanceado de Fuerza/Energía sin penalizaciones, inyección de Rune Bastard Sword, Volcano Set y calibración de daño elemental para PvP en cualquier Season.'
     },
     dl: {
       avatar: './assets/classes/dl.jpg',

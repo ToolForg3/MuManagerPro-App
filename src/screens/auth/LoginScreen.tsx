@@ -50,44 +50,20 @@ export const LoginScreen = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
 
-  // PRO Request Modal State
-  const [proModalVisible, setProModalVisible] = useState(false);
-  const [proName, setProName] = useState('');
-  const [proPhone, setProPhone] = useState('');
-  const [proEmail, setProEmail] = useState('');
-  const [proServer, setProServer] = useState('');
-  const [proNotes, setProNotes] = useState('');
-  const [proHwid, setProHwid] = useState('');
-  const [proLoading, setProLoading] = useState(false);
-
-  useEffect(() => {
-    SecurityService.getDeviceHwid().then(id => setProHwid(id)).catch(() => {});
-  }, []);
-
-  const openProModal = () => {
-    const defaultEmail = email.trim() || (savedEmail?.includes('@') ? savedEmail : (username.includes('@') ? username : ''));
-    if (defaultEmail && !proEmail) {
-      setProEmail(defaultEmail);
-    }
-    setProModalVisible(true);
-  };
-
   useEffect(() => {
     if (isDemoExpired) {
       setIsRegisterMode(true);
       Alert.alert(
         'Tiempo de Demo Finalizado',
-        'Tu acceso rápido de 10 minutos para este dispositivo ha finalizado.\n\nCrea tu cuenta para disfrutar de 24 horas completas de prueba PRO gratuita (y Modo DEMO permanente) o envía una solicitud para activar tu licencia.',
+        'Tu acceso rápido de 10 minutos para este dispositivo ha finalizado.\n\nCrea tu cuenta para disfrutar de 24 horas completas de prueba PRO gratuita (y Modo DEMO permanente).',
         [
           {
-            text: '⭐ Solicitar Licencia PRO',
-            onPress: () => {
-              clearDemoExpiredNotice();
-              openProModal();
-            },
+            text: 'Crear Cuenta (24h PRO)',
+            onPress: () => clearDemoExpiredNotice(),
           },
           {
-            text: 'Crear Cuenta (24h PRO)',
+            text: 'Entendido',
+            style: 'cancel',
             onPress: () => clearDemoExpiredNotice(),
           },
         ]
@@ -530,23 +506,6 @@ export const LoginScreen = () => {
                 },
               ]
             );
-          } else if (
-            loginRes.error?.includes('concluido') || 
-            loginRes.error?.includes('finalizado') || 
-            loginRes.error?.includes('LICENCIA_EXPIRADA') ||
-            loginRes.error?.includes('tiempo extra')
-          ) {
-            Alert.alert(
-              'Período de Licencia Finalizado',
-              loginRes.error,
-              [
-                {
-                  text: '⭐ Solicitar PRO / Extra Demo',
-                  onPress: () => openProModal(),
-                },
-                { text: 'Entendido', style: 'cancel' }
-              ]
-            );
           } else {
             Alert.alert('Acceso Denegado', loginRes.error || 'Usuario o contraseña incorrectos.');
           }
@@ -592,10 +551,6 @@ export const LoginScreen = () => {
           onPress: () => setIsRegisterMode(true),
         },
         {
-          text: '⭐ Solicitar PRO',
-          onPress: () => openProModal(),
-        },
-        {
           text: 'Cancelar',
           style: 'cancel',
         },
@@ -617,10 +572,6 @@ export const LoginScreen = () => {
           res.error,
           [
             {
-              text: '⭐ Solicitar Licencia PRO',
-              onPress: () => openProModal(),
-            },
-            {
               text: 'Crear Cuenta (24h Prueba PRO)',
               onPress: () => setIsRegisterMode(true),
             },
@@ -632,60 +583,6 @@ export const LoginScreen = () => {
       Alert.alert('Error', e.message || 'No se pudo iniciar sesión en modo prueba.');
     } finally {
       setLoadingDemo(false);
-    }
-  };
-
-  const handleSendProRequest = async (isDirect: boolean = false) => {
-    const cleanName = isDirect
-      ? (username.trim() || email.trim().split('@')[0] || 'Usuario App')
-      : (proName.trim() || username.trim() || 'Usuario App');
-    const cleanPhone = isDirect
-      ? 'Sin número (Contacto vía Email/Discord/Telegram)'
-      : (proPhone.trim() || 'Sin número (Contacto vía Email/Discord/Telegram)');
-    const cleanEmail = proEmail.trim() || email.trim() || undefined;
-
-    setProLoading(true);
-    try {
-      const res = await SqlClient.sendProRequest({
-        name: cleanName,
-        phone: cleanPhone,
-        email: cleanEmail,
-        serverName: isDirect ? undefined : (proServer.trim() || undefined),
-        notes: isDirect ? 'Solicitud directa (1 Clic) desde pantalla de inicio.' : (proNotes.trim() || undefined),
-      });
-
-      if (res.success) {
-        Alert.alert(
-          '⚡ Solicitud Enviada al Panel',
-          `Tu solicitud de Licencia PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${proHwid || 'Registrado'}\n[CONTACTO]: ${cleanEmail || cleanPhone}\n\nEl administrador revisará tu solicitud para activar tu Licencia PRO. También puedes contactar al soporte por nuestros canales oficiales de Discord o Telegram.`,
-          [
-            {
-              text: 'Entendido',
-              onPress: () => {
-                setProModalVisible(false);
-                setProNotes('');
-              },
-            },
-          ]
-        );
-      } else if (res.alreadyRequested) {
-        Alert.alert(
-          'Solicitud Registrada',
-          res.message || `Este dispositivo (${proHwid || 'HWID'}) ya tiene una solicitud registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
-          [
-            {
-              text: 'Entendido',
-              onPress: () => setProModalVisible(false),
-            }
-          ]
-        );
-      } else {
-        Alert.alert('Aviso', res.message || 'No se pudo registrar la solicitud en este momento.');
-      }
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'Error de conexión al enviar la solicitud.');
-    } finally {
-      setProLoading(false);
     }
   };
 
@@ -995,17 +892,6 @@ export const LoginScreen = () => {
                 icono="zap"
                 altura={48}
                 style={{ marginTop: 12 }}
-              />
-
-              {/* Botón Solicitar Prueba PRO */}
-              <MuButton
-                titulo="⭐ Solicitar Prueba del Plan PRO"
-                icono="crown"
-                variante="primary"
-                altura={48}
-                onPress={openProModal}
-                style={{ marginTop: 12 }}
-                accessibilityLabel="Solicitar Prueba del Plan PRO"
               />
             </>
           )}
@@ -1378,167 +1264,6 @@ export const LoginScreen = () => {
         visible={termsModalVisible}
         onClose={() => setTermsModalVisible(false)}
       />
-
-      {/* Modal: Solicitar Prueba del Plan PRO */}
-      <Modal
-        visible={proModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setProModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Panel variant="box" style={styles.modalCard}>
-            <MuCornerOrnaments size={12} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MuIcon name="crown" size={18} color={THEME.colors.oroClaro} />
-                <Text style={styles.modalTitle}>Solicitar Prueba PRO</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setProModalVisible(false)}
-                style={styles.modalCloseBtn}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityRole="button"
-                accessibilityLabel="Cerrar modal de solicitud PRO"
-              >
-                <MuIcon name="close" size={22} color={THEME.colors.textoSecundario} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
-              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>
-                Esta solicitud se enviará directamente al Panel de Control del Administrador con el identificador único de tu dispositivo para gestionar tu prueba del Plan PRO.
-              </Text>
-
-              {/* HWID Device Badge */}
-              <View style={styles.lockedEmailBadge}>
-                <MuIcon name="cellphone-key" size={20} color={THEME.colors.oroClaro} />
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={{ fontSize: 10, color: THEME.colors.textMuted, textTransform: 'uppercase', fontWeight: '700' }}>
-                    ID de este Celular (HWID)
-                  </Text>
-                  <Text style={{ fontSize: 12, color: THEME.colors.texto, fontWeight: '700' }} numberOfLines={1}>
-                    {proHwid || 'Detectando ID...'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Botón 1-Clic Directo al Panel */}
-              <BotonOro
-                titulo="⚡ Enviar Solicitud Directa (1 Clic)"
-                onPress={() => handleSendProRequest(true)}
-                cargando={proLoading}
-                icono="zap"
-                altura={48}
-                style={{ marginTop: 10, marginBottom: 8 }}
-              />
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-                <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
-                <Text style={{ marginHorizontal: 8, fontSize: 10, color: THEME.colors.textoSecundarioLuminoso, fontWeight: '700' }}>
-                  O PERSONALIZAR DATOS (OPCIONAL)
-                </Text>
-                <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
-              </View>
-
-              {/* Nombre / Administrador */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nombre o Apodo</Text>
-                <View style={styles.inputWrapper}>
-                  <MuIcon name="user" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ej: Administrador Luis"
-                    placeholderTextColor={THEME.colors.textMuted}
-                    value={proName}
-                    onChangeText={setProName}
-                  />
-                </View>
-              </View>
-
-              {/* Teléfono / WhatsApp */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Teléfono / WhatsApp (Opcional)</Text>
-                <View style={styles.inputWrapper}>
-                  <MuIcon name="whatsapp" size={20} color={THEME.colors.jade} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="+54 9 11 1234-5678"
-                    placeholderTextColor={THEME.colors.textMuted}
-                    value={proPhone}
-                    onChangeText={setProPhone}
-                    keyboardType="phone-pad"
-                  />
-                </View>
-              </View>
-
-              {/* Correo Electrónico */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Correo Electrónico (Opcional)</Text>
-                <View style={styles.inputWrapper}>
-                  <MuIcon name="mail" size={18} color={THEME.colors.arcano} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="admin@tuservidor.com"
-                    placeholderTextColor={THEME.colors.textMuted}
-                    value={proEmail}
-                    onChangeText={setProEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                </View>
-              </View>
-
-              {/* Nombre del Servidor */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nombre de tu Servidor MU (Opcional)</Text>
-                <View style={styles.inputWrapper}>
-                  <MuIcon name="server" size={18} color={THEME.colors.oro} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ej: Mu Argentina S6"
-                    placeholderTextColor={THEME.colors.textMuted}
-                    value={proServer}
-                    onChangeText={setProServer}
-                  />
-                </View>
-              </View>
-
-              {/* Notas adicionales */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Mensaje o Consulta (Opcional)</Text>
-                <View style={[styles.inputWrapper, { minHeight: 64, alignItems: 'flex-start' }]}>
-                  <TextInput
-                    style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
-                    placeholder="Versión de Season o consultas adicionales..."
-                    placeholderTextColor={THEME.colors.textMuted}
-                    value={proNotes}
-                    onChangeText={setProNotes}
-                    multiline={true}
-                  />
-                </View>
-              </View>
-
-              {/* Enviar Solicitud Button */}
-              <BotonOro
-                titulo="Enviar Solicitud Personalizada"
-                onPress={() => handleSendProRequest(false)}
-                cargando={proLoading}
-                icono="check-circle"
-                altura={48}
-                style={{ marginTop: 8 }}
-              />
-
-              <TouchableOpacity
-                style={{ alignItems: 'center', marginTop: 12, paddingVertical: 6 }}
-                onPress={() => setProModalVisible(false)}
-              >
-                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 12 }}>Cancelar</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </Panel>
-        </View>
-      </Modal>
       </ImageBackground>
     </KeyboardAvoidingView>
   );

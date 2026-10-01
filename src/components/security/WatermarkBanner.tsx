@@ -50,7 +50,7 @@ export const WatermarkBanner: React.FC<WatermarkBannerProps> = ({ onPressActivat
             style={styles.badge}
             resizeMode="stretch"
           >
-            <MuIcon name="crown" size={12} color="#0D0E0D" />
+            <MuIcon name="crown" size={12} color="#FEDF99" />
             <Text style={styles.badgeText}>ACTIVAR PRO</Text>
           </ImageBackground>
         </View>
@@ -133,8 +133,9 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 10.5,
     fontWeight: '900',
-    color: '#0D0E0D',
+    color: '#FEDF99',
     letterSpacing: 0.5,
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadowHigh,
   },
 });

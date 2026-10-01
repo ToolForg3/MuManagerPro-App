@@ -37,6 +37,7 @@ export class LicenseService {
 
   private static listeners: Array<(status: LicenseStatus) => void> = [];
   private static sessionInvalidatedCallback: ((reason?: string) => void) | null = null;
+  private static lastNotifiedTrialExpiresAt: string | null = null;
   private static lastProcessedRevision: number = 0;
   private static lastProcessedUpdatedAt: number = 0;
   private static lastServerId: string = '';
@@ -70,55 +71,68 @@ export class LicenseService {
     this.currentStatus.hwid = hwid;
 
     try {
+      const savedNotified = await AsyncStorage.getItem('@mumanager_notified_trial_expires_at');
+      if (savedNotified) {
+        this.lastNotifiedTrialExpiresAt = savedNotified;
+      }
+    } catch (_) {}
+
+    try {
       const raw = await AsyncStorage.getItem(LICENSE_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         // Verify anti-tamper checksum
         if (parsed.hwid === hwid && parsed.plan === 'PRO') {
-          // Blindaje anti-pérdida de licencia:
-          // Si el dispositivo tiene una clave matemáticamente válida o es PRO, no destruir la licencia local
-          const isMathematicallyValid = parsed.licenseKey && SecurityService.verifyKey(hwid, parsed.licenseKey).valid;
-          if (parsed.licenseValidUntil && !isMathematicallyValid && !parsed.isLifetime) {
-            const validUntil = new Date(parsed.licenseValidUntil).getTime();
-            if (Date.now() > validUntil) {
-              console.warn('[LicenseService] Licencia temporal expirada — pasando a verificación con servidor');
+          // Si la licencia local ya venció por fecha, limpiar almacenamiento y pasar a DEMO de inmediato
+          if (parsed.expiresAt && new Date(parsed.expiresAt).getTime() <= Date.now()) {
+            console.log('[LicenseService] Licencia local expirada por fecha en inicio, pasando a DEMO');
+            await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+          } else {
+            // Blindaje anti-pérdida de licencia:
+            // Si el dispositivo tiene una clave matemáticamente válida o es PRO, no destruir la licencia local
+            const isMathematicallyValid = parsed.licenseKey && SecurityService.verifyKey(hwid, parsed.licenseKey).valid;
+            if (parsed.licenseValidUntil && !isMathematicallyValid && !parsed.isLifetime) {
+              const validUntil = new Date(parsed.licenseValidUntil).getTime();
+              if (Date.now() > validUntil) {
+                console.warn('[LicenseService] Licencia temporal expirada — pasando a verificación con servidor');
+              }
             }
-          }
 
-          const expectedChecksum = SecurityService.computeChecksum(
-            `${parsed.hwid}:${parsed.licenseKey || ''}:PRO`
-          );
-          const legacyChecksum = SecurityService.computeChecksum(
-            `${parsed.hwid}:${parsed.licenseKey || ''}:${parsed.plan}`
-          );
+            const expectedChecksum = SecurityService.computeChecksum(
+              `${parsed.hwid}:${parsed.licenseKey || ''}:PRO`
+            );
+            const legacyChecksum = SecurityService.computeChecksum(
+              `${parsed.hwid}:${parsed.licenseKey || ''}:${parsed.plan}`
+            );
 
-          if (
-            parsed.deviceChecksum === expectedChecksum ||
-            parsed.deviceChecksum === legacyChecksum ||
-            (parsed.licenseKey && SecurityService.verifyKey(hwid, parsed.licenseKey).valid)
-          ) {
-            this.currentStatus = {
-              isActivated: true,
-              plan: 'PRO',
-              hwid,
-              licenseKey: parsed.licenseKey || '',
-              activatedAt: parsed.activatedAt,
-              deviceChecksum: parsed.deviceChecksum || expectedChecksum,
-              isBlocked: false,
-              isLifetime: !!parsed.isLifetime && !parsed.expiresAt,
-              expiresAt: parsed.expiresAt,
-              daysRemaining: parsed.daysRemaining,
-              licenseValidUntil: parsed.licenseValidUntil,
-            };
-            if (typeof parsed.authRevision === 'number') {
-              this.lastProcessedRevision = parsed.authRevision;
+            if (
+              parsed.deviceChecksum === expectedChecksum ||
+              parsed.deviceChecksum === legacyChecksum ||
+              (parsed.licenseKey && SecurityService.verifyKey(hwid, parsed.licenseKey).valid)
+            ) {
+              this.currentStatus = {
+                isActivated: true,
+                plan: 'PRO',
+                hwid,
+                licenseKey: parsed.licenseKey || '',
+                activatedAt: parsed.activatedAt,
+                deviceChecksum: parsed.deviceChecksum || expectedChecksum,
+                isBlocked: false,
+                isLifetime: !!parsed.isLifetime && !parsed.expiresAt,
+                expiresAt: parsed.expiresAt,
+                daysRemaining: parsed.daysRemaining,
+                licenseValidUntil: parsed.licenseValidUntil,
+              };
+              if (typeof parsed.authRevision === 'number') {
+                this.lastProcessedRevision = parsed.authRevision;
+              }
+              if (typeof parsed.authUpdatedAt === 'number') {
+                this.lastProcessedUpdatedAt = parsed.authUpdatedAt;
+              }
+              this.notifyListeners();
+              this.reportTelemetry(hwid, 'PRO', parsed.licenseKey);
+              return this.currentStatus;
             }
-            if (typeof parsed.authUpdatedAt === 'number') {
-              this.lastProcessedUpdatedAt = parsed.authUpdatedAt;
-            }
-            this.notifyListeners();
-            this.reportTelemetry(hwid, 'PRO', parsed.licenseKey);
-            return this.currentStatus;
           }
         }
       }
@@ -156,15 +170,20 @@ export class LicenseService {
     }
     this.lastProcessedHwid = currentHwid;
 
-    // Control de orden estricto: Si la respuesta tiene authRevision y es menor que la última procesada,
-    // o es igual pero con authUpdatedAt menor, se descarta como obsoleta/desfasada.
-    if (incomingRev > 0 || this.lastProcessedRevision > 0) {
-      if (incomingRev < this.lastProcessedRevision) {
+    // Órdenes autoritativas del servidor: revocación, downgrade a DEMO, wipe de claves o bloqueo
+    const isAuthoritativeDowngradeOrWipe = (
+      res.mode === 'DEMO' ||
+      res.forceWipeKey === true ||
+      res.forceDemo === true ||
+      res.blocked === true ||
+      (res as any).authoritativeMode === 'DEMO'
+    );
+
+    // Control de orden: Solo descartar si la revisión es menor Y la fecha NO es más reciente,
+    // y NUNCA descartar si es una orden autoritativa de revocación/downgrade/wipe/bloqueo del servidor.
+    if (!isAuthoritativeDowngradeOrWipe && (incomingRev > 0 || this.lastProcessedRevision > 0)) {
+      if (incomingRev < this.lastProcessedRevision && incomingUpdatedAt <= this.lastProcessedUpdatedAt) {
         console.warn(`[LicenseService] Descartando respuesta de telemetría obsoleta (rev ${incomingRev} < ${this.lastProcessedRevision})`);
-        return;
-      }
-      if (incomingRev === this.lastProcessedRevision && incomingUpdatedAt > 0 && incomingUpdatedAt < this.lastProcessedUpdatedAt) {
-        console.warn(`[LicenseService] Descartando respuesta de telemetría con marca temporal anterior (${incomingUpdatedAt} < ${this.lastProcessedUpdatedAt})`);
         return;
       }
     }
@@ -179,9 +198,10 @@ export class LicenseService {
       this.lastServerId = incomingServerId;
     }
 
-    // Concurrencia de Sesión: Si la cuenta fue abierta en otro celular
-    if (res.sessionInvalidated && this.sessionInvalidatedCallback) {
-      this.sessionInvalidatedCallback(res.reason || 'Tu cuenta ha iniciado sesión en otro celular.');
+    // Concurrencia de Sesión o Desvinculación desde el Panel de Control
+    if ((res.sessionInvalidated || (res as any).forceLogout) && this.sessionInvalidatedCallback) {
+      const reasonMsg = res.reason || (res as any).sessionInvalidatedReason || 'Tu cuenta ha sido desvinculada o tu sesión ha finalizado.';
+      this.sessionInvalidatedCallback(reasonMsg);
     }
 
     if (res.blocked) {
@@ -298,23 +318,40 @@ export class LicenseService {
       }
       this.notifyListeners();
 
-      // Notificación al APK cuando la licencia es asignada (DEMO -> PRO)
-      if (!wasPro) {
-        let duracionTxt = 'Vitalicia (Permanente sin límite de tiempo)';
-        if (!isLifetime && expiresAt) {
-          const expD = new Date(expiresAt);
-          const fechaStr = expD.toLocaleDateString() + ' ' + expD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          if (timeRemainingFormatted) {
-            duracionTxt = `${timeRemainingFormatted} (Vence: ${fechaStr})`;
-          } else if (hoursRemaining !== undefined && hoursRemaining < 24) {
-            duracionTxt = `${hoursRemaining} horas (Vence: ${fechaStr})`;
-          } else {
-            duracionTxt = `${daysRemaining !== undefined && daysRemaining > 0 ? `${daysRemaining} días ` : ''}(Vence: ${fechaStr})`;
-          }
-        } else if ((res as any).durationText) {
-          duracionTxt = (res as any).durationText;
+      // Notificación al APK cuando la licencia es asignada (DEMO -> PRO o primer inicio de cuenta con PRO Trial)
+      const isTrial = !!(
+        (res as any).isProTrial ||
+        (res as any).authAction?.startsWith('PRO_TRIAL') ||
+        (!isLifetime && expiresAt && ((res as any).proTrialStartedAt || (res as any).authAction?.includes('TRIAL')))
+      );
+      let duracionTxt = 'Vitalicia (Permanente)';
+      if (!isLifetime && expiresAt) {
+        const expD = new Date(expiresAt);
+        const fechaStr = expD.toLocaleDateString() + ' ' + expD.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (timeRemainingFormatted) {
+          duracionTxt = `${timeRemainingFormatted} (Vence: ${fechaStr})`;
+        } else if (hoursRemaining !== undefined && hoursRemaining > 0) {
+          duracionTxt = `${hoursRemaining} horas (Vence: ${fechaStr})`;
+        } else {
+          duracionTxt = `${daysRemaining !== undefined && daysRemaining > 0 ? `${daysRemaining} días ` : ''}(Vence: ${fechaStr})`;
         }
+      } else if ((res as any).durationText) {
+        duracionTxt = (res as any).durationText;
+      }
 
+      if (isTrial) {
+        // Mostrar alerta si esta prueba aún no ha sido notificada al usuario en este dispositivo
+        const trialKey = expiresAt || 'trial_active';
+        if (this.lastNotifiedTrialExpiresAt !== trialKey) {
+          this.lastNotifiedTrialExpiresAt = trialKey;
+          AsyncStorage.setItem('@mumanager_notified_trial_expires_at', trialKey).catch(() => {});
+          Alert.alert(
+            '🎉 ¡Bienvenido a MU Manager PRO!',
+            `Se ha activado tu prueba PRO gratuita por 24 horas para este dispositivo.\n\n⏳ Tiempo disponible: ${duracionTxt}\n\nTienes acceso completo a todas las herramientas avanzadas, edición de personajes, baúl y diagnósticos SQL.`,
+            [{ text: '¡Comenzar a Usar!' }]
+          );
+        }
+      } else if (!wasPro) {
         Alert.alert(
           '🎉 ¡Licencia PRO Activada!',
           `El administrador ha asignado tu licencia PRO para este dispositivo.\n\n⏳ Tiempo activado: ${duracionTxt}\n\nTienes acceso completo a todas las funciones avanzadas.`,
@@ -339,8 +376,8 @@ export class LicenseService {
         this.notifyListeners();
         // Notificación al APK cuando la prueba concluye o la licencia es revocada (PRO -> DEMO)
         Alert.alert(
-          'Prueba PRO Finalizada',
-          'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente con sus funciones básicas.',
+          'Acceso en Modo DEMO',
+          'Tu licencia PRO o período de prueba ha finalizado o ha sido revocado. Tu dispositivo continúa activo en Modo DEMO permanente con sus funciones básicas.',
           [{ text: 'Entendido' }]
         );
       }

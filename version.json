@@ -1,10 +1,10 @@
 {
-  "version": "2.3.6",
+  "version": "2.3.7",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-01T15:00:00.000Z",
+  "publishedAt": "2026-10-01T22:40:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 138,
+  "build": 139,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.3.6 (Build 138) - Separación de Divisas, Ajuste Dinámico de Encabezados y Blindaje de Términos:\n• SEPARACIÓN DE DIVISAS CASHSHOP: Separación rigurosa de WCoinC (WCoins) y Goblin Points (GP) en entrega de kits y premios, garantizando nomenclatura canónica del servidor MU Online.\n• CABEZALES Y VISORES ADAPTABLES: Ajuste dinámico anti-aplastamiento en pantallas compactas (<385dp), evitando sobreposición de visores y optimizando títulos y botones de acción.\n• VISUALIZACIÓN Y SCROLL DE TÉRMINOS: Restablecimiento completo del contenedor de términos y condiciones en Panel de la APK con renderizado fluido de sus 8 artículos.\n• SEGURIDAD Y PRIVACIDAD FORTALECIDA: Migración de PIN a almacenamiento cifrado SecureStorage (AES-256-CBC) y tasa de límite en endpoints de autenticación y licencias."
+  "changelog": "MuManager PRO v2.3.7 (Build 139) - Canales Oficiales, Blindaje de Scroll y Sincronización Continua de Licencias:\n• CANALES DE ASISTENCIA OFICIAL: Integración exclusiva de Discord y Telegram en modales de seguridad y licencia, aboliendo accesos obsoletos de WhatsApp.\n• CONTRASTE Y LEGIBILIDAD STITCH IRONFORGE: Corrección total de textos dorados (#FEDF99) de alta nitidez en botones y pestañas sobre texturas nativas metálicas.\n• SCROLL COMPLETO EN LICENCIAS: Desplazamiento fluido borde a borde sin recortes en la ventana de Licencias y Actualizaciones.\n• SINCRONIZACIÓN EN TIEMPO REAL: Heartbeat continuo y refresco instantáneo de telemetría de dispositivo para reflejar en vivo aprobaciones y revocaciones del panel."
 }

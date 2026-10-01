@@ -158,7 +158,11 @@ const DEFAULT_SETTINGS = {
       sqlExploit: true,
       bruteForce: true,
       deviceBlocked: true,
-      proRequest: true
+      proRequest: true,
+      proTrial: true,
+      demoAssigned: true,
+      quickDemo: true,
+      proAssigned: true
     }
   },
   beta: {
@@ -217,7 +221,14 @@ function loadSettings() {
       cachedSettings = {
         ...DEFAULT_SETTINGS,
         ...parsed,
-        whatsapp: { ...DEFAULT_SETTINGS.whatsapp, ...(parsed.whatsapp || {}) },
+        whatsapp: {
+          ...DEFAULT_SETTINGS.whatsapp,
+          ...(parsed.whatsapp || {}),
+          events: {
+            ...DEFAULT_SETTINGS.whatsapp.events,
+            ...((parsed.whatsapp && parsed.whatsapp.events) || {})
+          }
+        },
         beta: { ...DEFAULT_SETTINGS.beta, ...(parsed.beta || {}) },
         rollback: { ...DEFAULT_SETTINGS.rollback, ...(parsed.rollback || {}) }
       };
@@ -367,20 +378,30 @@ function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, h
     try {
       const parsed = new URL(discordUrl);
       const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
+      let embedColor = 15830060; // Rojo por defecto para alertas críticas
+      let formattedTitle = title;
+      if (title.includes('⭐') || title.includes('PRUEBA PRO') || title.includes('LICENCIA PRO')) {
+        embedColor = 65407; // Verde esmeralda (#00FF7F)
+      } else if (title.includes('DEMO') || title.includes('ACCESO RÁPIDO')) {
+        embedColor = 5089023; // Azul brillante (#4DA6FF)
+      } else if (!formattedTitle.startsWith('🚨')) {
+        formattedTitle = `🚨 ${formattedTitle}`;
+      }
+
       const postData = JSON.stringify({
         username: 'Mu Manager PRO Shield',
         avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
         embeds: [
           {
-            title: `🚨 ${title}`,
+            title: formattedTitle,
             description: details,
-            color: 15830060,
+            color: embedColor,
             fields: [
               { name: '📱 Dispositivo (HWID)', value: `\`${hwid}\``, inline: true },
               { name: '🌐 IP Cliente', value: `\`${ip}\``, inline: true },
               { name: '⏰ Hora (Sao Paulo)', value: timeStr, inline: false }
             ],
-            footer: { text: 'Mu Manager PRO Security • Tráfico Protegido' },
+            footer: { text: 'MU Manager PRO Shield • Telemetría y Licencias' },
             timestamp: new Date().toISOString()
           }
         ]
@@ -2085,6 +2106,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_SKIPPED_EMULATOR', cleanHwid, clientIp || '127.0.0.1', `Emulador detectado (${devBrand || ''} ${devModel || ''}). Cuenta: ${userAccountIdentifier}. DEMO vitalicio concedido.`);
+      sendWhatsAppAlert(
+        'demoAssigned',
+        '🎮 MODO DEMO VITALICIO ASIGNADO (EMULADOR) 🎮',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n💻 Emulador: ${devBrand || ''} ${devModel || 'Emulador PC'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: Vitalicio permanente\n🛡️ Modo: Lectura y Diagnóstico SQL`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else if (existingProFromIp) {
       // REGLA B: Límite de 1 prueba PRO por IP en 48 horas alcanzado para celulares físicos
@@ -2118,6 +2146,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_SKIPPED_IP_LIMIT', cleanHwid, clientIp || '127.0.0.1', `Límite de prueba PRO por IP alcanzado (${clientIp}). Celular entra en DEMO vitalicio.`);
+      sendWhatsAppAlert(
+        'demoAssigned',
+        '🎮 MODO DEMO VITALICIO ASIGNADO (LÍMITE IP) 🎮',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || ''} ${devModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: Vitalicio permanente\n🛡️ Motivo: Límite 1 prueba PRO por IP (48h) alcanzado`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else {
       // Dispositivo físico nuevo registrando cuenta por primera vez: otorga 24 Horas de Demo PRO
@@ -2155,6 +2190,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+      sendWhatsAppAlert(
+        'proTrial',
+        '⭐ PRUEBA PRO 24H ASIGNADA (DEMO PRO) ⭐',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || ''} ${devModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: 24 Horas (Prueba PRO 24h)\n📅 Vence: ${new Date(proExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}\n🔑 Clave Temporal: \`${key}\`\n🛡️ Estado: Acceso PRO total concedido`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     }
   } else {
@@ -2194,6 +2236,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       dev.authUpdatedAt = Date.now();
       dev.authAction = 'PRO_TRIAL_24H';
       addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+      sendWhatsAppAlert(
+        'proTrial',
+        '⭐ PRUEBA PRO 24H ASIGNADA (DEMO PRO) ⭐',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || dev.deviceBrand || ''} ${devModel || dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: 24 Horas (Prueba PRO 24h)\n📅 Vence: ${new Date(dev.expiresAt).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}\n🔑 Clave Temporal: \`${key}\`\n🛡️ Estado: Acceso PRO total concedido`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else if (dev.mode === 'DEMO') {
       // Modo DEMO es vitalicio: asegurar que expiresAt sea null para que nunca expire ni bloquee
@@ -9069,6 +9118,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   if (cleanHwid) {
     const devices = loadDevices();
     let dev = devices[cleanHwid];
+    let isNewQuickDemo = false;
     if (!dev) {
       dev = {
         hwid: cleanHwid,
@@ -9085,6 +9135,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
       };
       devices[cleanHwid] = dev;
       saveDevices(devices);
+      isNewQuickDemo = true;
     } else {
       dev.lastSeen = new Date().toISOString();
       dev.ip = clientIp;
@@ -9112,8 +9163,18 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
           dev.quickDemoStartedAt = new Date().toISOString();
           dev.quickDemoExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
           saveDevices(devices);
+          isNewQuickDemo = true;
         }
       }
+    }
+    if (isNewQuickDemo) {
+      sendWhatsAppAlert(
+        'quickDemo',
+        '⏱️ ACCESO RÁPIDO DEMO INICIADO (10 MIN) ⏱️',
+        `📱 Dispositivo: ${deviceBrand || dev.deviceBrand || ''} ${deviceModel || dev.deviceModel || 'Android'}${dev.isEmulator ? ' [EMULADOR]' : ''}\n📱 HWID: \`${cleanHwid}\`\n⏳ Duración: 10 Minutos\n🛡️ Estado: Exploración temporal de prueba`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
     }
   }
 
@@ -10148,6 +10209,24 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
 
   saveDevices(devices);
   addAuditLog('PLAN_TOGGLE', hwid, req.socket.remoteAddress || '127.0.0.1', `Plan cambiado a ${targetPlan} con 1 clic (${durationText})`);
+
+  if (targetPlan === 'PRO') {
+    sendWhatsAppAlert(
+      'proAssigned',
+      '🌟 LICENCIA PRO ASIGNADA (ADMIN PANEL) 🌟',
+      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Vigencia: ${durationText}\n🔑 Clave: \`${devices[hwid].licenseKey}\`\n🛡️ Estado: PRO Oficial Activado`,
+      hwid,
+      req.socket.remoteAddress || '127.0.0.1'
+    ).catch(() => {});
+  } else {
+    sendWhatsAppAlert(
+      'demoAssigned',
+      '🎮 MODO DEMO ASIGNADO (ADMIN PANEL) 🎮',
+      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Vigencia: ${durationText}\n🛡️ Estado: Modo DEMO (Lectura y Diagnóstico)`,
+      hwid,
+      req.socket.remoteAddress || '127.0.0.1'
+    ).catch(() => {});
+  }
   res.json({
     success: true,
     hwid,
@@ -10189,6 +10268,13 @@ app.post('/api/admin/device/extend-demo', (req, res) => {
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
   addAuditLog('EXTEND_DEMO', hwid, clientIp, `Tiempo DEMO extendido +${hoursToAdd}h para ${hwid}. Vence: ${newExpires}`);
+  sendWhatsAppAlert(
+    'demoAssigned',
+    '🎮 TIEMPO DEMO EXTENDIDO (ADMIN PANEL) 🎮',
+    `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Extensión: +${hoursToAdd}h\n📅 Nuevo Vencimiento: ${new Date(newExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}`,
+    hwid,
+    clientIp
+  ).catch(() => {});
 
   res.json({
     success: true,
@@ -10737,7 +10823,11 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
       sqlExploit: events && events.sqlExploit !== undefined ? !!events.sqlExploit : true,
       bruteForce: events && events.bruteForce !== undefined ? !!events.bruteForce : true,
       deviceBlocked: events && events.deviceBlocked !== undefined ? !!events.deviceBlocked : true,
-      proRequest: events && events.proRequest !== undefined ? !!events.proRequest : true
+      proRequest: events && events.proRequest !== undefined ? !!events.proRequest : true,
+      proTrial: events && events.proTrial !== undefined ? !!events.proTrial : true,
+      demoAssigned: events && events.demoAssigned !== undefined ? !!events.demoAssigned : true,
+      quickDemo: events && events.quickDemo !== undefined ? !!events.quickDemo : true,
+      proAssigned: events && events.proAssigned !== undefined ? !!events.proAssigned : true
     }
   };
   saveSettings(settings);

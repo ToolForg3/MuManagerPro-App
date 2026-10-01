@@ -258,7 +258,11 @@ const DEFAULT_SETTINGS = {
       sqlExploit: true,
       bruteForce: true,
       deviceBlocked: true,
-      proRequest: true
+      proRequest: true,
+      proTrial: true,
+      demoAssigned: true,
+      quickDemo: true,
+      proAssigned: true
     }
   },
   beta: {
@@ -336,7 +340,14 @@ function loadSettings() {
           cachedSettings = {
             ...DEFAULT_SETTINGS,
             ...parsed,
-            whatsapp: { ...DEFAULT_SETTINGS.whatsapp, ...(parsed.whatsapp || {}) },
+            whatsapp: {
+              ...DEFAULT_SETTINGS.whatsapp,
+              ...(parsed.whatsapp || {}),
+              events: {
+                ...DEFAULT_SETTINGS.whatsapp.events,
+                ...((parsed.whatsapp && parsed.whatsapp.events) || {})
+              }
+            },
             beta: { ...DEFAULT_SETTINGS.beta, ...(parsed.beta || {}) },
             rollback: { ...DEFAULT_SETTINGS.rollback, ...(parsed.rollback || {}) }
           };
@@ -486,20 +497,31 @@ function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, h
     try {
       const parsed = new URL(discordUrl);
       const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
+
+      let embedColor = 15830060; // Rojo por defecto para alertas críticas
+      let formattedTitle = title;
+      if (title.includes('⭐') || title.includes('PRUEBA PRO') || title.includes('LICENCIA PRO')) {
+        embedColor = 65407; // Verde esmeralda (#00FF7F)
+      } else if (title.includes('DEMO') || title.includes('ACCESO RÁPIDO')) {
+        embedColor = 5089023; // Azul brillante (#4DA6FF)
+      } else if (!formattedTitle.startsWith('🚨')) {
+        formattedTitle = `🚨 ${formattedTitle}`;
+      }
+
       const postData = JSON.stringify({
         username: 'Mu Manager PRO Shield',
-        avatar_url: 'https://mumanager.pro/assets/icon.png',
+        avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
         embeds: [
           {
-            title: `🚨 ${title}`,
+            title: formattedTitle,
             description: details,
-            color: 15830060,
+            color: embedColor,
             fields: [
               { name: '📱 Dispositivo (HWID)', value: `\`${hwid}\``, inline: true },
               { name: '🌐 IP Cliente', value: `\`${ip}\``, inline: true },
               { name: '⏰ Hora (Sao Paulo)', value: timeStr, inline: false }
             ],
-            footer: { text: 'Mu Manager PRO Security • Tráfico Protegido' },
+            footer: { text: 'MU Manager PRO Shield • Telemetría y Licencias' },
             timestamp: new Date().toISOString()
           }
         ]
@@ -1037,11 +1059,9 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
   const fp = (devFingerprint || '').toLowerCase();
   const bm = `${devBrand} ${devModel}`.toLowerCase();
   const dr = (devDetectionReason || '').toLowerCase();
-  if (
-    fp.includes('test-keys') ||
-    fp.includes('generic') ||
+
+  const isExplicitEmulatorIndicator = (
     fp.includes('vbox') ||
-    fp.includes('x86') ||
     fp.includes('sdk_gphone') ||
     fp.includes('bluestacks') ||
     fp.includes('ldplayer') ||
@@ -1056,14 +1076,28 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
     bm.includes('emulator') ||
     bm.includes('simulator') ||
     bm.includes('genymotion') ||
-    bm.includes('google_sdk') ||
-    (dr && dr !== 'physical_device')
-  ) {
+    bm.includes('google_sdk')
+  );
+
+  // Evitar falsos positivos en celulares físicos de marcas reconocidas con firmware oficial (release-keys)
+  const isKnownPhysicalOem = /honor|xiaomi|samsung|motorola|huawei|oppo|vivo|realme|oneplus|google|lg|sony/i.test(devBrand || '');
+  const hasReleaseKeys = fp.includes('release-keys');
+
+  if (isExplicitEmulatorIndicator) {
     devIsEmulator = true;
+  } else if (!isKnownPhysicalOem || !hasReleaseKeys) {
+    if (fp.includes('test-keys') || fp.includes('generic') || fp.includes('x86') || (dr && dr !== 'physical_device')) {
+      devIsEmulator = true;
+    }
   }
 
-  if (dev && dev.isEmulator === true) {
+  // Respetar anulación manual del administrador
+  if (dev && dev.isEmulatorManual === true) {
+    devIsEmulator = !!dev.isEmulator;
+  } else if (dev && dev.isTest === true) {
     devIsEmulator = true;
+  } else if (dev && dev.isTest === false && isKnownPhysicalOem && hasReleaseKeys) {
+    devIsEmulator = false;
   }
 
   // Regla B: Límite por IP pública (máximo 1 prueba PRO por IP cada 48 horas para evitar granjas de instancias)
@@ -1112,6 +1146,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_SKIPPED_EMULATOR', cleanHwid, clientIp || '127.0.0.1', `Emulador detectado (${devBrand || ''} ${devModel || ''}). Cuenta: ${userAccountIdentifier}. DEMO vitalicio concedido.`);
+      sendWhatsAppAlert(
+        'demoAssigned',
+        '🎮 MODO DEMO VITALICIO ASIGNADO (EMULADOR) 🎮',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n💻 Emulador: ${devBrand || ''} ${devModel || 'Emulador PC'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: Vitalicio permanente\n🛡️ Modo: Lectura y Diagnóstico SQL`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else if (existingProFromIp) {
       // REGLA B: Límite de 1 prueba PRO por IP en 48 horas alcanzado para celulares físicos
@@ -1145,6 +1186,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_SKIPPED_IP_LIMIT', cleanHwid, clientIp || '127.0.0.1', `Límite de prueba PRO por IP alcanzado (${clientIp}). Celular entra en DEMO vitalicio.`);
+      sendWhatsAppAlert(
+        'demoAssigned',
+        '🎮 MODO DEMO VITALICIO ASIGNADO (LÍMITE IP) 🎮',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || ''} ${devModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: Vitalicio permanente\n🛡️ Motivo: Límite 1 prueba PRO por IP (48h) alcanzado`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else if (!proTrialEnabled) {
       // Prueba PRO automática desactivada en Ajustes Globales
@@ -1178,6 +1226,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_SKIPPED_GLOBAL_OFF', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO desactivada globalmente. Cuenta: ${userAccountIdentifier}. DEMO vitalicio.`);
+      sendWhatsAppAlert(
+        'demoAssigned',
+        '🎮 MODO DEMO VITALICIO ASIGNADO (PRO TRIAL OFF) 🎮',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || ''} ${devModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: Vitalicio permanente\n🛡️ Motivo: Prueba PRO desactivada globalmente`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else {
       // Dispositivo físico nuevo registrando cuenta por primera vez: otorga X Horas de Demo PRO
@@ -1215,6 +1270,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       };
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de ${trialHours}h activada para cuenta: ${userAccountIdentifier}`);
+      sendWhatsAppAlert(
+        'proTrial',
+        '⭐ PRUEBA PRO 24H ASIGNADA (DEMO PRO) ⭐',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || ''} ${devModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: ${trialHours} Horas (Prueba PRO 24h)\n📅 Vence: ${new Date(proExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}\n🔑 Clave Temporal: \`${key}\`\n🛡️ Estado: Acceso PRO total concedido`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     }
   } else {
@@ -1245,6 +1307,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       dev.authUpdatedAt = Date.now();
       dev.authAction = `PRO_TRIAL_${trialHours}H`;
       addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de ${trialHours}h activada para cuenta: ${userAccountIdentifier}`);
+      sendWhatsAppAlert(
+        'proTrial',
+        '⭐ PRUEBA PRO 24H ASIGNADA (DEMO PRO) ⭐',
+        `👤 Cuenta: ${userAccountIdentifier || 'Registro directo'}\n📱 Celular: ${devBrand || dev.deviceBrand || ''} ${devModel || dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: ${trialHours} Horas (Prueba PRO 24h)\n📅 Vence: ${new Date(dev.expiresAt).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}\n🔑 Clave Temporal: \`${key}\`\n🛡️ Estado: Acceso PRO total concedido`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
       changed = true;
     } else if (dev.mode === 'DEMO') {
       // Modo DEMO es vitalicio: asegurar que expiresAt sea null para que nunca expire ni bloquee
@@ -1442,14 +1511,10 @@ async function syncCloudStorage(force = false) {
         // Inicializar con la verdad de la nube para no resucitar dispositivos eliminados
         const mergedDevs = { ...cloudDevs };
 
-        // Conciliar actualizaciones locales en vuelo solo si son más recientes y no están eliminadas
+        // Conciliar actualizaciones locales en vuelo sin descartar dispositivos registrados localmente
         for (const [hwid, lDev] of Object.entries(currentDevs)) {
           if (!mergedDevs[hwid]) {
-            // Preservar registro local únicamente si fue registrado hace menos de 10 minutos y no fue borrado
-            const lTs = Number(lDev.authUpdatedAt) || 0;
-            if (now - lTs < 600000 && lDev.authAction === 'REGISTER') {
-              mergedDevs[hwid] = lDev;
-            }
+            mergedDevs[hwid] = lDev;
           } else {
             const cDev = mergedDevs[hwid];
             const lRev = Number(lDev.authRevision) || 0;
@@ -1488,24 +1553,65 @@ async function syncCloudStorage(force = false) {
           }
         }
 
-        // Purgar dispositivos eliminados explícitamente y probes de verificación
+        // Purgar dispositivos eliminados explícitamente solo si no tuvieron actividad posterior al borrado
         try {
           const tomData = data['mumanager:tombstones'] || inMemoryFallback[TOMBSTONES_FILE] || {};
           const allDeletedDevs = {
             ...((tomData && tomData.deletedDevices) || {}),
             ...((inMemoryFallback[TOMBSTONES_FILE] && inMemoryFallback[TOMBSTONES_FILE].deletedDevices) || {})
           };
-          for (const delH of Object.keys(allDeletedDevs)) {
-            delete mergedDevs[delH];
-            delete mergedDevs[delH.toUpperCase()];
-            delete mergedDevs[delH.toLowerCase()];
+          for (const [delH, delTsVal] of Object.entries(allDeletedDevs)) {
+            const delTs = typeof delTsVal === 'number' ? delTsVal : (delTsVal && delTsVal.deletedAt ? new Date(delTsVal.deletedAt).getTime() : 0);
+            const devKey = Object.keys(mergedDevs).find(k => k.toUpperCase() === delH.toUpperCase());
+            if (devKey) {
+              const dev = mergedDevs[devKey];
+              const devTs = Math.max(
+                Number(dev.authUpdatedAt) || 0,
+                dev.lastSeen ? new Date(dev.lastSeen).getTime() : 0,
+                dev.firstSeen ? new Date(dev.firstSeen).getTime() : 0,
+                dev.registeredAt ? new Date(dev.registeredAt).getTime() : 0
+              );
+              // Si el dispositivo tuvo actividad POSTERIOR al borrado, es una conexión nueva: NO BORRAR
+              if (delTs > 0 && devTs > delTs) {
+                if (tomData.deletedDevices) delete tomData.deletedDevices[delH];
+                if (inMemoryFallback[TOMBSTONES_FILE]?.deletedDevices) delete inMemoryFallback[TOMBSTONES_FILE].deletedDevices[delH];
+              } else {
+                delete mergedDevs[devKey];
+                delete mergedDevs[delH];
+                delete mergedDevs[delH.toUpperCase()];
+                delete mergedDevs[delH.toLowerCase()];
+              }
+            }
           }
-          // Purgar también cualquier dispositivo actualmente listado en tombstones como excluido
+          // Conciliar dispositivos bloqueados en tombstones para que aparezcan en el panel como BLOQUEADOS
           for (const [k, v] of Object.entries(tomData)) {
             if (k !== 'revokedKeys' && k !== 'deletedUsers' && k !== 'deletedDevices' && !k.startsWith('_') && typeof v === 'object') {
-              delete mergedDevs[k];
-              delete mergedDevs[k.toUpperCase()];
-              delete mergedDevs[k.toLowerCase()];
+              const cleanH = k.toUpperCase();
+              const existingDevKey = Object.keys(mergedDevs).find(d => d.toUpperCase() === cleanH);
+              if (v.blocked === true) {
+                if (existingDevKey) {
+                  mergedDevs[existingDevKey].blocked = true;
+                  mergedDevs[existingDevKey].blockReason = v.reason || mergedDevs[existingDevKey].blockReason || 'Bloqueado por el administrador.';
+                } else {
+                  mergedDevs[cleanH] = {
+                    hwid: cleanH,
+                    mode: 'DEMO',
+                    licenseKey: '',
+                    blocked: true,
+                    blockReason: v.reason || 'Bloqueado por el administrador.',
+                    firstSeen: v.blockedAt || new Date().toISOString(),
+                    lastSeen: v.blockedAt || new Date().toISOString(),
+                    totalPings: 1,
+                    ip: 'Desconocida',
+                    platform: 'Android',
+                    appVersion: '1.0.0',
+                    isEmulator: false,
+                    isTest: false,
+                    forceDemo: true,
+                    currentUser: v.user || ''
+                  };
+                }
+              }
             }
           }
           for (const k of Object.keys(mergedDevs)) {
@@ -1706,12 +1812,31 @@ async function syncCloudStorage(force = false) {
 
 async function initCloudStorage() {
   await syncCloudStorage(true);
+  try {
+    const t = loadTombstones();
+    if (t && t.deletedUsers && typeof t.deletedUsers === 'object') {
+      let cleaned = 0;
+      for (const [k, v] of Object.entries(t.deletedUsers)) {
+        if (!v || v.isBanned !== true) {
+          delete t.deletedUsers[k];
+          cleaned++;
+        }
+      }
+      if (cleaned > 0) {
+        saveTombstones(t);
+        if (typeof flushCloudWrites === 'function') await flushCloudWrites();
+        console.log(`[Tombstone Migration] Limpiados ${cleaned} registros residuales no vetados de deletedUsers`);
+      }
+    }
+  } catch (err) {
+    console.error('[Tombstone Migration Error]', err);
+  }
 }
 
 app.use(async (req, res, next) => {
   if (CLOUD_STORAGE.enabled) {
     try {
-      const isUrgentRoute = req.path.startsWith('/api/admin') || req.path === '/api/telemetry/ping';
+      const isUrgentRoute = req.path.startsWith('/api/admin') || req.path.startsWith('/api/auth') || req.path === '/api/telemetry/ping';
       await syncCloudStorage(isUrgentRoute);
     } catch (_) {}
   }
@@ -2244,7 +2369,7 @@ function getLatestApkInfo() {
   return null;
 }
 
-/// Redirección permanente a GitHub CDN para descarga del APK (0 consumo de ancho de banda en Render)
+/// Redirección permanente a GitHub CDN para descarga del APK (0 consumo de ancho de banda en Vercel)
 const GITHUB_APK_CDN = process.env.GITHUB_APK_CDN || 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk';
 
 app.get([
@@ -2403,21 +2528,38 @@ app.use((req, res, next) => {
         if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
           const tombstones = loadTombstones();
           const cleanEmail = String(decoded.sub).toLowerCase().trim();
-          const isDeletedByAdmin = !!(tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]);
-          if (isDeletedByAdmin) {
-            return res.status(401).json({
-              success: false,
-              sessionInvalidated: true,
-              error: 'USUARIO_NO_EXISTE',
-              message: 'Tu cuenta ya no existe en el servidor o ha sido reiniciada. Por favor, regístrate nuevamente.'
-            });
-          }
-
           const allUsers = loadUsers();
           let userRecord = allUsers.find(u => 
             (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
             (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
           );
+
+          const tombRecord = tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail];
+          if (tombRecord) {
+            if (tombRecord.isBanned === true) {
+              if (tombRecord.bannedUntil && Date.now() > new Date(tombRecord.bannedUntil).getTime()) {
+                delete tombstones.deletedUsers[cleanEmail];
+                saveTombstones(tombstones);
+              } else {
+                return res.status(403).json({
+                  success: false,
+                  sessionInvalidated: true,
+                  error: 'CUENTA_BLOQUEADA',
+                  message: `Tu cuenta ha sido bloqueada por el administrador: ${tombRecord.reason || 'Restricción de acceso.'}`
+                });
+              }
+            } else if (userRecord && userRecord.status === 'ACTIVE') {
+              delete tombstones.deletedUsers[cleanEmail];
+              saveTombstones(tombstones);
+            } else if (!userRecord) {
+              return res.status(401).json({
+                success: false,
+                sessionInvalidated: true,
+                error: 'USUARIO_NO_EXISTE',
+                message: 'Tu cuenta ya no existe en el servidor o ha sido reiniciada. Por favor, regístrate nuevamente.'
+              });
+            }
+          }
           if (!userRecord) {
             userRecord = {
               id: 'usr_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
@@ -2613,8 +2755,8 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
     const tombstones = loadTombstones();
     const dev = devices[hwid];
 
-    // Verificar tombstone del HWID (revocado permanentemente)
-    const isHwidTombstoned = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object' && tombstones[hwid].blocked !== false);
+    // Verificar tombstone del HWID (revocado permanentemente SOLO si fue bloqueado explícitamente con blocked: true)
+    const isHwidTombstoned = !!(tombstones[hwid] && typeof tombstones[hwid] === 'object' && tombstones[hwid].blocked === true);
 
     if (isHwidTombstoned) {
       addAuditLog('SQL_BLOCKED', hwid, clientIp, 'Acceso bloqueado: dispositivo revocado permanentemente (tombstone)', 'BLOCKED');
@@ -9651,16 +9793,14 @@ function formatTimeRemaining(expiresAt, isLifetime, nowMs = Date.now()) {
   const diffMs = new Date(expiresAt).getTime() - nowMs;
   if (diffMs <= 0) return 'Expirado';
   const totalMin = Math.floor(diffMs / 60000);
+  const totalHours = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  if (totalHours <= 48) {
+    return totalHours > 0 ? `${totalHours}h ${mins}m` : `${mins} min`;
+  }
   const days = Math.floor(totalMin / 1440);
   const hours = Math.floor((totalMin % 1440) / 60);
-  const mins = totalMin % 60;
-  if (days > 0) {
-    return `${days}d ${hours}h ${mins}m`;
-  }
-  if (hours > 0) {
-    return `${hours}h ${mins}m`;
-  }
-  return `${mins} min`;
+  return `${days}d ${hours}h`;
 }
 
 function extractGeoFromReq(req) {
@@ -9729,12 +9869,32 @@ app.post('/api/telemetry/ping', async (req, res) => {
   let sessionInvalidated = false;
   let sessionInvalidatedReason = '';
 
+  const devRecord = devices[cleanHwid] || devices[hwid];
+  if (devRecord && (devRecord.sessionInvalidated === true || devRecord.forceLogout === true)) {
+    sessionInvalidated = true;
+    sessionInvalidatedReason = devRecord.sessionInvalidatedReason || 'Sesión finalizada por el administrador.';
+    devRecord.sessionInvalidated = false;
+    devRecord.forceLogout = false;
+    devRecord.sessionInvalidatedReason = '';
+    saveDevices(devices);
+  }
+
   const tombstones = loadTombstones();
-  // Si el dispositivo fue explícitamente eliminado o excluido por el administrador:
-  // Rechazar re-registro automático en la lista activa de celulares.
-  const isDeletedByAdmin = !!(tombstones.deletedDevices && (tombstones.deletedDevices[cleanHwid] || tombstones.deletedDevices[hwid]));
-  const isExcludedByAdmin = !!(tombstones[cleanHwid] || tombstones[hwid]);
-  const isRevokedByAdmin = !!(isDeletedByAdmin || (isExcludedByAdmin && (tombstones[cleanHwid] || tombstones[hwid]).blocked !== false));
+  // Si el dispositivo estaba en deletedDevices por una eliminación previa del panel para limpiar historial,
+  // notificar invalidación de sesión al APK y removerlo al conectarse para permitir re-registro limpio sin bloqueos residuales (acceso DEMO libre permanente).
+  if (tombstones.deletedDevices && (tombstones.deletedDevices[cleanHwid] || tombstones.deletedDevices[hwid])) {
+    delete tombstones.deletedDevices[cleanHwid];
+    delete tombstones.deletedDevices[hwid];
+    saveTombstones(tombstones);
+    sessionInvalidated = true;
+    sessionInvalidatedReason = 'Este dispositivo ha sido eliminado del panel por el administrador.';
+  }
+
+  // REGLA AUTORITATIVA: El acceso al APK es SIEMPRE LIBRE en modo DEMO con restricciones.
+  // SOLO se bloquea con KillSwitch si el administrador lo bloqueó MANUALMENTE de forma explícita (blocked === true)
+  // o si el sistema de seguridad detectó un intento verificado de bypass/hack/tamper.
+  // La eliminación del panel JAMÁS bloquea un dispositivo.
+  const isRevokedByAdmin = !!((tombstones[cleanHwid] && tombstones[cleanHwid].blocked === true) || (tombstones[hwid] && tombstones[hwid].blocked === true));
   const effectiveLicenseKey = (licenseKey || '').trim().toUpperCase();
   const isKeyRevoked = !!(effectiveLicenseKey && tombstones.revokedKeys && tombstones.revokedKeys[effectiveLicenseKey]);
   const _telAuthHeader = (req.headers && req.headers['authorization']) || '';
@@ -9742,8 +9902,8 @@ app.post('/api/telemetry/ping', async (req, res) => {
   const _telAdminKey = (req.headers && req.headers['x-admin-key']) || '';
   const canAssociateIdentity = (_telToken && !!(typeof verifySessionToken === 'function' && verifySessionToken(_telToken))) || (typeof isValidAdminKey === 'function' && isValidAdminKey(_telAdminKey));
 
-  if (isDeletedByAdmin || isExcludedByAdmin) {
-    const excReason = (tombstones[cleanHwid]?.reason) || (tombstones[hwid]?.reason) || 'Dispositivo excluido del registro por el administrador.';
+  if (isRevokedByAdmin) {
+    const excReason = (tombstones[cleanHwid]?.reason) || (tombstones[hwid]?.reason) || 'Acceso bloqueado por el administrador.';
     return res.json({
       success: true,
       hwid: cleanHwid,
@@ -9751,7 +9911,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
       blocked: true,
       forceDemo: true,
       blockReason: excReason,
-      isDeleted: true,
+      isDeleted: false,
       updateInfo: {
         latestVersion: settings.latestVersion || '1.0.0',
         versionCode: settings.versionCode || 1,
@@ -9765,12 +9925,23 @@ app.post('/api/telemetry/ping', async (req, res) => {
   // Un ping sin token solo actualiza estado del dispositivo; no crea ni modifica users.json.
   if (userEmail && typeof userEmail === 'string' && userEmail.trim().length > 0) {
     const cleanEmail = userEmail.trim().toLowerCase();
-    const isUserDeleted = !!(tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]);
-    if (isUserDeleted) {
-      // La invalidación de sesión se permite siempre (protección del administrador)
-      sessionInvalidated = true;
-      sessionInvalidatedReason = 'Esta cuenta ha sido eliminada por el administrador.';
-    } else if (canAssociateIdentity) {
+    const tombRecord = tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail];
+    if (tombRecord) {
+      if (tombRecord.isBanned === true) {
+        if (tombRecord.bannedUntil && Date.now() > new Date(tombRecord.bannedUntil).getTime()) {
+          delete tombstones.deletedUsers[cleanEmail];
+          saveTombstones(tombstones);
+        } else {
+          sessionInvalidated = true;
+          sessionInvalidatedReason = tombRecord.reason || 'Esta cuenta ha sido bloqueada por el administrador.';
+        }
+      } else {
+        delete tombstones.deletedUsers[cleanEmail];
+        saveTombstones(tombstones);
+      }
+    }
+
+    if (canAssociateIdentity) {
       // Solo crear/actualizar entrada en users.json si el ping lleva token JWT o admin-key válido
       const users = loadUsers();
       let userObj = users.find(u => u.email.toLowerCase() === cleanEmail || (u.username && u.username.toLowerCase() === cleanEmail));
@@ -9799,13 +9970,16 @@ app.post('/api/telemetry/ping', async (req, res) => {
         if (userObj.status === 'BLOCKED') {
           sessionInvalidated = true;
           sessionInvalidatedReason = 'Tu cuenta ha sido bloqueada por el administrador.';
+        } else if (userObj.status === 'ACTIVE' && tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
+          delete tombstones.deletedUsers[cleanEmail];
+          saveTombstones(tombstones);
         }
       }
       saveUsers(users);
     }
   }
 
-  // Si el celular físico fue eliminado o revocado por el administrador, devolver revocación permanente y NO reinsertar
+  // Si el celular físico fue explícitamente bloqueado por el administrador (blocked === true)
   if (isRevokedByAdmin) {
     return res.json({
       success: true,
@@ -9814,7 +9988,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
       licenseKey: '',
       forceWipeKey: true,
       blocked: true,
-      reason: 'Dispositivo excluido del registro por el administrador.',
+      reason: 'Acceso revocado por el administrador.',
       sessionInvalidated,
       sessionInvalidatedReason,
       authoritativeMode: 'DEMO',
@@ -10170,6 +10344,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
       updateInfo,
       releaseChannel,
       betaStatus,
+      isProTrial: !!(devMode === 'PRO' && !isForcedDemo && ((devices[hwid].authAction && devices[hwid].authAction.startsWith('PRO_TRIAL')) || devices[hwid].proTrialStartedAt || (devices[hwid].expiresAt && !devices[hwid].isLifetime))),
       expiresAt: devices[hwid].expiresAt || null,
       isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
       daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
@@ -10183,8 +10358,8 @@ app.post('/api/telemetry/ping', async (req, res) => {
       licenseValidUntil: devMode === 'PRO' && !isForcedDemo
         ? new Date(Date.now() + 48 * 3600 * 1000).toISOString()
         : null,
-      sessionInvalidated: false,
-      forceLogout: false,
+      sessionInvalidated: sessionInvalidated,
+      forceLogout: sessionInvalidated,
       isEmulator: !!devices[hwid].isEmulator,
       deviceModel: devices[hwid].deviceModel || '',
       deviceBrand: devices[hwid].deviceBrand || '',
@@ -10240,6 +10415,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
     updateInfo,
     releaseChannel,
     betaStatus,
+    isProTrial: !!(devMode === 'PRO' && !isForcedDemo && ((devices[hwid].authAction && devices[hwid].authAction.startsWith('PRO_TRIAL')) || devices[hwid].proTrialStartedAt || (devices[hwid].expiresAt && !devices[hwid].isLifetime))),
     expiresAt: devices[hwid].expiresAt || null,
     isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
     daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
@@ -10544,6 +10720,10 @@ async function sendEmailDirect(to, subject, html) {
 
 app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
   try {
+    if (typeof syncCloudStorage === 'function') {
+      await syncCloudStorage(true);
+    }
+
     const { email, password, username, hwid, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body;
     if (!email || !password) {
       return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
@@ -10559,6 +10739,28 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
     if (cleanPass.length < 8) {
       return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres.' });
+    }
+
+    // Comprobar si el correo tiene veto activo registrado por el administrador
+    const tombstones = loadTombstones();
+    const tombRecord = tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail];
+    if (tombRecord) {
+      if (tombRecord.isBanned === true) {
+        if (tombRecord.bannedUntil && Date.now() > new Date(tombRecord.bannedUntil).getTime()) {
+          // Baneo temporal expirado: limpiar y permitir registro
+          delete tombstones.deletedUsers[cleanEmail];
+          saveTombstones(tombstones);
+        } else {
+          return res.status(403).json({
+            success: false,
+            error: 'Esta cuenta o correo electrónico se encuentra suspendido o vetado por el administrador.' + (tombRecord.reason ? ' Motivo: ' + tombRecord.reason : '')
+          });
+        }
+      } else {
+        // Eliminación limpia sin veto: remover tombstone residual
+        delete tombstones.deletedUsers[cleanEmail];
+        saveTombstones(tombstones);
+      }
     }
 
     const users = loadUsers();
@@ -10602,8 +10804,7 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
     }
     saveUsers(users);
 
-    // Limpiar de tombstones si el correo había sido eliminado previamente
-    const tombstones = loadTombstones();
+    // Asegurar que no quede ningún tombstone si fue registrado
     if (tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
       delete tombstones.deletedUsers[cleanEmail];
       saveTombstones(tombstones);
@@ -10660,6 +10861,11 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       }
     }
 
+    // Sincronizar cambios a Redis de inmediato
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
+
     // Plantilla HTML Season 6 híbrida (Código + 1-Clic Web + App Deep-Link)
     const emailHtml = buildActivationEmailHtml(cleanUser, cleanEmail, code);
 
@@ -10692,8 +10898,12 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 });
 
 // Endpoint público GET para activación en 1-Clic desde el correo electrónico
-app.get('/api/auth/activate', (req, res) => {
+app.get('/api/auth/activate', async (req, res) => {
   try {
+    if (typeof syncCloudStorage === 'function') {
+      await syncCloudStorage(true);
+    }
+
     const { email, code } = req.query || {};
     if (!email) {
       return res.status(400).send(renderActivationHtmlPage({
@@ -10774,16 +10984,35 @@ app.get('/api/auth/activate', (req, res) => {
     user.emailVerifiedAt = new Date().toISOString();
     saveUsers(users);
 
+    // Limpiar cualquier tombstone residual para garantizar reactivación sin vetos
+    const tombstones = loadTombstones();
+    if (tombstones.deletedUsers && tombstones.deletedUsers[targetEmail]) {
+      delete tombstones.deletedUsers[targetEmail];
+      saveTombstones(tombstones);
+    }
+
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
     // Activar prueba PRO de 24h o DEMO vitalicio en el dispositivo
     if (user.hwid) {
       const devices = loadDevices();
-      const changed = activateProTrialOrPermanentDemo(devices, user.hwid, targetEmail, clientIp);
+      const existingDev = devices[user.hwid];
+      const changed = activateProTrialOrPermanentDemo(devices, user.hwid, targetEmail, clientIp, existingDev ? {
+        isEmulator: existingDev.isEmulator,
+        deviceModel: existingDev.deviceModel,
+        deviceBrand: existingDev.deviceBrand,
+        fingerprint: existingDev.fingerprint,
+        detectionReason: existingDev.detectionReason
+      } : null);
       if (changed) saveDevices(devices);
     }
 
     addAuditLog('REGISTER_CONFIRMED_WEB', user.hwid || 'WEB', clientIp, `Cuenta activada vía enlace 1-clic: ${user.username} (${targetEmail})`);
+
+    // Sincronizar persistencia distribuida antes de enviar respuesta web
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
 
     return res.send(renderActivationHtmlPage({
       success: true,
@@ -11030,6 +11259,29 @@ app.get('/api/auth/oauth/google/callback', async (req, res) => {
 
     const cleanEmail = String(googleUser.email).trim().toLowerCase();
     const cleanName = String(googleUser.name || googleUser.given_name || cleanEmail.split('@')[0]).trim();
+
+    // Comprobar si el correo tiene veto activo registrado por el administrador
+    const tombstones = loadTombstones();
+    const tombRecord = tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail];
+    if (tombRecord) {
+      if (tombRecord.isBanned === true) {
+        if (tombRecord.bannedUntil && Date.now() > new Date(tombRecord.bannedUntil).getTime()) {
+          delete tombstones.deletedUsers[cleanEmail];
+          saveTombstones(tombstones);
+        } else {
+          return res.status(403).send(renderActivationHtmlPage({
+            success: false,
+            title: 'Cuenta Suspendida',
+            message: 'Esta cuenta o correo electrónico se encuentra suspendido o vetado por el administrador.' + (tombRecord.reason ? '<br><small>Motivo: ' + escapeHtml(tombRecord.reason) + '</small>' : '')
+          }));
+        }
+      } else {
+        // Eliminación limpia: permitir acceso o nuevo registro con Google
+        delete tombstones.deletedUsers[cleanEmail];
+        saveTombstones(tombstones);
+      }
+    }
+
     const users = loadUsers();
     let user = users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
@@ -11255,7 +11507,29 @@ app.post('/api/auth/validate-session', (req, res) => {
       const tombstones = loadTombstones();
       const cleanEmail = String(decoded.sub).toLowerCase().trim();
       if (tombstones.deletedUsers && tombstones.deletedUsers[cleanEmail]) {
-        return res.status(401).json({ success: false, valid: false, error: 'USUARIO_NO_EXISTE' });
+        const tombRecord = tombstones.deletedUsers[cleanEmail];
+        if (tombRecord && tombRecord.isBanned === true) {
+          if (tombRecord.bannedUntil && Date.now() > new Date(tombRecord.bannedUntil).getTime()) {
+            delete tombstones.deletedUsers[cleanEmail];
+            saveTombstones(tombstones);
+          } else {
+            return res.status(401).json({ success: false, valid: false, error: 'USUARIO_BLOQUEADO' });
+          }
+        } else {
+          // Si no está baneado, verificar si el usuario existe actualmente en users.json
+          const allUsers = loadUsers();
+          const userRecord = allUsers.find(u =>
+            (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+            (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+          );
+          if (userRecord && userRecord.status === 'ACTIVE') {
+            // Usuario recreado o activo: limpiar tombstone residual
+            delete tombstones.deletedUsers[cleanEmail];
+            saveTombstones(tombstones);
+          } else if (!userRecord) {
+            return res.status(401).json({ success: false, valid: false, error: 'USUARIO_NO_EXISTE' });
+          }
+        }
       }
 
       const allUsers = loadUsers();
@@ -11303,8 +11577,12 @@ app.post('/api/auth/validate-session', (req, res) => {
 });
 
 // Verificar código de activación de registro (soporta email o username)
-app.post('/api/auth/verify-registration', authRateLimitMiddleware, (req, res) => {
+app.post('/api/auth/verify-registration', authRateLimitMiddleware, async (req, res) => {
   try {
+    if (typeof syncCloudStorage === 'function') {
+      await syncCloudStorage(true);
+    }
+
     const { email, username, code, hwid } = req.body;
     const rawId = email || username;
     if (!rawId || !code) {
@@ -11359,17 +11637,38 @@ app.post('/api/auth/verify-registration', authRateLimitMiddleware, (req, res) =>
     user.status = 'ACTIVE';
     user.verificationCode = undefined;
     user.verificationExpiresAt = undefined;
+    user.emailVerifiedAt = new Date().toISOString();
+
+    // Limpiar cualquier tombstone residual
+    const tombstones = loadTombstones();
+    if (tombstones.deletedUsers && tombstones.deletedUsers[targetEmail]) {
+      delete tombstones.deletedUsers[targetEmail];
+      saveTombstones(tombstones);
+    }
+
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     if (hwid) {
       user.hwid = hwid;
       user.activeHwid = hwid;
       const devices = loadDevices();
-      const changed = activateProTrialOrPermanentDemo(devices, hwid, targetEmail, clientIp);
+      const existingDev = devices[hwid];
+      const changed = activateProTrialOrPermanentDemo(devices, hwid, targetEmail, clientIp, existingDev ? {
+        isEmulator: existingDev.isEmulator,
+        deviceModel: existingDev.deviceModel,
+        deviceBrand: existingDev.deviceBrand,
+        fingerprint: existingDev.fingerprint,
+        detectionReason: existingDev.detectionReason
+      } : null);
       if (changed) saveDevices(devices);
     }
     saveUsers(users);
 
     addAuditLog('REGISTER_CONFIRMED', hwid, clientIp, `Cuenta activada: ${user.username} (${targetEmail})`);
+
+    // Sincronizar cambios a Redis de inmediato
+    if (typeof flushCloudWrites === 'function') {
+      await flushCloudWrites();
+    }
 
     const token = generateSessionToken(targetEmail, user.role || 'USER', hwid);
     res.json({
@@ -11454,6 +11753,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   if (cleanHwid) {
     const devices = loadDevices();
     let dev = devices[cleanHwid];
+    let isNewQuickDemo = false;
     if (!dev) {
       dev = {
         hwid: cleanHwid,
@@ -11470,6 +11770,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
       };
       devices[cleanHwid] = dev;
       saveDevices(devices);
+      isNewQuickDemo = true;
     } else {
       dev.lastSeen = new Date().toISOString();
       dev.ip = clientIp;
@@ -11497,8 +11798,18 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
           dev.quickDemoStartedAt = new Date().toISOString();
           dev.quickDemoExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
           saveDevices(devices);
+          isNewQuickDemo = true;
         }
       }
+    }
+    if (isNewQuickDemo) {
+      sendWhatsAppAlert(
+        'quickDemo',
+        '⏱️ ACCESO RÁPIDO DEMO INICIADO (10 MIN) ⏱️',
+        `📱 Dispositivo: ${deviceBrand || dev.deviceBrand || ''} ${deviceModel || dev.deviceModel || 'Android'}${dev.isEmulator ? ' [EMULADOR]' : ''}\n📱 HWID: \`${cleanHwid}\`\n⏳ Duración: 10 Minutos\n🛡️ Estado: Exploración temporal de prueba`,
+        cleanHwid,
+        clientIp || '127.0.0.1'
+      ).catch(() => {});
     }
   }
 
@@ -11538,6 +11849,10 @@ app.post('/api/auth/demo-quick-consumed', (req, res) => {
 });
 
 app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
+  }
+
   const { email, username, password, hwid, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body || {};
   const rawIdentifier = username || email;
   if (!rawIdentifier || !password) {
@@ -11582,7 +11897,29 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
     return res.status(401).json({ success: false, error: 'Usuario o correo no encontrado.' });
   }
 
-  if (user.status === 'BLOCKED') {
+  // Comprobar si el usuario tiene veto activo registrado
+  const tombstones = loadTombstones();
+  const tombEmail = (user.email || '').toLowerCase().trim();
+  const tombRecord = tombstones.deletedUsers && tombstones.deletedUsers[tombEmail];
+  if (tombRecord) {
+    if (tombRecord.isBanned === true) {
+      if (tombRecord.bannedUntil && Date.now() > new Date(tombRecord.bannedUntil).getTime()) {
+        delete tombstones.deletedUsers[tombEmail];
+        saveTombstones(tombstones);
+      } else {
+        return res.status(403).json({
+          success: false,
+          error: 'CUENTA_BLOQUEADA',
+          message: 'Esta cuenta se encuentra suspendida o vetada por el administrador.' + (tombRecord.reason ? ' Motivo: ' + tombRecord.reason : '')
+        });
+      }
+    } else {
+      delete tombstones.deletedUsers[tombEmail];
+      saveTombstones(tombstones);
+    }
+  }
+
+  if (user.status === 'BLOCKED' || user.blocked) {
     return res.status(403).json({ success: false, error: 'Tu cuenta ha sido bloqueada por el administrador.' });
   }
 
@@ -11641,7 +11978,14 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
 
   if (cleanHwid) {
     const userAccountIdentifier = (user.email || user.username || cleanIdentifier || '').trim();
-    const changed = activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp, {
+    const existingDev = devices[cleanHwid];
+    const changed = activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp, existingDev ? {
+      isEmulator: isEmulator !== undefined ? (isEmulator === true || isEmulator === 'true') : existingDev.isEmulator,
+      deviceModel: deviceModel || existingDev.deviceModel,
+      deviceBrand: deviceBrand || existingDev.deviceBrand,
+      fingerprint: fingerprint || existingDev.fingerprint,
+      detectionReason: existingDev.detectionReason
+    } : {
       isEmulator: isEmulator === true || isEmulator === 'true',
       deviceModel,
       deviceBrand,
@@ -11658,6 +12002,10 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
 
   const token = generateSessionToken(user.email, user.role || 'USER', cleanHwid);
   addAuditLog('USER_LOGIN', cleanHwid, clientIp, `Inicio de sesión: ${user.email}`);
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
 
   res.json({
     success: true,
@@ -12602,14 +12950,14 @@ app.post('/api/admin/user/toggle-block', async (req, res) => {
   res.json({ success: true, status: user.status, email: user.email });
 });
 
-// Eliminar usuario desde el panel con registro de revocación (Tombstone)
+// Eliminar usuario desde el panel con soporte de veto opcional (limpieza total por defecto)
 app.post('/api/admin/user/delete', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
   }
 
-  const { id, email } = req.body;
+  const { id, email, restrictionType, restrictionDays, reason } = req.body || {};
   if (!id && !email) {
     return res.status(400).json({ success: false, error: 'ID o Email de usuario requerido para eliminar.' });
   }
@@ -12629,39 +12977,90 @@ app.post('/api/admin/user/delete', async (req, res) => {
 
   const targetEmail = (targetUser && targetUser.email ? targetUser.email : cleanEmail).toLowerCase();
   const targetId = targetUser && targetUser.id ? targetUser.id : cleanId;
+  const targetUserHwid = (targetUser && targetUser.hwid ? targetUser.hwid : '').trim().toUpperCase();
 
-  // Registrar en Tombstones para evitar resurrección permanente
   const tombstones = loadTombstones();
   tombstones.deletedUsers = tombstones.deletedUsers || {};
-  const tombstoneRecord = {
-    deletedAt: new Date().toISOString(),
-    id: targetId,
-    hwid: (targetUser && targetUser.hwid) || '',
-    username: (targetUser && targetUser.username) || '',
-    deletedBy: 'ADMIN_PANEL'
-  };
-  if (targetEmail) tombstones.deletedUsers[targetEmail] = tombstoneRecord;
-  if (targetId) tombstones.deletedUsers[targetId.toLowerCase()] = tombstoneRecord;
-  saveTombstones(tombstones);
 
-  // Filtrar estrictamente por ID y por Email para evitar cualquier residuo
+  // Gestión de restricción/veto según lo elegido por el administrador
+  const cleanRestrType = String(restrictionType || 'none').toLowerCase().trim();
+  let actionLogType = 'USER_DELETED_CLEAN';
+  let restrictionMsg = 'Cuenta eliminada con limpieza total (sin vetos ni restricciones).';
+
+  if (cleanRestrType === 'temporary') {
+    const days = Math.max(1, parseInt(restrictionDays, 10) || 7);
+    const bannedUntil = new Date(Date.now() + days * 86400000).toISOString();
+    const tombstoneRecord = {
+      isBanned: true,
+      bannedUntil,
+      reason: reason || 'Suspensión temporal por administrador',
+      deletedAt: new Date().toISOString(),
+      id: targetId,
+      username: (targetUser && targetUser.username) || '',
+      deletedBy: 'ADMIN_PANEL'
+    };
+    if (targetEmail) tombstones.deletedUsers[targetEmail] = tombstoneRecord;
+    if (targetId) tombstones.deletedUsers[targetId.toLowerCase()] = tombstoneRecord;
+    actionLogType = 'USER_BANNED_TEMPORARY';
+    restrictionMsg = `Cuenta eliminada con veto temporal de ${days} días.`;
+    saveTombstones(tombstones);
+  } else if (cleanRestrType === 'permanent') {
+    const tombstoneRecord = {
+      isBanned: true,
+      bannedUntil: null,
+      reason: reason || 'Baneo definitivo por infracción',
+      deletedAt: new Date().toISOString(),
+      id: targetId,
+      username: (targetUser && targetUser.username) || '',
+      deletedBy: 'ADMIN_PANEL'
+    };
+    if (targetEmail) tombstones.deletedUsers[targetEmail] = tombstoneRecord;
+    if (targetId) tombstones.deletedUsers[targetId.toLowerCase()] = tombstoneRecord;
+    actionLogType = 'USER_BANNED_PERMANENT';
+    restrictionMsg = 'Cuenta eliminada con veto permanente (baneo definitivo).';
+    saveTombstones(tombstones);
+  } else {
+    // Limpieza total: erradicar cualquier registro de tombstone residual
+    let tombstonesChanged = false;
+    if (targetEmail && tombstones.deletedUsers[targetEmail]) {
+      delete tombstones.deletedUsers[targetEmail];
+      tombstonesChanged = true;
+    }
+    if (targetId && tombstones.deletedUsers[targetId.toLowerCase()]) {
+      delete tombstones.deletedUsers[targetId.toLowerCase()];
+      tombstonesChanged = true;
+    }
+    if (tombstonesChanged) {
+      saveTombstones(tombstones);
+    }
+  }
+
+  // Filtrar estrictamente por ID y por Email para erradicar de users.json
   users = users.filter(u => 
     (!targetId || u.id !== targetId) && 
     (!targetEmail || (u.email || '').toLowerCase() !== targetEmail)
   );
   saveUsers(users);
 
-  // Desvincular celulares asociados a este usuario
+  // Desvincular y forzar cierre de sesión en todos los celulares asociados a este usuario
   const devices = loadDevices();
   let devicesChanged = false;
   for (const [devHwid, dev] of Object.entries(devices)) {
-    if (dev && (
-      (targetEmail && ((dev.currentUser || '').toLowerCase() === targetEmail || (dev.userEmail || '').toLowerCase() === targetEmail)) ||
-      (targetId && dev.activeUser === targetId)
-    )) {
+    if (!dev) continue;
+    const isAssociated = (targetEmail && ((dev.currentUser || '').toLowerCase() === targetEmail || (dev.userEmail || '').toLowerCase() === targetEmail)) ||
+      (targetId && dev.activeUser === targetId) ||
+      (targetUserHwid && devHwid === targetUserHwid);
+
+    if (isAssociated) {
       dev.currentUser = '';
       dev.userEmail = '';
       dev.activeUser = '';
+      dev.sessionInvalidated = true;
+      dev.sessionInvalidatedReason = 'Tu cuenta de usuario ha sido eliminada por el administrador.';
+      dev.forceLogout = true;
+      dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+      dev.authUpdatedAt = Date.now();
+      dev.authAction = 'USER_DELETED';
       devicesChanged = true;
     }
   }
@@ -12673,8 +13072,9 @@ app.post('/api/admin/user/delete', async (req, res) => {
     await flushCloudWrites();
   }
 
-  addAuditLog('USER_DELETED', (targetUser && targetUser.hwid) || 'PANEL', getClientIp(req), `Cuenta de usuario eliminada permanentemente: ${targetEmail || targetId}`);
-  res.json({ success: true, message: 'Usuario eliminado permanentemente con éxito.', email: targetEmail, id: targetId });
+  const clientIp = getClientIp(req);
+  addAuditLog(actionLogType, targetUserHwid || 'PANEL', clientIp, `${restrictionMsg} Usuario: ${targetEmail || targetId}`);
+  res.json({ success: true, message: restrictionMsg, email: targetEmail, id: targetId, restrictionType: cleanRestrType });
 });
 
 // Actualizar información completa de usuario desde el panel (modal y menú contextual)
@@ -13021,6 +13421,46 @@ app.get('/api/admin/devices', async (req, res) => {
   let modified = false;
   const users = loadUsers();
 
+  // Reconciliación bidireccional exhaustiva:
+  // 1. Si un usuario de users.json tiene hwid o activeHwid y NO existe en devices, crearlo de inmediato
+  users.forEach(u => {
+    if (u && u.status !== 'DELETED') {
+      const uHwid = (u.activeHwid || u.hwid || '').trim().toUpperCase();
+      if (uHwid && !uHwid.startsWith('PROBE-') && uHwid.length >= 8) {
+        const foundKey = Object.keys(devices).find(h => h.toUpperCase() === uHwid);
+        if (!foundKey) {
+          const nowIso = new Date().toISOString();
+          devices[uHwid] = {
+            hwid: uHwid,
+            mode: (u.role === 'ADMIN' || u.isPro) ? 'PRO' : 'DEMO',
+            licenseKey: '',
+            currentUser: (u.email || u.username || '').toLowerCase().trim(),
+            deviceModel: u.deviceModel || 'Dispositivo Vinculado',
+            deviceBrand: u.deviceBrand || 'Android',
+            firstSeen: u.createdAt || u.registeredAt || nowIso,
+            lastSeen: u.lastLoginAt || u.lastSeen || nowIso,
+            totalPings: 1,
+            ip: u.lastIp || '127.0.0.1',
+            platform: 'Android',
+            appVersion: '1.0.0',
+            blocked: u.status === 'BLOCKED',
+            blockReason: u.status === 'BLOCKED' ? 'Cuenta de usuario bloqueada.' : '',
+            isEmulator: !!u.isEmulator,
+            isTest: !!u.isEmulator,
+            forceDemo: !(u.role === 'ADMIN' || u.isPro),
+            authRevision: 1,
+            authUpdatedAt: Date.now(),
+            authAction: 'USER_RECONCILE'
+          };
+          modified = true;
+        } else if (!devices[foundKey].currentUser || String(devices[foundKey].currentUser).trim() === '') {
+          devices[foundKey].currentUser = (u.email || u.username || '').toLowerCase().trim();
+          modified = true;
+        }
+      }
+    }
+  });
+
   // Reconciliación proactiva: Si dev.currentUser está vacío o ausente, autovincular con el usuario de users.json
   Object.values(devices).forEach(dev => {
     if (!dev.currentUser || String(dev.currentUser).trim() === '') {
@@ -13037,6 +13477,41 @@ app.get('/api/admin/devices', async (req, res) => {
       }
     }
   });
+
+  // 3. Conciliar dispositivos bloqueados en tombstones para que aparezcan en el historial con badge BLOQUEADO
+  const currentTombstones = loadTombstones();
+  for (const [tHwid, tVal] of Object.entries(currentTombstones)) {
+    if (tHwid !== 'revokedKeys' && tHwid !== 'deletedUsers' && tHwid !== 'deletedDevices' && !tHwid.startsWith('_') && tVal && typeof tVal === 'object' && tVal.blocked === true) {
+      const cleanTHwid = tHwid.toUpperCase();
+      const devKey = Object.keys(devices).find(k => k.toUpperCase() === cleanTHwid);
+      if (devKey) {
+        if (!devices[devKey].blocked) {
+          devices[devKey].blocked = true;
+          devices[devKey].blockReason = tVal.reason || 'Bloqueado por el administrador.';
+          modified = true;
+        }
+      } else {
+        devices[cleanTHwid] = {
+          hwid: cleanTHwid,
+          mode: 'DEMO',
+          licenseKey: '',
+          blocked: true,
+          blockReason: tVal.reason || 'Bloqueado por el administrador.',
+          firstSeen: tVal.blockedAt || new Date().toISOString(),
+          lastSeen: tVal.blockedAt || new Date().toISOString(),
+          totalPings: 1,
+          ip: 'Desconocida',
+          platform: 'Android',
+          appVersion: '1.0.0',
+          isEmulator: false,
+          isTest: false,
+          forceDemo: true,
+          currentUser: tVal.user || ''
+        };
+        modified = true;
+      }
+    }
+  }
 
   const now = new Date();
   const nowMs = Date.now();
@@ -13347,43 +13822,35 @@ app.post('/api/admin/device/delete', async (req, res) => {
   }
 
   // 3. GESTIÓN DE EXCLUSIÓN / TOMBSTONES
+  // Eliminar un dispositivo borra su historial y revoca su clave previa, pero JAMÁS lo bloquea.
+  // El hardware queda limpio para permitir acceso libre en Modo DEMO o volver a probar licencias demo pro.
   const tombstones = loadTombstones();
-  if (clearHistory === true || exclude === false) {
-    // Limpieza total: remover de tombstones para que el registro quede completamente limpio
-    tombstones._deletedTombstones = tombstones._deletedTombstones || {};
-    tombstones._deletedTombstones[cleanHwid] = Date.now();
-    for (const k of Object.keys(tombstones)) {
-      if (k.toUpperCase() === cleanHwid) {
-        delete tombstones[k];
-      }
+  tombstones._deletedTombstones = tombstones._deletedTombstones || {};
+  tombstones._deletedTombstones[cleanHwid] = Date.now();
+  for (const k of Object.keys(tombstones)) {
+    if (k.toUpperCase() === cleanHwid) {
+      delete tombstones[k];
     }
-    delete tombstones[cleanHwid];
-    delete tombstones[hwid];
-    delete tombstones[targetKey];
-    if (tombstones.deletedDevices) delete tombstones.deletedDevices[cleanHwid];
-  } else {
-    // Exclusión preventiva estándar
-    tombstones.deletedDevices = tombstones.deletedDevices || {};
-    tombstones.deletedDevices[cleanHwid] = Date.now();
-    tombstones._deletedTombstones = tombstones._deletedTombstones || {};
-    const oldKey = targetDev ? (targetDev.licenseKey || targetDev.generatedKey) : '';
-    if (!tombstones.revokedKeys) tombstones.revokedKeys = {};
-    if (oldKey) {
-      tombstones.revokedKeys[oldKey] = {
-        revokedAt: new Date().toISOString(),
-        hwid: cleanHwid,
-        reason: 'Licencia revocada por eliminación del panel'
-      };
-    }
-    tombstones[cleanHwid] = {
-      deletedAt: new Date().toISOString(),
-      revokedKey: oldKey || '',
-      previousModel: targetDev ? (targetDev.deviceModel || targetDev.platform || 'N/A') : 'N/A',
-      previousUser: targetDev ? (targetDev.currentUser || 'N/A') : 'N/A',
-      reason: req.body.reason || 'Eliminado del panel por el administrador'
-    };
-    delete tombstones._deletedTombstones[cleanHwid];
   }
+  delete tombstones[cleanHwid];
+  delete tombstones[hwid];
+  delete tombstones[targetKey];
+
+  // Si tenía clave de licencia emitida, revocarla para que esa clave específica no pueda ser reutilizada
+  const oldKey = targetDev ? (targetDev.licenseKey || targetDev.generatedKey) : '';
+  if (oldKey) {
+    if (!tombstones.revokedKeys) tombstones.revokedKeys = {};
+    tombstones.revokedKeys[oldKey] = {
+      revokedAt: new Date().toISOString(),
+      hwid: cleanHwid,
+      reason: 'Licencia revocada por eliminación del panel'
+    };
+  }
+
+  // Registrar en deletedDevices únicamente como marcador transitorio de sincronización en la nube (anti-resurrección de copia vieja)
+  tombstones.deletedDevices = tombstones.deletedDevices || {};
+  tombstones.deletedDevices[cleanHwid] = Date.now();
+
   saveTombstones(tombstones);
 
   // 4. ELIMINAR DISPOSITIVO DEL REGISTRO ACTIVO
@@ -13425,6 +13892,22 @@ app.post('/api/admin/device/reset-pro-trial', async (req, res) => {
   const durationHours = Number.isFinite(parseFloat(hours)) && parseFloat(hours) > 0 ? parseFloat(hours) : 24;
   const proExpires = new Date(Date.now() + durationHours * 3600 * 1000).toISOString();
   const key = generateKey(cleanHwid, 'PRO');
+  const tombstones = loadTombstones();
+  let tombChanged = false;
+  if (tombstones.revokedKeys) {
+    for (const [rKey, rVal] of Object.entries(tombstones.revokedKeys)) {
+      if (rKey === key || (rVal && rVal.hwid === cleanHwid)) {
+        delete tombstones.revokedKeys[rKey];
+        tombChanged = true;
+      }
+    }
+  }
+  if (tombstones.deletedDevices && (tombstones.deletedDevices[cleanHwid] || tombstones.deletedDevices[hwid])) {
+    delete tombstones.deletedDevices[cleanHwid];
+    delete tombstones.deletedDevices[hwid];
+    tombChanged = true;
+  }
+  if (tombChanged) saveTombstones(tombstones);
 
   if (!dev) {
     dev = {
@@ -13480,6 +13963,13 @@ app.post('/api/admin/device/reset-pro-trial', async (req, res) => {
   }
 
   addAuditLog('PRO_TRIAL_RESET', cleanHwid, getClientIp(req), `Prueba Demo PRO restablecida a ${durationHours}h para HWID: ${cleanHwid}`);
+  sendWhatsAppAlert(
+    'proTrial',
+    '⭐ PRUEBA PRO REINICIADA (ADMIN PANEL) ⭐',
+    `📱 Dispositivo: ${dev.deviceBrand || ''} ${dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Duración: ${durationHours} Horas\n📅 Vence: ${new Date(proExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}\n🔑 Clave Temporal: \`${key}\`\n🛠️ Acción: Restablecida manualmente por Admin`,
+    cleanHwid,
+    getClientIp(req)
+  ).catch(() => {});
   res.json({
     success: true,
     message: `Prueba Demo PRO activada por ${durationHours} horas con éxito.`,
@@ -13524,6 +14014,13 @@ app.post('/api/admin/device/end-pro-trial', async (req, res) => {
   }
 
   addAuditLog('PRO_TRIAL_ENDED', cleanHwid, getClientIp(req), `Prueba Demo PRO finalizada por Admin. Celular pasa a DEMO vitalicio.`);
+  sendWhatsAppAlert(
+    'demoAssigned',
+    '🎮 PRUEBA PRO FINALIZADA -> DEMO VITALICIO 🎮',
+    `📱 Dispositivo: ${dev.deviceBrand || ''} ${dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: Vitalicio permanente\n🛠️ Acción: Finalizada manualmente por Admin`,
+    cleanHwid,
+    getClientIp(req)
+  ).catch(() => {});
   res.json({
     success: true,
     message: 'Prueba Demo PRO finalizada. El celular ahora está en DEMO vitalicio sin bloqueo.',
@@ -13685,6 +14182,9 @@ app.get('/api/admin/licenses', async (req, res) => {
         hoursRemaining,
         minutesRemaining,
         timeRemainingFormatted,
+        isProTrial: !!(dev.authAction?.startsWith('PRO_TRIAL') || dev.proTrialStartedAt || (dev.mode === 'PRO' && dev.expiresAt && !dev.isLifetime)),
+        proTrialStartedAt: dev.proTrialStartedAt || null,
+        authAction: dev.authAction || '',
         currentUser: dev.currentUser || 'N/A',
         deviceBrand: dev.deviceBrand || '',
         deviceModel: dev.deviceModel || dev.platform || '',
@@ -13791,11 +14291,15 @@ app.post('/api/admin/license/delete', async (req, res) => {
 
   if (targetHwid && devices[targetHwid]) {
     devices[targetHwid].mode = 'DEMO';
-    devices[targetHwid].forceDemo = true;
+    devices[targetHwid].forceDemo = false;
     devices[targetHwid].licenseKey = '';
     devices[targetHwid].generatedKey = '';
     devices[targetHwid].expiresAt = null;
     devices[targetHwid].isLifetime = false;
+    devices[targetHwid].proTrialUsed = false;
+    devices[targetHwid].authRevision = (Number(devices[targetHwid].authRevision) || 0) + 1;
+    devices[targetHwid].authUpdatedAt = Date.now();
+    devices[targetHwid].authAction = 'LICENSE_DELETED';
     saveDevices(devices);
   }
 
@@ -14084,6 +14588,24 @@ app.post('/api/admin/device/toggle-plan', async (req, res) => {
         ? `Hasta el ${new Date(devices[hwid].expiresAt).toLocaleDateString()} ${new Date(devices[hwid].expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
         : 'Indefinido');
 
+  if (targetPlan === 'PRO') {
+    sendWhatsAppAlert(
+      'proAssigned',
+      '🌟 LICENCIA PRO ASIGNADA (ADMIN PANEL) 🌟',
+      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Vigencia: ${durationText}\n🔑 Clave: \`${devices[hwid].licenseKey}\`\n🛡️ Estado: PRO Oficial Activado`,
+      hwid,
+      req.socket.remoteAddress || '127.0.0.1'
+    ).catch(() => {});
+  } else {
+    sendWhatsAppAlert(
+      'demoAssigned',
+      '🎮 MODO DEMO ASIGNADO (ADMIN PANEL) 🎮',
+      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Vigencia: ${durationText}\n🛡️ Estado: Modo DEMO (Lectura y Diagnóstico)`,
+      hwid,
+      req.socket.remoteAddress || '127.0.0.1'
+    ).catch(() => {});
+  }
+
   res.json({
     success: true,
     hwid,
@@ -14225,6 +14747,23 @@ app.post('/api/admin/device/extend-demo', async (req, res) => {
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
   addAuditLog(isPro ? 'EXTEND_PRO' : 'EXTEND_DEMO', hwid, clientIp, `Tiempo ${isPro ? 'PRO' : 'DEMO'} extendido +${label} para ${hwid}. Vence: ${newExpires}`);
+  if (isPro) {
+    sendWhatsAppAlert(
+      'proAssigned',
+      '🌟 TIEMPO PRO EXTENDIDO (ADMIN PANEL) 🌟',
+      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Extensión: +${label}\n📅 Nuevo Vencimiento: ${new Date(newExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}`,
+      hwid,
+      clientIp
+    ).catch(() => {});
+  } else {
+    sendWhatsAppAlert(
+      'demoAssigned',
+      '🎮 TIEMPO DEMO EXTENDIDO (ADMIN PANEL) 🎮',
+      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Extensión: +${label}\n📅 Nuevo Vencimiento: ${new Date(newExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}`,
+      hwid,
+      clientIp
+    ).catch(() => {});
+  }
 
   res.json({
     success: true,
@@ -14239,31 +14778,61 @@ app.post('/api/admin/device/invalidate-session', async (req, res) => {
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
   const { hwid, email } = req.body || {};
   const cleanHwid = hwid ? String(hwid).trim().toUpperCase() : '';
+  const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+
   const users = loadUsers();
-  let found = false;
+  let usersChanged = false;
 
   users.forEach(u => {
-    if ((email && u.email && u.email.toLowerCase() === String(email).toLowerCase()) || (cleanHwid && u.activeHwid === cleanHwid)) {
+    const matchEmail = cleanEmail && u.email && u.email.toLowerCase() === cleanEmail;
+    const matchHwid = cleanHwid && (u.activeHwid === cleanHwid || (u.hwid && u.hwid.trim().toUpperCase() === cleanHwid));
+    if (matchEmail || matchHwid) {
       u.activeHwid = null;
       u.activeSessionAt = null;
       u.sessionVersion = (typeof u.sessionVersion === 'number' ? u.sessionVersion : 1) + 1;
-      found = true;
+      usersChanged = true;
     }
   });
 
-  if (found) {
+  if (usersChanged) {
     saveUsers(users);
   }
 
-  if (cleanHwid) {
-    const devices = loadDevices();
-    if (devices[cleanHwid]) {
-      devices[cleanHwid].currentUser = '';
-      devices[cleanHwid].lastSeen = new Date().toISOString();
-      saveDevices(devices);
+  const devices = (typeof loadDevices === 'function') ? loadDevices() : {};
+  let devicesChanged = false;
+
+  for (const [dhwid, dev] of Object.entries(devices)) {
+    if (!dev) continue;
+    const matchHwid = cleanHwid && dhwid.toUpperCase() === cleanHwid;
+    const matchEmail = cleanEmail && (
+      (dev.currentUser || '').toLowerCase() === cleanEmail ||
+      (dev.userEmail || '').toLowerCase() === cleanEmail
+    );
+
+    if (matchHwid || matchEmail) {
+      dev.currentUser = '';
+      dev.userEmail = '';
+      dev.activeUser = '';
+      dev.sessionInvalidated = true;
+      dev.sessionInvalidatedReason = 'El administrador ha cerrado tu sesión y desvinculado este dispositivo.';
+      dev.forceLogout = true;
+      dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+      dev.authUpdatedAt = Date.now();
+      dev.authAction = 'SESSION_INVALIDATED';
+      dev.lastSeen = new Date().toISOString();
+      devicesChanged = true;
     }
+  }
+
+  if (devicesChanged && typeof saveDevices === 'function') {
+    saveDevices(devices);
   }
 
   if (typeof flushCloudWrites === 'function') {
@@ -14271,9 +14840,9 @@ app.post('/api/admin/device/invalidate-session', async (req, res) => {
   }
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
-  addAuditLog('SESSION_INVALIDATED', hwid || 'N/A', clientIp, `Sesión forzosamente cerrada por Admin para ${email || hwid}`);
+  addAuditLog('SESSION_INVALIDATED', cleanHwid || 'N/A', clientIp, `Sesión forzosamente cerrada y dispositivo desvinculado para: ${cleanEmail || cleanHwid}`);
 
-  res.json({ success: true, message: 'Sesión invalidada. El usuario será desconectado de inmediato.' });
+  res.json({ success: true, message: 'Sesión invalidada y dispositivo desvinculado. El APK cerrará la sesión de inmediato.' });
 });
 
 // 3. Solicitud de Licencia PRO desde la APK por el Cliente
@@ -14650,7 +15219,11 @@ app.post('/api/admin/whatsapp/settings', (req, res) => {
       sqlExploit: events && events.sqlExploit !== undefined ? !!events.sqlExploit : true,
       bruteForce: events && events.bruteForce !== undefined ? !!events.bruteForce : true,
       deviceBlocked: events && events.deviceBlocked !== undefined ? !!events.deviceBlocked : true,
-      proRequest: events && events.proRequest !== undefined ? !!events.proRequest : true
+      proRequest: events && events.proRequest !== undefined ? !!events.proRequest : true,
+      proTrial: events && events.proTrial !== undefined ? !!events.proTrial : true,
+      demoAssigned: events && events.demoAssigned !== undefined ? !!events.demoAssigned : true,
+      quickDemo: events && events.quickDemo !== undefined ? !!events.quickDemo : true,
+      proAssigned: events && events.proAssigned !== undefined ? !!events.proAssigned : true
     }
   };
   saveSettings(settings);

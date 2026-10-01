@@ -5,6 +5,7 @@ import { SecurityService, sha256 } from '../services/security/securityService';
 import { SqlClient } from '../services/database/sqlClient';
 import { LicenseService } from '../services/security/licenseService';
 import { SecureStorage } from '../services/security/secureStorage';
+import { RemoteConfigService } from '../services/security/remoteConfigService';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -74,6 +75,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isDemoExpired, setIsDemoExpired] = useState<boolean>(false);
 
   const clearDemoExpiredNotice = () => setIsDemoExpired(false);
+
+  const syncTelemetry = (hwid: string, plan: 'DEMO' | 'PRO', licenseKey?: string, email?: string, username?: string) => {
+    SqlClient.sendTelemetryPing(
+      hwid,
+      plan || 'DEMO',
+      licenseKey,
+      email,
+      username
+    )
+      .then((res) => {
+        RemoteConfigService.handleTelemetryPingResult(res);
+        LicenseService.handleTelemetryResponse(res, hwid);
+      })
+      .catch((err) => {
+        console.warn('[AuthContext] Telemetry ping error:', err?.message);
+      });
+  };
 
   useEffect(() => {
     const checkSession = async () => {
@@ -188,16 +206,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setUserName(storedUser);
             SqlClient.setActiveUser(storedEmail || storedUser);
             setIsAuthenticated(true);
-            SecurityService.getDeviceHwid().then(hwid => {
-              const currentLicense = LicenseService.getStatus();
-              SqlClient.sendTelemetryPing(
-                hwid,
-                currentLicense.plan || 'DEMO',
-                currentLicense.licenseKey,
-                storedEmail,
-                storedUser || storedEmail.split('@')[0]
-              ).catch(() => {});
-            }).catch(() => {});
           } else {
             setIsAuthenticated(false);
             setIsDemoSession(false);
@@ -206,6 +214,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setIsAuthenticated(false);
           setIsDemoSession(false);
         }
+
+        // Sincronizar telemetría de dispositivo autoritativo al arrancar la app en cualquier estado (login o invitado)
+        SecurityService.getDeviceHwid().then((hwid) => {
+          if (hwid) {
+            const currentLicense = LicenseService.getStatus();
+            syncTelemetry(
+              hwid,
+              currentLicense.plan || 'DEMO',
+              currentLicense.licenseKey,
+              storedEmail || '',
+              storedUser || (storedEmail ? storedEmail.split('@')[0] : '')
+            );
+          }
+        }).catch(() => {});
       } catch (e) {
         console.warn('Auth restore error', e);
         setIsAuthenticated(false);
@@ -289,6 +311,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (interval) clearInterval(interval);
     };
   }, [isAuthenticated, isDemoSession]);
+
+  // Heartbeat periódico (30s autenticado / 45s sin autenticar) para sincronización de telemetría y desvinculación inmediata desde el panel
+  useEffect(() => {
+    const intervalMs = isAuthenticated ? 30000 : 45000;
+    const heartbeatInterval = setInterval(async () => {
+      try {
+        const hwid = await SecurityService.getDeviceHwid();
+        if (!hwid) return;
+        const currentLicense = LicenseService.getStatus();
+        syncTelemetry(
+          hwid,
+          currentLicense.plan || 'DEMO',
+          currentLicense.licenseKey,
+          userEmail || (userName ? `${userName}@muonline.local` : (savedEmail || '')),
+          userName || (savedUsername || '')
+        );
+      } catch (_) {}
+    }, intervalMs);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+    };
+  }, [isAuthenticated, userEmail, userName, savedEmail, savedUsername]);
 
   const login = async (
     usernameOrEmail: string,
@@ -402,13 +447,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         const hwid = await SecurityService.getDeviceHwid();
         const currentLicense = LicenseService.getStatus();
-        SqlClient.sendTelemetryPing(
+        syncTelemetry(
           hwid,
           currentLicense.plan || 'DEMO',
           currentLicense.licenseKey,
           resolvedEmail || `${resolvedUser}@muonline.local`,
           resolvedUser
-        ).catch(() => {});
+        );
       } catch (e) {
         console.warn('Error saving session', e);
       }
@@ -446,13 +491,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const hwid = await SecurityService.getDeviceHwid();
       const currentLicense = LicenseService.getStatus();
-      SqlClient.sendTelemetryPing(
+      syncTelemetry(
         hwid,
         currentLicense.plan || 'DEMO',
         currentLicense.licenseKey,
         cleanEmail,
         cleanUser
-      ).catch(() => {});
+      );
 
       return { success: true };
     } catch (e: any) {
@@ -543,13 +588,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       const currentLicense = LicenseService.getStatus();
-      SqlClient.sendTelemetryPing(
+      syncTelemetry(
         hwid,
         currentLicense.plan || (isDevicePro ? 'PRO' : 'DEMO'),
         currentLicense.licenseKey,
         isDevicePro ? 'pro@muonline.local' : 'demo@muonline.local',
         isDevicePro ? 'PRO User' : 'Demo'
-      ).catch(() => {});
+      );
 
       return { success: true };
     } catch (e: any) {
@@ -641,13 +686,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await AsyncStorage.setItem(SAVED_EMAIL_KEY, resolvedVerifiedEmail);
           await AsyncStorage.setItem(SAVED_USERNAME_KEY, resolvedVerifiedUsername);
           const currentLicense = LicenseService.getStatus();
-          SqlClient.sendTelemetryPing(
+          syncTelemetry(
             hwid,
             currentLicense.plan || 'DEMO',
             currentLicense.licenseKey,
             resolvedVerifiedEmail,
             resolvedVerifiedUsername
-          ).catch(() => {});
+          );
         } catch (e) {
           console.warn('Error saving verified session', e);
         }

@@ -390,6 +390,7 @@
     }
     .badge-demo { background: rgba(239, 210, 141, 0.15); color: var(--gold); border: 1px solid var(--gold); }
     .badge-pro { background: rgba(63, 207, 142, 0.15); color: var(--green-bright); border: 1px solid var(--green-bright); }
+    .badge-protrial { background: rgba(168, 85, 247, 0.18); color: #C084FC; border: 1px solid #A855F7; }
     .badge-blocked { background: rgba(211, 47, 47, 0.15); color: var(--red-bright); border: 1px solid var(--red-bright); }
     .badge-expired { background: rgba(226, 112, 58, 0.15); color: #FF884D; border: 1px solid #E2703A; }
     .badge-expired-pro { background: rgba(239, 210, 141, 0.15); color: var(--gold); border: 1px solid var(--gold); font-weight: 700; }
@@ -1269,6 +1270,79 @@
     </div>
   </div>
 
+  <!-- Modal de Eliminación de Usuario con Opciones de Restricción/Veto -->
+  <div id="delete-user-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 520px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; display:flex; align-items:center; gap:8px; margin:0; color:#FFF;">
+          🗑️ Eliminar Cuenta de Usuario
+        </h3>
+        <button class="btn btn-dark btn-sm" onclick="closeDeleteUserModal()">✕</button>
+      </div>
+
+      <input type="hidden" id="delete-user-target-id" />
+      <input type="hidden" id="delete-user-target-email" />
+
+      <p style="font-size: 13px; color: #E0E0E0; margin-bottom: 16px;">
+        ¿Qué tipo de acción deseas ejecutar sobre la cuenta <strong id="delete-user-target-display" style="color:var(--gold);"></strong>?
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:18px;">
+        <!-- Opción 1: Limpieza Total (Por defecto) -->
+        <label style="display:flex; align-items:flex-start; gap:10px; background:rgba(63,207,142,0.08); border:1px solid rgba(63,207,142,0.3); border-radius:4px; padding:12px; cursor:pointer;">
+          <input type="radio" name="delete-restriction-type" value="none" checked onchange="toggleDeleteRestrictionFields()" style="margin-top:3px; accent-color:#3FCF8E;" />
+          <div>
+            <strong style="color:#3FCF8E; font-size:13px; display:block;">🟢 Limpieza Total (Sin Restricciones / Recomendado)</strong>
+            <span style="font-size:11px; color:#BCB2A4; display:block; margin-top:2px; line-height:1.4;">
+              Elimina la cuenta y desvincula celulares. Permite volver a registrar el correo o ingresar con Google libremente sin ningún veto o bloqueo residual (ideal para pruebas y mantenimiento).
+            </span>
+          </div>
+        </label>
+
+        <!-- Opción 2: Veto Temporal -->
+        <label style="display:flex; align-items:flex-start; gap:10px; background:rgba(239,210,141,0.08); border:1px solid rgba(239,210,141,0.3); border-radius:4px; padding:12px; cursor:pointer;">
+          <input type="radio" name="delete-restriction-type" value="temporary" onchange="toggleDeleteRestrictionFields()" style="margin-top:3px; accent-color:#EFD28D;" />
+          <div>
+            <strong style="color:#EFD28D; font-size:13px; display:block;">🟡 Eliminar con Veto Temporal (Suspensión por Días)</strong>
+            <span style="font-size:11px; color:#BCB2A4; display:block; margin-top:2px; line-height:1.4;">
+              Elimina los datos activos de la cuenta pero bloquea nuevos registros o accesos durante el plazo establecido. Al expirar el plazo, el veto se levanta solo.
+            </span>
+          </div>
+        </label>
+
+        <!-- Opción 3: Veto Permanente -->
+        <label style="display:flex; align-items:flex-start; gap:10px; background:rgba(211,47,47,0.08); border:1px solid rgba(211,47,47,0.3); border-radius:4px; padding:12px; cursor:pointer;">
+          <input type="radio" name="delete-restriction-type" value="permanent" onchange="toggleDeleteRestrictionFields()" style="margin-top:3px; accent-color:#E2703A;" />
+          <div>
+            <strong style="color:#FF884D; font-size:13px; display:block;">🔴 Eliminar con Veto Permanente (Baneo Definitivo)</strong>
+            <span style="font-size:11px; color:#BCB2A4; display:block; margin-top:2px; line-height:1.4;">
+              Baneo definitivo de este correo e identidad. Bloquea permanentemente cualquier futuro registro o inicio de sesión por infracción grave.
+            </span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Campos condicionales para veto temporal o permanente -->
+      <div id="delete-restriction-fields" style="display:none; background:rgba(0,0,0,0.25); border:1px solid #444; border-radius:4px; padding:12px; margin-bottom:16px;">
+        <div id="delete-restriction-days-container" class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:12px;">Días de Suspensión / Veto</label>
+          <input type="number" id="delete-restriction-days" class="form-control" value="7" min="1" max="365" style="font-size:12px; width:120px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12px;">Motivo del Veto / Sanción <small style="color:var(--muted);">(Opcional, visible en auditoría)</small></label>
+          <input type="text" id="delete-restriction-reason" class="form-control" placeholder="Ej: Infracción de normas, solicitud de baneo, abuso detectado..." style="font-size:12px;" />
+        </div>
+      </div>
+
+      <div id="delete-user-error" style="color: var(--red-bright); font-size: 12px; margin-bottom: 12px; display: none; font-weight:600;"></div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn btn-dark" onclick="closeDeleteUserModal()">Cancelar</button>
+        <button class="btn btn-red" id="btn-confirm-delete-user" onclick="executeDeleteUserAccount()">🗑️ Confirmar Eliminación</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Conectar Persistencia Cloud (Upstash Redis / Vercel KV) -->
   <div id="cloud-storage-modal" class="modal-overlay">
     <div class="modal-box" style="max-width: 580px;">
@@ -1489,7 +1563,7 @@
       <div class="metric-value" id="metric-expired" style="color: #FFB300;">0</div>
       <span class="metric-hint">Extender o Bloquear →</span>
     </div>
-    <div class="metric-card red" onclick="selectMainModule('mod-devices', 'tab-devices')" title="Clic para ver Dispositivos Bloqueados Manualmente por el Administrador">
+    <div class="metric-card red" onclick="selectMainModule('mod-devices', 'tab-devices'); setDeviceView('blocked');" title="Clic para ver Dispositivos Bloqueados Manualmente por el Administrador">
       <div class="metric-label">⛔ Bloqueados (Admin)</div>
       <div class="metric-value" id="metric-blocked">0</div>
       <span class="metric-hint">Ver Bloqueados →</span>
@@ -1651,6 +1725,9 @@
           </button>
           <button id="view-btn-protrial" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('protrial')">
             ⚡ Demo PRO 24h <span id="count-protrial" class="badge" style="background: rgba(255, 179, 0, 0.2); color: #FFB300; margin-left: 6px; font-weight: 700;">0</span>
+          </button>
+          <button id="view-btn-blocked" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('blocked')">
+            ⛔ Bloqueados <span id="count-blocked" class="badge" style="background: rgba(226, 112, 58, 0.2); color: #E2703A; margin-left: 6px; font-weight: 700;">0</span>
           </button>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -1954,6 +2031,22 @@
           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
             <input type="checkbox" id="wa-evt-pro" checked />
             <span>⭐ Nuevas Solicitudes de Licencia PRO</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
+            <input type="checkbox" id="wa-evt-protrial" checked />
+            <span>⭐ Prueba PRO 24H Asignada (Demo PRO)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
+            <input type="checkbox" id="wa-evt-demoassigned" checked />
+            <span>🎮 Modo DEMO Vitalicio Asignado</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
+            <input type="checkbox" id="wa-evt-quickdemo" checked />
+            <span>⏱️ Acceso Rápido Demo Iniciado (10 min)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #DDD; cursor: pointer;">
+            <input type="checkbox" id="wa-evt-proassigned" checked />
+            <span>🌟 Licencias PRO Asignadas / Modificadas</span>
           </label>
         </div>
       </div>
@@ -2475,6 +2568,7 @@
             <button class="btn btn-dark btn-sm log-cat-btn active" id="log-btn-ALL" onclick="setLogCategoryFilter('ALL')">Todos</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-SECURITY" onclick="setLogCategoryFilter('SECURITY')">🛡️ Seguridad</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-LICENSE" onclick="setLogCategoryFilter('LICENSE')">🔑 Licencias</button>
+            <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-PRO_TRIAL" onclick="setLogCategoryFilter('PRO_TRIAL')">⚡ Demo PRO 24h</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-DEVICES" onclick="setLogCategoryFilter('DEVICES')">📱 Celulares</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-USERS" onclick="setLogCategoryFilter('USERS')">👥 Usuarios</button>
             <button class="btn btn-dark btn-sm log-cat-btn" id="log-btn-SYSTEM" onclick="setLogCategoryFilter('SYSTEM')">⚙️ Sistema</button>
@@ -2679,28 +2773,16 @@
         const parsed = JSON.parse(savedDismissed);
         if (Array.isArray(parsed)) parsed.forEach(id => dismissedNotificationIds.add(id));
       }
-      // Cargar celulares, usuarios, tombstones y solicitudes explícitamente eliminados en esta sesión
+      // Limpieza proactiva de listas negras locales residuales (el servidor es la única autoridad de verdad)
       try {
-        const savedDelHwids = sessionStorage.getItem('mumanager_deleted_hwids') || localStorage.getItem('mumanager_deleted_hwids');
-        if (savedDelHwids) {
-          const parsed = JSON.parse(savedDelHwids);
-          if (Array.isArray(parsed)) parsed.forEach(h => locallyDeletedHwids.add(String(h).toUpperCase()));
-        }
-        const savedDelUsers = sessionStorage.getItem('mumanager_deleted_users') || localStorage.getItem('mumanager_deleted_users');
-        if (savedDelUsers) {
-          const parsed = JSON.parse(savedDelUsers);
-          if (Array.isArray(parsed)) parsed.forEach(u => locallyDeletedUserIds.add(String(u).toLowerCase()));
-        }
-        const savedDelTombstones = sessionStorage.getItem('mumanager_deleted_tombstones') || localStorage.getItem('mumanager_deleted_tombstones');
-        if (savedDelTombstones) {
-          const parsed = JSON.parse(savedDelTombstones);
-          if (Array.isArray(parsed)) parsed.forEach(h => locallyDeletedTombstones.add(String(h).toUpperCase()));
-        }
-        const savedDelProReqs = sessionStorage.getItem('mumanager_deleted_pro_reqs') || localStorage.getItem('mumanager_deleted_pro_reqs');
-        if (savedDelProReqs) {
-          const parsed = JSON.parse(savedDelProReqs);
-          if (Array.isArray(parsed)) parsed.forEach(id => locallyDeletedProRequests.add(String(id)));
-        }
+        localStorage.removeItem('mumanager_deleted_hwids');
+        localStorage.removeItem('mumanager_deleted_users');
+        localStorage.removeItem('mumanager_deleted_tombstones');
+        localStorage.removeItem('mumanager_deleted_pro_reqs');
+        sessionStorage.removeItem('mumanager_deleted_hwids');
+        sessionStorage.removeItem('mumanager_deleted_users');
+        sessionStorage.removeItem('mumanager_deleted_tombstones');
+        sessionStorage.removeItem('mumanager_deleted_pro_reqs');
       } catch (_) {}
     } catch (_) {}
 
@@ -3499,11 +3581,7 @@
         const users = await res.json();
         if (Array.isArray(users)) {
           // El servidor es la fuente autoritativa de verdad
-          allUsersCache = users.filter(u => {
-            const emailKey = (u.email || '').toLowerCase().trim();
-            const idKey = (u.id || '').toLowerCase().trim();
-            return (!emailKey || !locallyDeletedUserIds.has(emailKey)) && (!idKey || !locallyDeletedUserIds.has(idKey));
-          });
+          allUsersCache = users.filter(u => u && (u.username || u.email));
           try { sessionStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
           updateTextIfDifferent('metric-users', allUsersCache.length);
           
@@ -3749,26 +3827,95 @@
       }
     }
 
-    async function deleteUserAccount(id, email) {
-      if (!await showGothicConfirm({ title: 'Eliminar Cuenta de Usuario', message: `¿Deseas eliminar definitivamente la cuenta de "${email || id}"?\n\nEsta acción no se puede deshacer y revoca cualquier sesión activa.`, icon: '🗑️', confirmText: 'Eliminar Definitivamente', isDanger: true })) return;
+    function openDeleteUserModal(id, email, username) {
+      const modal = document.getElementById('delete-user-modal');
+      if (!modal) return;
+      document.getElementById('delete-user-target-id').value = id || '';
+      document.getElementById('delete-user-target-email').value = email || '';
+      document.getElementById('delete-user-target-display').innerText = (email || username || id || 'esta cuenta');
+      
+      // Reset radio buttons to 'none' (limpieza total)
+      const radios = document.getElementsByName('delete-restriction-type');
+      radios.forEach(r => { r.checked = (r.value === 'none'); });
+      document.getElementById('delete-restriction-days').value = '7';
+      document.getElementById('delete-restriction-reason').value = '';
+      const errBox = document.getElementById('delete-user-error');
+      if (errBox) errBox.style.display = 'none';
+      toggleDeleteRestrictionFields();
+      modal.style.display = 'flex';
+    }
+
+    function closeDeleteUserModal() {
+      const modal = document.getElementById('delete-user-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function toggleDeleteRestrictionFields() {
+      const radios = document.getElementsByName('delete-restriction-type');
+      let selected = 'none';
+      radios.forEach(r => { if (r.checked) selected = r.value; });
+
+      const fieldsContainer = document.getElementById('delete-restriction-fields');
+      const daysContainer = document.getElementById('delete-restriction-days-container');
+      const confirmBtn = document.getElementById('btn-confirm-delete-user');
+
+      if (selected === 'none') {
+        if (fieldsContainer) fieldsContainer.style.display = 'none';
+        if (confirmBtn) {
+          confirmBtn.innerHTML = '🟢 Confirmar Limpieza Total';
+          confirmBtn.className = 'btn btn-green';
+        }
+      } else if (selected === 'temporary') {
+        if (fieldsContainer) fieldsContainer.style.display = 'block';
+        if (daysContainer) daysContainer.style.display = 'block';
+        if (confirmBtn) {
+          confirmBtn.innerHTML = '🟡 Eliminar con Veto Temporal';
+          confirmBtn.className = 'btn btn-warning';
+        }
+      } else if (selected === 'permanent') {
+        if (fieldsContainer) fieldsContainer.style.display = 'block';
+        if (daysContainer) daysContainer.style.display = 'none';
+        if (confirmBtn) {
+          confirmBtn.innerHTML = '🔴 Eliminar con Baneo Definitivo';
+          confirmBtn.className = 'btn btn-red';
+        }
+      }
+    }
+
+    async function executeDeleteUserAccount() {
+      const id = document.getElementById('delete-user-target-id').value;
+      const email = document.getElementById('delete-user-target-email').value;
+      const errBox = document.getElementById('delete-user-error');
+      if (errBox) errBox.style.display = 'none';
+
+      const radios = document.getElementsByName('delete-restriction-type');
+      let restrictionType = 'none';
+      radios.forEach(r => { if (r.checked) restrictionType = r.value; });
+
+      const restrictionDays = document.getElementById('delete-restriction-days').value || 7;
+      const reason = document.getElementById('delete-restriction-reason').value || '';
+
       const key = getAdminKey();
+      const confirmBtn = document.getElementById('btn-confirm-delete-user');
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = 'Eliminando...';
+      }
+
       try {
         const res = await fetch('/api/admin/user/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ id, email })
+          body: JSON.stringify({ id, email, restrictionType, restrictionDays, reason })
         });
         const data = await res.json().catch(() => ({}));
         if ((res.ok && data.success) || res.status === 404) {
-          showToast(res.status === 404 ? 'La cuenta no existía en el servidor. Registro local limpiado.' : 'Cuenta de "' + (email || id) + '" eliminada permanentemente.');
+          closeDeleteUserModal();
+          showToast(data.message || (res.status === 404 ? 'La cuenta no existía en el servidor. Registro local limpiado.' : 'Cuenta de "' + (email || id) + '" eliminada permanentemente.'));
+          
           // Eliminación reactiva/optimista inmediata en memoria local
           const cleanEmail = (email || '').toLowerCase().trim();
           const cleanId = id ? String(id).toLowerCase().trim() : '';
-          if (cleanEmail) locallyDeletedUserIds.add(cleanEmail);
-          if (cleanId) locallyDeletedUserIds.add(cleanId);
-          try {
-            localStorage.setItem('mumanager_deleted_users', JSON.stringify(Array.from(locallyDeletedUserIds)));
-          } catch (_) {}
           allUsersCache = allUsersCache.filter(u => 
             (cleanId ? String(u.id || '').toLowerCase().trim() !== cleanId : true) && 
             (cleanEmail ? (u.email || '').toLowerCase().trim() !== cleanEmail : true)
@@ -3778,13 +3925,34 @@
           updateTextIfDifferent('metric-users', allUsersCache.length);
           updateTextIfDifferent('metric-users-total', allUsersCache.length);
           refreshUsers();
+          refreshDevices();
+          loadAllLicensesModule();
           loadAuditLogs();
         } else {
-          showToast('Error al eliminar cuenta: ' + (data.error || 'Operación fallida'), true);
+          if (errBox) {
+            errBox.innerText = data.error || 'Operación fallida al eliminar la cuenta.';
+            errBox.style.display = 'block';
+          } else {
+            showToast('Error al eliminar cuenta: ' + (data.error || 'Operación fallida'), true);
+          }
         }
       } catch (e) {
-        showToast('Error de conexión al eliminar cuenta: ' + e.message, true);
+        if (errBox) {
+          errBox.innerText = 'Error de conexión: ' + e.message;
+          errBox.style.display = 'block';
+        } else {
+          showToast('Error de conexión al eliminar cuenta: ' + e.message, true);
+        }
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          toggleDeleteRestrictionFields();
+        }
       }
+    }
+
+    function deleteUserAccount(id, email, username) {
+      openDeleteUserModal(id, email, username);
     }
 
     /* ========================================================
@@ -4008,7 +4176,7 @@
         const list = await res.json();
         if (Array.isArray(list)) {
           // El servidor es la fuente autoritativa de verdad
-          allDevicesCache = list.filter(d => d && d.hwid && !locallyDeletedHwids.has(String(d.hwid).toUpperCase()));
+          allDevicesCache = list.filter(d => d && d.hwid);
           try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
           updateNotificationBadges();
 
@@ -4028,7 +4196,7 @@
 
     function setDeviceView(view) {
       currentDeviceView = view;
-      ['all', 'online', 'clients', 'tests', 'expired', 'protrial'].forEach(v => {
+      ['all', 'online', 'clients', 'tests', 'expired', 'protrial', 'blocked'].forEach(v => {
         const b = document.getElementById(`view-btn-${v}`);
         if (b) {
           if (v === view) b.classList.add('active');
@@ -4126,7 +4294,9 @@
       const noteDisplay = dev.note ? `<div class="client-note">📌 <strong>${safeNote}</strong></div>` : `<div class="client-note" style="opacity:0.5;">Sin nota asignada</div>`;
 
       const isProTrial = (dev.mode === 'PRO' && dev.authAction === 'PRO_TRIAL_24H') ||
-                         (dev.mode === 'PRO' && !dev.isLifetime && dev.proTrialUsed && dev.proTrialStartedAt);
+                         (dev.mode === 'PRO' && dev.authAction?.startsWith('PRO_TRIAL')) ||
+                         (dev.mode === 'PRO' && dev.proTrialStartedAt) ||
+                         (dev.mode === 'PRO' && !dev.isLifetime && dev.proTrialUsed);
 
       let badgeClass = 'badge-demo';
       let statusText = '♾️ DEMO (VITALICIO)';
@@ -4137,7 +4307,7 @@
         badgeClass = 'badge-expired-pro';
         statusText = '⏳ PRO VENCIDO';
       } else if (isProTrial) {
-        badgeClass = 'badge-demo';
+        badgeClass = 'badge-protrial';
         statusText = '⚡ DEMO PRO (24H)';
       } else if (dev.mode === 'PRO') {
         badgeClass = 'badge-pro';
@@ -4285,8 +4455,12 @@
         if (d.isOnline) countOnline++;
 
         const isExp = d.mode === 'PRO' && d.expiresAt && new Date(d.expiresAt) < new Date();
-        const isTrial = (d.mode === 'PRO' && d.authAction === 'PRO_TRIAL_24H') ||
-                        (d.mode === 'PRO' && !d.isLifetime && d.proTrialUsed && d.proTrialStartedAt);
+        const isTrial = !!(
+          (d.authAction && d.authAction.startsWith('PRO_TRIAL')) ||
+          d.isProTrial === true ||
+          (d.mode === 'PRO' && !d.isLifetime && (d.proTrialUsed || d.proTrialStartedAt)) ||
+          (d.proTrialStartedAt && !d.isLifetime)
+        );
         if (isTrial) countProTrial++;
 
         if (d.blocked) {
@@ -4310,6 +4484,7 @@
       updateTextIfDifferent('count-online', countOnline);
       updateTextIfDifferent('count-expired', countExpired);
       updateTextIfDifferent('count-protrial', countProTrial);
+      updateTextIfDifferent('count-blocked', blockedCount);
       updateTextIfDifferent('count-all', countAll);
 
       // Banner de notificación en vivo para dispositivos vencidos
@@ -4334,7 +4509,14 @@
       } else if (currentDeviceView === 'expired') {
         displayList = list.filter(d => !d.blocked && d.mode === 'PRO' && d.expiresAt && new Date(d.expiresAt) < new Date());
       } else if (currentDeviceView === 'protrial') {
-        displayList = list.filter(d => (d.mode === 'PRO' && d.authAction === 'PRO_TRIAL_24H') || (d.mode === 'PRO' && !d.isLifetime && d.proTrialUsed && d.proTrialStartedAt));
+        displayList = list.filter(d => !!(
+          (d.authAction && d.authAction.startsWith('PRO_TRIAL')) ||
+          d.isProTrial === true ||
+          (d.mode === 'PRO' && !d.isLifetime && (d.proTrialUsed || d.proTrialStartedAt)) ||
+          (d.proTrialStartedAt && !d.isLifetime)
+        ));
+      } else if (currentDeviceView === 'blocked') {
+        displayList = list.filter(d => !!d.blocked);
       }
 
       const tbody = document.getElementById('devices-body');
@@ -4352,6 +4534,8 @@
           emptyMsg = '✨ No hay dispositivos con vigencia vencida. ¡Todas las licencias y pruebas están al día!';
         } else if (currentDeviceView === 'protrial') {
           emptyMsg = '⚡ No hay celulares en período de prueba PRO de 24 horas en este momento.';
+        } else if (currentDeviceView === 'blocked') {
+          emptyMsg = '🛡️ No hay dispositivos bloqueados en el sistema.';
         }
         if (!tbody.querySelector('.empty-devices-cell') || tbody.dataset.emptyView !== currentDeviceView || tbody.querySelector('#devices-loading-row')) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-devices-cell" style="text-align:center; padding: 28px; color: var(--muted);">${emptyMsg}</td></tr>`;
@@ -5158,14 +5342,6 @@
         if ((res.ok && data.success) || res.status === 404) {
           const cleanHwid = String(hwid).trim().toUpperCase();
           showToast(`Dispositivo ${cleanHwid} eliminado. Historial purgado y cuenta desvinculada.`);
-          locallyDeletedHwids.add(cleanHwid);
-          locallyDeletedTombstones.delete(cleanHwid);
-          try {
-            sessionStorage.setItem('mumanager_deleted_hwids', JSON.stringify(Array.from(locallyDeletedHwids)));
-            localStorage.setItem('mumanager_deleted_hwids', JSON.stringify(Array.from(locallyDeletedHwids)));
-            sessionStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
-            localStorage.setItem('mumanager_deleted_tombstones', JSON.stringify(Array.from(locallyDeletedTombstones)));
-          } catch (_) {}
           allDevicesCache = allDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
           try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
           renderDevicesTable(allDevicesCache);
@@ -5482,6 +5658,38 @@
       }
     }
 
+    function contactViaEmail(email) {
+      if (!email) return;
+      const cleanEmail = String(email).trim();
+      if (!cleanEmail) return;
+
+      // 1. Copiar al portapapeles con feedback visual
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cleanEmail).then(() => {
+          showToast('📧 Correo copiado: ' + cleanEmail);
+        }).catch(() => {
+          showToast('📧 Correo: ' + cleanEmail);
+        });
+      } else {
+        const dummy = document.createElement('textarea');
+        dummy.value = cleanEmail;
+        document.body.appendChild(dummy);
+        dummy.select();
+        try { document.execCommand('copy'); } catch (_) {}
+        document.body.removeChild(dummy);
+        showToast('📧 Correo copiado: ' + cleanEmail);
+      }
+
+      // 2. Abrir Gmail Web directamente en nueva pestaña con asunto preconfigurado
+      const subject = encodeURIComponent('Mu Manager PRO - Activación de Licencia');
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(cleanEmail)}&su=${subject}`;
+      const win = window.open(gmailUrl, '_blank');
+      // 3. Fallback a mailto si el navegador bloquea pestañas emergentes
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = `mailto:${encodeURIComponent(cleanEmail)}?subject=${subject}`;
+      }
+    }
+
     function renderProRequestsTable(list) {
       const tbody = document.getElementById('pro-requests-body');
       if (!tbody) return;
@@ -5571,7 +5779,7 @@
 
           const contactActionBtn = hasPhone
             ? `<a href="${escapeHtml(waLink)}" target="_blank" class="btn btn-green btn-sm" title="Abrir chat en WhatsApp">💬 Chat</a>`
-            : (r.email ? `<a href="mailto:${escapeHtml(r.email)}?subject=Mu%20Manager%20PRO%20-%20Licencia" class="btn btn-blue btn-sm" title="Enviar correo">✉️ Email</a>` : '');
+            : (r.email ? `<button type="button" onclick="contactViaEmail('${escapeHtml(r.email)}')" class="btn btn-blue btn-sm" style="cursor:pointer;" title="Copiar correo y redactar">✉️ Email</button>` : '');
 
           const rowHtml = `
             <td>
@@ -5580,7 +5788,7 @@
             </td>
             <td>
               <strong>${escapeHtml(r.serverName || 'No especificado')}</strong><br>
-              <small style="color:var(--muted);">${escapeHtml(r.email || 'Sin email')}</small>
+              <small style="color:var(--muted); cursor:pointer;" onclick="contactViaEmail('${escapeHtml(r.email || '')}')" title="Clic para copiar email">${escapeHtml(r.email || 'Sin email')}</small>
             </td>
             <td>
               <span class="hwid-code" style="font-size:11px;">${escapeHtml(r.hwid || 'N/A')}</span>
@@ -6565,6 +6773,18 @@
           if (document.getElementById('wa-evt-pro')) {
             document.getElementById('wa-evt-pro').checked = evts.proRequest !== false;
           }
+          if (document.getElementById('wa-evt-protrial')) {
+            document.getElementById('wa-evt-protrial').checked = evts.proTrial !== false;
+          }
+          if (document.getElementById('wa-evt-demoassigned')) {
+            document.getElementById('wa-evt-demoassigned').checked = evts.demoAssigned !== false;
+          }
+          if (document.getElementById('wa-evt-quickdemo')) {
+            document.getElementById('wa-evt-quickdemo').checked = evts.quickDemo !== false;
+          }
+          if (document.getElementById('wa-evt-proassigned')) {
+            document.getElementById('wa-evt-proassigned').checked = evts.proAssigned !== false;
+          }
 
           toggleWaChannelBoxes();
         }
@@ -6598,7 +6818,11 @@
           sqlExploit: document.getElementById('wa-evt-sql').checked,
           bruteForce: document.getElementById('wa-evt-brute').checked,
           deviceBlocked: document.getElementById('wa-evt-block').checked,
-          proRequest: document.getElementById('wa-evt-pro') ? document.getElementById('wa-evt-pro').checked : true
+          proRequest: document.getElementById('wa-evt-pro') ? document.getElementById('wa-evt-pro').checked : true,
+          proTrial: document.getElementById('wa-evt-protrial') ? document.getElementById('wa-evt-protrial').checked : true,
+          demoAssigned: document.getElementById('wa-evt-demoassigned') ? document.getElementById('wa-evt-demoassigned').checked : true,
+          quickDemo: document.getElementById('wa-evt-quickdemo') ? document.getElementById('wa-evt-quickdemo').checked : true,
+          proAssigned: document.getElementById('wa-evt-proassigned') ? document.getElementById('wa-evt-proassigned').checked : true
         }
       };
 
@@ -6910,10 +7134,15 @@
                 const key = dev.licenseKey || dev.generatedKey || 'PRO-DIRECTA';
                 const isLifetime = !dev.expiresAt || dev.isLifetime;
                 const isExp = dev.expiresAt && new Date(dev.expiresAt).getTime() < Date.now();
+                const isProTrial = (dev.mode === 'PRO' && dev.authAction === 'PRO_TRIAL_24H') ||
+                                   (dev.mode === 'PRO' && dev.authAction?.startsWith('PRO_TRIAL')) ||
+                                   (dev.mode === 'PRO' && dev.proTrialStartedAt) ||
+                                   (dev.mode === 'PRO' && !dev.isLifetime && dev.proTrialUsed);
                 licenseMap.set(dev.hwid, {
                   hwid: dev.hwid,
                   mode: 'PRO',
                   licenseKey: key,
+                  isProTrial: !!isProTrial,
                   isLifetime: !!isLifetime,
                   isExpired: !!isExp,
                   expiresAt: dev.expiresAt || null,
@@ -6970,7 +7199,14 @@
       const safeUser = escapeHtml(l.currentUser || 'N/A');
       const safeDev = escapeHtml(l.deviceBrand ? `${l.deviceBrand} ${l.deviceModel || ''}` : (l.deviceModel || 'N/A'));
       
-      let planBadge = l.mode === 'PRO' ? '<span class="badge badge-pro">PRO</span>' : '<span class="badge badge-demo">DEMO</span>';
+      let planBadge = '<span class="badge badge-demo">DEMO</span>';
+      if (l.mode === 'PRO') {
+        if (l.isProTrial) {
+          planBadge = '<span class="badge badge-protrial">DEMO PRO 24H</span>';
+        } else {
+          planBadge = '<span class="badge badge-pro">PRO</span>';
+        }
+      }
       let remVal = l.timeRemainingFormatted || (l.daysRemaining !== null ? l.daysRemaining + ' días' : 'Por tiempo');
       let vigBadge = l.isLifetime 
         ? '<span style="color:#3FCF8E; font-weight:800; font-size:11px;">♾️ VITALICIA</span>'
@@ -7323,18 +7559,7 @@
         if ((res.ok && data.success) || res.status === 404) {
           showToast(`♻️ Dispositivo ${hwid} restaurado exitosamente.`);
           const cleanHwid = String(hwid).trim().toUpperCase();
-          locallyDeletedTombstones.delete(cleanHwid);
-          if (typeof locallyDeletedHwids !== 'undefined' && locallyDeletedHwids.delete) {
-            locallyDeletedHwids.delete(String(hwid).toUpperCase());
-            try {
-              localStorage.setItem('mumanager_deleted_hwids', JSON.stringify([...locallyDeletedHwids]));
-              sessionStorage.setItem('mumanager_deleted_hwids', JSON.stringify([...locallyDeletedHwids]));
-            } catch (_) {}
-          }
-          try {
-            localStorage.setItem('mumanager_deleted_tombstones', JSON.stringify([...locallyDeletedTombstones]));
-            sessionStorage.setItem('mumanager_deleted_tombstones', JSON.stringify([...locallyDeletedTombstones]));
-          } catch (_) {}
+          locallyDeletedHwids.delete(String(hwid).toUpperCase());
           excludedDevicesCache = excludedDevicesCache.filter(d => (d.hwid || '').toUpperCase() !== cleanHwid);
           renderExcludedDevicesTable(excludedDevicesCache);
           updateTextIfDifferent('lic-metric-excluded', excludedDevicesCache.length);
@@ -7418,6 +7643,7 @@
 
     function getLogCategoryFallback(type) {
       const t = String(type || '').toUpperCase();
+      if (t.includes('PRO_TRIAL') || t.includes('TRIAL_RESET') || t.includes('TRIAL_EXPIRED') || t.includes('PRO_EXPIRED')) return 'PRO_TRIAL';
       if (t.includes('SQL') || t.includes('TAMPER') || t.includes('REPLAY') || t.includes('SIG_') || t.includes('AUTH_') || t.includes('EMERGENCY') || t.includes('THREAT') || t.includes('FIREWALL') || t.includes('WAF') || t.includes('BOT')) return 'SECURITY';
       if (t.includes('KEY') || t.includes('PLAN') || t.includes('PRO') || t.includes('DEMO') || t.includes('EXPIR') || t.includes('LICENSE')) return 'LICENSE';
       if (t.includes('USER') || t.includes('SESSION') || t.includes('LOGIN') || t.includes('PW_') || t.includes('ROLE') || t.includes('GOOGLE') || t.includes('OAUTH')) return 'USERS';
@@ -7460,7 +7686,8 @@
         const cat = l.category || getLogCategoryFallback(l.type);
         let catColor = '#29B6F6';
         let catLabel = '⚙️ SISTEMA';
-        if (cat === 'SECURITY') { catColor = '#E2703A'; catLabel = '🛡️ SEGURIDAD'; }
+        if (cat === 'PRO_TRIAL') { catColor = '#FFD54F'; catLabel = '⚡ DEMO PRO 24H'; }
+        else if (cat === 'SECURITY') { catColor = '#E2703A'; catLabel = '🛡️ SEGURIDAD'; }
         else if (cat === 'LICENSE') { catColor = '#3FCF8E'; catLabel = '🔑 LICENCIA'; }
         else if (cat === 'USERS') { catColor = '#5B8DEF'; catLabel = '👥 USUARIOS'; }
         else if (cat === 'DEVICES') { catColor = '#FFB300'; catLabel = '📱 DISPOSITIVO'; }

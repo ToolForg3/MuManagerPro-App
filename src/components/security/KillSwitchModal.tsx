@@ -16,6 +16,7 @@ import * as Clipboard from 'expo-clipboard';
 import { THEME } from '../../constants/theme';
 import { Panel } from '../ui';
 import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { DISCORD_URL, TELEGRAM_URL } from '../../constants/appVersion';
 
 interface KillSwitchModalProps {
   visible: boolean;
@@ -41,19 +42,15 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
     Alert.alert('¡Copiado!', 'El ID de tu dispositivo ha sido copiado al portapapeles.');
   };
 
-  const handleOpenWhatsApp = () => {
-    const hwidCode = hwid || 'N/A';
-    const reasonText = reason || 'Acceso restringido';
-    const text = `Hola Soporte ToolForg3! Mi dispositivo está bloqueado en MuManager PRO.\n\n[HWID]: ${hwidCode}\n[MOTIVO]: ${reasonText}\n\nSolicito asistencia o adquisición de licencia oficial.`;
-    const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-    Linking.openURL(url).catch(() => {
-      Alert.alert('WhatsApp', 'No se pudo abrir WhatsApp automáticamente. Puedes escribir al número oficial: +55 21 97121-7376.');
+  const handleOpenDiscord = () => {
+    Linking.openURL(DISCORD_URL).catch(() => {
+      Alert.alert('Discord', `Comunidad oficial de soporte: ${DISCORD_URL}`);
     });
   };
 
   const handleOpenTelegram = () => {
-    Linking.openURL('https://t.me/ToolForg3').catch(() => {
-      Alert.alert('Telegram', 'Canal oficial de soporte: https://t.me/ToolForg3');
+    Linking.openURL(TELEGRAM_URL).catch(() => {
+      Alert.alert('Telegram', `Canal oficial de soporte: ${TELEGRAM_URL}`);
     });
   };
 
@@ -100,7 +97,7 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
                 style={styles.copyButton}
                 resizeMode="stretch"
               >
-                <MuIcon name="save" size={18} color="#0D0E0D" />
+                <MuIcon name="save" size={18} color="#FEDF99" />
                 <Text style={styles.copyButtonText}>Copiar Código de Dispositivo</Text>
               </ImageBackground>
             </TouchableOpacity>
@@ -116,7 +113,7 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
             <View style={styles.supportButtonsCol}>
               <TouchableOpacity
                 style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
-                onPress={handleOpenWhatsApp}
+                onPress={handleOpenDiscord}
                 activeOpacity={0.85}
               >
                 <ImageBackground
@@ -124,10 +121,10 @@ export const KillSwitchModal: React.FC<KillSwitchModalProps> = ({
                   style={styles.btnSupport}
                   resizeMode="stretch"
                 >
-                  <MuIcon name="community" size={24} color="#3FCF8E" />
+                  <MuIcon name={"discord" as any} size={24} color="#5865F2" />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.btnSupportMainText}>WhatsApp Soporte Oficial</Text>
-                    <Text style={styles.btnSupportSubText}>Atención inmediata para activación y desbloqueo</Text>
+                    <Text style={styles.btnSupportMainText}>Discord Soporte Oficial</Text>
+                    <Text style={styles.btnSupportSubText}>Atención y comunidad para activación y asistencia</Text>
                   </View>
                   <MuIcon name="arrow-right" size={18} color="#E0C380" />
                 </ImageBackground>
@@ -250,10 +247,11 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   copyButtonText: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontSize: 13,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadowHigh,
   },
   supportCard: {
     width: '100%',
