@@ -2939,7 +2939,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               <Panel style={[styles.card, { borderColor: '#EAB308', borderWidth: 1, backgroundColor: '#141208', padding: 10 }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FACC15' }}>COLOR DE FENRIR</Text>
-                  <Text style={{ fontSize: 10, color: '#A1A1AA' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: THEME.colors.textoSecundarioLuminoso, ...THEME.effects.textShadowSubtle }}>
                     {makerExcFlags === 4 ? 'Dorado (Golden)' : makerExcFlags === 2 ? 'Azul (Protección)' : makerExcFlags === 1 ? 'Negro (Destrucción)' : 'Rojo (Normal)'}
                   </Text>
                 </View>
@@ -7156,9 +7156,10 @@ const styles = StyleSheet.create({
   },
   gothicCardBadge: {
     fontFamily: THEME.typography.fontBody,
-    fontSize: 10,
-    color: '#989081',
-    fontWeight: '600',
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   heroBanner: {
     width: '100%',
@@ -7197,9 +7198,10 @@ const styles = StyleSheet.create({
   },
   heroBannerSubtitle: {
     fontFamily: THEME.typography.fontBody,
-    fontSize: 11,
-    color: '#BBB4A8',
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 2,
+    fontWeight: '600',
   },
   fixHeaderGothic: {
     flexDirection: 'row',
@@ -8115,9 +8117,10 @@ const styles = StyleSheet.create({
     borderBottomColor: '#090A09',
   },
   onlinePlayerAccountText: {
-    color: '#A0A0B0',
-    fontSize: 11,
-    fontWeight: '600',
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 11.5,
+    fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
   onlinePlayerLevelBadge: {
     backgroundColor: THEME.colors.oroClaro,

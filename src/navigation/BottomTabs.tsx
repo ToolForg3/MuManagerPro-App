@@ -39,7 +39,7 @@ const StitchTabBarButton = (
         <MuIcon
           name={iconName}
           size={24}
-          color={isFocused ? '#FEDF99' : '#8E867A'}
+          color={isFocused ? '#FEDF99' : '#CDC6B9'}
         />
       </View>
       <Text
@@ -229,7 +229,8 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   tabLabelInactive: {
-    color: '#8e867a',
-    fontWeight: '600',
+    color: '#CDC6B9',
+    fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
 });

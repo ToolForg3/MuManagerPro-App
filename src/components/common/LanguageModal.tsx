@@ -190,9 +190,9 @@ const styles = StyleSheet.create({
   },
   optionName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     fontFamily: THEME.typography.fontTitle,
-    color: '#C5C8CD',
+    color: THEME.colors.textoSecundarioLuminoso,
     ...THEME.effects.textShadowSubtle,
   },
   optionNameSelected: {
@@ -201,12 +201,13 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   optionCountry: {
-    fontSize: 11,
-    color: '#8E939C',
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: THEME.colors.textoSecundario,
   },
   optionCountrySelected: {
-    color: '#E0C380',
-    fontWeight: '700',
+    color: '#FEDF99',
+    fontWeight: '800',
     ...THEME.effects.textShadowSubtle,
   },
   scrollList: {

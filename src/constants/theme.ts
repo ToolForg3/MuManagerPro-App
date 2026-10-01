@@ -140,14 +140,14 @@ export const THEME = {
 
   effects: {
     textShadow: {
-      textShadowColor: 'rgba(0, 0, 0, 0.85)',
+      textShadowColor: 'rgba(0, 0, 0, 0.95)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,
     },
     textShadowSubtle: {
-      textShadowColor: 'rgba(0, 0, 0, 0.70)',
+      textShadowColor: 'rgba(0, 0, 0, 0.85)',
       textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 1,
+      textShadowRadius: 1.5,
     },
   },
 };

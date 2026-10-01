@@ -3150,7 +3150,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       }}>
                         {selectedVaultMakerDef.name} +{vaultMakerLevel}
                       </Text>
-                      <Text style={{ color: '#8E8E93', fontSize: 11, marginTop: 2 }}>
+                      <Text style={{ color: THEME.colors.textoSecundarioLuminoso, fontSize: 11.5, marginTop: 2, fontWeight: '600', ...THEME.effects.textShadowSubtle }}>
                         Opción: +{vaultMakerOption * 4} • Tamaño: {selectedVaultMakerDef.width}×{selectedVaultMakerDef.height} • Dur: {vaultMakerDurability}
                       </Text>
 

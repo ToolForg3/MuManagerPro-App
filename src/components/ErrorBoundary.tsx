@@ -212,10 +212,11 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadow,
   },
   headerSubtitle: {
-    color: '#989081',
-    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 11.5,
     textAlign: 'center',
     marginBottom: 14,
+    fontWeight: '600',
     ...THEME.effects.textShadowSubtle,
   },
   technicalBox: {
@@ -229,16 +230,17 @@ const styles = StyleSheet.create({
   },
   errorHighlightText: {
     color: '#FFB4AB',
-    fontSize: 11,
+    fontSize: 11.5,
     fontFamily: 'monospace',
-    fontWeight: '600',
+    fontWeight: '700',
     lineHeight: 16,
   },
   trackingCodeText: {
-    fontSize: 10,
-    color: '#989081',
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundario,
     marginTop: 6,
     fontFamily: 'monospace',
+    fontWeight: '600',
   },
   dividerImg: {
     width: '80%',

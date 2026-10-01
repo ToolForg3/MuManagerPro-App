@@ -1492,45 +1492,6 @@ export const ConfigScreen = () => {
               </View>
 
               <TouchableOpacity
-                style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
-                activeOpacity={0.8}
-                onPress={() => {
-                  Alert.alert(
-                    'Soporte por WhatsApp',
-                    '¿Deseas incluir el identificador de tu dispositivo (HWID) en el mensaje para agilizar la atención?',
-                    [
-                      {
-                        text: 'No incluir',
-                        onPress: () => {
-                          const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).`;
-                          const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-                          Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
-                        }
-                      },
-                      {
-                        text: 'Incluir HWID',
-                        onPress: () => {
-                          const hwidCode = licenseStatus.hwid || 'N/A';
-                          const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).\n\nHWID: ${hwidCode}`;
-                          const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-                          Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.tabs.tabModeInactive}
-                  style={styles.whatsappButtonConfig}
-                  resizeMode="stretch"
-                >
-                  <MuIcon name={"whatsapp" as any} size={16} color="#3FCF8E" style={{ marginRight: 6 }} />
-                  <Text style={styles.whatsappButtonTextConfig}>WhatsApp Soporte Técnico</Text>
-                </ImageBackground>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={handleSecretTap}
                 style={styles.versionFooterBox}
@@ -1893,9 +1854,10 @@ const styles = StyleSheet.create({
   },
   heroBannerSubtitle: {
     fontFamily: THEME.typography.fontBody,
-    fontSize: 11,
-    color: '#BBB4A8',
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 2,
+    fontWeight: '600',
   },
   card: {
     marginBottom: 12,
@@ -1998,13 +1960,14 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
   },
   emuSub: {
-    fontSize: 10,
-    color: '#A89E8C',
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 2,
+    fontWeight: '600',
   },
   emuSubActive: {
-    color: '#E0C380',
-    fontWeight: '700',
+    color: '#FEDF99',
+    fontWeight: '800',
     textShadowColor: 'rgba(0, 0, 0, 0.95)',
     textShadowRadius: 2,
     textShadowOffset: { width: 0, height: 1 },
@@ -2013,12 +1976,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   label: {
-    fontSize: 11,
-    color: THEME.colors.textoSecundario,
+    fontSize: 11.5,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginBottom: 4,
     fontWeight: '800',
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadowSubtle,
   },
   input: {
     backgroundColor: THEME.colors.casillaFondo,
@@ -2028,7 +1992,7 @@ const styles = StyleSheet.create({
     borderRadius: THEME.shapes.radioEsquina,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '700',
     minHeight: 48,
   },
@@ -2039,8 +2003,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   quickIpLabel: {
-    fontSize: 10,
-    color: THEME.colors.textMuted,
+    fontSize: 10.5,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '700',
   },
   quickIpBtn: {
     paddingHorizontal: 10,
@@ -2049,9 +2014,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quickIpText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#CDC6B9',
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FEDF99',
     ...THEME.effects.textShadowSubtle,
   },
   row2: {
@@ -2073,9 +2038,10 @@ const styles = StyleSheet.create({
     color: THEME.colors.textPrimary,
   },
   switchDesc: {
-    fontSize: 10,
-    color: THEME.colors.textSecondary,
+    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
     marginTop: 2,
+    fontWeight: '600',
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -2610,22 +2576,6 @@ const styles = StyleSheet.create({
     height: 46,
   },
   channelButtonTextConfig: {
-    color: '#CDC6B9',
-    fontWeight: 'bold',
-    fontSize: 12,
-    letterSpacing: 0.3,
-    ...THEME.effects.textShadowSubtle,
-  },
-  whatsappButtonConfig: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    minHeight: 46,
-    height: 46,
-  },
-  whatsappButtonTextConfig: {
     color: '#CDC6B9',
     fontWeight: 'bold',
     fontSize: 12,

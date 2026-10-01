@@ -3794,9 +3794,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#A0ADC2',
+    color: THEME.colors.textoSecundarioLuminoso,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
+    ...THEME.effects.textShadowSubtle,
   },
   header: {
     flexDirection: 'row',

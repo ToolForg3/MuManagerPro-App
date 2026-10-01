@@ -573,7 +573,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                         <Text style={{ fontSize: 13, fontWeight: '700', color: isSelected ? fen.color : THEME.colors.texto }}>
                           {fen.label}
                         </Text>
-                        <Text style={{ fontSize: 10, color: THEME.colors.textoSecundario, marginTop: 2 }}>{fen.desc}</Text>
+                        <Text style={{ fontSize: 11, color: THEME.colors.textoSecundarioLuminoso, marginTop: 2, fontWeight: '600', ...THEME.effects.textShadowSubtle }}>{fen.desc}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -984,17 +984,17 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                         const info = getAncientInfo(editedItem.group, editedItem.index, editedItem.ancientOption);
                         if (!info.set) return null;
                         return (
-                          <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(91, 141, 239, 0.15)' }}>
-                            <Text style={{ fontSize: 10, color: THEME.colors.arcano, fontWeight: 'bold', marginBottom: 2 }}>
+                          <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: 'rgba(91, 141, 239, 0.25)' }}>
+                            <Text style={{ fontSize: 11.5, color: '#7CA8FF', fontWeight: '800', marginBottom: 3, ...THEME.effects.textShadowSubtle }}>
                               Propiedades del Set {info.set.name}:
                             </Text>
                             {info.set.options.slice(0, 4).map((opt, oIdx) => (
-                              <Text key={`anc_prop_${oIdx}`} style={{ fontSize: 10, color: THEME.colors.textoSecundario }}>
+                              <Text key={`anc_prop_${oIdx}`} style={{ fontSize: 11, color: THEME.colors.textoSecundarioLuminoso, fontWeight: '600', ...THEME.effects.textShadowSubtle }}>
                                 • {opt.optName}: +{opt.val}
                               </Text>
                             ))}
                             {info.set.fullOptions.length > 0 && (
-                              <Text style={{ fontSize: 10, color: THEME.colors.arcano, marginTop: 2, fontStyle: 'italic' }}>
+                              <Text style={{ fontSize: 11, color: '#7CA8FF', marginTop: 3, fontStyle: 'italic', fontWeight: '700', ...THEME.effects.textShadowSubtle }}>
                                 • Full Set: {info.set.fullOptions[0].optName} +{info.set.fullOptions[0].val}
                               </Text>
                             )}

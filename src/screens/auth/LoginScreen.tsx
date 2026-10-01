@@ -1983,10 +1983,12 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   stitchFooterSubText: {
-    fontSize: 9,
-    color: '#989081',
+    fontSize: 10,
+    color: THEME.colors.textoSecundarioLuminoso,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginTop: 2,
+    fontWeight: '700',
+    ...THEME.effects.textShadowSubtle,
   },
 });

@@ -152,12 +152,13 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   emptySlotLabel: {
-    fontSize: 8,
-    color: '#8A7D6E',
-    fontWeight: '700',
+    fontSize: 9,
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontWeight: '800',
     letterSpacing: 0.5,
     marginTop: 2,
     textTransform: 'uppercase',
+    ...THEME.effects.textShadowSubtle,
   },
   occupiedContent: {
     alignItems: 'center',
@@ -167,8 +168,8 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   itemName: {
-    fontSize: 9,
-    fontWeight: '800',
+    fontSize: 9.5,
+    fontWeight: '900',
     marginTop: 2,
     textAlign: 'center',
     letterSpacing: 0.3,

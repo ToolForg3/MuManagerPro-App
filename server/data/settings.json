@@ -31,7 +31,7 @@
     "telegramBotToken": "",
     "telegramChatId": "5316576437",
     "discordWebhookUrl": "https://discord.com/api/webhooks/1554963868160233584/DlPqfzVgKo19lvQUflIr_YO1zcZtmJZrgkdqBYRJOhXgWBJmatd8PbMbRguK4v2umXwc",
-    "provider": "telegram",
+    "provider": "discord",
     "webhookUrl": "",
     "events": {
       "tamper": true,
