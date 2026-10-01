@@ -1,10 +1,10 @@
 {
-  "version": "2.2.9",
+  "version": "2.3.1",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-09-29T11:45:00.000Z",
+  "publishedAt": "2026-09-30T23:55:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 131,
+  "build": 133,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.2.9 (Build 131) - Cobertura 100% Texturas Nativas Ironforge, Zócalo Gótico Completo & Blindaje de Encabezados:\n• TEXTURAS NATIVAS MU AL 100%: Erradicación total de bordes lisos en chips de teletransporte rápido, selector de mapas, presets de premios, catálogo de sets rápidos, enlaces a módulos y gestión de clanes/GMs.\n• ZÓCALOS GÓTICOS BORDE A BORDE: Estiramiento completo al 100% de la base en modales de actualización, licencias, login y pantalla de PIN sin huecos laterales.\n• ENCABEZADOS BLINDADOS ANTI-APLASTAMIENTO: Corrección del header de personajes en móvil para evitar compresión de texto y solapamiento de badges.\n• MODAL DE NIVEL: Eliminación del bug de estiramiento en Yoga con alturas numéricas rígidas y textos en oro radiante #FEDF99.\n• SEGURIDAD Y ESTABILIDAD: Cero fugas de claves, Hermes Bytecode, R8/ProGuard y protección estricta anti-debug."
+  "changelog": "MuManager PRO v2.3.1 (Build 133) - Canales Oficiales y Notificaciones Multi-Canal:\n• CANALES OFICIALES INTEGRADOS: Incorporación de acceso directo a la comunidad oficial de Discord, canal de Telegram ToolForg3 y soporte técnico directo por WhatsApp en ajustes y pantalla de bienvenida.\n• SISTEMA DE ALERTAS MULTI-CANAL: Envío simultáneo y configurable por checkboxes de alertas de seguridad y solicitudes PRO hacia Bot de Telegram, Webhook de Discord y CallMeBot.\n• ENLACES CORTOS DE MARCA: Redirecciones oficiales directas /discord y /telegram sin intermediarios.\n• OPTIMIZACIÓN Y CONTRASTE GÓTICO: Acabados metálicos Stitch Ironforge con alto contraste óptico WCAG AAA y cero deformación de botones."
 }

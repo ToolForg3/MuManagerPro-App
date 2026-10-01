@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.3.0",
+  "latestVersion": "2.3.1",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.3.0 (Build 132) - Solución Global de Persistencia y Reconciliación Autoritativa:\n• PERSISTENCIA Y RECONCILIACIÓN EN NUBE: Erradicación del bucle de auto-resurrección en telemetría de celulares y prevención de duplicidad en sincronización con Upstash Redis.\n• HISTORIAL DE EXCLUSIONES (TOMBSTONES): Limpieza y vaciado de registros garantizados con consistencia inmediata en disco y nube persistente ante refrescos de página.\n• GESTIÓN DE SOLICITUDES PRO: Actualización reactiva y optimista en panel administrativo eliminando registros zombi.\n• BLINDAJE Y SEGURIDAD: 100% de suites de seguridad y arquitectura aprobadas, Hermes Bytecode y R8/ProGuard.",
+  "updateChangelog": "MuManager PRO v2.3.1 (Build 133) - Canales Oficiales y Notificaciones Multi-Canal:\n• CANALES OFICIALES INTEGRADOS: Incorporación de acceso directo a la comunidad oficial de Discord, canal de Telegram ToolForg3 y soporte técnico directo por WhatsApp en ajustes y pantalla de bienvenida.\n• SISTEMA DE ALERTAS MULTI-CANAL: Envío simultáneo y configurable por checkboxes de alertas de seguridad y solicitudes PRO hacia Bot de Telegram, Webhook de Discord y CallMeBot.\n• ENLACES CORTOS DE MARCA: Redirecciones oficiales directas /discord y /telegram sin intermediarios.\n• OPTIMIZACIÓN Y CONTRASTE GÓTICO: Acabados metálicos Stitch Ironforge con alto contraste óptico WCAG AAA y cero deformación de botones.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": 72,
@@ -68,15 +68,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.3.0 (Build 132)",
+  "updateTitle": "MuManager PRO v2.3.1 (Build 133)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 132,
+  "versionCode": 133,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.3.0 (Build 132) - Solución Global de Persistencia y Reconciliación Autoritativa:\n• PERSISTENCIA Y RECONCILIACIÓN EN NUBE: Erradicación del bucle de auto-resurrección en telemetría de celulares y prevención de duplicidad en sincronización con Upstash Redis.\n• HISTORIAL DE EXCLUSIONES (TOMBSTONES): Limpieza y vaciado de registros garantizados con consistencia inmediata en disco y nube persistente ante refrescos de página.\n• GESTIÓN DE SOLICITUDES PRO: Actualización reactiva y optimista en panel administrativo eliminando registros zombi.\n• BLINDAJE Y SEGURIDAD: 100% de suites de seguridad y arquitectura aprobadas, Hermes Bytecode y R8/ProGuard.",
+  "releaseNotes": "MuManager PRO v2.3.1 (Build 133) - Canales Oficiales y Notificaciones Multi-Canal:\n• CANALES OFICIALES INTEGRADOS: Incorporación de acceso directo a la comunidad oficial de Discord, canal de Telegram ToolForg3 y soporte técnico directo por WhatsApp en ajustes y pantalla de bienvenida.\n• SISTEMA DE ALERTAS MULTI-CANAL: Envío simultáneo y configurable por checkboxes de alertas de seguridad y solicitudes PRO hacia Bot de Telegram, Webhook de Discord y CallMeBot.\n• ENLACES CORTOS DE MARCA: Redirecciones oficiales directas /discord y /telegram sin intermediarios.\n• OPTIMIZACIÓN Y CONTRASTE GÓTICO: Acabados metálicos Stitch Ironforge con alto contraste óptico WCAG AAA y cero deformación de botones.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.3.0",
-  "buildNumber": 132,
+  "appVersion": "2.3.1",
+  "buildNumber": 133,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -88,6 +88,6 @@
       "pass": ""
     }
   },
-  "version": "2.3.0",
-  "build": 132
+  "version": "2.3.1",
+  "build": 133
 }
