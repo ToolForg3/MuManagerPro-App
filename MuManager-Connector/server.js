@@ -1965,58 +1965,196 @@ function verifyKey(hwid, key) {
  * Activa la prueba PRO de 24 horas a un dispositivo nuevo al registrar cuenta,
  * o asegura Modo DEMO vitalicio si ya utilizó su prueba PRO de 24 horas.
  */
-function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp, platform, appVersion) {
+function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp, platformOrOptions, appVersion, isEmulator, deviceModel, deviceBrand) {
   if (!cleanHwid) return false;
   const now = new Date().toISOString();
   let dev = devices[cleanHwid];
   let changed = false;
 
+  let platform = 'Android';
+  let devAppVersion = appVersion || '2.0.8';
+  let devIsEmulator = false;
+  let devModel = '';
+  let devBrand = '';
+  let devFingerprint = '';
+
+  if (platformOrOptions && typeof platformOrOptions === 'object') {
+    devIsEmulator = platformOrOptions.isEmulator === true || platformOrOptions.isEmulator === 'true';
+    devModel = platformOrOptions.deviceModel || '';
+    devBrand = platformOrOptions.deviceBrand || '';
+    devFingerprint = platformOrOptions.fingerprint || '';
+    platform = platformOrOptions.platform || 'Android';
+    devAppVersion = platformOrOptions.appVersion || devAppVersion;
+  } else {
+    platform = platformOrOptions || 'Android';
+    devIsEmulator = isEmulator === true || isEmulator === 'true';
+    devModel = deviceModel || '';
+    devBrand = deviceBrand || '';
+  }
+
+  const fp = (devFingerprint || '').toLowerCase();
+  const bm = `${devBrand} ${devModel}`.toLowerCase();
+  if (
+    fp.includes('test-keys') ||
+    fp.includes('generic') ||
+    fp.includes('vbox') ||
+    fp.includes('x86') ||
+    fp.includes('sdk_gphone') ||
+    fp.includes('bluestacks') ||
+    fp.includes('ldplayer') ||
+    fp.includes('ttvm') ||
+    fp.includes('nox') ||
+    bm.includes('bluestacks') ||
+    bm.includes('nox') ||
+    bm.includes('ldplayer') ||
+    bm.includes('vbox') ||
+    bm.includes('emulator') ||
+    bm.includes('simulator')
+  ) {
+    devIsEmulator = true;
+  }
+
+  if (dev && dev.isEmulator === true) {
+    devIsEmulator = true;
+  }
+
+  // Regla B: Límite por IP pública (máximo 1 prueba PRO por IP cada 48 horas para evitar granjas de instancias)
+  const fortyEightHoursAgo = Date.now() - (48 * 3600 * 1000);
+  const isLocalIp = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1';
+  const existingProFromIp = !isLocalIp ? Object.values(devices).find(d =>
+    d && d.hwid !== cleanHwid && d.ip === clientIp && d.proTrialStartedAt &&
+    (new Date(d.proTrialStartedAt).getTime() > fortyEightHoursAgo)
+  ) : null;
+
   if (!dev) {
-    // Dispositivo nuevo registrando cuenta por primera vez: otorga 24 Horas de Demo PRO
-    const key = generateKey(cleanHwid, 'PRO');
-    const proExpires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-    dev = {
-      hwid: cleanHwid,
-      mode: 'PRO',
-      licenseKey: key,
-      generatedKey: key,
-      firstSeen: now,
-      lastSeen: now,
-      totalPings: 1,
-      ip: clientIp || '127.0.0.1',
-      platform: platform || 'Android',
-      appVersion: appVersion || '2.0.8',
-      blocked: false,
-      blockReason: '',
-      note: '',
-      currentUser: userAccountIdentifier || '',
-      expiresAt: proExpires,
-      isLifetime: false,
-      isEmulator: false,
-      deviceModel: '',
-      deviceBrand: '',
-      proTrialUsed: true,
-      proTrialStartedAt: now,
-      proTrialExpiresAt: proExpires,
-      demoExtendedHours: 0,
-      isTest: false,
-      forceDemo: false,
-      authRevision: 1,
-      authUpdatedAt: Date.now(),
-      authAction: 'PRO_TRIAL_24H'
-    };
-    devices[cleanHwid] = dev;
-    addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
-    changed = true;
+    if (devIsEmulator) {
+      // REGLA A: Los emuladores NO reciben 24h de prueba PRO automática; entran en DEMO Vitalicio
+      dev = {
+        hwid: cleanHwid,
+        mode: 'DEMO',
+        licenseKey: '',
+        generatedKey: '',
+        firstSeen: now,
+        lastSeen: now,
+        totalPings: 1,
+        ip: clientIp || '127.0.0.1',
+        platform: platform || 'Android',
+        appVersion: devAppVersion || '2.0.8',
+        blocked: false,
+        blockReason: '',
+        note: 'Emulador detectado. Asignado Modo DEMO vitalicio (Prueba PRO requiere solicitud del admin).',
+        currentUser: userAccountIdentifier || '',
+        expiresAt: null, // Vitalicio
+        isLifetime: false,
+        isEmulator: true,
+        deviceModel: devModel || '',
+        deviceBrand: devBrand || '',
+        proTrialUsed: false,
+        demoExtendedHours: 0,
+        isTest: true,
+        forceDemo: false,
+        authRevision: 1,
+        authUpdatedAt: Date.now(),
+        authAction: 'EMULATOR_DEMO_VITALICIO'
+      };
+      devices[cleanHwid] = dev;
+      addAuditLog('PRO_TRIAL_SKIPPED_EMULATOR', cleanHwid, clientIp || '127.0.0.1', `Emulador detectado (${devBrand || ''} ${devModel || ''}). Cuenta: ${userAccountIdentifier}. DEMO vitalicio concedido.`);
+      changed = true;
+    } else if (existingProFromIp) {
+      // REGLA B: Límite de 1 prueba PRO por IP en 48 horas alcanzado para celulares físicos
+      dev = {
+        hwid: cleanHwid,
+        mode: 'DEMO',
+        licenseKey: '',
+        generatedKey: '',
+        firstSeen: now,
+        lastSeen: now,
+        totalPings: 1,
+        ip: clientIp || '127.0.0.1',
+        platform: platform || 'Android',
+        appVersion: devAppVersion || '2.0.8',
+        blocked: false,
+        blockReason: '',
+        note: `Límite 1 prueba PRO por IP alcanzado (48h). Vinculado a ${existingProFromIp.hwid}.`,
+        currentUser: userAccountIdentifier || '',
+        expiresAt: null, // Vitalicio
+        isLifetime: false,
+        isEmulator: false,
+        deviceModel: devModel || '',
+        deviceBrand: devBrand || '',
+        proTrialUsed: false,
+        demoExtendedHours: 0,
+        isTest: false,
+        forceDemo: false,
+        authRevision: 1,
+        authUpdatedAt: Date.now(),
+        authAction: 'IP_LIMIT_DEMO_VITALICIO'
+      };
+      devices[cleanHwid] = dev;
+      addAuditLog('PRO_TRIAL_SKIPPED_IP_LIMIT', cleanHwid, clientIp || '127.0.0.1', `Límite de prueba PRO por IP alcanzado (${clientIp}). Celular entra en DEMO vitalicio.`);
+      changed = true;
+    } else {
+      // Dispositivo físico nuevo registrando cuenta por primera vez: otorga 24 Horas de Demo PRO
+      const key = generateKey(cleanHwid, 'PRO');
+      const proExpires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      dev = {
+        hwid: cleanHwid,
+        mode: 'PRO',
+        licenseKey: key,
+        generatedKey: key,
+        firstSeen: now,
+        lastSeen: now,
+        totalPings: 1,
+        ip: clientIp || '127.0.0.1',
+        platform: platform || 'Android',
+        appVersion: devAppVersion || '2.0.8',
+        blocked: false,
+        blockReason: '',
+        note: '',
+        currentUser: userAccountIdentifier || '',
+        expiresAt: proExpires,
+        isLifetime: false,
+        isEmulator: false,
+        deviceModel: devModel || '',
+        deviceBrand: devBrand || '',
+        proTrialUsed: true,
+        proTrialStartedAt: now,
+        proTrialExpiresAt: proExpires,
+        demoExtendedHours: 0,
+        isTest: false,
+        forceDemo: false,
+        authRevision: 1,
+        authUpdatedAt: Date.now(),
+        authAction: 'PRO_TRIAL_24H'
+      };
+      devices[cleanHwid] = dev;
+      addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+      changed = true;
+    }
   } else {
     // Dispositivo existente
     if (userAccountIdentifier) dev.currentUser = userAccountIdentifier;
     dev.lastSeen = now;
     if (clientIp) dev.ip = clientIp;
+    if (devModel && !dev.deviceModel) dev.deviceModel = devModel;
+    if (devBrand && !dev.deviceBrand) dev.deviceBrand = devBrand;
+    if (devIsEmulator && !dev.isEmulator) {
+      dev.isEmulator = true;
+      changed = true;
+    }
+
+    // Si ya existía un dispositivo con PRO expirado, degradar limpiamente a DEMO vitalicio
+    if (dev.mode === 'PRO' && dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now()) {
+      dev.mode = 'DEMO';
+      dev.expiresAt = null;
+      dev.proTrialUsed = true;
+      dev.notes = (dev.notes ? dev.notes + ' | ' : '') + 'Degradado a DEMO vitalicio tras expiración de PRO';
+      changed = true;
+    }
 
     // Verificar si es elegible para la prueba PRO de 24 horas:
-    // Solo si NUNCA ha usado la prueba (!dev.proTrialUsed), no es PRO actualmente y no está bloqueado por el admin
-    if (!dev.proTrialUsed && dev.mode !== 'PRO' && !dev.blocked && !dev.forceDemo) {
+    // Solo si NUNCA ha usado la prueba (!dev.proTrialUsed), NO es emulador, NO excede límite IP, no es PRO actualmente y no está bloqueado
+    if (!devIsEmulator && !existingProFromIp && !dev.proTrialUsed && dev.mode !== 'PRO' && !dev.blocked && !dev.forceDemo) {
       const key = generateKey(cleanHwid, 'PRO');
       dev.mode = 'PRO';
       dev.generatedKey = key;
@@ -8323,7 +8461,7 @@ app.post(['/api/capabilities', '/capabilities'], (req, res) => res.json(getCapab
 
 // Ping silencioso del APK
 app.post('/api/telemetry/ping', (req, res) => {
-  const { hwid, mode, appVersion, platform, licenseKey, userEmail, username, isEmulator, deviceModel, deviceBrand } = req.body;
+  const { hwid, mode, appVersion, platform, licenseKey, userEmail, username, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID missing' });
 
   const settings = loadSettings();
@@ -8382,6 +8520,8 @@ app.post('/api/telemetry/ping', (req, res) => {
   // Evaluación autoritativa anti-falsos positivos de emulador en el Servidor
   const cleanBrand = String(deviceBrand || (devices[hwid] && devices[hwid].deviceBrand) || '').toLowerCase().trim();
   const cleanModel = String(deviceModel || (devices[hwid] && devices[hwid].deviceModel) || '').toLowerCase().trim();
+  const cleanFingerprint = String(fingerprint || (devices[hwid] && devices[hwid].fingerprint) || '').toLowerCase().trim();
+  const clientSaysEmulator = isEmulator === true || isEmulator === 'true';
 
   const isExplicitEmulatorModel = (
     cleanModel.includes('google_sdk') ||
@@ -8402,6 +8542,18 @@ app.post('/api/telemetry/ping', (req, res) => {
     cleanBrand.includes('bignox')
   );
 
+  const isExplicitEmulatorFingerprint = (
+    cleanFingerprint.includes('test-keys') ||
+    cleanFingerprint.includes('generic') ||
+    cleanFingerprint.includes('vbox') ||
+    cleanFingerprint.includes('x86') ||
+    cleanFingerprint.includes('sdk_gphone') ||
+    cleanFingerprint.includes('bluestacks') ||
+    cleanFingerprint.includes('ldplayer') ||
+    cleanFingerprint.includes('ttvm') ||
+    cleanFingerprint.includes('nox')
+  );
+
   const isTrustedPhysicalPhoneOem = [
     'samsung', 'honor', 'huawei', 'xiaomi', 'redmi', 'poco',
     'motorola', 'moto', 'oppo', 'vivo', 'realme', 'oneplus',
@@ -8409,12 +8561,14 @@ app.post('/api/telemetry/ping', (req, res) => {
   ].some(oem => cleanBrand.includes(oem));
 
   let authoritativeIsEmulator = false;
-  if (isExplicitEmulatorModel) {
+  if (clientSaysEmulator || isExplicitEmulatorModel || isExplicitEmulatorFingerprint) {
     authoritativeIsEmulator = true;
-  } else if (isTrustedPhysicalPhoneOem) {
+  } else if (isTrustedPhysicalPhoneOem && (!cleanFingerprint || (cleanFingerprint.includes('release-keys') && !cleanFingerprint.includes('test-keys')))) {
     authoritativeIsEmulator = false;
+  } else if (isEmulator !== undefined) {
+    authoritativeIsEmulator = !!isEmulator;
   } else {
-    authoritativeIsEmulator = isEmulator !== undefined ? !!isEmulator : false;
+    authoritativeIsEmulator = false;
   }
 
   const tombstones = (typeof loadTombstones === 'function') ? loadTombstones() : {};
@@ -8792,7 +8946,7 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 // ==========================================
 
 app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
-  const { email, password, username, hwid } = req.body;
+  const { email, password, username, hwid, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
   }
@@ -8839,7 +8993,12 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
   if (hwid) {
     const devices = loadDevices();
-    const changed = activateProTrialOrPermanentDemo(devices, hwid, cleanEmail, clientIp);
+    const changed = activateProTrialOrPermanentDemo(devices, hwid, cleanEmail, clientIp, {
+      isEmulator: isEmulator === true || isEmulator === 'true',
+      deviceModel,
+      deviceBrand,
+      fingerprint
+    });
     if (changed) saveDevices(devices);
   }
 
@@ -9049,7 +9208,7 @@ app.post('/api/auth/validate-session', (req, res) => {
 });
 
 app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
-  const { email, username, password, hwid } = req.body || {};
+  const { email, username, password, hwid, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body || {};
   const loginIdentifier = String(username || email || '').trim();
   if (!loginIdentifier || !password) {
     return res.status(400).json({ success: false, error: 'Nombre de usuario y contraseña requeridos.' });
@@ -9128,12 +9287,11 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
     }
     const isExpired = dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now();
     if (isExpired && user.role !== 'ADMIN') {
-      return res.status(403).json({
-        success: false,
-        expired: true,
-        error: 'LICENCIA_EXPIRADA',
-        message: 'Tu tiempo de prueba o licencia PRO para este dispositivo ha concluido. Por favor comunícate con el administrador para adquirir una licencia PRO o solicitar tiempo extra de demo.'
-      });
+      dev.mode = 'DEMO';
+      dev.expiresAt = null;
+      dev.proTrialUsed = true;
+      dev.notes = (dev.notes ? dev.notes + ' | ' : '') + 'Degradado a DEMO vitalicio tras expirar período PRO';
+      saveDevices(devices);
     }
   }
 
@@ -9146,7 +9304,12 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
 
   if (cleanHwid) {
     const userAccountIdentifier = (user.email || user.username || loginIdentifier || '').trim();
-    const changed = activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp);
+    const changed = activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp, {
+      isEmulator: isEmulator === true || isEmulator === 'true',
+      deviceModel,
+      deviceBrand,
+      fingerprint
+    });
     if (changed) {
       saveDevices(devices);
     }

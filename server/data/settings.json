@@ -3,9 +3,9 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.3.2",
+  "latestVersion": "2.3.3",
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.3.2 (Build 134) - Optimización Visual y Canales Oficiales:\n• CANALES OFICIALES: Soporte técnico centralizado en Discord Oficial y Telegram Canal.\n• REFINAMIENTO DE ICONOS: Erradicación del marco blanco residual en el engranaje de ajustes, integrándose nítido sobre piedra gótica.\n• NITIDEZ Y ALTO CONTRASTE: Sombras de texto profundizadas para pantallas móviles AMOLED, títulos de comando aumentados a 12.5px en oro radiante (#FEDF99), textos secundarios en marfil (#E4E2E0), y legibilidad perfeccionada en inventario y ranuras de equipamiento.",
+  "updateChangelog": "MuManager PRO v2.3.3 (Build 135) - Blindaje Anti-Abuso y Detección de Emuladores:\n• DETECCIÓN NATIVA DE EMULADORES: Módulo nativo Android (C++/Kotlin) para inspección profunda de QEMU, pipes, hypervisores, microvirt, vbox y huellas digitales de emulación, erradicando falsos negativos incluso con spoofing de marcas físicas.\n• LICENCIAMIENTO SEGURO (OPCIÓN A): Los emuladores reciben Modo DEMO vitalicio al registrarse, requiriendo solicitud directa para evaluación PRO y bloqueando granjas automatizadas.\n• CONTROL DE INSTANCIAS POR IP (OPCIÓN B): Límite de 1 prueba PRO por IP pública cada 48 horas para celulares físicos, asignando DEMO vitalicio automático a dispositivos secundarios.\n• DEGRADACIÓN FLUIDA A DEMO: Al concluir el período de prueba PRO de 24h, el usuario continúa accediendo transparentemente en Modo DEMO vitalicio sin bloqueos de pantalla.\n• SOLICITUD PRO EN 1 CLIC: Envío inmediato de solicitud PRO al panel administrativo sin formularios redundantes.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": null,
@@ -69,15 +69,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.3.2 (Build 134)",
+  "updateTitle": "MuManager PRO v2.3.3 (Build 135)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 134,
+  "versionCode": 135,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.3.2 (Build 134) - Optimización Visual y Canales Oficiales:\n• CANALES OFICIALES: Soporte técnico centralizado en Discord Oficial y Telegram Canal.\n• REFINAMIENTO DE ICONOS: Erradicación del marco blanco residual en el engranaje de ajustes, integrándose nítido sobre piedra gótica.\n• NITIDEZ Y ALTO CONTRASTE: Sombras de texto profundizadas para pantallas móviles AMOLED, títulos de comando aumentados a 12.5px en oro radiante (#FEDF99), textos secundarios en marfil (#E4E2E0), y legibilidad perfeccionada en inventario y ranuras de equipamiento.",
+  "releaseNotes": "MuManager PRO v2.3.3 (Build 135) - Blindaje Anti-Abuso y Detección de Emuladores:\n• DETECCIÓN NATIVA DE EMULADORES: Módulo nativo Android (C++/Kotlin) para inspección profunda de QEMU, pipes, hypervisores, microvirt, vbox y huellas digitales de emulación, erradicando falsos negativos incluso con spoofing de marcas físicas.\n• LICENCIAMIENTO SEGURO (OPCIÓN A): Los emuladores reciben Modo DEMO vitalicio al registrarse, requiriendo solicitud directa para evaluación PRO y bloqueando granjas automatizadas.\n• CONTROL DE INSTANCIAS POR IP (OPCIÓN B): Límite de 1 prueba PRO por IP pública cada 48 horas para celulares físicos, asignando DEMO vitalicio automático a dispositivos secundarios.\n• DEGRADACIÓN FLUIDA A DEMO: Al concluir el período de prueba PRO de 24h, el usuario continúa accediendo transparentemente en Modo DEMO vitalicio sin bloqueos de pantalla.\n• SOLICITUD PRO EN 1 CLIC: Envío inmediato de solicitud PRO al panel administrativo sin formularios redundantes.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.3.2",
-  "buildNumber": 134,
+  "appVersion": "2.3.3",
+  "buildNumber": 135,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -89,6 +89,6 @@
       "pass": ""
     }
   },
-  "version": "2.3.2",
-  "build": 134
+  "version": "2.3.3",
+  "build": 135
 }
