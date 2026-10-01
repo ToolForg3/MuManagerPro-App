@@ -74,7 +74,7 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
       onRequestClose={isOnboarding ? () => {} : onClose}
     >
       <View style={styles.backdrop}>
-        <Panel variant="box" style={styles.cardContainer}>
+        <Panel variant="box" padding={0} style={styles.cardContainer}>
           <MuCornerOrnaments size={12} />
           {/* Cabecera Medieval */}
           <View style={styles.header}>
@@ -86,7 +86,7 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
               <View style={styles.headerTextCol}>
                 <Text style={styles.headerTitle}>Términos y Condiciones</Text>
                 <Text style={styles.headerSubtitle}>
-                  Mu Manager PRO • v{APP_VERSION}
+                  Mu Manager PRO • Edición Oficial
                 </Text>
               </View>
             </View>
@@ -406,6 +406,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 520,
     height: Math.min(640, windowHeight * 0.82),
+    minHeight: 420,
+    flexDirection: 'column',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.6,
@@ -472,10 +474,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    width: '100%',
+    minHeight: 220,
     backgroundColor: 'transparent',
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 24,
     gap: 12,
   },
   sectionBox: {
@@ -484,6 +489,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.colors.borde,
     padding: 12,
+    marginBottom: 10,
   },
   sectionHeaderRow: {
     flexDirection: 'row',

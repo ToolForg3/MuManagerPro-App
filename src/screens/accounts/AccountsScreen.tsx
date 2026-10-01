@@ -2059,9 +2059,25 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                   </View>
                   <View style={styles.stitchHeaderInfoCol}>
                     <View style={styles.stitchTitleRow}>
-                      <Text style={styles.stitchAccountIdText} numberOfLines={1}>
-                        {item.memb___id}
-                      </Text>
+                      {(() => {
+                        const q = search.trim().toLowerCase();
+                        const text = item.memb___id || '';
+                        const idx = q ? text.toLowerCase().indexOf(q) : -1;
+                        if (idx !== -1 && q) {
+                          return (
+                            <Text style={styles.stitchAccountIdText} numberOfLines={1}>
+                              {text.slice(0, idx)}
+                              <Text style={styles.stitchSearchHighlight}>{text.slice(idx, idx + q.length)}</Text>
+                              {text.slice(idx + q.length)}
+                            </Text>
+                          );
+                        }
+                        return (
+                          <Text style={styles.stitchAccountIdText} numberOfLines={1}>
+                            {text}
+                          </Text>
+                        );
+                      })()}
                       {item.AccountLevel > 0 && (
                         <View style={[styles.stitchVipBadge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
                           <Text style={[styles.stitchVipBadgeText, { color: badge.color }]}>{badge.label}</Text>
@@ -5731,6 +5747,12 @@ const styles = StyleSheet.create({
     color: THEME.colors.oroClaro,
     letterSpacing: 0.3,
     ...THEME.effects.textShadow,
+  },
+  stitchSearchHighlight: {
+    color: '#7AF5BA',
+    fontWeight: '900',
+    textDecorationLine: 'underline',
+    ...THEME.effects.textShadowHigh,
   },
   stitchVipBadge: {
     paddingHorizontal: 6,

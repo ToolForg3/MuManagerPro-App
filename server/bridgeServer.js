@@ -37,14 +37,13 @@ try {
 }
 
 const app = express();
-app.set('trust proxy', 1); // Confiar en proxies inversos (Vercel, Cloudflare, AWS) para extraer IP real del cliente
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
 app.get('/api/ping', (req, res) => {
   res.json({
     success: true,
     status: 'ONLINE',
-    service: 'MuManager PRO Gateway',
-    platform: process.env.VERCEL ? 'Vercel Serverless' : 'NodeJS',
     timestamp: new Date().toISOString()
   });
 });
@@ -11213,7 +11212,7 @@ app.post('/api/auth/validate-session', (req, res) => {
 });
 
 // Verificar código de activación de registro (soporta email o username)
-app.post('/api/auth/verify-registration', (req, res) => {
+app.post('/api/auth/verify-registration', authRateLimitMiddleware, (req, res) => {
   try {
     const { email, username, code, hwid } = req.body;
     const rawId = email || username;
@@ -12037,11 +12036,11 @@ const handleForgotPasswordReset = async (req, res) => {
   });
 };
 
-app.post('/api/auth/forgot-password/reset', handleForgotPasswordReset);
-app.post('/api/auth/forgot-password/confirm', handleForgotPasswordReset);
+app.post('/api/auth/forgot-password/reset', authRateLimitMiddleware, handleForgotPasswordReset);
+app.post('/api/auth/forgot-password/confirm', authRateLimitMiddleware, handleForgotPasswordReset);
 
 // Cambiar contraseña de usuario con sesión activa o credenciales
-app.post('/api/auth/change-password', async (req, res) => {
+app.post('/api/auth/change-password', authRateLimitMiddleware, async (req, res) => {
   const { email, currentPassword, newPassword } = req.body;
   const token = req.headers['x-session-token'] || (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '');
 
@@ -13987,7 +13986,7 @@ app.post('/api/admin/device/invalidate-session', async (req, res) => {
 });
 
 // 3. Solicitud de Licencia PRO desde la APK por el Cliente
-app.post('/api/license/request-pro', async (req, res) => {
+app.post('/api/license/request-pro', authRateLimitMiddleware, async (req, res) => {
   const { name, phone, email, serverName, notes, hwid, deviceModel, deviceBrand } = req.body;
   const hwidTrim = String(hwid || '').trim();
   if (!hwidTrim) {

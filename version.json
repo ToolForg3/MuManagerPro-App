@@ -1,10 +1,10 @@
 {
-  "version": "2.3.5",
+  "version": "2.3.6",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-01T10:45:00.000Z",
+  "publishedAt": "2026-10-01T15:00:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 137,
+  "build": 138,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.3.5 (Build 137) - Blindaje Legal, Filtros Visuales y Corrección Global de Contraste:\n• CORRECCIÓN GLOBAL DE CONTRASTE: Eliminación completa de texto negro sobre texturas oscuras en chips, botones activos, selectores y modales de todo el aplicativo. Contraste óptico nítido superior a 12:1 con oro radiante #FEDF99 y sombra profunda.\n• VISIBILIDAD DE COINCIDENCIAS EN FILTROS: Realce de texto coincidente con insignia luminosa y conteo en tiempo real de ítems encontrados en creador de ítems, catálogo y baúl.\n• BLINDAJE LEGAL Y POLÍTICAS OFICIALES: Integración de términos de servicio, política de privacidad con cero retención y aviso legal con contacto oficial mumanagerpro@gmail.com."
+  "changelog": "MuManager PRO v2.3.6 (Build 138) - Separación de Divisas, Ajuste Dinámico de Encabezados y Blindaje de Términos:\n• SEPARACIÓN DE DIVISAS CASHSHOP: Separación rigurosa de WCoinC (WCoins) y Goblin Points (GP) en entrega de kits y premios, garantizando nomenclatura canónica del servidor MU Online.\n• CABEZALES Y VISORES ADAPTABLES: Ajuste dinámico anti-aplastamiento en pantallas compactas (<385dp), evitando sobreposición de visores y optimizando títulos y botones de acción.\n• VISUALIZACIÓN Y SCROLL DE TÉRMINOS: Restablecimiento completo del contenedor de términos y condiciones en Panel de la APK con renderizado fluido de sus 8 artículos.\n• SEGURIDAD Y PRIVACIDAD FORTALECIDA: Migración de PIN a almacenamiento cifrado SecureStorage (AES-256-CBC) y tasa de límite en endpoints de autenticación y licencias."
 }

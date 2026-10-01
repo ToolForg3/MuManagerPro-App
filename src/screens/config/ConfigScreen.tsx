@@ -37,6 +37,7 @@ import { APP_VERSION, APP_BUILD, APP_DISPLAY_VERSION, TELEGRAM_URL, DISCORD_URL 
 import { ServerProfile } from '../../types/admin';
 import { logAdminAction } from '../../services/adminLog';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
+import { SecureStorage } from '../../services/security/secureStorage';
 const maskHost = (h?: string): string => {
   if (!h) return '';
   const ipMatch = h.match(/^(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}$/);
@@ -252,7 +253,14 @@ export const ConfigScreen = () => {
 
   const checkPinStatus = async () => {
     try {
-      const pinHash = await AsyncStorage.getItem('@mumanager_pin_hash');
+      let pinHash = await SecureStorage.getItem('@mumanager_pin_hash');
+      if (!pinHash) {
+        pinHash = await AsyncStorage.getItem('@mumanager_pin_hash');
+        if (pinHash) {
+          await SecureStorage.setItem('@mumanager_pin_hash', pinHash);
+          await AsyncStorage.removeItem('@mumanager_pin_hash').catch(() => {});
+        }
+      }
       setHasPinConfigured(!!pinHash);
     } catch (e) {
       console.error('Error comprobando PIN:', e);
@@ -269,7 +277,8 @@ export const ConfigScreen = () => {
       return;
     }
     const hash = SecurityService.computeChecksum(newPinInput);
-    await AsyncStorage.setItem('@mumanager_pin_hash', hash);
+    await SecureStorage.setItem('@mumanager_pin_hash', hash);
+    await AsyncStorage.removeItem('@mumanager_pin_hash').catch(() => {});
     setHasPinConfigured(true);
     setPinModalVisible(false);
     setNewPinInput('');
@@ -288,7 +297,8 @@ export const ConfigScreen = () => {
           text: 'Desactivar',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.removeItem('@mumanager_pin_hash');
+            await SecureStorage.removeItem('@mumanager_pin_hash');
+            await AsyncStorage.removeItem('@mumanager_pin_hash').catch(() => {});
             setHasPinConfigured(false);
             await logAdminAction('SEGURIDAD_PIN', 'PIN de 4 dígitos desactivado');
             Alert.alert('PIN Desactivado', 'La app ya no solicitará PIN al iniciar.');

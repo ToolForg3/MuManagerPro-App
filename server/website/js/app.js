@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initModals();
   updateDynamicYear();
-  initSecretAdminAccess();
   initHeroParticles();
   initClassShowcase();
   initCookieConsent();
@@ -217,43 +216,7 @@ function updateDynamicYear() {
   }
 }
 
-// 9. Acceso Maestro Secreto a Administración
-function initSecretAdminAccess() {
-  let clickCount = 0;
-  let clickTimer = null;
-  const brandLogo = document.querySelector('.brand-logo');
-  if (brandLogo) {
-    brandLogo.addEventListener('click', (e) => {
-      clickCount++;
-      clearTimeout(clickTimer);
-      if (clickCount >= 7) {
-        e.preventDefault();
-        clickCount = 0;
-        showToast('🔓 Abriendo consola maestra...');
-        setTimeout(() => {
-          window.location.href = '/admin';
-        }, 600);
-        return;
-      }
-      clickTimer = setTimeout(() => {
-        clickCount = 0;
-      }, 3000);
-    });
-  }
-
-  // Atajo de teclado maestro: Ctrl + Shift + A
-  document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
-      e.preventDefault();
-      showToast('🔓 Acceso de Administrador');
-      setTimeout(() => {
-        window.location.href = '/admin';
-      }, 500);
-    }
-  });
-}
-
-// 10. Partículas de Polvo Místico en el Hero
+// 9. Partículas de Polvo Místico en el Hero
 function initHeroParticles() {
   const container = document.getElementById('hero-particles');
   if (!container) return;

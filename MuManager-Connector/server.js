@@ -29,6 +29,7 @@ try {
 } catch (_) {}
 
 const app = express();
+app.disable('x-powered-by');
 
 // BUG-16: CORS configurado con cabeceras permitidas explícitas (Primero antes de cualquier ruta)
 app.use(cors({
@@ -1389,6 +1390,7 @@ app.use((req, res, next) => {
     '/api/kit/', '/api/kit',
     '/api/prizes/', '/api/prizes',
     '/api/players/', '/api/players',
+    '/api/editor/', '/api/editor',
     '/api/dashboard'
   ];
   // Normalización semántica de ruta en minúsculas para autorización unificada (anti-bypasses por casing)
@@ -10382,7 +10384,7 @@ app.post('/api/admin/device/invalidate-session', (req, res) => {
 });
 
 // 3. Solicitud de Licencia PRO desde la APK por el Cliente
-app.post('/api/license/request-pro', async (req, res) => {
+app.post('/api/license/request-pro', authRateLimitMiddleware, async (req, res) => {
   const { name, phone, email, serverName, notes, hwid, deviceModel, deviceBrand } = req.body;
   const hwidTrim = String(hwid || '').trim();
   if (!hwidTrim) {

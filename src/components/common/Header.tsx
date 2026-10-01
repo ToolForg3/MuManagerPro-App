@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar, Image, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, StatusBar, Image, ImageBackground, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MuIcon, MuIconName } from '../ui/MuIcon';
 import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
@@ -30,6 +30,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { isConnected, config } = useDatabase();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompact = windowWidth < 385;
   const topInset = Math.max(
     insets.top,
     Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
@@ -49,11 +51,11 @@ export const Header: React.FC<HeaderProps> = ({
       </View>
 
       <View style={styles.mainRow}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+        <View style={styles.leftContainer}>
           {showBack && onBack && (
             <TouchableOpacity
               onPress={onBack}
-              style={styles.backButtonWrap}
+              style={[styles.backButtonWrap, isCompact && { marginRight: 4 }]}
               activeOpacity={0.82}
               accessibilityRole="button"
               accessibilityLabel="Atrás"
@@ -62,33 +64,41 @@ export const Header: React.FC<HeaderProps> = ({
               <ImageBackground
                 source={STITCH_ASSETS.buttons.small}
                 resizeMode="stretch"
-                style={styles.backButtonFrame}
+                style={[styles.backButtonFrame, isCompact && { paddingHorizontal: 6 }]}
               >
                 <View style={styles.backButtonContent}>
-                  <MuIcon name="arrow-left" size={13} color="#E4E2E0" containerStyle={{ marginRight: 3 }} />
-                  <Text style={styles.backButtonText}>Atrás</Text>
+                  <MuIcon name="arrow-left" size={13} color="#E4E2E0" containerStyle={{ marginRight: isCompact ? 0 : 3 }} />
+                  {!isCompact && <Text style={styles.backButtonText}>Atrás</Text>}
                 </View>
               </ImageBackground>
             </TouchableOpacity>
           )}
           <View style={styles.titleContainer}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={styles.muLogoBox}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: isCompact ? 6 : 8, minWidth: 0, flex: 1 }}>
+              <View style={[styles.muLogoBox, isCompact && { width: 24, height: 24 }]}>
                 <Image
                   source={require('../../../assets/ui/icons/mu_logo.png')}
-                  style={styles.muLogoImg}
+                  style={[styles.muLogoImg, isCompact && { width: 22, height: 22 }]}
                   resizeMode="contain"
                 />
               </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.title} numberOfLines={1}>{title}</Text>
-                  <View style={styles.nativoBadge}>
-                    <Text style={styles.nativoBadgeText}>NATIVO</Text>
+              <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, minWidth: 0, flexShrink: 1 }}>
+                  <Text
+                    style={[styles.title, isCompact && { fontSize: 13, letterSpacing: 0.3 }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {title}
+                  </Text>
+                  <View style={[styles.nativoBadge, isCompact && { paddingHorizontal: 4, paddingVertical: 1 }]}>
+                    <Text style={[styles.nativoBadgeText, isCompact && { fontSize: 7.5 }]}>NATIVO</Text>
                   </View>
                 </View>
                 {subtitle && (
-                  <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
+                  <Text style={[styles.subtitle, isCompact && { fontSize: 9.5 }]} numberOfLines={1} ellipsizeMode="tail">
+                    {subtitle}
+                  </Text>
                 )}
               </View>
             </View>
@@ -97,22 +107,23 @@ export const Header: React.FC<HeaderProps> = ({
 
         <View style={styles.rightContainer}>
           {showConnectionBadge && (
-            <View style={styles.badgeWrap}>
+            <View style={[styles.badgeWrap, isCompact && { maxWidth: 105, height: 28 }]}>
               <ImageBackground
                 source={STITCH_ASSETS.backgrounds.stone}
                 resizeMode="repeat"
                 style={[
                   styles.badgeFrame,
                   isConnected ? styles.badgeConnected : styles.badgeDisconnected,
+                  isCompact && { paddingHorizontal: 5 },
                 ]}
                 imageStyle={{ opacity: 0.45, borderRadius: 2 }}
               >
                 <View style={styles.badgeContent}>
-                  <View style={[styles.jewelOrb, isConnected ? styles.jewelOrbConnected : styles.jewelOrbDisconnected]}>
+                  <View style={[styles.jewelOrb, isConnected ? styles.jewelOrbConnected : styles.jewelOrbDisconnected, isCompact && { width: 8, height: 8, marginRight: 4 }]}>
                     <View style={styles.jewelGlance} />
                   </View>
-                  <Text style={styles.badgeText} numberOfLines={1}>
-                    {isConnected ? (maskHost(config.host) || 'MU REALM') : 'SIN CONEXIÓN'}
+                  <Text style={[styles.badgeText, isCompact && { fontSize: 9.5 }]} numberOfLines={1} ellipsizeMode="tail">
+                    {isConnected ? (maskHost(config.host) || 'MU REALM') : (isCompact ? 'OFFLINE' : 'SIN CONEXIÓN')}
                   </Text>
                 </View>
               </ImageBackground>
@@ -122,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
           {rightAction && (
             rightAction.icon === 'refresh' ? (
               <TouchableOpacity
-                style={styles.refreshButtonWrap}
+                style={[styles.refreshButtonWrap, (isCompact || (showConnectionBadge && windowWidth < 415)) && { minWidth: 32, width: 32, height: 28 }]}
                 onPress={rightAction.onPress}
                 activeOpacity={0.82}
                 accessibilityRole="button"
@@ -132,17 +143,24 @@ export const Header: React.FC<HeaderProps> = ({
                 <ImageBackground
                   source={STITCH_ASSETS.buttons.small}
                   resizeMode="stretch"
-                  style={styles.refreshButtonFrame}
+                  style={[styles.refreshButtonFrame, (isCompact || (showConnectionBadge && windowWidth < 415)) && { width: 32, height: 28, paddingHorizontal: 0 }]}
                 >
                   <View style={styles.refreshButtonContent}>
-                    <MuIcon name="refresh" size={12} color="#EFD28D" containerStyle={{ marginRight: 4 }} />
-                    <Text style={styles.refreshButtonText}>Actualizar</Text>
+                    <MuIcon
+                      name="refresh"
+                      size={12}
+                      color="#EFD28D"
+                      containerStyle={(isCompact || (showConnectionBadge && windowWidth < 415)) ? undefined : { marginRight: 4 }}
+                    />
+                    {!(isCompact || (showConnectionBadge && windowWidth < 415)) && (
+                      <Text style={styles.refreshButtonText}>Actualizar</Text>
+                    )}
                   </View>
                 </ImageBackground>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={styles.actionBtnWrap}
+                style={[styles.actionBtnWrap, isCompact && { width: 28, height: 28 }]}
                 onPress={rightAction.onPress}
                 activeOpacity={0.82}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -150,9 +168,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <ImageBackground
                   source={STITCH_ASSETS.buttons.small}
                   resizeMode="stretch"
-                  style={styles.actionBtnFrame}
+                  style={[styles.actionBtnFrame, isCompact && { width: 28, height: 28 }]}
                 >
-                  <MuIcon name={rightAction.icon} size={16} color="#EFD28D" />
+                  <MuIcon name={rightAction.icon} size={15} color="#EFD28D" />
                 </ImageBackground>
               </TouchableOpacity>
             )
@@ -205,36 +223,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
+  },
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+    marginRight: 6,
   },
   titleContainer: {
     flex: 1,
-    paddingRight: 8,
+    minWidth: 0,
   },
   title: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '900',
     fontFamily: THEME.typography.fontTitle,
     color: THEME.colors.oroClaro,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
+    flexShrink: 1,
+    minWidth: 0,
     ...THEME.effects.textShadow,
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: THEME.colors.textoSecundarioLuminoso,
     fontWeight: '800',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
     ...THEME.effects.textShadowSubtle,
   },
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    flexShrink: 0,
   },
   badgeWrap: {
     height: 32,
-    maxWidth: 155,
+    maxWidth: 145,
   },
   badgeFrame: {
     flex: 1,

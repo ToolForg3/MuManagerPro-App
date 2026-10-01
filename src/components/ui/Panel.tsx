@@ -75,6 +75,10 @@ export const Panel: React.FC<PanelProps> = ({
     alignItems: flat.alignItems,
     flexDirection: flat.flexDirection,
     overflow: isOverflowVisible ? 'visible' : 'hidden',
+    ...(flat.flex !== undefined || flat.height !== undefined || flat.flexGrow !== undefined
+      ? { flex: 1, height: '100%' }
+      : {}),
+    ...(flat.maxHeight !== undefined ? { maxHeight: '100%' } : {}),
   };
 
   // Remaches are only shown if explicitly asked for

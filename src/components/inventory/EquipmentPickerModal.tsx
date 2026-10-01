@@ -543,11 +543,9 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowHigh,
   },
   searchMatchHighlight: {
-    color: '#FEDF99',
-    backgroundColor: 'rgba(239, 210, 141, 0.28)',
+    color: '#7AF5BA',
     fontWeight: '900',
-    paddingHorizontal: 2,
-    borderRadius: 2,
+    textDecorationLine: 'underline',
     ...THEME.effects.textShadowHigh,
   },
   listContent: {

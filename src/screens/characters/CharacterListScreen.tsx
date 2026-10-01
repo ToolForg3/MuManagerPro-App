@@ -349,9 +349,25 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
 
           <View style={styles.stitchNameClassCol}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Text style={styles.stitchCharName} numberOfLines={1}>
-                {item.Name}
-              </Text>
+              {(() => {
+                const q = searchQuery.trim().toLowerCase();
+                const text = item.Name || '';
+                const idx = q ? text.toLowerCase().indexOf(q) : -1;
+                if (idx !== -1 && q) {
+                  return (
+                    <Text style={styles.stitchCharName} numberOfLines={1}>
+                      {text.slice(0, idx)}
+                      <Text style={styles.stitchSearchHighlight}>{text.slice(idx, idx + q.length)}</Text>
+                      {text.slice(idx + q.length)}
+                    </Text>
+                  );
+                }
+                return (
+                  <Text style={styles.stitchCharName} numberOfLines={1}>
+                    {text}
+                  </Text>
+                );
+              })()}
               {isGm && (
                 <View style={styles.stitchGmTagBadge}>
                   <Text style={styles.stitchGmTagText}>GM</Text>
@@ -1037,6 +1053,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.3,
     ...THEME.effects.textShadow,
+  },
+  stitchSearchHighlight: {
+    color: '#7AF5BA',
+    fontWeight: '900',
+    textDecorationLine: 'underline',
+    ...THEME.effects.textShadowHigh,
   },
   stitchGmTagBadge: {
     backgroundColor: THEME.colors.oroClaro,

@@ -12,6 +12,7 @@ import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEME } from '../../constants/theme';
 import { SecurityService } from '../../services/security/securityService';
+import { SecureStorage } from '../../services/security/secureStorage';
 import {
   MuIcon,
   MuSideMoldings,
@@ -60,7 +61,14 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
 
   const verifyPin = async (inputPin: string) => {
     try {
-      const storedHash = await AsyncStorage.getItem(PIN_STORAGE_KEY);
+      let storedHash = await SecureStorage.getItem(PIN_STORAGE_KEY);
+      if (!storedHash) {
+        storedHash = await AsyncStorage.getItem(PIN_STORAGE_KEY);
+        if (storedHash) {
+          await SecureStorage.setItem(PIN_STORAGE_KEY, storedHash);
+          await AsyncStorage.removeItem(PIN_STORAGE_KEY).catch(() => {});
+        }
+      }
       if (!storedHash) {
         // Si no hay PIN configurado, dar acceso directamente
         onSuccess();

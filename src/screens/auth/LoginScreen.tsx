@@ -1095,7 +1095,7 @@ export const LoginScreen = () => {
             </Text>
           </ImageBackground>
           <Text style={styles.stitchFooterSubText}>
-            MU ONLINE ARCHIVE • CONEXIÓN CIFRADA 256-BIT • v{APP_VERSION}
+            MU ONLINE ARCHIVE • CONEXIÓN CIFRADA 256-BIT • EDICIÓN OFICIAL
           </Text>
         </View>
       </ScrollView>

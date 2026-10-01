@@ -14,6 +14,7 @@ import {
   ImageBackground,
   Modal,
   FlatList,
+  useWindowDimensions,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -67,6 +68,8 @@ export const CharacterEditScreen = () => {
     Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0
   );
   const bottomInset = Math.max(32, insets.bottom + 20);
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompactHeader = windowWidth < 385;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1340,34 +1343,34 @@ export const CharacterEditScreen = () => {
         <View style={styles.stitchHeaderContent}>
           {/* Botón Volver NewUI Season 6 con textura nativa */}
           <TouchableOpacity
-            style={styles.stitchBackBtn}
+            style={[styles.stitchBackBtn, isCompactHeader && { width: 34, height: 34 }]}
             onPress={() => navigation.goBack()}
             activeOpacity={0.8}
             accessibilityLabel="Volver a lista de personajes"
           >
             <ImageBackground
               source={STITCH_ASSETS.buttons.small}
-              style={styles.stitchBackBtnBg}
+              style={[styles.stitchBackBtnBg, isCompactHeader && { paddingHorizontal: 0, width: 34, height: 34 }]}
               resizeMode="stretch"
             >
               <MuIcon name="arrow-left" size={14} color="#FEDF99" />
-              <Text style={styles.stitchBackBtnText}>VOLVER</Text>
+              {!isCompactHeader && <Text style={styles.stitchBackBtnText}>VOLVER</Text>}
             </ImageBackground>
           </TouchableOpacity>
 
           {/* Avatar de Clase MU */}
           <View style={styles.stitchHeaderAvatarWrap}>
-            <ClassAvatar classId={character?.Class || 0} size={32} />
+            <ClassAvatar classId={character?.Class || 0} size={30} />
           </View>
 
           {/* Avatar y Datos del Personaje */}
           <View style={styles.stitchHeaderCenter}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'nowrap', minWidth: 0, flexShrink: 1 }}>
               <Text style={styles.stitchHeaderName} numberOfLines={1} ellipsizeMode="tail">
                 {character?.Name}
               </Text>
               {/* Badge PK con sprite Stitch */}
-              <View style={styles.stitchHeaderPkBadge}>
+              <View style={[styles.stitchHeaderPkBadge, { flexShrink: 0 }]}>
                 <Image
                   source={STITCH_ASSETS.sprites.pkEmblem}
                   style={styles.stitchHeaderPkIcon}
@@ -1376,32 +1379,32 @@ export const CharacterEditScreen = () => {
                 <Text style={styles.stitchHeaderPkText}>PK {pkCount || '0'}</Text>
               </View>
             </View>
-            <Text style={styles.stitchHeaderSubtitle} numberOfLines={1}>
+            <Text style={styles.stitchHeaderSubtitle} numberOfLines={1} ellipsizeMode="tail">
               {classInfo.name} • Lv {level} ({(character?.ResetCount ?? 0)}R)
             </Text>
           </View>
 
           {/* Botones SYNC y BORRAR */}
-          <View style={styles.stitchHeaderRightActions}>
+          <View style={[styles.stitchHeaderRightActions, isCompactHeader && { gap: 4 }]}>
             <MuButton
-              titulo="SYNC"
+              titulo={isCompactHeader ? '' : 'SYNC'}
               icono="refresh"
               variante="primary"
               compacto={true}
               altura={34}
-              style={{ width: 68 }}
+              style={{ width: isCompactHeader ? 34 : 64 }}
               onPress={() => loadCharacter(true)}
               disabled={isRefreshing}
               cargando={isRefreshing}
               accessibilityLabel="Sincronizar Datos"
             />
             <MuButton
-              titulo="BORRAR"
+              titulo={isCompactHeader ? '' : 'BORRAR'}
               icono="close"
               variante="danger"
               compacto={true}
               altura={34}
-              style={{ width: 68 }}
+              style={{ width: isCompactHeader ? 34 : 68 }}
               onPress={promptDeleteCurrentCharacter}
               disabled={isDeletingChar}
               cargando={isDeletingChar}

@@ -4592,7 +4592,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
                     <MuIcon name="hand-coin" size={15} color={THEME.colors.arcano} />
-                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins)</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: kitIncludeGCoins ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {kitIncludeGCoins ? 'ACTIVADO' : 'DESACTIVADO'}
@@ -4605,7 +4605,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       value={kitGCoins}
                       onChangeText={setKitGCoins}
                       keyboardType="numeric"
-                      placeholder="Cantidad de WCoinC / GCoins..."
+                      placeholder="Cantidad de WCoinC (WCoins)..."
                       placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
@@ -5058,7 +5058,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                   />
                   <View style={[styles.currencyBadge, { backgroundColor: 'rgba(91, 141, 239, 0.15)', borderColor: THEME.colors.arcano }]}>
                     <MuIcon name="hand-coin" size={15} color={THEME.colors.arcano} />
-                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins / GCoins)</Text>
+                    <Text style={[styles.currencyBadgeText, { color: THEME.colors.arcano }]}>WCoinC (WCoins)</Text>
                   </View>
                   <Text style={{ flex: 1, textAlign: 'right', fontSize: 11, color: prizeIncludeGCoins ? THEME.colors.jade : THEME.colors.textMuted, fontWeight: 'bold' }}>
                     {prizeIncludeGCoins ? 'ACTIVADO' : 'DESACTIVADO'}
@@ -5071,7 +5071,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       value={prizeGCoins}
                       onChangeText={setPrizeGCoins}
                       keyboardType="numeric"
-                      placeholder="Cantidad de WCoins..."
+                      placeholder="Cantidad de WCoinC (WCoins)..."
                       placeholderTextColor={THEME.colors.textMuted}
                     />
                     <View style={styles.currencyQuickRow}>
