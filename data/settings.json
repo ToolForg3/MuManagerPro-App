@@ -4,6 +4,7 @@
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
   "latestVersion": "2.3.6",
+  "latestBuild": 138,
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "updateChangelog": "MuManager PRO v2.3.6 (Build 138) - Separación de Divisas, Ajuste Dinámico de Encabezados y Blindaje de Términos:\n• SEPARACIÓN DE DIVISAS CASHSHOP: Separación rigurosa de WCoinC (WCoins) y Goblin Points (GP) en entrega de kits y premios, garantizando nomenclatura canónica del servidor MU Online.\n• CABEZALES Y VISORES ADAPTABLES: Ajuste dinámico anti-aplastamiento en pantallas compactas (<385dp), evitando sobreposición de visores y optimizando títulos y botones de acción.\n• VISUALIZACIÓN Y SCROLL DE TÉRMINOS: Restablecimiento completo del contenedor de términos y condiciones en Panel de la APK con renderizado fluido de sus 8 artículos.\n• SEGURIDAD Y PRIVACIDAD FORTALECIDA: Migración de PIN a almacenamiento cifrado SecureStorage (AES-256-CBC) y tasa de límite en endpoints de autenticación y licencias.",
   "forceUpdate": false,
