@@ -1,261 +1,148 @@
 /* ==========================================================================
    Mu Manager PRO - Responsive & Mobile Optimizations (responsive.css)
+   Adaptabilidad Multi-Resolución Limpia, Armoniosa y Sin Desbordes
    ========================================================================== */
 
 @media (max-width: 1024px) {
   .hero-grid {
     grid-template-columns: 1fr;
     text-align: center;
-    gap: 40px;
+    gap: 36px;
   }
 
   .hero-content {
+    display: flex;
+    flex-direction: column;
     align-items: center;
   }
 
-  .hero-badge-container {
+  .hero-mu-crest {
     justify-content: center;
   }
 
   .hero-title {
-    font-size: 2.6rem;
+    font-size: 2.2rem;
   }
 
-  .hero-description {
-    margin: 0 auto;
+  .hero-desc {
+    margin: 0 auto 24px;
   }
 
   .hero-actions {
     justify-content: center;
   }
 
-  .hero-meta-stats {
+  .hero-chips-bar {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    max-width: 520px;
     width: 100%;
-    max-width: 500px;
   }
 
-  .security-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .steps-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .downloads-container {
-    grid-template-columns: 1fr;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  .matrix-grid {
+  .features-grid-4 {
     grid-template-columns: 1fr;
   }
 
-  .class-featured-grid {
+  .connection-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
   }
 
-  .class-art-container {
-    max-width: 380px;
-    margin: 0 auto;
-  }
-
-  .item-lab-grid {
+  .downloads-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
   }
 
-  .item-lab-preview-pane {
-    position: static;
+  .support-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .support-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .support-buttons .btn-mu-gold,
+  .support-buttons .btn-mu-stone {
+    width: 100%;
   }
 
   .footer-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 }
 
-@media (max-width: 1220px) {
-  .navbar-inner {
-    height: 70px;
+@media (max-width: 860px) {
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 68px;
+    left: 0;
+    right: 0;
+    background-color: #0E0F0E;
+    background-image: var(--bg-stone);
+    border-bottom: 2px solid var(--border-structural);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.9);
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
+    z-index: 999;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .nav-link {
+    font-size: 1rem;
+    padding: 8px 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(76, 70, 58, 0.3);
   }
 
   .mobile-menu-btn {
     display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
-  .nav-links {
-    position: fixed;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background: rgba(7, 8, 12, 0.98);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    flex-direction: column;
-    padding: 24px;
-    gap: 14px;
-    border-bottom: 1px solid rgba(245, 179, 53, 0.25);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
-    transform: translateY(-160%);
-    transition: transform var(--trans-normal);
-    z-index: 999;
-    max-height: calc(100vh - 70px);
-    overflow-y: auto;
+  .nav-actions .btn-mu-medium {
+    display: none;
   }
 
-  .nav-links.active {
-    transform: translateY(0);
+  .hero-jewels-decor {
+    display: none;
   }
 
-  .nav-link {
-    font-size: 1.05rem;
-    padding: 10px 0;
-    width: 100%;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  .forensic-cards-grid {
+  .hero-class-display-card {
     grid-template-columns: 1fr;
+    text-align: center;
+    padding: 22px;
+    gap: 20px;
+  }
+
+  .hero-class-avatar-frame {
+    max-width: 160px;
+    margin: 0 auto;
   }
 }
 
-@media (max-width: 768px) {
-  .navbar-inner {
-    height: 66px;
+@media (max-width: 600px) {
+  .hero-mu-crest-img {
+    width: 140px;
   }
 
-  .nav-cta-group .btn-sm {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-  }
-
-  .hero-section {
-    padding-top: 110px;
-    padding-bottom: 60px;
-  }
-
-  .hero-title {
-    font-size: 2.1rem;
-  }
-
-  .section {
-    padding: 60px 0;
-  }
-
-  .section-title {
-    font-size: 1.85rem;
-  }
-
-  .crypto-verifier-card {
-    padding: 22px 16px;
-  }
-
-  .hash-string-container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .terminal-snippets-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .security-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .steps-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .specs-table-container {
-    overflow-x: auto;
-  }
-
-  .specs-table th, .specs-table td {
-    padding: 12px 16px;
-    font-size: 0.84rem;
-  }
-
-  .class-featured-grid {
-    padding: 20px;
-  }
-
-  .class-stat-distribution {
-    grid-template-columns: 1fr;
-  }
-
-  .item-lab-controls {
-    padding: 20px;
-  }
-
-  .excellent-options-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .phone-device,
-  .android-device {
-    width: 304px;
-    height: 630px;
-    border-radius: 34px;
-  }
-
-  .device-screen-selector {
-    flex-wrap: wrap;
-    justify-content: center;
-    border-radius: var(--radius-md);
-    max-width: 320px;
-  }
-
-  .device-tab-btn {
-    font-size: 0.72rem;
-    padding: 5px 9px;
-  }
-
-  .download-card-primary, .download-card-secondary {
-    padding: 24px 18px;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    word-break: break-word;
-  }
-
-  .qr-box-inner {
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 14px;
-  }
-
-  .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-
-  .footer-bottom {
-    flex-direction: column;
-    gap: 12px;
+  .hero-badge {
+    font-size: 0.68rem;
+    padding: 5px 10px;
     text-align: center;
   }
-}
 
-@media (max-width: 480px) {
   .hero-title {
-    font-size: 1.8rem;
+    font-size: 1.75rem;
+  }
+
+  .hero-desc {
+    font-size: 0.95rem;
   }
 
   .hero-actions {
@@ -263,33 +150,123 @@
     width: 100%;
   }
 
-  .hero-actions .btn {
+  .hero-actions .btn-mu-gold,
+  .hero-actions .btn-mu-stone {
     width: 100%;
   }
 
+  .hero-chips-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .hero-chip {
+    padding: 8px 10px;
+  }
+
+  .hero-classes-selector {
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .hero-class-tab {
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    height: 34px;
+    gap: 6px;
+  }
+
+  .hero-class-tab img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hero-class-display-card {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .hero-class-avatar-frame {
+    max-width: 140px;
+  }
+
+  .hero-class-info-pane h3 {
+    font-size: 1.25rem;
+  }
+
+  .hero-class-desc {
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .hero-class-app-power {
+    font-size: 0.78rem;
+    padding: 8px 10px;
+  }
+
+  .feature-panel {
+    padding: 18px;
+  }
+
+  .feature-panel-desc {
+    font-size: 0.88rem;
+  }
+
+  .conn-panel {
+    padding: 20px;
+  }
+
+  .conn-desc {
+    font-size: 0.88rem;
+  }
+
   .android-device {
-    width: 290px;
-    height: 605px;
-    border-radius: 28px;
+    max-width: 100%;
+    border-radius: 18px;
+    padding: 6px;
+  }
+
+  .android-screen {
+    border-radius: 12px;
+    min-height: 480px;
   }
 
   .device-screen-selector {
-    gap: 4px;
-    padding: 3px 4px;
+    max-width: 100%;
   }
 
   .device-tab-btn {
-    font-size: 0.68rem;
-    padding: 4px 7px;
-  }
-
-  .mockup-controls {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .mockup-btn {
     font-size: 0.72rem;
-    padding: 5px 10px;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+  }
+
+  .dl-card-main {
+    padding: 20px;
+  }
+
+  .dl-main-title {
+    font-size: 1.3rem;
+  }
+
+  .dl-desc {
+    font-size: 0.88rem;
+  }
+
+  .qr-card-box {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .support-banner {
+    padding: 20px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
   }
 }

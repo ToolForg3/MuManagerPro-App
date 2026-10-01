@@ -1,91 +1,77 @@
 /* ==========================================================================
    Mu Manager PRO - Design System & Variables (theme.css)
-   Fantasía Medieval Clásica Season 6 (Piedra y Oro)
+   Stitch Approved Ironforge — Atmósfera Artística y Legendaria MU Online
    ========================================================================== */
 
 :root {
-  /* Paleta Base - Piedra Oscura y Granito Season 6 */
-  --bg-deep: #100D0B;
-  --bg-surface-1: #160D0B;
-  --bg-surface-2: #201915;
-  --bg-surface-3: #2B2521;
-  
-  /* Texturas Auténticas de Cliente MU Season 6 */
+  /* 1. Paleta Canónica Ironforge (DESIGN.md) */
+  --bg-deep: #0B0C0B;            /* Deep Forge: ranuras profundas, fondo sombrío */
+  --bg-canvas: #111211;          /* Charcoal Canvas: fondo global de la aplicación */
+  --bg-surface-low: #181918;     /* Iron Low: placa oscura de control, fondos secundarios */
+  --bg-surface-panel: #1D1E1D;   /* Iron Panel: paneles principales y contenedores */
+  --bg-surface-high: #262726;    /* Raised Iron: cabeceras activas, controles elevados */
+
+  /* 2. Biseles Metálicos Chiseled 3D */
+  --bevel-light: #3E3F3E;        /* Bright Steel: resalte superior e izquierdo */
+  --border-structural: #4C463A;  /* Structural Outline: marco de hierro de paneles */
+  --border-subtle: #2E2F2E;      /* Borde interno atenuado */
+
+  /* 3. Texturas Auténticas y Arte de MU Online */
   --bg-stone: url('../assets/ui/mu_stone_back.png');
   --divider-gold: url('../assets/ui/mu_gold_divider.png');
-  --header-gothic: url('../assets/ui/mu_window_header.png');
-  --footer-gothic: url('../assets/ui/mu_window_footer.png');
-  
-  /* Superficie de Piedra con Bisel MU */
-  --glass-bg: #1A1512;
-  --glass-bg-hover: #241D18;
-  --glass-card: #201915;
-  --glass-border: #3D3126;
-  --glass-border-hover: #E8C86A;
-  --glass-blur: none;
+  --header-gold: url('../assets/ui/header_cornisa_gold.png');
+  --footer-gothic: url('../assets/ui/gothic_bottom_footer.png');
+  --slot-box: url('../assets/ui/mu_slot_box.png');
 
-  /* Acentos MU Online - Dorado Legendario Season 6 (Piedra y Oro) */
-  --gold-primary: #E8C86A;
-  --gold-light: #F0D27A;
-  --gold-dark: #A68028;
-  --gold-glow: rgba(232, 200, 106, 0.28);
-  --gold-gradient: linear-gradient(135deg, #F0D27A 0%, #E8C86A 50%, #A68028 100%);
-  --gold-gradient-subtle: linear-gradient(135deg, rgba(232, 200, 106, 0.15) 0%, rgba(166, 128, 40, 0.05) 100%);
+  /* Sprites de Botones Nativos */
+  --btn-big-normal: url('../assets/ui/btn_big_normal.png');
+  --btn-big-pressed: url('../assets/ui/btn_big_pressed.png');
+  --btn-med-normal: url('../assets/ui/btn_medium_normal.png');
+  --btn-med-pressed: url('../assets/ui/btn_medium_pressed.png');
+  --btn-small-normal: url('../assets/ui/btn_small_normal.png');
+  --btn-small-pressed: url('../assets/ui/btn_small_pressed.png');
+  --tab-active: url('../assets/ui/mu_tab_active.png');
+  --tab-inactive: url('../assets/ui/mu_tab_inactive.png');
 
-  /* MU Item Grades & Lore Colors (Season 6) */
-  --mu-excellent: #3FCF8E;
-  --mu-ancient: #5B8DEF;
-  --mu-socket: #5B8DEF;
-  --mu-harmony: #E8C86A;
-  --mu-luck: #7FA8F5;
-  --mu-item-box-bg: #100D0B;
-  --mu-item-border: #3D3126;
+  /* 4. Acentos de Oro Restringido (DESIGN.md) */
+  --gold-radiant: #FEDF99;       /* Oro Radiante: texto de botones activos, pestañas */
+  --gold-primary: #EFD28D;       /* Oro Primario: títulos ceremoniales y foco */
+  --gold-antique: #E0C380;       /* Oro Antiguo: marcos y detalles de jerarquía */
+  --gold-pressed: #D2B674;       /* Oro Presionado: estados activos secundarios */
+  --gold-dark: #A68028;          /* Oro Sombra: borde de relieve oscuro */
+  --gold-glow: rgba(239, 210, 141, 0.35);
 
-  /* Acentos Arcanos & Seguridad Season 6 */
-  --cyan-primary: #5B8DEF;
-  --cyan-glow: rgba(91, 141, 239, 0.28);
-  --cyan-gradient: linear-gradient(135deg, #7FA8F5 0%, #5B8DEF 100%);
-  
-  --green-verified: #3FCF8E;
-  --green-glow: rgba(63, 207, 142, 0.28);
-  --green-gradient: linear-gradient(135deg, #5EE4A6 0%, #3FCF8E 100%);
+  /* 5. Acentos de Estado y Lore de MU */
+  --green-online: #62E642;       /* Verde Servidor / Conectado */
+  --mu-excellent: #3FCF8E;       /* Verde Ítem Excelente clásico MU */
+  --mu-harmony: #EFD28D;         /* Amarillo Opción Harmony */
+  --mu-luck: #7FA8F5;            /* Azul Celeste Luck */
+  --danger-iron: #7A2E28;        /* Rojo Destructivo controlado */
+  --error-text: #FFDAD6;
 
-  --red-alert: #E2703A;
-  --red-glow: rgba(226, 112, 58, 0.28);
+  /* 6. Tipografía Canónica (WCAG AAA) */
+  --text-ivory: #E4E2E0;         /* Texto Principal: marfil de alto contraste */
+  --text-silver: #CDC6B9;        /* Texto Secundario: plata/acero envejecido */
+  --text-dimmed: #989081;        /* Texto Terciario: gris estructural legible */
 
-  --purple-accent: #5B8DEF;
-  --purple-glow: rgba(91, 141, 239, 0.3);
+  --font-display: 'Domine', Georgia, serif;
+  --font-body: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
-  /* Tipografía & Textos (WCAG AAA > 7:1) */
-  --text-white: #FAF6EE;
-  --text-main: #FAF6EE;
-  --text-secondary: #C8BEAF;
-  --text-dimmed: #B8AEA0;
-  --text-gold: #F0D27A;
+  /* 7. Sombras y Profundidad Táctil */
+  --shadow-chiseled: inset 1px 1px 0 rgba(239, 210, 141, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.88);
+  --shadow-recessed: inset 1px 1px 3px rgba(0, 0, 0, 0.9), inset -1px -1px 1px rgba(255, 255, 255, 0.05);
+  --shadow-panel: 0 10px 30px rgba(0, 0, 0, 0.8), inset 1px 1px 0 rgba(239, 210, 141, 0.18);
+  --shadow-gold: 0 6px 24px rgba(239, 210, 141, 0.3);
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-
-  /* Elevación & Sombras */
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.75);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.85);
-  --shadow-gold: 0 8px 32px rgba(232, 200, 106, 0.25);
-  --shadow-cyan: 0 8px 32px rgba(91, 141, 239, 0.25);
-  --shadow-runic: 0 0 25px rgba(232, 200, 106, 0.35);
-
-  /* Bordes & Radios Góticos Season 6 (estándar gótico de piedra 2px-4px) */
+  /* 8. Radios Góticos Rígidos (0 a 3px máx) */
+  --radius-xs: 1px;
   --radius-sm: 2px;
-  --radius-md: 2px;
-  --radius-lg: 3px;
-  --radius-xl: 4px;
-  --radius-full: 4px;
+  --radius-md: 3px;
 
-  /* Transiciones Suaves */
-  --trans-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  --trans-normal: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  --trans-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 9. Transiciones */
+  --trans-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Reset y Normalización */
@@ -95,21 +81,27 @@
   padding: 0;
 }
 
-html {
+/* Cursor Legendario de Webzen MU Online */
+html, body {
+  cursor: url('../assets/art/cursor_default_webzen.png'), default;
   scroll-behavior: smooth;
   color-scheme: dark;
   font-size: 16px;
   background-color: var(--bg-deep);
 }
 
+a, button, [role="button"], input[type="range"], .device-tab-btn, .apk-nav-item, .faq-question, .hero-class-btn {
+  cursor: url('../assets/art/cursor_attack_webzen.png'), pointer !important;
+}
+
 body {
-  font-family: var(--font-sans);
-  color: var(--text-main);
+  font-family: var(--font-body);
+  color: var(--text-ivory);
   background-color: var(--bg-deep);
   background-image: 
-    radial-gradient(circle at 15% 15%, rgba(245, 179, 53, 0.05) 0%, transparent 45%),
-    radial-gradient(circle at 85% 30%, rgba(91, 141, 239, 0.04) 0%, transparent 45%),
-    radial-gradient(circle at 50% 80%, rgba(63, 207, 142, 0.03) 0%, transparent 50%);
+    radial-gradient(circle at 50% 12%, rgba(239, 210, 141, 0.08) 0%, transparent 65%),
+    var(--bg-stone);
+  background-repeat: repeat;
   background-attachment: fixed;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -119,27 +111,27 @@ body {
 
 /* Selección de Texto */
 ::selection {
-  background: rgba(245, 179, 53, 0.3);
-  color: var(--gold-light);
+  background: rgba(239, 210, 141, 0.35);
+  color: var(--gold-radiant);
 }
 
-/* Barra de Desplazamiento */
+/* Scrollbar Gótico MU */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 9px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-deep);
+  background: #080808;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-3);
-  border-radius: var(--radius-full);
-  border: 2px solid var(--bg-deep);
+  background: #252625;
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-xs);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gold-dark);
 }
 
-/* Enlaces y Botones */
+/* Elementos Básicos */
 a {
   color: inherit;
   text-decoration: none;
@@ -147,7 +139,6 @@ a {
 }
 
 button {
-  cursor: pointer;
   border: none;
   background: none;
   font-family: inherit;
@@ -159,100 +150,68 @@ img, svg {
 }
 
 /* ==========================================================================
-   ANIMACIONES & EFECTOS VISUALES MODERNOS
+   ANIMACIONES ARTÍSTICAS (Chispas, Joyas Flotantes y Auras de MU)
    ========================================================================== */
-
-/* 1. Pulso de Resplandor Dorado */
-@keyframes goldGlowPulse {
+@keyframes floatJewel {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(245, 179, 53, 0.25), 0 0 30px rgba(245, 179, 53, 0.1);
+    transform: translateY(0) rotate(0deg);
   }
   50% {
-    box-shadow: 0 0 25px rgba(245, 179, 53, 0.5), 0 0 50px rgba(245, 179, 53, 0.25);
+    transform: translateY(-10px) rotate(2deg);
   }
 }
 
-/* 2. Flotación Suave (Levitación) */
-@keyframes floatSlow {
+@keyframes jewelGlowPulse {
   0%, 100% {
-    transform: translateY(0);
+    filter: drop-shadow(0 0 10px rgba(239, 210, 141, 0.5)) drop-shadow(0 0 20px rgba(239, 210, 141, 0.2));
   }
   50% {
-    transform: translateY(-8px);
+    filter: drop-shadow(0 0 18px rgba(239, 210, 141, 0.85)) drop-shadow(0 0 35px rgba(239, 210, 141, 0.4));
   }
 }
 
-/* 3. Barrido de Luz Holográfica */
-@keyframes holoScan {
-  0% {
-    background-position: -200% 0;
+@keyframes chaosGlowPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(255, 120, 20, 0.6)) drop-shadow(0 0 22px rgba(255, 80, 0, 0.25));
   }
-  100% {
-    background-position: 200% 0;
+  50% {
+    filter: drop-shadow(0 0 20px rgba(255, 140, 30, 0.95)) drop-shadow(0 0 40px rgba(255, 90, 0, 0.5));
   }
 }
 
-/* 4. Radar Ping */
-@keyframes radarPing {
-  0% {
+@keyframes soulGlowPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(80, 160, 255, 0.6)) drop-shadow(0 0 22px rgba(40, 120, 255, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(100, 180, 255, 0.95)) drop-shadow(0 0 40px rgba(50, 140, 255, 0.5));
+  }
+}
+
+@keyframes lifeGlowPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(60, 220, 140, 0.6)) drop-shadow(0 0 22px rgba(40, 180, 100, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(80, 240, 160, 0.95)) drop-shadow(0 0 40px rgba(50, 200, 120, 0.5));
+  }
+}
+
+@keyframes pulseGoldDot {
+  0%, 100% {
+    opacity: 1;
     transform: scale(1);
-    opacity: 0.9;
-  }
-  75%, 100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-}
-
-/* 5. Gradiente Animado de Borde */
-@keyframes borderGradientRotate {
-  0% {
-    background-position: 0% 50%;
   }
   50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+    opacity: 0.6;
+    transform: scale(0.9);
   }
 }
 
-/* Clases de Utilidad de Efectos */
-.fx-float {
-  animation: floatSlow 5s ease-in-out infinite;
+.fx-float-jewel {
+  animation: floatJewel 4s ease-in-out infinite;
 }
 
 .fx-gold-pulse {
-  animation: goldGlowPulse 3s ease-in-out infinite;
+  animation: pulseGoldDot 2.4s ease-in-out infinite;
 }
-
-.fx-glass-panel {
-  background: rgba(14, 18, 28, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(245, 179, 53, 0.2);
-  border-radius: var(--radius-lg);
-  transition: all var(--trans-normal);
-}
-
-.fx-glass-panel:hover {
-  border-color: rgba(245, 179, 53, 0.55);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(245, 179, 53, 0.22);
-  transform: translateY(-4px);
-}
-
-.fx-neon-gold {
-  color: var(--gold-light);
-  text-shadow: 0 0 10px rgba(245, 179, 53, 0.6), 0 0 20px rgba(245, 179, 53, 0.3);
-}
-
-.fx-neon-cyan {
-  color: #7FA8F5;
-  text-shadow: 0 0 10px rgba(91, 141, 239, 0.6), 0 0 20px rgba(91, 141, 239, 0.3);
-}
-
-.fx-neon-green {
-  color: #3FCF8E;
-  text-shadow: 0 0 10px rgba(63, 207, 142, 0.6), 0 0 20px rgba(63, 207, 142, 0.3);
-}
-

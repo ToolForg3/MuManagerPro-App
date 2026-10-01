@@ -25,7 +25,7 @@ import { Panel, BotonOro, BotonPiedra, TituloSeccion, MuCornerOrnaments, MuSideM
 import { LanguageModal } from '../../components/common/LanguageModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { APP_VERSION } from '../../constants/appVersion';
+import { APP_VERSION, TELEGRAM_URL, DISCORD_URL } from '../../constants/appVersion';
 import { SqlClient } from '../../services/database/sqlClient';
 import { SecurityService } from '../../services/security/securityService';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
@@ -1038,22 +1038,39 @@ export const LoginScreen = () => {
           <Text style={styles.securityText}>Conexión cifrada TLS / TDS puerto 1433 TCP</Text>
         </View>
 
-        {/* Telegram ToolForg3 */}
+        {/* Canales Oficiales ToolForg3 */}
         <View style={styles.brandingSection}>
-          <TouchableOpacity
-            style={{ borderRadius: 2, overflow: 'hidden' }}
-            onPress={() => Linking.openURL('https://t.me/ToolForg3').catch(() => Alert.alert('Telegram', 'Canal oficial: https://t.me/ToolForg3'))}
-            activeOpacity={0.8}
-          >
-            <ImageBackground
-              source={STITCH_ASSETS.tabs.tabModeInactive}
-              style={styles.telegramButton}
-              resizeMode="stretch"
+          <View style={styles.officialChannelsLoginRow}>
+            <TouchableOpacity
+              style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+              onPress={() => Linking.openURL(DISCORD_URL).catch(() => Alert.alert('Discord', `Servidor oficial: ${DISCORD_URL}`))}
+              activeOpacity={0.8}
             >
-              <MuIcon name={"send" as any} size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.telegramButtonText}>Telegram ToolForg3</Text>
-            </ImageBackground>
-          </TouchableOpacity>
+              <ImageBackground
+                source={STITCH_ASSETS.tabs.tabModeInactive}
+                style={styles.channelButton}
+                resizeMode="stretch"
+              >
+                <MuIcon name={"discord" as any} size={16} color="#5865F2" style={{ marginRight: 6 }} />
+                <Text style={styles.channelButtonText}>Discord Oficial</Text>
+              </ImageBackground>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+              onPress={() => Linking.openURL(TELEGRAM_URL).catch(() => Alert.alert('Telegram', `Canal oficial: ${TELEGRAM_URL}`))}
+              activeOpacity={0.8}
+            >
+              <ImageBackground
+                source={STITCH_ASSETS.tabs.tabModeInactive}
+                style={styles.channelButton}
+                resizeMode="stretch"
+              >
+                <MuIcon name={"send" as any} size={16} color="#5B8DEF" style={{ marginRight: 6 }} />
+                <Text style={styles.channelButtonText}>Telegram Canal</Text>
+              </ImageBackground>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Zócalo Inferior Gótico Stitch 06 */}
@@ -1710,18 +1727,27 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     gap: 8,
   },
-  telegramButton: {
+  officialChannelsLoginRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+    maxWidth: 360,
+  },
+  channelButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
     minHeight: 44,
+    height: 44,
   },
-  telegramButtonText: {
-    color: THEME.colors.arcano,
+  channelButtonText: {
+    color: '#CDC6B9',
     fontWeight: 'bold',
     fontSize: 12,
+    letterSpacing: 0.3,
+    ...THEME.effects.textShadowSubtle,
   },
   producedByText: {
     fontSize: 11,

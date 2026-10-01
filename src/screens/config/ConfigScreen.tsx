@@ -33,7 +33,7 @@ import { LicenseModal } from '../../components/security/LicenseModal';
 import { RemoteConfigService, RemoteConfigState } from '../../services/security/remoteConfigService';
 import { UpdateModal } from '../../components/common/UpdateModal';
 import { SecurityService } from '../../services/security/securityService';
-import { APP_VERSION, APP_BUILD, APP_DISPLAY_VERSION } from '../../constants/appVersion';
+import { APP_VERSION, APP_BUILD, APP_DISPLAY_VERSION, TELEGRAM_URL, DISCORD_URL } from '../../constants/appVersion';
 import { ServerProfile } from '../../types/admin';
 import { logAdminAction } from '../../services/adminLog';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
@@ -1463,57 +1463,72 @@ export const ConfigScreen = () => {
                 <TouchableOpacity
                   style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                   activeOpacity={0.8}
-                  onPress={() => Linking.openURL('https://t.me/ToolForg3').catch(() => Alert.alert('Telegram', 'Canal oficial: https://t.me/ToolForg3'))}
+                  onPress={() => Linking.openURL(DISCORD_URL).catch(() => Alert.alert('Discord', `Servidor oficial: ${DISCORD_URL}`))}
                 >
                   <ImageBackground
                     source={STITCH_ASSETS.tabs.tabModeInactive}
-                    style={styles.telegramButtonConfig}
+                    style={styles.channelButtonConfig}
                     resizeMode="stretch"
                   >
-                    <MuIcon name={"send" as any} size={16} color="#5B8DEF" style={{ marginRight: 6 }} />
-                    <Text style={styles.telegramButtonTextConfig}>Telegram ToolForg3</Text>
+                    <MuIcon name={"discord" as any} size={16} color="#5865F2" style={{ marginRight: 6 }} />
+                    <Text style={styles.channelButtonTextConfig}>Discord Oficial</Text>
                   </ImageBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
                   activeOpacity={0.8}
-                  onPress={() => {
-                    Alert.alert(
-                      'Soporte por WhatsApp',
-                      '¿Deseas incluir el identificador de tu dispositivo (HWID) en el mensaje para agilizar la atención?',
-                      [
-                        {
-                          text: 'No incluir',
-                          onPress: () => {
-                            const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).`;
-                            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-                            Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
-                          }
-                        },
-                        {
-                          text: 'Incluir HWID',
-                          onPress: () => {
-                            const hwidCode = licenseStatus.hwid || 'N/A';
-                            const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).\n\nHWID: ${hwidCode}`;
-                            const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
-                            Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
-                          }
-                        }
-                      ]
-                    );
-                  }}
+                  onPress={() => Linking.openURL(TELEGRAM_URL).catch(() => Alert.alert('Telegram', `Canal oficial: ${TELEGRAM_URL}`))}
                 >
                   <ImageBackground
                     source={STITCH_ASSETS.tabs.tabModeInactive}
-                    style={styles.whatsappButtonConfig}
+                    style={styles.channelButtonConfig}
                     resizeMode="stretch"
                   >
-                    <MuIcon name={"whatsapp" as any} size={16} color="#3FCF8E" style={{ marginRight: 6 }} />
-                    <Text style={styles.whatsappButtonTextConfig}>WhatsApp Soporte</Text>
+                    <MuIcon name={"send" as any} size={16} color="#5B8DEF" style={{ marginRight: 6 }} />
+                    <Text style={styles.channelButtonTextConfig}>Telegram Canal</Text>
                   </ImageBackground>
                 </TouchableOpacity>
               </View>
+
+              <TouchableOpacity
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
+                activeOpacity={0.8}
+                onPress={() => {
+                  Alert.alert(
+                    'Soporte por WhatsApp',
+                    '¿Deseas incluir el identificador de tu dispositivo (HWID) en el mensaje para agilizar la atención?',
+                    [
+                      {
+                        text: 'No incluir',
+                        onPress: () => {
+                          const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).`;
+                          const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+                          Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
+                        }
+                      },
+                      {
+                        text: 'Incluir HWID',
+                        onPress: () => {
+                          const hwidCode = licenseStatus.hwid || 'N/A';
+                          const text = `Hola Soporte ToolForg3! Me comunico desde MuManager PRO (v${APP_VERSION}).\n\nHWID: ${hwidCode}`;
+                          const url = `https://wa.me/5521971217376?text=${encodeURIComponent(text)}`;
+                          Linking.openURL(url).catch(() => Alert.alert('WhatsApp', 'Soporte oficial: +55 21 97121-7376'));
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeInactive}
+                  style={styles.whatsappButtonConfig}
+                  resizeMode="stretch"
+                >
+                  <MuIcon name={"whatsapp" as any} size={16} color="#3FCF8E" style={{ marginRight: 6 }} />
+                  <Text style={styles.whatsappButtonTextConfig}>WhatsApp Soporte Técnico</Text>
+                </ImageBackground>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -2585,16 +2600,16 @@ const styles = StyleSheet.create({
     gap: 10,
     width: '100%',
   },
-  telegramButtonConfig: {
+  channelButtonConfig: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     minHeight: 46,
     height: 46,
   },
-  telegramButtonTextConfig: {
+  channelButtonTextConfig: {
     color: '#CDC6B9',
     fontWeight: 'bold',
     fontSize: 12,
@@ -2602,7 +2617,7 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   whatsappButtonConfig: {
-    flex: 1,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
