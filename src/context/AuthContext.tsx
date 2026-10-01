@@ -322,6 +322,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           deviceModel: meta.model,
           deviceBrand: meta.brand,
           fingerprint: meta.fingerprint,
+          detectionReason: (meta as any).detectionReason || '',
         }),
       });
       const data = await res.json();
@@ -485,6 +486,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             deviceBrand: meta.brand,
             isEmulator: meta.isEmulator,
             fingerprint: meta.fingerprint,
+            detectionReason: (meta as any).detectionReason || '',
           }),
         });
         const data = await res.json();
@@ -580,6 +582,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           deviceModel: meta.model,
           deviceBrand: meta.brand,
           fingerprint: meta.fingerprint,
+          detectionReason: (meta as any).detectionReason || '',
         }),
       });
 

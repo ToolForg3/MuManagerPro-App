@@ -4155,7 +4155,7 @@
             <span class="badge ${dev.isEmulator ? 'badge-emulator' : 'badge-physical'}" 
                   style="cursor: pointer;" 
                   data-action="toggle-emulator" 
-                  title="Clic para alternar entre Emulador y Celular Físico">
+                  title="${dev.detectionReason ? 'Detección: ' + escapeHtml(dev.detectionReason) + '. Clic para alternar' : 'Clic para alternar entre Emulador y Celular Físico'}">
               ${dev.isEmulator ? '🎮 EMULADOR' : '📱 FÍSICO'}
             </span>
             <span class="badge" 

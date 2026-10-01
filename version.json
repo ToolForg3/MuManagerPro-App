@@ -1,10 +1,10 @@
 {
-  "version": "2.3.3",
+  "version": "2.3.4",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-01T04:00:00.000Z",
+  "publishedAt": "2026-10-01T04:30:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 135,
-  "forceUpdate": false,
-  "changelog": "MuManager PRO v2.3.3 (Build 135) - Blindaje Anti-Abuso y Detección de Emuladores:\n• DETECCIÓN NATIVA DE EMULADORES: Módulo nativo Android (C++/Kotlin) para inspección profunda de QEMU, pipes, hypervisores, microvirt, vbox y huellas digitales de emulación, erradicando falsos negativos incluso con spoofing de marcas físicas.\n• LICENCIAMIENTO SEGURO (OPCIÓN A): Los emuladores reciben Modo DEMO vitalicio al registrarse, requiriendo solicitud directa para evaluación PRO y bloqueando granjas automatizadas.\n• CONTROL DE INSTANCIAS POR IP (OPCIÓN B): Límite de 1 prueba PRO por IP pública cada 48 horas para celulares físicos, asignando DEMO vitalicio automático a dispositivos secundarios.\n• DEGRADACIÓN FLUIDA A DEMO: Al concluir el período de prueba PRO de 24h, el usuario continúa accediendo transparentemente en Modo DEMO vitalicio sin bloqueos de pantalla.\n• SOLICITUD PRO EN 1 CLIC: Envío inmediato de solicitud PRO al panel administrativo sin formularios redundantes."
+  "build": 136,
+  "forceUpdate": true,
+  "changelog": "MuManager PRO v2.3.4 (Build 136) - Detección Automática de Emuladores y Blindaje Total:\n• DETECCIÓN AUTOMÁTICA INFALIBLE DE EMULADORES: Módulo nativo Android perfeccionado con inspección de arquitectura de CPU (x86/x86_64), /proc/cpuinfo (Intel/AMD), propiedades de sistema (LDPlayer, Nox, BlueStacks, MEmu), pipes y sensores de hardware. Detecta automáticamente emuladores incluso cuando spoofean modelos Samsung (SM-A715F) sin requerir intervención manual.\n• TELEMETRÍA Y CONTROL DE ENTORNO: El panel web y la base de datos clasifican con precisión cristalina celulares físicos y emuladores, asignando Modo DEMO vitalicio automático a instancias emuladas para prevenir granjas de pruebas PRO.\n• SINCRONIZACIÓN Y RESISTENCIA: Registro detallado de la razón técnica de detección en la auditoría forense para total transparencia administrativa."
 }

@@ -1431,6 +1431,7 @@ export class SqlClient {
         deviceModel: meta.model,
         deviceBrand: meta.brand,
         fingerprint: meta.fingerprint,
+        detectionReason: meta.detectionReason || '',
         isExplicitActivation: !!isExplicitActivation,
       }, 7000);
 

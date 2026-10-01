@@ -1018,11 +1018,13 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
   let devBrand = '';
   let devFingerprint = '';
 
+  let devDetectionReason = '';
   if (platformOrOptions && typeof platformOrOptions === 'object') {
     devIsEmulator = platformOrOptions.isEmulator === true || platformOrOptions.isEmulator === 'true';
     devModel = platformOrOptions.deviceModel || '';
     devBrand = platformOrOptions.deviceBrand || '';
     devFingerprint = platformOrOptions.fingerprint || '';
+    devDetectionReason = platformOrOptions.detectionReason || '';
     platform = platformOrOptions.platform || 'Android';
     devAppVersion = platformOrOptions.appVersion || devAppVersion;
   } else {
@@ -1034,6 +1036,7 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
 
   const fp = (devFingerprint || '').toLowerCase();
   const bm = `${devBrand} ${devModel}`.toLowerCase();
+  const dr = (devDetectionReason || '').toLowerCase();
   if (
     fp.includes('test-keys') ||
     fp.includes('generic') ||
@@ -1043,13 +1046,18 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
     fp.includes('bluestacks') ||
     fp.includes('ldplayer') ||
     fp.includes('ttvm') ||
+    fp.includes('cancro') ||
+    fp.includes('microvirt') ||
     fp.includes('nox') ||
     bm.includes('bluestacks') ||
     bm.includes('nox') ||
     bm.includes('ldplayer') ||
     bm.includes('vbox') ||
     bm.includes('emulator') ||
-    bm.includes('simulator')
+    bm.includes('simulator') ||
+    bm.includes('genymotion') ||
+    bm.includes('google_sdk') ||
+    (dr && dr !== 'physical_device')
   ) {
     devIsEmulator = true;
   }
@@ -9636,7 +9644,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
   if (typeof syncCloudStorage === 'function') {
     await syncCloudStorage(false);
   }
-  const { hwid, mode, appVersion, platform, licenseKey, userEmail, username, isEmulator, deviceModel, deviceBrand } = req.body;
+  const { hwid, mode, appVersion, platform, licenseKey, userEmail, username, isEmulator, deviceModel, deviceBrand, detectionReason, fingerprint } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID missing' });
 
   const cleanHwid = String(hwid).trim().toUpperCase();
@@ -9772,7 +9780,8 @@ app.post('/api/telemetry/ping', async (req, res) => {
   // Evaluación autoritativa anti-falsos positivos de emulador en el Servidor
   const cleanBrand = String(deviceBrand || (devices[hwid] && devices[hwid].deviceBrand) || '').toLowerCase().trim();
   const cleanModel = String(deviceModel || (devices[hwid] && devices[hwid].deviceModel) || '').toLowerCase().trim();
-  const cleanFingerprint = String(req.body.fingerprint || (devices[hwid] && devices[hwid].fingerprint) || '').toLowerCase().trim();
+  const cleanFingerprint = String(fingerprint || req.body.fingerprint || (devices[hwid] && devices[hwid].fingerprint) || '').toLowerCase().trim();
+  const cleanDetectionReason = String(detectionReason || req.body.detectionReason || (devices[hwid] && devices[hwid].detectionReason) || '').trim();
 
   const isExplicitEmulatorModel = (
     cleanModel.includes('google_sdk') ||
@@ -9805,10 +9814,11 @@ app.post('/api/telemetry/ping', async (req, res) => {
     cleanFingerprint.includes('ranchu') ||
     cleanFingerprint.includes('ttvm') ||
     cleanFingerprint.includes('cancro') ||
-    cleanFingerprint.includes('microvirt')
+    cleanFingerprint.includes('microvirt') ||
+    cleanFingerprint.includes('x86')
   );
 
-  const clientSaysEmulator = isEmulator === true || isEmulator === 'true';
+  const clientSaysEmulator = isEmulator === true || isEmulator === 'true' || (cleanDetectionReason && cleanDetectionReason !== 'PHYSICAL_DEVICE');
 
   const isTrustedPhysicalPhoneOem = [
     'samsung', 'honor', 'huawei', 'xiaomi', 'redmi', 'poco',
@@ -9819,7 +9829,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
   let authoritativeIsEmulator = false;
   if (clientSaysEmulator || isExplicitEmulatorModel || isExplicitEmulatorFingerprint) {
     authoritativeIsEmulator = true;
-  } else if (isTrustedPhysicalPhoneOem && (!cleanFingerprint || (cleanFingerprint.includes('release-keys') && !cleanFingerprint.includes('test-keys')))) {
+  } else if (isTrustedPhysicalPhoneOem && cleanFingerprint && cleanFingerprint.includes('release-keys') && !cleanFingerprint.includes('test-keys') && !cleanFingerprint.includes('x86')) {
     authoritativeIsEmulator = false;
   } else if (isEmulator !== undefined) {
     authoritativeIsEmulator = !!isEmulator;
@@ -9847,10 +9857,12 @@ app.post('/api/telemetry/ping', async (req, res) => {
       expiresAt: null, // Modo DEMO vitalicio por defecto
       isLifetime: false,
       isEmulator: authoritativeIsEmulator,
+      detectionReason: cleanDetectionReason || (authoritativeIsEmulator ? 'SERVER_HEURISTIC' : 'PHYSICAL_DEVICE'),
+      fingerprint: cleanFingerprint,
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
       demoExtendedHours: 0,
-      isTest: isTestDevice({ hwid, deviceModel }),
+      isTest: authoritativeIsEmulator ? true : isTestDevice({ hwid, deviceModel }),
       forceDemo: isRevokedByAdmin || isKeyRevoked,
       authRevision: 1,
       authUpdatedAt: Date.now(),
@@ -9903,7 +9915,18 @@ app.post('/api/telemetry/ping', async (req, res) => {
     devices[hwid].appVersion = appVersion || devices[hwid].appVersion;
     if (userEmail) devices[hwid].currentUser = userEmail;
     if (!devices[hwid].isEmulatorManual) {
-      devices[hwid].isEmulator = authoritativeIsEmulator;
+      if (authoritativeIsEmulator) {
+        devices[hwid].isEmulator = true;
+        devices[hwid].isTest = true;
+      } else {
+        devices[hwid].isEmulator = false;
+      }
+    }
+    if (cleanDetectionReason) {
+      devices[hwid].detectionReason = cleanDetectionReason;
+    }
+    if (cleanFingerprint) {
+      devices[hwid].fingerprint = cleanFingerprint;
     }
     if (deviceModel) devices[hwid].deviceModel = deviceModel;
     if (deviceBrand) devices[hwid].deviceBrand = deviceBrand;
