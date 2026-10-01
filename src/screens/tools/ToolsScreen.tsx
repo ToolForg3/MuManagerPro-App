@@ -2798,7 +2798,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             </Panel>
 
             {/* Buscador Rápido de Ítems */}
-            <Panel variant="box" style={[styles.card, { zIndex: 30, marginBottom: 10 }]}>
+            <Panel variant="box" style={[styles.card, { zIndex: 30, marginBottom: 10, overflow: 'visible' }]}>
               <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderGothic}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -2840,7 +2840,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                           <MuIcon
                             name={cat.icon as any}
                             size={16}
-                            color={isSel ? THEME.colors.textoOscuro : THEME.colors.oroClaro}
+                            color={isSel ? '#FEDF99' : THEME.colors.oroClaro}
                           />
                         }
                       />
@@ -2850,12 +2850,31 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
               </ScrollView>
 
               {/* Items in Current Selected Category con Chip */}
-              <Text style={[styles.cardTitle, { marginTop: 12 }]}>Seleccionar Ítem</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+                <Text style={styles.cardTitle}>Seleccionar Ítem</Text>
+                {itemSearchText.trim().length > 0 && (
+                  <View style={{ backgroundColor: 'rgba(239, 210, 141, 0.2)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: '#C4A65E' }}>
+                    <Text style={{ color: '#FEDF99', fontSize: 10, fontWeight: '900', ...THEME.effects.textShadowHigh }}>
+                      Filtro activo
+                    </Text>
+                  </View>
+                )}
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {(() => {
                     const curCat = MAKER_CATEGORIES.find((c) => c.id === selectedMakerCatId) || MAKER_CATEGORIES[0];
-                    const items = DEFAULT_ITEM_CATALOG.filter(curCat.filter);
+                    const hasSearch = itemSearchText && itemSearchText.trim().length > 0;
+                    const q = hasSearch ? itemSearchText.trim().toLowerCase() : '';
+                    let items = DEFAULT_ITEM_CATALOG.filter(curCat.filter);
+                    if (hasSearch) {
+                      const inCat = items.filter((i) => i.name.toLowerCase().includes(q));
+                      if (inCat.length > 0) {
+                        items = inCat;
+                      } else {
+                        items = DEFAULT_ITEM_CATALOG.filter((i) => i.name.toLowerCase().includes(q));
+                      }
+                    }
                     return items.map((item) => {
                       const isItemSel = selectedItemDef.group === item.group && selectedItemDef.index === item.index && (selectedItemDef.name === item.name);
                       return (
@@ -2876,7 +2895,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                               itemName={item.name}
                               size={20}
                               fallbackIcon={item.icon as any}
-                              fallbackColor={isItemSel ? THEME.colors.textoOscuro : THEME.colors.oroClaro}
+                              fallbackColor={isItemSel ? '#FEDF99' : THEME.colors.oroClaro}
                             />
                           }
                         />
@@ -3136,7 +3155,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.counterBtnText, { color: THEME.colors.textoOscuro, fontWeight: '900' }]}>MAX</Text>
+                      <Text style={[styles.counterBtnText, { color: '#FEDF99', fontWeight: '900', ...THEME.effects.textShadowHigh }]}>MAX</Text>
                     </ImageBackground>
                   </TouchableOpacity>
                 </View>
@@ -3183,7 +3202,7 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                       style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.counterBtnText, { color: THEME.colors.textoOscuro, fontWeight: '900' }]}>MAX</Text>
+                      <Text style={[styles.counterBtnText, { color: '#FEDF99', fontWeight: '900', ...THEME.effects.textShadowHigh }]}>MAX</Text>
                     </ImageBackground>
                   </TouchableOpacity>
                 </View>

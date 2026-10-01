@@ -17,7 +17,7 @@
   --border-subtle: #2E2F2E;      /* Borde interno atenuado */
 
   /* 3. Texturas Auténticas y Arte de MU Online */
-  --bg-stone: url('../assets/ui/mu_stone_back.png');
+  --bg-stone: url('../assets/ui/mu_stone_pavement.jpg');
   --divider-gold: url('../assets/ui/mu_gold_divider.png');
   --header-gold: url('../assets/ui/header_cornisa_gold.png');
   --footer-gothic: url('../assets/ui/gothic_bottom_footer.png');
@@ -49,10 +49,10 @@
   --danger-iron: #7A2E28;        /* Rojo Destructivo controlado */
   --error-text: #FFDAD6;
 
-  /* 6. Tipografía Canónica (WCAG AAA) */
-  --text-ivory: #E4E2E0;         /* Texto Principal: marfil de alto contraste */
-  --text-silver: #CDC6B9;        /* Texto Secundario: plata/acero envejecido */
-  --text-dimmed: #989081;        /* Texto Terciario: gris estructural legible */
+  /* 6. Tipografía Canónica de Ultra Alto Contraste (WCAG AAA) */
+  --text-ivory: #F5F3F0;         /* Texto Principal: marfil de máxima nitidez */
+  --text-silver: #DDD7CB;        /* Texto Secundario: plata/acero claro luminoso */
+  --text-dimmed: #B5ACA0;        /* Texto Terciario: legible y claro sobre piedra oscura */
 
   --font-display: 'Domine', Georgia, serif;
   --font-body: 'Roboto Flex', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -100,8 +100,10 @@ body {
   background-color: var(--bg-deep);
   background-image: 
     radial-gradient(circle at 50% 12%, rgba(239, 210, 141, 0.08) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(11, 12, 11, 0.35) 0%, rgba(8, 9, 8, 0.7) 100%),
     var(--bg-stone);
   background-repeat: repeat;
+  background-size: auto, auto, 480px 480px;
   background-attachment: fixed;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;

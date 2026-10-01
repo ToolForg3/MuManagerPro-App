@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidad y Protección de Datos — Mu Manager PRO</title>
+  
+  <!-- Metadatos de Seguridad & SEO -->
+  <meta name="description" content="Política de Privacidad y Protección de Datos oficial de Mu Manager PRO. Conoce el tratamiento de telemetría, HWID, principio de cero retención de jugadores y ejercicio de derechos ARCO / RGPD.">
+  <meta name="theme-color" content="#0D0E0D">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicons Oficiales -->
+  <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="./assets/favicon.ico">
+  <link rel="icon" type="image/png" href="./assets/icon.png">
+
+  <!-- Tipografía Canónica Stitch Approved Ironforge -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo Oficiales -->
+  <link rel="stylesheet" href="./css/theme.css?v=3.5">
+  <link rel="stylesheet" href="./css/components.css?v=3.5">
+  <link rel="stylesheet" href="./css/responsive.css?v=3.5">
+  <style>
+    .legal-content-wrap {
+      padding: 60px 0 100px;
+    }
+    .legal-card {
+      background: var(--bg-surface-panel);
+      border: 1px solid var(--border-structural);
+      border-radius: var(--radius-md);
+      padding: 40px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75);
+      position: relative;
+    }
+    .legal-header {
+      border-bottom: 1px solid var(--border-structural);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .legal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: rgba(63, 207, 142, 0.12);
+      border: 1px solid rgba(63, 207, 142, 0.3);
+      border-radius: var(--radius-sm);
+      color: var(--mu-excellent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .legal-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      color: var(--gold-primary);
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    .legal-meta {
+      font-size: 0.88rem;
+      color: var(--text-dimmed);
+    }
+    .legal-section {
+      margin-bottom: 32px;
+    }
+    .legal-section-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      color: var(--gold-radiant);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px dashed var(--border-subtle);
+      padding-bottom: 8px;
+    }
+    .legal-section-title span.sec-num {
+      color: var(--gold-antique);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+    }
+    .legal-text {
+      color: var(--text-silver);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+    .legal-highlight-box {
+      background: rgba(11, 12, 11, 0.75);
+      border-left: 3px solid var(--gold-primary);
+      padding: 16px 20px;
+      margin: 16px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .legal-list {
+      margin: 12px 0 16px 24px;
+      color: var(--text-silver);
+      line-height: 1.7;
+    }
+    .legal-list li {
+      margin-bottom: 8px;
+    }
+    .nav-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gold-antique);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      transition: color 0.15s ease;
+    }
+    .nav-back-link:hover {
+      color: var(--gold-radiant);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Láser de Progreso de Lectura -->
+  <div class="scroll-progress-bar" id="scroll-progress"></div>
+
+  <!-- NAVBAR PRINCIPAL -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand-logo" aria-label="Ir al inicio de Mu Manager PRO">
+        <img src="./assets/icon.png" alt="Logo Mu Manager PRO" class="brand-logo-img">
+        <div class="brand-info">
+          <span class="brand-name">Mu Manager PRO</span>
+          <span class="brand-tag">
+            <span class="status-dot"></span> Suite de Administración T-SQL
+          </span>
+        </div>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Inicio</a></li>
+          <li><a href="terminos-de-servicio.html" class="nav-link">Términos de Servicio</a></li>
+          <li><a href="politica-de-privacidad.html" class="nav-link active">Privacidad</a></li>
+          <li><a href="aviso-legal-y-marcas.html" class="nav-link">Aviso Legal & Marcas</a></li>
+          <li><a href="https://discord.gg/4YXguuBFV" target="_blank" rel="noopener noreferrer" class="nav-link" style="color: #A4B3E6;">Discord</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="index.html#descargas" class="btn-mu-medium">
+          Descargar APK
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL DE PRIVACIDAD -->
+  <main class="legal-content-wrap">
+    <div class="container">
+      <a href="index.html" class="nav-back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Volver al Portal Oficial
+      </a>
+
+      <article class="legal-card">
+        <header class="legal-header">
+          <div class="legal-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Cumplimiento RGPD, LGPD, CCPA/CPRA & Cero Retención
+          </div>
+          <h1 class="legal-title">Política de Privacidad y Tratamiento de Datos</h1>
+          <p class="legal-meta">
+            Última actualización y entrada en vigor: Octubre 2026 • Versión Normativa: 3.5 • Ámbito: Aplicación Android, Web y Servicios de Puente
+          </p>
+        </header>
+
+        <!-- Sección 1 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">1.</span> Responsable del Tratamiento de los Datos
+          </h2>
+          <p class="legal-text">
+            El presente documento regula el tratamiento de datos personales y telemetría técnica efectuado por el equipo de desarrollo de <strong>Mu Manager PRO</strong> (en adelante identificado comercialmente como <em>"ToolForg3"</em> o <em>"el Desarrollador"</em>), aplicable al uso de la aplicación móvil para Android (identificada bajo el paquete <code>com.mumanager.pro</code>), el portal web oficial de distribución, el Conector Local de Windows y la Pasarela de Comunicación Gateway.
+          </p>
+          <p class="legal-text">
+            Para cualquier cuestión, consulta o ejercicio de derechos concernientes a su privacidad o la protección de sus datos personales, puede comunicarse formalmente a través del canal oficial de privacidad:
+            <br>
+            <strong style="color: var(--gold-primary);">Correo Electrónico de Privacidad:</strong> <code style="color: var(--gold-radiant);">mumanagerpro@gmail.com</code>
+            <br>
+            <strong style="color: var(--gold-primary);">Canales Oficiales de Soporte Técnico:</strong> Discord Oficial (<code>https://discord.gg/4YXguuBFV</code>) y Telegram (<code>https://t.me/ToolForg3</code>).
+          </p>
+        </section>
+
+        <!-- Sección 2 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">2.</span> Principio Rector: Cero Retención de Datos de Jugadores
+          </h2>
+          <div class="legal-highlight-box">
+            <p class="legal-text" style="margin: 0; color: var(--gold-radiant); font-weight: 600;">
+              🛡️ COMPROMISO INVIOLABLE DE NO INTRUSIÓN Y CERO RETENCIÓN:
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem;">
+              Mu Manager PRO opera exclusivamente como una herramienta de interfaz y administración directa sobre las bases de datos Microsoft SQL Server del propio operador. <strong>Nuestros servidores centrales, pasarelas o servicios en la nube NUNCA recopilan, almacenan, copian, analizan ni transmiten a terceros la información de las bases de datos de sus servidores (MuOnline, Me_MuOnline u homólogas)</strong>. Los registros de cuentas de jugadores, contraseñas de juego, personajes, inventarios o transacciones permanecen con total exclusividad bajo el control de su propia infraestructura.
+            </p>
+          </div>
+          <p class="legal-text">
+            Asimismo, las credenciales de conexión a su motor de base de datos (usuario <code>sa</code>, contraseñas de SQL Server, direcciones IP de servidores privados) se resguardan <strong>exclusivamente en el almacenamiento seguro local de su dispositivo móvil</strong> mediante la biblioteca de cifrado autenticado nativo del sistema operativo (SecureStorage con cifrado simétrico AES-256-CBC y validación criptográfica HMAC-SHA256). Estas contraseñas jamás son enviadas a servidores de ToolForg3.
+          </p>
+        </section>
+
+        <!-- Sección 3 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">3.</span> Categorías de Datos Recopilados y Finalidad
+          </h2>
+          <p class="legal-text">
+            Con el único propósito de suministrar el servicio, autenticar usuarios autorizados, verificar la vigencia de licencias y proteger la plataforma contra abusos y ataques cibernéticos, recabamos un conjunto mínimo y estrictamente necesario de datos técnicos:
+          </p>
+          <ul class="legal-list">
+            <li>
+              <strong>Identificador Criptográfico de Hardware (HWID):</strong> Se genera a partir de identificadores técnicos del dispositivo del usuario de forma irreversible (hash unidireccional). Su única finalidad es vincular la licencia emitida (período de prueba Demo o Licencia PRO) a un dispositivo específico y prevenir la clonación o reventa ilícita de licencias.
+            </li>
+            <li>
+              <strong>Credenciales de Cuenta de Administración de la Aplicación:</strong> Nombre de usuario, dirección de correo electrónico vinculada (para recuperación de contraseña y notificaciones de seguridad) y la contraseña cifrada mediante algoritmo robusto de derivación de claves PBKDF2 con sal criptográfica individualizada.
+            </li>
+            <li>
+              <strong>Telemetría de Diagnóstico Técnico de Dispositivo:</strong> Modelo del dispositivo (ej. Samsung Galaxy S23, Xiaomi Note 12), marca del fabricante, versión del sistema operativo Android y estado de emulación (para diagnóstico de fallos y optimización de rendimiento gráfico de la APK).
+            </li>
+            <li>
+              <strong>Registros de Conexión y Seguridad Perimetral (WAF):</strong> Dirección IP pública del emisor, marca de tiempo y agente de usuario. Estos datos son procesados por el cortafuegos perimetral (WAF) exclusivamente para detectar y bloquear intentos de inyección SQL, ataques de fuerza bruta, escaneos automáticos de vulnerabilidades y ataques de denegación de servicio (DoS).
+            </li>
+            <li>
+              <strong>Datos Opcionales de Contacto en Solicitudes PRO:</strong> Si el usuario solicita voluntariamente una licencia comercial PRO desde la app, puede proporcionar su identificador de Discord, usuario de Telegram o número de WhatsApp para que el equipo administrativo coordine la emisión y facturación de la clave.
+            </li>
+          </ul>
+        </section>
+
+        <!-- Sección 4 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">4.</span> Base Jurídica para el Tratamiento
+          </h2>
+          <p class="legal-text">
+            En estricto apego al Reglamento General de Protección de Datos (RGPD / GDPR de la Unión Europea, Art. 6) y legislaciones análogas de las Américas:
+          </p>
+          <ul class="legal-list">
+            <li>
+              <strong>Ejecución de un Contrato (Art. 6.1.b RGPD):</strong> El tratamiento del HWID, credenciales de cuenta y telemetría de versión es indispensable para la entrega de la licencia de software solicitada por el usuario y para el funcionamiento de las características de la aplicación.
+            </li>
+            <li>
+              <strong>Interés Legítimo (Art. 6.1.f RGPD):</strong> El tratamiento de direcciones IP y registros de seguridad perimetral responde a nuestro interés legítimo e ineludible de salvaguardar la integridad de los servidores, prevenir fraudes cibernéticos y mitigar ataques maliciosos contra la comunidad de usuarios.
+            </li>
+            <li>
+              <strong>Consentimiento Expreso (Art. 6.1.a RGPD):</strong> En el suministro de datos de contacto adicionales (Discord, Telegram) para solicitudes de asistencia técnica o licencias comerciales PRO.
+            </li>
+          </ul>
+        </section>
+
+        <!-- Sección 5 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">5.</span> No Comercialización y Terceros Proveedores de Infraestructura
+          </h2>
+          <p class="legal-text">
+            <strong>ToolForg3 NO vende, no alquila, no monetiza ni comparte su información personal o técnica con empresas de publicidad, corredores de datos ni terceros ajenos.</strong>
+          </p>
+          <p class="legal-text">
+            La operación de la infraestructura tecnológica requiere la concurrencia de proveedores de servicios de computación en la nube líderes en la industria, quienes procesan datos estrictamente como encargados de tratamiento bajo estándares contractuales de seguridad rigurosos:
+          </p>
+          <ul class="legal-list">
+            <li><strong>Vercel Inc. (EE. UU.):</strong> Proveedor de alojamiento de computación edge y APIs de distribución web con certificación SOC 2 y cumplimiento de Cláusulas Contractuales Tipo de la UE.</li>
+            <li><strong>Upstash Inc. (EE. UU.):</strong> Proveedor de base de datos en memoria para almacenamiento cifrado y autenticado de sesiones de licencia y telemetría de HWID.</li>
+            <li><strong>GitHub Inc. / Microsoft Corporation:</strong> Repositorio seguro para la distribución de compilaciones binarias de la APK y conector.</li>
+          </ul>
+        </section>
+
+        <!-- Sección 6 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">6.</span> Plazos de Retención y Conservación de Datos
+          </h2>
+          <p class="legal-text">
+            Los datos personales y de telemetría se conservarán únicamente durante los siguientes plazos:
+          </p>
+          <ul class="legal-list">
+            <li><strong>Cuentas de Usuario Registradas:</strong> Se conservan indefinidamente de acuerdo con nuestra política de preservación de usuarios a fin de que el administrador mantenga acceso continuo a su historial de licencias, o hasta que el usuario solicite formalmente su eliminación.</li>
+            <li><strong>Registros Técnicos de Seguridad y WAF (IPs):</strong> Se eliminan o sobrescriben automáticamente en un plazo de veinticuatro (24) a setenta y dos (72) horas.</li>
+            <li><strong>Telemetría de HWID y Licencias:</strong> Permanece vinculada a la licencia emitida mientras la misma se encuentre activa o registrada en el sistema de gestión de licencias.</li>
+          </ul>
+        </section>
+
+        <!-- Sección 7 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">7.</span> Derechos del Usuario (ARCO y RGPD)
+          </h2>
+          <p class="legal-text">
+            Usted tiene el control absoluto sobre sus datos. En cualquier momento y sin costo alguno, puede ejercer los siguientes derechos reconocidos internacionalmente:
+          </p>
+          <ul class="legal-list">
+            <li><strong>Acceso:</strong> Conocer con precisión qué datos sobre su persona o dispositivo son tratados en nuestros sistemas.</li>
+            <li><strong>Rectificación:</strong> Corregir o actualizar sus credenciales, correo electrónico o identificadores de soporte si resultasen inexactos.</li>
+            <li><strong>Supresión ("Derecho al Olvido"):</strong> Solicitar la eliminación total y definitiva de su cuenta de usuario, su registro de HWID y sus datos de telemetría de nuestros servidores.</li>
+            <li><strong>Oposición y Limitación:</strong> Solicitar que suspendamos el procesamiento de sus datos en supuestos específicos contemplados por la ley.</li>
+            <li><strong>Portabilidad:</strong> Obtener una copia estructurada de sus datos de perfil en formato electrónico interoperable (JSON).</li>
+          </ul>
+          <p class="legal-text">
+            Para ejercer cualquiera de estos derechos, basta con enviar una comunicación directa a <strong style="color: var(--gold-radiant);">mumanagerpro@gmail.com</strong> especificando su nombre de usuario y el derecho que desea ejercer. Su solicitud será procesada y respondida en un plazo máximo de quince (15) días hábiles.
+          </p>
+        </section>
+
+        <!-- Sección 8 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">8.</span> Medidas Técnicas de Seguridad de la Información
+          </h2>
+          <p class="legal-text">
+            Hemos implementado un blindaje técnico integral acorde a las mejores prácticas de ciberseguridad industrial:
+          </p>
+          <ul class="legal-list">
+            <li>Cifrado forzoso en tránsito mediante protocolo TLS 1.3 / 1.2 en todos los puntos de enlace.</li>
+            <li>Cabeceras HTTP de endurecimiento bancario (HSTS con inclusión de subdominios, CSP estricto, X-Frame-Options, X-Content-Type-Options y Permissions-Policy).</li>
+            <li>Cero almacenamiento de contraseñas en texto plano: derivación criptográfica PBKDF2 de 10,000 iteraciones con sal individual por usuario.</li>
+            <li>Cortafuegos perimetral anti-intrusión (WAF) con detección de firmas de escaneo malicioso (sqlmap, nikto, dirbuster) y bloqueo automático de direcciones IP abusivas.</li>
+            <li>Mecanismo de revocación inmediata de tokens de sesión ante cambios de clave o detección de accesos no autorizados.</li>
+          </ul>
+        </section>
+
+        <!-- Sección 9 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">9.</span> Almacenamiento Local en la Web y la Aplicación (Cookies & LocalStorage)
+          </h2>
+          <p class="legal-text">
+            El portal web oficial de Mu Manager PRO <strong>no utiliza cookies de seguimiento comercial de terceros, balizas web ni herramientas invasivas de analítica publicitaria</strong>. Se emplea exclusivamente el almacenamiento local esencial (<code>localStorage</code>) del navegador para resguardar la preferencia de tema visual, idioma y fichas técnicas temporales de descarga.
+          </p>
+          <p class="legal-text">
+            En la aplicación móvil para Android, se utiliza <code>AsyncStorage</code> para preferencias no sensibles de interfaz y <code>SecureStorage</code> (con cifrado AES-256) para credenciales criptográficas de sesión y parámetros locales de conectividad.
+          </p>
+        </section>
+
+        <!-- Sección 10 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">10.</span> Restricción de Edad y Menores
+          </h2>
+          <p class="legal-text">
+            Nuestros servicios y aplicaciones están concebidos con exclusividad como herramientas técnicas para administradores de sistemas y operadores de servidores mayores de dieciocho (18) años. No recopilamos deliberadamente información relativa a menores de edad. En caso de detectarse el registro de un menor de edad, procederemos a la inmediata supresión de la cuenta correspondiente.
+          </p>
+        </section>
+
+        <!-- Sección 11 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">11.</span> Actualizaciones a esta Política
+          </h2>
+          <p class="legal-text">
+            Nos reservamos el derecho de actualizar o adecuar la presente Política de Privacidad para reflejar cambios tecnológicos, operacionales o legislativos. Toda actualización será publicada en este sitio web y notificada mediante el diálogo normativo en la aplicación móvil con indicación clara de la fecha de última revisión. El uso continuado del software tras la publicación de cambios implicará su pleno conocimiento y conformidad con los mismos.
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <!-- FOOTER GÓTICO OFICIAL -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-cornice"></div>
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-title">Mu Manager PRO</div>
+          <p class="footer-desc">
+            Suite móvil profesional desarrollada para la administración remota, edición de inventarios y control de servidores MU Online.
+          </p>
+          <p class="footer-legal-notice">
+            Aviso Legal: MU Online es una marca comercial registrada de Webzen Inc. Mu Manager PRO es un desarrollo de software independiente orientado a la gestión técnica de bases de datos de servidores privados autorizados.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Documentación Legal</h4>
+          <ul class="footer-links-list">
+            <li><a href="terminos-de-servicio.html">Términos de Servicio y EULA</a></li>
+            <li><a href="politica-de-privacidad.html" style="color: var(--gold-primary); font-weight: 700;">Política de Privacidad</a></li>
+            <li><a href="aviso-legal-y-marcas.html">Aviso Legal, Marcas & DMCA</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Comunidad & Soporte</h4>
+          <ul class="footer-links-list">
+            <li><a href="https://discord.gg/4YXguuBFV" target="_blank" rel="noopener noreferrer">Discord Oficial</a></li>
+            <li><a href="https://t.me/ToolForg3" target="_blank" rel="noopener noreferrer">Telegram Oficial</a></li>
+            <li><a href="mailto:mumanagerpro@gmail.com">Contacto de Privacidad</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 ToolForg3 • Mu Manager PRO. Todos los derechos reservados.</span>
+        <span>Apego Normativo: <span style="color: var(--gold-primary); font-weight: 700;">RGPD / GDPR & Directivas de Comercio Electrónico</span></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/app.js?v=3.5"></script>
+</body>
+</html>

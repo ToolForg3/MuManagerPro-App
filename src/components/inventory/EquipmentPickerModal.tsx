@@ -285,6 +285,15 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
             )}
           </View>
 
+          {/* Search Match Badge */}
+          {search.trim().length > 0 && (
+            <View style={styles.searchResultBadgeRow}>
+              <Text style={styles.searchResultBadgeText}>
+                {filteredItems.length} {filteredItems.length === 1 ? 'coincidencia encontrada' : 'coincidencias encontradas'}
+              </Text>
+            </View>
+          )}
+
           {/* Items List */}
           <FlatList
             data={filteredItems}
@@ -322,7 +331,20 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
                   />
                 </View>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+                  {(() => {
+                    const q = search.trim().toLowerCase();
+                    const idx = q ? item.name.toLowerCase().indexOf(q) : -1;
+                    if (idx !== -1 && q) {
+                      return (
+                        <Text style={styles.itemName} numberOfLines={1}>
+                          {item.name.slice(0, idx)}
+                          <Text style={styles.searchMatchHighlight}>{item.name.slice(idx, idx + q.length)}</Text>
+                          {item.name.slice(idx + q.length)}
+                        </Text>
+                      );
+                    }
+                    return <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>;
+                  })()}
                   <Text style={styles.itemSub}>
                     Grupo {item.group} • Index {item.index} • Tamaño: {item.width}x{item.height}
                   </Text>
@@ -334,7 +356,7 @@ export const EquipmentPickerModal: React.FC<EquipmentPickerModalProps> = ({
                     resizeMode="stretch"
                   >
                     <Text style={styles.equipBtnText}>EQUIPAR</Text>
-                    <MuIcon name="arrow-right" size={14} color="#0D0E0D" />
+                    <MuIcon name="arrow-right" size={14} color="#FEDF99" />
                   </ImageBackground>
                 </View>
               </TouchableOpacity>
@@ -479,8 +501,9 @@ const styles = StyleSheet.create({
     ...THEME.effects.textShadowSubtle,
   },
   filterChipTextActive: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontWeight: '900',
+    ...THEME.effects.textShadowHigh,
   },
   searchBox: {
     flexDirection: 'row',
@@ -500,6 +523,32 @@ const styles = StyleSheet.create({
     color: THEME.colors.texto,
     fontSize: 13,
     fontWeight: '600',
+  },
+  searchResultBadgeRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchResultBadgeText: {
+    color: '#FEDF99',
+    fontSize: 11,
+    fontWeight: '800',
+    backgroundColor: 'rgba(239, 210, 141, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 210, 141, 0.4)',
+    ...THEME.effects.textShadowHigh,
+  },
+  searchMatchHighlight: {
+    color: '#FEDF99',
+    backgroundColor: 'rgba(239, 210, 141, 0.28)',
+    fontWeight: '900',
+    paddingHorizontal: 2,
+    borderRadius: 2,
+    ...THEME.effects.textShadowHigh,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -554,11 +603,12 @@ const styles = StyleSheet.create({
     borderColor: '#EFD28D',
   },
   equipBtnText: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontFamily: THEME.typography.fontTitle,
     fontSize: 11,
     fontWeight: '900',
     marginRight: 2,
+    ...THEME.effects.textShadowHigh,
   },
   emptyContainer: {
     alignItems: 'center',

@@ -59,6 +59,8 @@ export const Chip: React.FC<ChipProps> = ({
 const styles = StyleSheet.create({
   chipTouch: {
     marginRight: 8,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
   chip: {
     minHeight: 38,
@@ -83,12 +85,13 @@ const styles = StyleSheet.create({
     fontWeight: THEME.typography.weightSemiBold,
   },
   textoActivo: {
-    color: '#0D0E0D',
+    color: '#FEDF99',
     fontWeight: '900',
+    ...THEME.effects.textShadowHigh,
   },
   textoInactivo: {
     color: '#CDC6B9',
-    fontWeight: '600',
+    fontWeight: '700',
     ...THEME.effects.textShadowSubtle,
   },
 });

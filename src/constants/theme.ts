@@ -144,6 +144,11 @@ export const THEME = {
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,
     },
+    textShadowHigh: {
+      textShadowColor: 'rgba(0, 0, 0, 0.95)',
+      textShadowOffset: { width: 1, height: 1 },
+      textShadowRadius: 2,
+    },
     textShadowSubtle: {
       textShadowColor: 'rgba(0, 0, 0, 0.85)',
       textShadowOffset: { width: 0, height: 1 },

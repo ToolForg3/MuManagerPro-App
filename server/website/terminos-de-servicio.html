@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Términos de Servicio y Acuerdo de Licencia (EULA) — Mu Manager PRO</title>
+  
+  <!-- Metadatos de Seguridad & SEO -->
+  <meta name="description" content="Términos de Servicio y Acuerdo de Licencia de Usuario Final (EULA) oficial de Mu Manager PRO. Conoce los términos de uso, exclusión de garantías 'AS IS', límite de responsabilidad y política de backups.">
+  <meta name="theme-color" content="#0D0E0D">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicons Oficiales -->
+  <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="./assets/favicon.ico">
+  <link rel="icon" type="image/png" href="./assets/icon.png">
+
+  <!-- Tipografía Canónica Stitch Approved Ironforge -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Hojas de Estilo Oficiales -->
+  <link rel="stylesheet" href="./css/theme.css?v=3.5">
+  <link rel="stylesheet" href="./css/components.css?v=3.5">
+  <link rel="stylesheet" href="./css/responsive.css?v=3.5">
+  <style>
+    .legal-content-wrap {
+      padding: 60px 0 100px;
+    }
+    .legal-card {
+      background: var(--bg-surface-panel);
+      border: 1px solid var(--border-structural);
+      border-radius: var(--radius-md);
+      padding: 40px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75);
+      position: relative;
+    }
+    .legal-header {
+      border-bottom: 1px solid var(--border-structural);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .legal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: rgba(239, 210, 141, 0.12);
+      border: 1px solid rgba(239, 210, 141, 0.3);
+      border-radius: var(--radius-sm);
+      color: var(--gold-radiant);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .legal-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      color: var(--gold-primary);
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    .legal-meta {
+      font-size: 0.88rem;
+      color: var(--text-dimmed);
+    }
+    .legal-section {
+      margin-bottom: 32px;
+    }
+    .legal-section-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      color: var(--gold-radiant);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px dashed var(--border-subtle);
+      padding-bottom: 8px;
+    }
+    .legal-section-title span.sec-num {
+      color: var(--gold-antique);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+    }
+    .legal-text {
+      color: var(--text-silver);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+    .legal-highlight-box {
+      background: rgba(11, 12, 11, 0.75);
+      border-left: 3px solid var(--gold-primary);
+      padding: 16px 20px;
+      margin: 16px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .legal-alert-box {
+      background: rgba(122, 46, 40, 0.15);
+      border-left: 3px solid #E65A4E;
+      padding: 16px 20px;
+      margin: 16px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .legal-list {
+      margin: 12px 0 16px 24px;
+      color: var(--text-silver);
+      line-height: 1.7;
+    }
+    .legal-list li {
+      margin-bottom: 8px;
+    }
+    .nav-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gold-antique);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      transition: color 0.15s ease;
+    }
+    .nav-back-link:hover {
+      color: var(--gold-radiant);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Láser de Progreso de Lectura -->
+  <div class="scroll-progress-bar" id="scroll-progress"></div>
+
+  <!-- NAVBAR PRINCIPAL -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand-logo" aria-label="Ir al inicio de Mu Manager PRO">
+        <img src="./assets/icon.png" alt="Logo Mu Manager PRO" class="brand-logo-img">
+        <div class="brand-info">
+          <span class="brand-name">Mu Manager PRO</span>
+          <span class="brand-tag">
+            <span class="status-dot"></span> Suite de Administración T-SQL
+          </span>
+        </div>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Inicio</a></li>
+          <li><a href="terminos-de-servicio.html" class="nav-link active">Términos de Servicio</a></li>
+          <li><a href="politica-de-privacidad.html" class="nav-link">Privacidad</a></li>
+          <li><a href="aviso-legal-y-marcas.html" class="nav-link">Aviso Legal & Marcas</a></li>
+          <li><a href="https://discord.gg/4YXguuBFV" target="_blank" rel="noopener noreferrer" class="nav-link" style="color: #A4B3E6;">Discord</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="index.html#descargas" class="btn-mu-medium">
+          Descargar APK
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL DE TÉRMINOS -->
+  <main class="legal-content-wrap">
+    <div class="container">
+      <a href="index.html" class="nav-back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Volver al Portal Oficial
+      </a>
+
+      <article class="legal-card">
+        <header class="legal-header">
+          <div class="legal-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Acuerdo Vinculante de Licencia de Usuario Final (EULA)
+          </div>
+          <h1 class="legal-title">Términos de Servicio & Condiciones de Uso</h1>
+          <p class="legal-meta">
+            Última actualización: Octubre 2026 • Versión Canónica: 3.5 • Ámbito: Suite Completa Mu Manager PRO
+          </p>
+        </header>
+
+        <!-- Sección 1 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">1.</span> Naturaleza del Software y Ámbito de Uso Administrativo
+          </h2>
+          <p class="legal-text">
+            El presente Acuerdo de Licencia de Usuario Final (en adelante, los <em>"Términos"</em>) constituye un contrato legalmente vinculante entre usted (en adelante, el <em>"Usuario"</em> o <em>"Administrador"</em>) y el equipo de desarrollo de <strong>Mu Manager PRO</strong> (identificado comercialmente como <em>"ToolForg3"</em> o el <em>"Licenciante"</em>).
+          </p>
+          <div class="legal-highlight-box">
+            <p class="legal-text" style="margin: 0; color: var(--gold-radiant); font-weight: 600;">
+              ⚙️ DEFINICIÓN TÉCNICA DEL SERVICIO:
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem;">
+              Mu Manager PRO es una herramienta técnica de interfaz gráfica para la gestión de bases de datos relacionales Microsoft SQL Server especializadas en esquemas de servidores de juegos privados (Season 6 Louis, MSPro y arquitecturas análogas). Funciona como un cliente T-SQL especializado (análogo a herramientas como SSMS, Navicat o DBeaver). <strong>El software NO incluye, no distribuye, no aloja ni vende código fuente del juego, binarios de cliente (Main.exe), ejecutables de servidor (GameServer.exe) ni contenidos propietarios de Webzen Inc.</strong>
+            </p>
+          </div>
+          <p class="legal-text">
+            El uso de esta herramienta está destinado exclusivamente a la gestión, mantenimiento y administración de servidores bajo la titularidad o autorización legítima y expresa del propio operador. Queda terminantemente desautorizado el empleo del software con propósitos de intrusión ilícita, explotación o manipulación no consentida en infraestructuras ajenas.
+          </p>
+        </section>
+
+        <!-- Sección 2 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">2.</span> Concesión de Licencia, Claves PRO y Modalidades de Acceso
+          </h2>
+          <p class="legal-text">
+            Sujeto al cumplimiento estricto de estos Términos, ToolForg3 otorga al Usuario una licencia limitada, no exclusiva, intransferible, no sublicenciable y revocable para descargar, instalar y ejecutar el software en dispositivos Android de su propiedad o bajo su control directo.
+          </p>
+          <ul class="legal-list">
+            <li>
+              <strong>Modalidad de Acceso Rápido Demo:</strong> Permite la exploración temporal de la interfaz durante diez (10) minutos por dispositivo físico único, o hasta setenta y dos (72) horas continuas para cuentas registradas. Las mutaciones de escritura SQL masiva pueden encontrarse restringidas para resguardar la seguridad del entorno.
+            </li>
+            <li>
+              <strong>Licencia Comercial PRO:</strong> Otorga acceso a las herramientas avanzadas (edición hexadecimal de 16 bytes de inventario, baúl y bovedas múltiples, pases de eventos, ruud universal y scripts de mantenimiento). Toda clave de activación PRO emitida es estrictamente personal, intransferible y se asocia de forma criptográfica e irrevocable al Identificador de Hardware (HWID) del dispositivo del usuario.
+            </li>
+          </ul>
+        </section>
+
+        <!-- Sección 3 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">3.</span> Restricciones Expresas e Ingeniería Inversa
+          </h2>
+          <div class="legal-alert-box">
+            <p class="legal-text" style="margin: 0; color: #FFDAD6; font-weight: 700;">
+              ⛔ PROHIBICIONES ESTRICTAS:
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem; color: var(--text-silver);">
+              Queda expresamente prohibido: (a) descompilar, desensamblar, aplicar ingeniería inversa o intentar extraer el código fuente o bytecode de la APK o del Conector; (b) modificar, alterar o generar obras derivadas del software; (c) eludir, deshabilitar o frustrar los mecanismos de seguridad criptográfica, validación de HWID o licencias; (d) revender, alquilar, prestar o distribuir claves PRO a terceros; (e) ejecutar herramientas automatizadas de escaneo de vulnerabilidades, inyecciones de código o ataques DoS contra la pasarela o servidores de ToolForg3.
+            </p>
+          </div>
+        </section>
+
+        <!-- Sección 4 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">4.</span> Rescisión Unilateral y Mecanismo Kill-Switch
+          </h2>
+          <p class="legal-text">
+            ToolForg3 se reserva el derecho de revocar unilateralmente y de forma inmediata cualquier licencia emitida, suspender la cuenta del usuario o bloquear el acceso del dispositivo (Kill-Switch) en caso de:
+          </p>
+          <ul class="legal-list">
+            <li>Detección de manipulación del binario o intentos de crackeo del sistema de validación de licencias.</li>
+            <li>Compartición pública o distribución fraudulenta de claves de activación.</li>
+            <li>Ataques cibernéticos o intentos de inyección maliciosa contra la infraestructura de ToolForg3.</li>
+            <li>Incumplimiento de cualquiera de las cláusulas del presente contrato.</li>
+          </ul>
+          <p class="legal-text">
+            Dicha rescisión operará de pleno derecho, sin necesidad de resolución judicial previa ni derecho a indemnización o reintegro alguno en favor del infractor.
+          </p>
+        </section>
+
+        <!-- Sección 5 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">5.</span> Política de Bienes Digitales y Excepción al Derecho de Desistimiento
+          </h2>
+          <p class="legal-text">
+            De conformidad con la normativa internacional de comercio electrónico aplicable a bienes digitales y servicios de suministro de software no materializado en soporte físico:
+          </p>
+          <div class="legal-highlight-box">
+            <p class="legal-text" style="margin: 0; color: var(--gold-radiant); font-weight: 600;">
+              💳 POLÍTICA DE NO REEMBOLSO (VENTAS DEFINITIVAS):
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem;">
+              Las licencias comerciales PRO constituyen contenido digital personalizado, emitido de forma inmediata y vinculado al identificador de hardware (HWID) del adquirente. <strong>El usuario acepta expresamente que, una vez generada, activada o entregada la clave de licencia, se extingue de pleno derecho cualquier derecho de desistimiento o solicitud de reembolso</strong>, considerándose la operación consumada en su totalidad. Se alienta a todos los usuarios a utilizar los períodos de prueba y demo gratuitos previos para verificar exhaustivamente la compatibilidad con su motor SQL.
+            </p>
+          </div>
+        </section>
+
+        <!-- Sección 6 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">6.</span> Exclusión Total de Garantías ("AS IS" y "AS AVAILABLE")
+          </h2>
+          <div class="legal-alert-box">
+            <p class="legal-text" style="margin: 0; color: #FFDAD6; font-weight: 700; text-transform: uppercase;">
+              ⚠️ RENUNCIA EXPRESA DE GARANTÍAS:
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem; color: var(--text-silver);">
+              EL SOFTWARE SE SUMINISTRA "TAL CUAL" ("AS IS") Y "SEGÚN DISPONIBILIDAD" ("AS AVAILABLE"), CON TODOS SUS DEFECTOS Y SIN GARANTÍAS DE NINGUNA CLASE. EN LA MÁXIMA MEDIDA PERMITIDA POR LA LEY APLICABLE, TOOLFORG3 Y SUS DESARROLLADORES RENUNCIAN EXPRESAMENTE A TODA GARANTÍA, YA SEA EXPLÍCITA, IMPLÍCITA, LEGAL O DE OTRO TIPO, INCLUIDAS, ENTRE OTRAS, LAS GARANTÍAS IMPLÍCITAS DE COMERCIABILIDAD, IDONEIDAD PARA UN PROPÓSITO DETERMINADO, EXACTITUD TÉCNICA, AUSENCIA DE ERRORES O NO INFRACCIÓN. NO SE GARANTIZA QUE EL SOFTWARE SATISFAGA SUS EXPECTATIVAS PARTICULARES, QUE OPERE SIN INTERRUPCIONES NI QUE SEA COMPATIBLE CON VERSIONES DE BASES DE DATOS MODIFICADAS POR TERCEROS O CORRUPTAS.
+            </p>
+          </div>
+        </section>
+
+        <!-- Sección 7 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">7.</span> Obligación Ineludible de Respaldos (Backups) del Administrador
+          </h2>
+          <div class="legal-highlight-box">
+            <p class="legal-text" style="margin: 0; color: var(--gold-radiant); font-weight: 700;">
+              💾 RESPONSABILIDAD EXCLUSIVA DE COPIAS DE SEGURIDAD:
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem;">
+              Las operaciones sobre bases de datos de producción (modificación de inventarios en código hexadecimal, borrado masivo de cuentas, inyección de joyas o alteración de estadísticas) conllevan riesgos inherentes al motor de base de datos y a la sincronización con el servidor de juego en tiempo real. <strong>EL USUARIO RECONOCE Y DECLARA SER EL ÚNICO Y EXCLUSIVO RESPONSABLE DE REALIZAR, VERIFICAR Y CUSTODIAR COPIAS DE SEGURIDAD ÍNTEGRAS Y ACTUALIZADAS (BACKUPS DE LAS BASES DE DATOS <code>MuOnline</code>, <code>Me_MuOnline</code> Y ANÁLOGAS) ANTES DE LLEVAR A CABO CUALQUIER OPERACIÓN MEDIANTE MU MANAGER PRO.</strong>
+            </p>
+          </div>
+        </section>
+
+        <!-- Sección 8 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">8.</span> Limitación Estricta de Responsabilidad Financiera (Liability Cap)
+          </h2>
+          <div class="legal-alert-box">
+            <p class="legal-text" style="margin: 0; color: #FFDAD6; font-weight: 700; text-transform: uppercase;">
+              🛡️ TOPE DE RESPONSABILIDAD LEGAL Y DAÑOS:
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem; color: var(--text-silver);">
+              EN NINGÚN CASO TOOLFORG3, SUS AUTORES, DIRECTORES O COLABORADORES SERÁN RESPONSABLES ANTE EL USUARIO O CUALQUIER TERCERO POR DAÑOS DIRECTOS, INDIRECTOS, INCIDENTALES, ESPECIALES, CONSECUENTES, PUNITIVOS O EJEMPLARES, INCLUYENDO, DE FORMA MERAMENTE ENUNCIATIVA: PÉRDIDA DE GANANCIAS O INGRESOS (LUCRO CESANTE), PÉRDIDA DE DATOS O ARCHIVOS, CORRUPCIÓN DE BASES DE DATOS, INTERRUPCIÓN DE LA ACTIVIDAD COMERCIAL, CAÍDA DEL SERVIDOR DE JUEGOS, RECLAMOS O DEMANDAS DE JUGADORES O PÉRDIDA DE FONDO DE COMERCIO, INCLUSO SI SE HUBIERA ADVERTIDO DE LA POSIBILIDAD DE TALES DAÑOS.
+            </p>
+            <p class="legal-text" style="margin: 8px 0 0; font-size: 0.92rem; color: var(--text-silver);">
+              SI POR CUALQUIER MOTIVO UN TRIBUNAL COMPETENTE DETERMINARA LA RESPONSABILIDAD DE TOOLFORG3, LA RESPONSABILIDAD TOTAL ACUMULADA DE TODAS LAS RECLAMACIONES DERIVADAS DE ESTE CONTRATO O DEL USO DEL SOFTWARE QUEDARÁ LIMITADA DE MANERA ESTRICTA Y EXCLUSIVA A LA CANTIDAD EFECTIVAMENTE ABONADA POR EL USUARIO POR LA LICENCIA DURANTE LOS ÚLTIMOS TREINTA (30) DÍAS PREVIOS AL EVENTO CAUSANTE, O A CERO DÓLARES ESTADOUNIDENSES ($0.00 USD) SI EL USUARIO HUBIERA UTILIZADO UNA VERSIÓN DEMO O GRATUITA.
+            </p>
+          </div>
+        </section>
+
+        <!-- Sección 9 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">9.</span> Indemnización a Favor del Desarrollador
+          </h2>
+          <p class="legal-text">
+            El Usuario acepta defender, indemnizar y mantener indemne a ToolForg3, sus desarrolladores y proveedores tecnológicos de y contra cualquier reclamo, demanda, acción judicial, responsabilidad, costo, daño o gasto (incluidos honorarios razonables de abogados) derivados de: (a) el uso del software por parte del Usuario; (b) el incumplimiento de estos Términos; (c) la violación de derechos de terceros o de leyes de propiedad intelectual; o (d) litigios entre el Usuario y los jugadores o miembros de su servidor de juego.
+          </p>
+        </section>
+
+        <!-- Sección 10 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">10.</span> Renuncia a Demandas Colectivas (Class Action Waiver)
+          </h2>
+          <p class="legal-text">
+            EN LA MÁXIMA MEDIDA PERMITIDA POR LA LEY, TODA RECLAMACIÓN O CONTROVERSIA DEBERÁ LITIGARSE O RESOLVERSE DE MANERA ESTRICTAMENTE INDIVIDUAL. EL USUARIO Y TOOLFORG3 ACUERDAN RENUNCIAR EXPRESAMENTE AL DERECHO DE INICIAR, INTERPONER O PARTICIPAR COMO DEMANDANTE O MIEMBRO EN CUALQUIER ACCIÓN COLECTIVA, DEMANDA REPRESENTATIVA O PROCEDIMIENTO ARBITRAL CONJUNTO.
+          </p>
+        </section>
+
+        <!-- Sección 11 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">11.</span> Procedimiento de Resolución Amistosa Previa y Ley Aplicable
+          </h2>
+          <p class="legal-text">
+            En caso de controversia, discrepancia o reclamación, las partes se comprometen a entablar negociaciones de buena fe para alcanzar una solución amistosa durante un plazo no inferior a treinta (30) días calendario a partir de la notificación fehaciente remitida por correo electrónico. Estos Términos se regirán e interpretarán de acuerdo con los principios del derecho internacional de comercio electrónico y software.
+          </p>
+        </section>
+
+        <!-- Sección 12 -->
+        <section class="legal-section">
+          <h2 class="legal-section-title">
+            <span class="sec-num">12.</span> Totalidad del Acuerdo e Independencia de Cláusulas
+          </h2>
+          <p class="legal-text">
+            El presente instrumento, junto con la Política de Privacidad y el Aviso de Marcas y DMCA, constituye el acuerdo completo y definitivo entre las partes respecto al uso de Mu Manager PRO. Si alguna disposición fuera declarada nula o inaplicable por un tribunal competente, dicha disposición se modificará en la mínima medida necesaria para hacerla válida, subsistiendo la plena validez de las restantes cláusulas.
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <!-- FOOTER GÓTICO OFICIAL -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-cornice"></div>
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-title">Mu Manager PRO</div>
+          <p class="footer-desc">
+            Suite móvil profesional desarrollada para la administración remota, edición de inventarios y control de servidores MU Online.
+          </p>
+          <p class="footer-legal-notice">
+            Aviso Legal: MU Online es una marca comercial registrada de Webzen Inc. Mu Manager PRO es un desarrollo de software independiente orientado a la gestión técnica de bases de datos de servidores privados autorizados.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Documentación Legal</h4>
+          <ul class="footer-links-list">
+            <li><a href="terminos-de-servicio.html" style="color: var(--gold-primary); font-weight: 700;">Términos de Servicio y EULA</a></li>
+            <li><a href="politica-de-privacidad.html">Política de Privacidad</a></li>
+            <li><a href="aviso-legal-y-marcas.html">Aviso Legal, Marcas & DMCA</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Comunidad & Soporte</h4>
+          <ul class="footer-links-list">
+            <li><a href="https://discord.gg/4YXguuBFV" target="_blank" rel="noopener noreferrer">Discord Oficial</a></li>
+            <li><a href="https://t.me/ToolForg3" target="_blank" rel="noopener noreferrer">Telegram Oficial</a></li>
+            <li><a href="mailto:mumanagerpro@gmail.com">Contacto Legal</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 ToolForg3 • Mu Manager PRO. Todos los derechos reservados.</span>
+        <span>Apego Normativo: <span style="color: var(--gold-primary); font-weight: 700;">EULA / Cláusulas de Limitación de Responsabilidad</span></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./js/app.js?v=3.5"></script>
+</body>
+</html>

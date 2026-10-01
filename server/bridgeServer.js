@@ -2637,7 +2637,7 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
     const isPro = dev && dev.mode === 'PRO' && !dev.forceDemo && !dev.blocked &&
       (!dev.expiresAt || new Date(dev.expiresAt).getTime() > Date.now());
 
-    const isDemoActive = dev && dev.mode === 'DEMO' && !dev.forceDemo && !dev.blocked &&
+    const isDemoActive = dev && dev.mode === 'DEMO' && !dev.blocked &&
       (!dev.expiresAt || new Date(dev.expiresAt).getTime() > Date.now());
 
     // Rutas exclusivas para PRO / ADMIN (herramientas de sistema, GM, control IP, premios, kits)
@@ -9914,13 +9914,14 @@ app.post('/api/telemetry/ping', async (req, res) => {
     devices[hwid].ip = clientIp;
     devices[hwid].appVersion = appVersion || devices[hwid].appVersion;
     if (userEmail) devices[hwid].currentUser = userEmail;
-    if (!devices[hwid].isEmulatorManual) {
-      if (authoritativeIsEmulator) {
-        devices[hwid].isEmulator = true;
-        devices[hwid].isTest = true;
-      } else {
-        devices[hwid].isEmulator = false;
+    if (authoritativeIsEmulator) {
+      devices[hwid].isEmulator = true;
+      devices[hwid].isTest = true;
+      if (devices[hwid].isEmulatorManual) {
+        delete devices[hwid].isEmulatorManual;
       }
+    } else if (!devices[hwid].isEmulatorManual) {
+      devices[hwid].isEmulator = false;
     }
     if (cleanDetectionReason) {
       devices[hwid].detectionReason = cleanDetectionReason;

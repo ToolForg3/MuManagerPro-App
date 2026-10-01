@@ -1426,7 +1426,7 @@ app.use((req, res, next) => {
     const isPro = _dev && _dev.mode === 'PRO' && !_dev.forceDemo && !_dev.blocked &&
       (!_dev.expiresAt || new Date(_dev.expiresAt).getTime() > Date.now());
 
-    const isDemoActive = _dev && _dev.mode === 'DEMO' && !_dev.forceDemo && !_dev.blocked &&
+    const isDemoActive = _dev && _dev.mode === 'DEMO' && !_dev.blocked &&
       (!_dev.expiresAt || new Date(_dev.expiresAt).getTime() > Date.now());
 
     const isProExclusiveRoute =
@@ -8674,13 +8674,14 @@ app.post('/api/telemetry/ping', (req, res) => {
     devices[hwid].ip = clientIp;
     devices[hwid].appVersion = appVersion || devices[hwid].appVersion;
     if (userEmail) devices[hwid].currentUser = userEmail;
-    if (!devices[hwid].isEmulatorManual) {
-      if (authoritativeIsEmulator) {
-        devices[hwid].isEmulator = true;
-        devices[hwid].isTest = true;
-      } else {
-        devices[hwid].isEmulator = false;
+    if (authoritativeIsEmulator) {
+      devices[hwid].isEmulator = true;
+      devices[hwid].isTest = true;
+      if (devices[hwid].isEmulatorManual) {
+        delete devices[hwid].isEmulatorManual;
       }
+    } else if (!devices[hwid].isEmulatorManual) {
+      devices[hwid].isEmulator = false;
     }
     if (cleanDetectionReason) {
       devices[hwid].detectionReason = cleanDetectionReason;
@@ -8971,7 +8972,7 @@ app.post('/api/telemetry/report-tamper', (req, res) => {
 // ==========================================
 
 app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
-  const { email, password, username, hwid, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body || {};
+  const { email, password, username, hwid, isEmulator, deviceModel, deviceBrand, fingerprint, detectionReason } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Correo y contraseña requeridos.' });
   }
@@ -9022,7 +9023,8 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       isEmulator: isEmulator === true || isEmulator === 'true',
       deviceModel,
       deviceBrand,
-      fingerprint
+      fingerprint,
+      detectionReason
     });
     if (changed) saveDevices(devices);
   }
@@ -9233,7 +9235,7 @@ app.post('/api/auth/validate-session', (req, res) => {
 });
 
 app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
-  const { email, username, password, hwid, isEmulator, deviceModel, deviceBrand, fingerprint } = req.body || {};
+  const { email, username, password, hwid, isEmulator, deviceModel, deviceBrand, fingerprint, detectionReason } = req.body || {};
   const loginIdentifier = String(username || email || '').trim();
   if (!loginIdentifier || !password) {
     return res.status(400).json({ success: false, error: 'Nombre de usuario y contraseña requeridos.' });
@@ -9333,7 +9335,8 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
       isEmulator: isEmulator === true || isEmulator === 'true',
       deviceModel,
       deviceBrand,
-      fingerprint
+      fingerprint,
+      detectionReason
     });
     if (changed) {
       saveDevices(devices);

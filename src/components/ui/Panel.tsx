@@ -57,7 +57,11 @@ export const Panel: React.FC<PanelProps> = ({
     flexGrow: flat.flexGrow,
     flexShrink: flat.flexShrink,
     alignSelf: flat.alignSelf,
+    overflow: flat.overflow !== undefined ? flat.overflow : undefined,
+    zIndex: flat.zIndex !== undefined ? flat.zIndex : undefined,
   };
+
+  const isOverflowVisible = flat.overflow === 'visible';
 
   // Content styles (padding, alignment)
   const defaultPadding = padding !== undefined ? padding : (flat.padding !== undefined ? flat.padding : 12);
@@ -70,6 +74,7 @@ export const Panel: React.FC<PanelProps> = ({
     justifyContent: flat.justifyContent,
     alignItems: flat.alignItems,
     flexDirection: flat.flexDirection,
+    overflow: isOverflowVisible ? 'visible' : 'hidden',
   };
 
   // Remaches are only shown if explicitly asked for
@@ -85,6 +90,7 @@ export const Panel: React.FC<PanelProps> = ({
           ? styles.boxPanelContainer
           : styles.panelContainer,
         layoutStyle,
+        isOverflowVisible ? { overflow: 'visible' } : undefined,
         contentStyle,
       ]}
     >

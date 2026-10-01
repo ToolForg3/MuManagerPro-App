@@ -134,6 +134,13 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             isPressingSuggestionRef.current = true;
           }}
         >
+          {value.trim().length > 0 && (
+            <View style={styles.dropdownHeader}>
+              <Text style={styles.dropdownHeaderText}>
+                {filteredSuggestions.length} {filteredSuggestions.length === 1 ? 'coincidencia encontrada' : 'coincidencias encontradas'}
+              </Text>
+            </View>
+          )}
           <ScrollView
             keyboardShouldPersistTaps="always"
             nestedScrollEnabled={true}
@@ -163,7 +170,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                 activeOpacity={0.7}
               >
                 {renderHighlightedText(item, value)}
-                <MuIcon name="arrow-right" size={14} />
+                <MuIcon name="arrow-right" size={14} color="#EFD28D" />
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -216,18 +223,32 @@ const styles = StyleSheet.create({
     top: '100%',
     left: 0,
     right: 0,
-    zIndex: 999,
-    backgroundColor: THEME.colors.card,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    borderRadius: THEME.borderRadius.md,
-    marginTop: 2,
+    zIndex: 99999,
+    backgroundColor: '#181918',
+    borderWidth: 1.5,
+    borderColor: '#C4A65E',
+    borderRadius: 2,
+    marginTop: 3,
     overflow: 'hidden',
-    elevation: 8,
+    elevation: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+  },
+  dropdownHeader: {
+    backgroundColor: '#252624',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#4A3C1E',
+  },
+  dropdownHeaderText: {
+    fontSize: 10,
+    color: '#FEDF99',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   suggestionItem: {
     flexDirection: 'row',
@@ -235,20 +256,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 12,
+    backgroundColor: '#181918',
   },
   suggestionBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.border,
+    borderBottomColor: '#2C2B28',
   },
   suggestionText: {
     fontSize: 13,
-    color: THEME.colors.textPrimary,
+    color: '#E4E2E0',
     flex: 1,
     ...THEME.effects.textShadowSubtle,
   },
   highlight: {
-    color: THEME.colors.oroClaro,
-    fontWeight: 'bold',
-    ...THEME.effects.textShadow,
+    color: '#FEDF99',
+    backgroundColor: 'rgba(239, 210, 141, 0.28)',
+    fontWeight: '900',
+    paddingHorizontal: 4,
+    borderRadius: 2,
+    ...THEME.effects.textShadowHigh,
   },
 });

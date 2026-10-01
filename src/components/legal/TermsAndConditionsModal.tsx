@@ -141,6 +141,8 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
                 Mu Manager PRO está destinado exclusivamente para la gestión, mantenimiento,
                 auditoría y administración técnica de servidores de juegos MU Online (Season 6
                 Louis, MSPro y derivados) bajo la titularidad o autorización expresa del operador.
+                El software opera como un cliente de base de datos relacional T-SQL y NO incluye, no aloja ni
+                distribuye binarios del juego (Main.exe) ni archivos de servidor (GameServer.exe).
                 El uso para fines no autorizados, manipulación ilícita o intrusión en infraestructuras
                 ajenas queda estrictamente desautorizado.
               </Text>
@@ -159,9 +161,11 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
               <Text style={styles.sectionBody}>
                 El software y su arquitectura de puente son propiedad intelectual de ToolForg3.
                 Cada clave de activación PRO emitida es personal, intransferible y queda vinculada
-                criptográficamente al identificador de hardware (HWID) del dispositivo. Queda prohibida
-                la redistribución no autorizada, descompilación, ingeniería inversa o elusión de las
-                capas de protección criptográfica del aplicativo.
+                criptográficamente al identificador de hardware (HWID) del dispositivo. Al tratarse
+                de bienes digitales activados de forma inmediata por HWID, se extingue el derecho de desistimiento
+                (ventas finales sin reembolso). Queda prohibida la redistribución no autorizada, descompilación,
+                ingeniería inversa o elusión de las capas de protección criptográfica del aplicativo.
+                ToolForg3 se reserva la revocación unilateral (Kill-Switch) ante piratería o manipulación.
               </Text>
             </View>
 
@@ -180,7 +184,8 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
                 hacia el conector o servidor configurado por el usuario. El administrador asume la
                 responsabilidad íntegra sobre la custodia de sus credenciales (usuario 'sa' o delegado),
                 las operaciones transaccionales ejecutadas en la base de datos y el mantenimiento regular
-                de copias de respaldo (Backups de MuOnline y Me_MuOnline).
+                de copias de respaldo (Backups de MuOnline y Me_MuOnline). El operador reconoce que es el
+                único y exclusivo responsable de salvaguardar copias de seguridad íntegras antes de editar.
               </Text>
             </View>
 
@@ -197,9 +202,10 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
               <Text style={styles.sectionBody}>
                 Mu Manager PRO garantiza el principio de cero retención de datos privados de tus
                 jugadores: no recopila, almacena ni comparte con terceros contraseñas, inventarios ni
-                registros de tu comunidad. La telemetría se limita estrictamente a pings de diagnóstico
-                del estado de la licencia PRO, versión instalada y mitigación de amenazas de alteración
-                en tiempo de ejecución.
+                registros de tu comunidad. Las contraseñas SQL locales se resguardan cifradas en tu
+                dispositivo mediante SecureStorage (AES-256-CBC). La telemetría se limita estrictamente a pings
+                de diagnóstico del estado de la licencia PRO, versión instalada y mitigación de amenazas de
+                alteración en tiempo de ejecución. Ejerce derechos ARCO en mumanagerpro@gmail.com.
               </Text>
             </View>
 
@@ -215,8 +221,63 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
               </View>
               <Text style={styles.sectionBody}>
                 El uso del aplicativo implica la comprensión y conformidad absoluta con estos
-                términos. Si en algún momento no estás de acuerdo con alguna de las cláusulas,
-                debes suspender el uso de la aplicación y eliminarla de tu dispositivo.
+                términos. Las partes renuncian expresamente a acciones colectivas (Class Action Waiver),
+                acordando resolver controversias de forma individual y mediante mediación previa de buena fe.
+                Si en algún momento no estás de acuerdo con alguna de las cláusulas, debes suspender el uso
+                de la aplicación y eliminarla de tu dispositivo.
+              </Text>
+            </View>
+
+            {/* Artículo 6 */}
+            <View style={styles.sectionBox}>
+              <View style={styles.sectionHeaderRow}>
+                <MuIcon
+                  name="shield"
+                  size={18}
+                />
+                <Text style={styles.sectionNumber}>6.</Text>
+                <Text style={styles.sectionTitle}>Deslinde de Marcas y Propiedad Intelectual</Text>
+              </View>
+              <Text style={styles.sectionBody}>
+                "MU" y "MU Online" son marcas comerciales registradas de Webzen Inc. Mu Manager PRO y
+                ToolForg3 no poseen afiliación, patrocinio ni asociación con Webzen Inc. La mención de
+                razas, mapas y temporadas se ampara bajo la doctrina de Uso Nominativo Legítimo (Nominative
+                Fair Use) para identificar compatibilidad técnica con esquemas de bases de datos.
+              </Text>
+            </View>
+
+            {/* Artículo 7 */}
+            <View style={styles.sectionBox}>
+              <View style={styles.sectionHeaderRow}>
+                <MuIcon
+                  name="tune"
+                  size={18}
+                />
+                <Text style={styles.sectionNumber}>7.</Text>
+                <Text style={styles.sectionTitle}>Exclusión de Garantías y Límite de Daños</Text>
+              </View>
+              <Text style={styles.sectionBody}>
+                El software se entrega "TAL CUAL" ("AS IS") y "SEGÚN DISPONIBILIDAD", sin garantías explícitas
+                o implícitas de infalibilidad. ToolForg3 no responderá por lucro cesante, caída de servidores,
+                corrupción de datos o reclamos de terceros. La responsabilidad máxima acumulada se limita al
+                monto efectivamente pagado por la licencia en los últimos 30 días o $0.00 USD en modo demo.
+              </Text>
+            </View>
+
+            {/* Artículo 8 */}
+            <View style={styles.sectionBox}>
+              <View style={styles.sectionHeaderRow}>
+                <MuIcon
+                  name="storage"
+                  size={18}
+                />
+                <Text style={styles.sectionNumber}>8.</Text>
+                <Text style={styles.sectionTitle}>Obligación de Backups y Política DMCA</Text>
+              </View>
+              <Text style={styles.sectionBody}>
+                El operador asume el 100% de la responsabilidad sobre sus respaldos de base de datos. En
+                cumplimiento con 17 U.S.C. § 512 (DMCA), cualquier aviso formal de derechos de autor debe
+                dirigirse a nuestro Agente Designado en mumanagerpro@gmail.com con los requisitos de ley.
               </Text>
             </View>
 
@@ -283,7 +344,7 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
                       <MuIcon
                         name="check"
                         size={18}
-                        color="#0D0E0D"
+                        color="#FEDF99"
                         style={{ marginRight: 8 }}
                       />
                       <Text style={styles.primaryAcceptBtnText}>
@@ -314,7 +375,7 @@ export const TermsAndConditionsModal: React.FC<TermsAndConditionsModalProps> = (
                   <MuIcon
                     name="check"
                     size={18}
-                    color="#0D0E0D"
+                    color="#FEDF99"
                     style={{ marginRight: 6 }}
                   />
                   <Text style={styles.secondaryCloseBtnText}>
@@ -506,9 +567,10 @@ const styles = StyleSheet.create({
   primaryAcceptBtnText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#0D0E0D',
+    color: '#FEDF99',
     letterSpacing: 0.6,
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadowHigh,
   },
   footerHelpText: {
     fontSize: 11,
@@ -528,8 +590,9 @@ const styles = StyleSheet.create({
   secondaryCloseBtnText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#0D0E0D',
+    color: '#FEDF99',
     letterSpacing: 0.6,
     fontFamily: THEME.typography.fontTitle,
+    ...THEME.effects.textShadowHigh,
   },
 });

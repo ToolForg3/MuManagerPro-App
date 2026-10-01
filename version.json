@@ -1,10 +1,10 @@
 {
-  "version": "2.3.4",
+  "version": "2.3.5",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-01T04:30:00.000Z",
+  "publishedAt": "2026-10-01T10:45:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 136,
-  "forceUpdate": true,
-  "changelog": "MuManager PRO v2.3.4 (Build 136) - Detección Automática de Emuladores y Blindaje Total:\n• DETECCIÓN AUTOMÁTICA INFALIBLE DE EMULADORES: Módulo nativo Android perfeccionado con inspección de arquitectura de CPU (x86/x86_64), /proc/cpuinfo (Intel/AMD), propiedades de sistema (LDPlayer, Nox, BlueStacks, MEmu), pipes y sensores de hardware. Detecta automáticamente emuladores incluso cuando spoofean modelos Samsung (SM-A715F) sin requerir intervención manual.\n• TELEMETRÍA Y CONTROL DE ENTORNO: El panel web y la base de datos clasifican con precisión cristalina celulares físicos y emuladores, asignando Modo DEMO vitalicio automático a instancias emuladas para prevenir granjas de pruebas PRO.\n• SINCRONIZACIÓN Y RESISTENCIA: Registro detallado de la razón técnica de detección en la auditoría forense para total transparencia administrativa."
+  "build": 137,
+  "forceUpdate": false,
+  "changelog": "MuManager PRO v2.3.5 (Build 137) - Blindaje Legal, Filtros Visuales y Corrección Global de Contraste:\n• CORRECCIÓN GLOBAL DE CONTRASTE: Eliminación completa de texto negro sobre texturas oscuras en chips, botones activos, selectores y modales de todo el aplicativo. Contraste óptico nítido superior a 12:1 con oro radiante #FEDF99 y sombra profunda.\n• VISIBILIDAD DE COINCIDENCIAS EN FILTROS: Realce de texto coincidente con insignia luminosa y conteo en tiempo real de ítems encontrados en creador de ítems, catálogo y baúl.\n• BLINDAJE LEGAL Y POLÍTICAS OFICIALES: Integración de términos de servicio, política de privacidad con cero retención y aviso legal con contacto oficial mumanagerpro@gmail.com."
 }

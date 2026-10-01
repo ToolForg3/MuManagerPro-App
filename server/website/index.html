@@ -138,13 +138,6 @@
 
       <!-- Columna Derecha: Mockup Interactivo Fiel a la APK -->
       <div class="mockup-wrapper">
-        <!-- Joyas Legendarias Flotantes que Orbitan el Dispositivo -->
-        <div class="hero-jewels-decor">
-          <img src="./assets/art/jewel_bless_hq.png" class="floating-jewel bless" alt="Jewel of Bless HQ" title="Jewel of Bless">
-          <img src="./assets/art/jewel_soul_hq.png" class="floating-jewel soul" alt="Jewel of Soul HQ" title="Jewel of Soul">
-          <img src="./assets/art/jewel_chaos_hq.png" class="floating-jewel chaos" alt="Jewel of Chaos HQ" title="Jewel of Chaos">
-          <img src="./assets/art/jewel_life_hq.png" class="floating-jewel life" alt="Jewel of Life HQ" title="Jewel of Life">
-        </div>
 
         <!-- Selector de Pantallas Superior -->
         <div class="device-screen-selector">
@@ -855,19 +848,30 @@
         </div>
 
         <div>
+          <h4 class="footer-col-title">Documentación Legal</h4>
+          <ul class="footer-links-list">
+            <li><a href="terminos-de-servicio.html">Términos de Servicio y EULA</a></li>
+            <li><a href="politica-de-privacidad.html">Política de Privacidad</a></li>
+            <li><a href="aviso-legal-y-marcas.html">Aviso Legal, Marcas & DMCA</a></li>
+            <li><a href="#" data-modal="modal-terms" style="color: var(--gold-antique); font-size: 0.8rem;">Resumen Rápido EULA</a></li>
+            <li><a href="#" data-modal="modal-privacy" style="color: var(--gold-antique); font-size: 0.8rem;">Resumen Privacidad</a></li>
+          </ul>
+        </div>
+
+        <div>
           <h4 class="footer-col-title">Comunidad & Soporte</h4>
           <ul class="footer-links-list">
             <li><a href="https://discord.gg/4YXguuBFV" target="_blank" rel="noopener noreferrer">Discord Oficial</a></li>
             <li><a href="https://t.me/ToolForg3" target="_blank" rel="noopener noreferrer">Soporte Técnico</a></li>
-            <li><a href="#" data-modal="modal-privacy">Política de Privacidad</a></li>
-            <li><a href="#" data-modal="modal-terms">Términos de Uso</a></li>
+            <li><a href="mailto:mumanagerpro@gmail.com">Privacidad (ARCO)</a></li>
+            <li><a href="mailto:mumanagerpro@gmail.com">Agente DMCA</a></li>
           </ul>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <span>© <span id="current-year">2026</span> Mu Manager PRO. Todos los derechos reservados.</span>
-        <span>Compilación: <span style="color: var(--gold-primary); font-weight: 700;">Release Oficial v2.3.0</span> • Bytecode Hermes HBC</span>
+        <span>© <span id="current-year">2026</span> ToolForg3 • Mu Manager PRO. Todos los derechos reservados.</span>
+        <span>Apego Normativo: <span style="color: var(--gold-primary); font-weight: 700;">RGPD / GDPR, EULA & DMCA Compliant</span></span>
       </div>
     </div>
   </footer>
@@ -877,38 +881,64 @@
        ======================================================================== -->
   <div class="modal-backdrop" id="modal-privacy" role="dialog" aria-modal="true" aria-labelledby="modal-privacy-title">
     <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 id="modal-privacy-title" style="color: var(--gold-primary); font-family: var(--font-display); font-size: 1.25rem; text-transform: uppercase;">
-          Política de Privacidad & Seguridad
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-structural); padding-bottom: 10px;">
+        <h3 id="modal-privacy-title" style="color: var(--gold-primary); font-family: var(--font-display); font-size: 1.2rem; text-transform: uppercase;">
+          🛡️ Política de Privacidad & Cero Retención
         </h3>
-        <button class="modal-close" aria-label="Cerrar" style="font-size: 1.4rem; color: var(--text-dimmed);">✕</button>
+        <button class="modal-close" aria-label="Cerrar" style="font-size: 1.4rem; color: var(--text-dimmed); background: none; border: none; cursor: pointer;">✕</button>
       </div>
       <div style="color: var(--text-silver); font-size: 0.88rem; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
-        <p><strong>1. Tratamiento de Credenciales:</strong> Las credenciales de base de datos viajan exclusivamente cifradas en tránsito (TLS 1.2+) hacia el Gateway o Conector configurado por el usuario. En el dispositivo, las credenciales locales se resguardan mediante cifrado autenticado de grado militar (AES-256 / HMAC-SHA256).</p>
-        <p><strong>2. Telemetría de Licenciamiento:</strong> Para el control de licencias y prevención de abusos, se transmite el identificador de hardware anónimo (HWID) del dispositivo emisor y el estado de la sesión. No se recopilan datos privados, contactos ni información personal.</p>
-        <p><strong>3. Permisos Mínimos:</strong> La aplicación declara únicamente <span style="font-family: var(--font-mono); color: var(--gold-primary);">INTERNET</span>, <span style="font-family: var(--font-mono); color: var(--gold-primary);">ACCESS_NETWORK_STATE</span> y <span style="font-family: var(--font-mono); color: var(--gold-primary);">VIBRATE</span>. Cero acceso a cámara, contactos, llamadas, SMS o ubicación GPS.</p>
+        <p><strong>1. Principio de Cero Retención de Jugadores:</strong> Mu Manager PRO jamás recopila, almacena, lee ni transmite a servidores centrales los datos de los jugadores de sus servidores privados. Las credenciales de Microsoft SQL Server se guardan de forma local y cifrada exclusivamente en su propio teléfono móvil mediante SecureStorage (AES-256 + HMAC-SHA256).</p>
+        <p><strong>2. Telemetría de Licenciamiento & HWID:</strong> La telemetría se restringe estrictamente a la validación criptográfica de la clave PRO o período demo, asociando un identificador de hardware anónimo (HWID) unidireccional y la versión instalada para prevenir fraudes.</p>
+        <p><strong>3. Seguridad Perimetral (WAF):</strong> Las direcciones IP se procesan de forma temporal (24 a 72 horas) para mitigación de ataques DoS, escaneos maliciosos y fuerza bruta.</p>
+        <p><strong>4. Derechos ARCO y Supresión:</strong> En cualquier momento puede solicitar el borrado integral de su cuenta y telemetría escribiendo a <code style="color: var(--gold-radiant);">mumanagerpro@gmail.com</code>.</p>
+        <div style="margin-top: 8px; text-align: center;">
+          <a href="politica-de-privacidad.html" class="btn-mu-small" style="text-decoration: none;">Ver Documento Completo RGPD</a>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ========================================================================
-       9. MODAL: TÉRMINOS DE USO
+       9. MODAL: TÉRMINOS DE USO Y EULA
        ======================================================================== -->
   <div class="modal-backdrop" id="modal-terms" role="dialog" aria-modal="true" aria-labelledby="modal-terms-title">
     <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 id="modal-terms-title" style="color: var(--gold-primary); font-family: var(--font-display); font-size: 1.25rem; text-transform: uppercase;">
-          Términos de Uso
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-structural); padding-bottom: 10px;">
+        <h3 id="modal-terms-title" style="color: var(--gold-primary); font-family: var(--font-display); font-size: 1.2rem; text-transform: uppercase;">
+          📜 Términos de Servicio, EULA & Garantías
         </h3>
-        <button class="modal-close" aria-label="Cerrar" style="font-size: 1.4rem; color: var(--text-dimmed);">✕</button>
+        <button class="modal-close" aria-label="Cerrar" style="font-size: 1.4rem; color: var(--text-dimmed); background: none; border: none; cursor: pointer;">✕</button>
       </div>
       <div style="color: var(--text-silver); font-size: 0.88rem; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">
-        <p><strong>1. Uso Legítimo:</strong> Mu Manager PRO está diseñado para la administración técnica de servidores propios o autorizados de MU Online.</p>
-        <p><strong>2. Licenciamiento:</strong> Cada clave de licencia emitida está vinculada al hardware del dispositivo emisor y no es transferible a terceros sin autorización.</p>
-        <p><strong>3. Responsabilidad:</strong> El administrador es responsable de la custodia de sus contraseñas SQL Server y de mantener respaldos regulares de sus bases de datos.</p>
+        <p><strong>1. Ámbito de Uso & Software T-SQL:</strong> Mu Manager PRO es un cliente de bases de datos relacionales especializado en esquemas de servidores de juegos propios o debidamente autorizados. No distribuye código, archivos ni binarios de Webzen Inc.</p>
+        <p><strong>2. Exclusión Total de Garantías ("AS IS"):</strong> El software se entrega "tal cual" y "según disponibilidad", sin garantías de infalibilidad. El usuario asume el riesgo operativo del motor de base de datos.</p>
+        <p><strong>3. Responsabilidad Exclusiva de Backups:</strong> El operador reconoce que es el único y exclusivo responsable de salvaguardar copias de seguridad íntegras y regulares de sus bases de datos (<code>MuOnline</code>, <code>Me_MuOnline</code>) antes de ejecutar cualquier mutación.</p>
+        <p><strong>4. Límite Estricto de Responsabilidad:</strong> En ningún caso ToolForg3 responderá por lucro cesante, caída de servidores, corrupción de tablas o reclamos de jugadores; con un tope de responsabilidad limitado al importe pagado en los últimos 30 días o $0.00 USD en modo demo.</p>
+        <p><strong>5. Bienes Digitales y No Reembolso:</strong> Toda clave de activación PRO constituye contenido digital activado inmediatamente por HWID, extinguiéndose el derecho de desistimiento tras su emisión.</p>
+        <div style="margin-top: 8px; text-align: center;">
+          <a href="terminos-de-servicio.html" class="btn-mu-small" style="text-decoration: none;">Ver EULA & Cláusulas Completas</a>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- ========================================================================
+       10. BANNER DE CONSENTIMIENTO DE ALMACENAMIENTO TÉCNICO Y PRIVACIDAD
+       ======================================================================== -->
+  <aside class="cookie-banner" id="cookie-banner" aria-label="Aviso de Privacidad y Almacenamiento Local">
+    <div class="cookie-banner-content">
+      <div class="cookie-icon-wrap">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <p class="cookie-text">
+        Este portal utiliza almacenamiento técnico esencial (sin cookies de rastreo publicitario de terceros) para recordar sus preferencias de visualización y gestionar descargas seguras. Consulte nuestra <a href="politica-de-privacidad.html" style="color: var(--gold-primary); text-decoration: underline;">Política de Privacidad</a> y <a href="terminos-de-servicio.html" style="color: var(--gold-primary); text-decoration: underline;">Términos de Servicio</a>.
+      </p>
+      <div class="cookie-actions">
+        <button class="btn-mu-small" id="cookie-accept-btn" style="cursor: pointer;">Entendido</button>
+      </div>
+    </div>
+  </aside>
 
   <!-- Scripts -->
   <script src="./js/qr-generator.js?v=3.5"></script>

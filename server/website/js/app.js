@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSecretAdminAccess();
   initHeroParticles();
   initClassShowcase();
+  initCookieConsent();
 });
 
 // 1. Barra de Progreso de Lectura
@@ -399,3 +400,28 @@ function initClassShowcase() {
     });
   });
 }
+
+// 12. Manejador de Banner de Almacenamiento Técnico / Privacidad
+function initCookieConsent() {
+  const banner = document.getElementById('cookie-banner');
+  const acceptBtn = document.getElementById('cookie-accept-btn');
+  if (!banner || !acceptBtn) return;
+
+  try {
+    if (!localStorage.getItem('mu_technical_storage_ack')) {
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch (err) {
+    banner.style.display = 'none';
+  }
+
+  acceptBtn.addEventListener('click', () => {
+    try {
+      localStorage.setItem('mu_technical_storage_ack', 'true');
+    } catch (e) {}
+    banner.style.display = 'none';
+  });
+}
+
