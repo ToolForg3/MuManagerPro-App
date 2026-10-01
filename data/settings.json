@@ -10,6 +10,7 @@
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": null,
+  "proTrialEnabled": true,
   "proTrialDurationHours": 24,
   "broadcast": {
     "active": false,

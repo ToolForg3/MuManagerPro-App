@@ -77,17 +77,17 @@ export const LoginScreen = () => {
       setIsRegisterMode(true);
       Alert.alert(
         'Tiempo de Demo Finalizado',
-        'Tu acceso rápido de 10 minutos para este dispositivo ha finalizado.\n\nCrea tu cuenta para disfrutar de 72 horas completas de prueba gratuita o envía una solicitud para probar el Plan PRO.',
+        'Tu acceso rápido de 10 minutos para este dispositivo ha finalizado.\n\nCrea tu cuenta para disfrutar de 24 horas completas de prueba PRO gratuita (y Modo DEMO permanente) o envía una solicitud para activar tu licencia.',
         [
           {
-            text: '⭐ Solicitar Prueba PRO',
+            text: '⭐ Solicitar Licencia PRO',
             onPress: () => {
               clearDemoExpiredNotice();
               openProModal();
             },
           },
           {
-            text: 'Crear Cuenta (72h Demo)',
+            text: 'Crear Cuenta (24h PRO)',
             onPress: () => clearDemoExpiredNotice(),
           },
         ]
@@ -569,7 +569,7 @@ export const LoginScreen = () => {
       if (supported) {
         await Linking.openURL(authUrl);
       } else {
-        await Linking.openURL(`https://mumanagerpro.vercel.app/api/auth/oauth/google?hwid=${encodeURIComponent(hwid)}`);
+        await Linking.openURL(`https://mumanager.pro/api/auth/oauth/google?hwid=${encodeURIComponent(hwid)}`);
       }
     } catch (err: any) {
       Alert.alert('Error con Google', 'No se pudo abrir el inicio de sesión con Google: ' + (err.message || 'Desconocido'));

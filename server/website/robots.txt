@@ -1,0 +1,16 @@
+# robots.txt para Mu Manager PRO
+User-agent: *
+Allow: /
+Allow: /downloads/
+Allow: /aviso-legal-y-marcas.html
+Allow: /politica-de-privacidad.html
+Allow: /terminos-de-servicio.html
+
+# Proteger endpoints de API, panel administrativo y datos
+Disallow: /api/
+Disallow: /admin
+Disallow: /data/
+Disallow: /sql/
+
+# Ubicación canónica del Sitemap
+Sitemap: https://mumanager.pro/sitemap.xml

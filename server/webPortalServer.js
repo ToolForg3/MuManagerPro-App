@@ -27,7 +27,8 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2',
   '.apk': 'application/vnd.android.package-archive',
   '.zip': 'application/zip',
-  '.txt': 'text/plain; charset=utf-8'
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8'
 };
 
 // Rate Limiting para descargas de APK: Máximo 10 solicitudes iniciales por IP cada 60 segundos

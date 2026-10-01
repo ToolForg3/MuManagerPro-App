@@ -469,7 +469,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (localConsumed === 'true' && !isDevicePro) {
         return {
           success: false,
-          error: 'El tiempo de acceso rápido de 10 minutos para este dispositivo ya ha sido utilizado. Crea tu cuenta para disfrutar de 72 horas de prueba.',
+          error: 'El tiempo de acceso rápido de 10 minutos para este dispositivo ya ha sido utilizado. Crea tu cuenta para disfrutar de 24 horas de prueba PRO y Modo DEMO permanente.',
         };
       }
 
@@ -498,7 +498,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
             return {
               success: false,
-              error: data.message || 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.',
+              error: data.message || 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 24 horas de prueba PRO y Modo DEMO permanente.',
             };
           }
           if (!isDevicePro) {

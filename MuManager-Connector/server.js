@@ -1425,6 +1425,21 @@ app.use((req, res, next) => {
       saveDevices(_devices);
     }
 
+    // Transición en caliente si el período PRO ya finalizó (regreso fluido a DEMO Vitalicio sin cortes de lectura)
+    if (_dev && _dev.mode === 'PRO' && _dev.expiresAt && new Date(_dev.expiresAt).getTime() <= Date.now()) {
+      _dev.mode = 'DEMO';
+      _dev.expiresAt = null;
+      _dev.forceDemo = false;
+      _dev.proTrialUsed = true;
+      _dev.licenseKey = '';
+      _dev.authRevision = (Number(_dev.authRevision) || 0) + 1;
+      _dev.authUpdatedAt = Date.now();
+      _dev.authAction = 'PRO_TRIAL_EXPIRED';
+      _dev.expireReason = 'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente.';
+      saveDevices(_devices);
+      addAuditLog('PRO_EXPIRED_DATA_ROUTE', hwid, getClientIp(req), 'Prueba PRO de 24h finalizada en ruta de datos. Dispositivo pasa fluidamente a Modo DEMO permanente.');
+    }
+
     const isPro = _dev && _dev.mode === 'PRO' && !_dev.forceDemo && !_dev.blocked &&
       (!_dev.expiresAt || new Date(_dev.expiresAt).getTime() > Date.now());
 
@@ -2030,9 +2045,10 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
 
   // Regla B: Límite por IP pública (máximo 1 prueba PRO por IP cada 48 horas para evitar granjas de instancias)
   const fortyEightHoursAgo = Date.now() - (48 * 3600 * 1000);
-  const isLocalIp = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1';
+  const cleanIp = String(clientIp || '').split(',')[0].trim();
+  const isLocalIp = !cleanIp || cleanIp === '127.0.0.1' || cleanIp === '::1';
   const existingProFromIp = !isLocalIp ? Object.values(devices).find(d =>
-    d && d.hwid !== cleanHwid && d.ip === clientIp && d.proTrialStartedAt &&
+    d && d.hwid !== cleanHwid && String(d.ip || '').split(',')[0].trim() === cleanIp && d.proTrialStartedAt &&
     (new Date(d.proTrialStartedAt).getTime() > fortyEightHoursAgo)
   ) : null;
 
@@ -8701,6 +8717,7 @@ app.post('/api/telemetry/ping', (req, res) => {
         devices[hwid].mode = 'DEMO';
         devices[hwid].expiresAt = null;
         devices[hwid].forceDemo = false;
+        devices[hwid].proTrialUsed = true;
         devices[hwid].licenseKey = '';
         devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
         devices[hwid].authUpdatedAt = Date.now();
@@ -9017,7 +9034,7 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
   saveUsers(users);
 
   const token = generateSessionToken(newUser.email, newUser.role, hwid);
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+  const clientIp = getClientIp(req);
 
   if (hwid) {
     const devices = loadDevices();
@@ -9047,7 +9064,7 @@ const failedLogins = new Map();
 app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   const { hwid, deviceModel, deviceBrand, isEmulator } = req.body || {};
   const cleanHwid = String(hwid || '').trim();
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+  const clientIp = getClientIp(req);
 
   if (cleanHwid) {
     const devices = loadDevices();
@@ -9079,7 +9096,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
           return res.status(403).json({
             success: false,
             error: 'QUICK_DEMO_EXPIRED',
-            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate para disfrutar de tu prueba PRO de 24 horas y Modo DEMO permanente.'
           });
         }
         if (dev.quickDemoExpiresAt && new Date(dev.quickDemoExpiresAt).getTime() <= Date.now()) {
@@ -9088,7 +9105,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
           return res.status(403).json({
             success: false,
             error: 'QUICK_DEMO_EXPIRED',
-            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate para disfrutar de tu prueba PRO de 24 horas y Modo DEMO permanente.'
           });
         }
         if (!dev.quickDemoStartedAt) {
@@ -9130,7 +9147,7 @@ app.post('/api/auth/demo-quick-consumed', (req, res) => {
       devices[cleanHwid].quickDemoExpiresAt = new Date().toISOString();
     }
     saveDevices(devices);
-    addAuditLog('DEMO_QUICK_EXPIRED', cleanHwid, req.socket.remoteAddress || '127.0.0.1', 'Prueba rápida de 10 minutos consumida por dispositivo');
+    addAuditLog('DEMO_QUICK_EXPIRED', cleanHwid, getClientIp(req), 'Prueba rápida de 10 minutos consumida por dispositivo');
   }
   res.json({ success: true });
 });

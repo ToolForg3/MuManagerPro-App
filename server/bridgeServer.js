@@ -227,6 +227,7 @@ const DEFAULT_SETTINGS = {
   forceUpdate: true,
   whitelistOnly: false,
   demoDurationHours: null,
+  proTrialEnabled: true,
   proTrialDurationHours: 24,
   broadcast: {
     active: false,
@@ -487,7 +488,7 @@ function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, h
       const lib = parsed.protocol === 'https:' ? httpsMod : (httpMod || httpsMod);
       const postData = JSON.stringify({
         username: 'Mu Manager PRO Shield',
-        avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
+        avatar_url: 'https://mumanager.pro/assets/icon.png',
         embeds: [
           {
             title: `🚨 ${title}`,
@@ -1067,11 +1068,16 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
 
   // Regla B: Límite por IP pública (máximo 1 prueba PRO por IP cada 48 horas para evitar granjas de instancias)
   const fortyEightHoursAgo = Date.now() - (48 * 3600 * 1000);
-  const isLocalIp = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1';
+  const cleanIp = String(clientIp || '').split(',')[0].trim();
+  const isLocalIp = !cleanIp || cleanIp === '127.0.0.1' || cleanIp === '::1';
   const existingProFromIp = !isLocalIp ? Object.values(devices).find(d =>
-    d && d.hwid !== cleanHwid && d.ip === clientIp && d.proTrialStartedAt &&
+    d && d.hwid !== cleanHwid && String(d.ip || '').split(',')[0].trim() === cleanIp && d.proTrialStartedAt &&
     (new Date(d.proTrialStartedAt).getTime() > fortyEightHoursAgo)
   ) : null;
+
+  const settings = typeof loadSettings === 'function' ? loadSettings() : DEFAULT_SETTINGS;
+  const proTrialEnabled = settings.proTrialEnabled !== false;
+  const trialHours = Number.isFinite(parseFloat(settings.proTrialDurationHours)) && parseFloat(settings.proTrialDurationHours) > 0 ? parseFloat(settings.proTrialDurationHours) : 24;
 
   if (!dev) {
     if (devIsEmulator) {
@@ -1140,10 +1146,43 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
       devices[cleanHwid] = dev;
       addAuditLog('PRO_TRIAL_SKIPPED_IP_LIMIT', cleanHwid, clientIp || '127.0.0.1', `Límite de prueba PRO por IP alcanzado (${clientIp}). Celular entra en DEMO vitalicio.`);
       changed = true;
+    } else if (!proTrialEnabled) {
+      // Prueba PRO automática desactivada en Ajustes Globales
+      dev = {
+        hwid: cleanHwid,
+        mode: 'DEMO',
+        licenseKey: '',
+        generatedKey: '',
+        firstSeen: now,
+        lastSeen: now,
+        totalPings: 1,
+        ip: clientIp || '127.0.0.1',
+        platform: platform || 'Android',
+        appVersion: devAppVersion || '2.0.8',
+        blocked: false,
+        blockReason: '',
+        note: 'Prueba PRO global desactivada por admin. Modo DEMO vitalicio concedido.',
+        currentUser: userAccountIdentifier || '',
+        expiresAt: null, // Vitalicio
+        isLifetime: false,
+        isEmulator: false,
+        deviceModel: devModel || '',
+        deviceBrand: devBrand || '',
+        proTrialUsed: false,
+        demoExtendedHours: 0,
+        isTest: false,
+        forceDemo: false,
+        authRevision: 1,
+        authUpdatedAt: Date.now(),
+        authAction: 'GLOBAL_DISABLED_DEMO_VITALICIO'
+      };
+      devices[cleanHwid] = dev;
+      addAuditLog('PRO_TRIAL_SKIPPED_GLOBAL_OFF', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO desactivada globalmente. Cuenta: ${userAccountIdentifier}. DEMO vitalicio.`);
+      changed = true;
     } else {
-      // Dispositivo físico nuevo registrando cuenta por primera vez: otorga 24 Horas de Demo PRO
+      // Dispositivo físico nuevo registrando cuenta por primera vez: otorga X Horas de Demo PRO
       const key = generateKey(cleanHwid, 'PRO');
-      const proExpires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      const proExpires = new Date(Date.now() + trialHours * 3600 * 1000).toISOString();
       dev = {
         hwid: cleanHwid,
         mode: 'PRO',
@@ -1172,10 +1211,10 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
         forceDemo: false,
         authRevision: 1,
         authUpdatedAt: Date.now(),
-        authAction: 'PRO_TRIAL_24H'
+        authAction: `PRO_TRIAL_${trialHours}H`
       };
       devices[cleanHwid] = dev;
-      addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+      addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de ${trialHours}h activada para cuenta: ${userAccountIdentifier}`);
       changed = true;
     }
   } else {
@@ -1192,20 +1231,20 @@ function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifi
 
     // Verificar si es elegible para la prueba PRO de 24 horas:
     // Solo si NUNCA ha usado la prueba (!dev.proTrialUsed), NO es emulador, NO excede límite IP, no es PRO actualmente y no está bloqueado
-    if (!devIsEmulator && !existingProFromIp && !dev.proTrialUsed && dev.mode !== 'PRO' && !dev.blocked && !dev.forceDemo) {
+    if (proTrialEnabled && !devIsEmulator && !existingProFromIp && !dev.proTrialUsed && dev.mode !== 'PRO' && !dev.blocked && !dev.forceDemo) {
       const key = generateKey(cleanHwid, 'PRO');
       dev.mode = 'PRO';
       dev.generatedKey = key;
       dev.licenseKey = key;
       dev.proTrialUsed = true;
       dev.proTrialStartedAt = now;
-      dev.expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      dev.expiresAt = new Date(Date.now() + trialHours * 3600 * 1000).toISOString();
       dev.proTrialExpiresAt = dev.expiresAt;
       dev.isLifetime = false;
       dev.authRevision = (Number(dev.authRevision) || 0) + 1;
       dev.authUpdatedAt = Date.now();
-      dev.authAction = 'PRO_TRIAL_24H';
-      addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+      dev.authAction = `PRO_TRIAL_${trialHours}H`;
+      addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de ${trialHours}h activada para cuenta: ${userAccountIdentifier}`);
       changed = true;
     } else if (dev.mode === 'DEMO') {
       // Modo DEMO es vitalicio: asegurar que expiresAt sea null para que nunca expire ni bloquee
@@ -2627,6 +2666,21 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
   if (isProtectedDataRoute && !isAdmin && !normalizedPath.startsWith('/api/admin')) {
     const devices = loadDevices();
     let dev = hwid ? devices[hwid] : null;
+
+    // Transición en caliente si el período PRO ya finalizó (regreso fluido a DEMO Vitalicio sin cortes de lectura)
+    if (dev && dev.mode === 'PRO' && dev.expiresAt && new Date(dev.expiresAt).getTime() <= Date.now()) {
+      dev.mode = 'DEMO';
+      dev.expiresAt = null;
+      dev.forceDemo = false;
+      dev.proTrialUsed = true;
+      dev.licenseKey = '';
+      dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+      dev.authUpdatedAt = Date.now();
+      dev.authAction = 'PRO_TRIAL_EXPIRED';
+      dev.expireReason = 'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente.';
+      saveDevices(devices);
+      addAuditLog('PRO_EXPIRED_DATA_ROUTE', hwid, getClientIp(req), 'Prueba PRO de 24h finalizada en ruta de datos. Dispositivo pasa fluidamente a Modo DEMO permanente.');
+    }
 
     // Obtener clave enviada por el cliente por cabecera si existe
     const clientLicenseKey = (req.headers['x-license-key'] || (req.body && req.body.licenseKey) || '').trim().toUpperCase();
@@ -10304,7 +10358,7 @@ const emailVerificationStore = new Map(); // cleanEmail -> { code, expiresAt, at
 function buildActivationEmailHtml(username, email, code) {
   const cleanUser = String(username || email.split('@')[0] || 'Aventurero').trim();
   const cleanEmail = String(email).trim().toLowerCase();
-  const directLink = `https://mumanagerpro.vercel.app/api/auth/activate?email=${encodeURIComponent(cleanEmail)}&code=${encodeURIComponent(code)}`;
+  const directLink = `https://mumanager.pro/api/auth/activate?email=${encodeURIComponent(cleanEmail)}&code=${encodeURIComponent(code)}`;
   const deepLink = `mumanager://activate?email=${encodeURIComponent(cleanEmail)}&code=${encodeURIComponent(code)}`;
 
   return `
@@ -10562,18 +10616,48 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       createdAt: new Date().toISOString()
     });
 
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = getClientIp(req);
+    const cleanHwid = hwid ? String(hwid).trim().toUpperCase() : '';
 
-    // Vincular y preparar dispositivo con prueba PRO de 24h o DEMO vitalicio
-    if (hwid) {
+    // Vincular metadatos de hardware preliminares en DEMO sin quemar proTrialUsed antes de que el usuario confirme su correo
+    if (cleanHwid) {
       const devices = loadDevices();
-      const changed = activateProTrialOrPermanentDemo(devices, hwid, cleanEmail, clientIp, {
-        isEmulator: isEmulator === true || isEmulator === 'true',
-        deviceModel,
-        deviceBrand,
-        fingerprint
-      });
-      if (changed) saveDevices(devices);
+      if (!devices[cleanHwid]) {
+        devices[cleanHwid] = {
+          hwid: cleanHwid,
+          mode: 'DEMO',
+          licenseKey: '',
+          firstSeen: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          totalPings: 1,
+          ip: clientIp,
+          platform: 'Android',
+          appVersion: '2.0.8',
+          blocked: false,
+          blockReason: '',
+          note: 'Registro en espera de verificación de correo',
+          currentUser: cleanEmail,
+          expiresAt: null,
+          isLifetime: false,
+          isEmulator: isEmulator === true || isEmulator === 'true',
+          deviceModel: deviceModel || '',
+          deviceBrand: deviceBrand || '',
+          fingerprint: fingerprint || '',
+          proTrialUsed: false,
+          forceDemo: false,
+          authRevision: 1,
+          authUpdatedAt: Date.now(),
+          authAction: 'REGISTER_PENDING'
+        };
+        saveDevices(devices);
+      } else {
+        devices[cleanHwid].currentUser = cleanEmail;
+        devices[cleanHwid].lastSeen = new Date().toISOString();
+        if (deviceModel && !devices[cleanHwid].deviceModel) devices[cleanHwid].deviceModel = deviceModel;
+        if (deviceBrand && !devices[cleanHwid].deviceBrand) devices[cleanHwid].deviceBrand = deviceBrand;
+        if (fingerprint && !devices[cleanHwid].fingerprint) devices[cleanHwid].fingerprint = fingerprint;
+        saveDevices(devices);
+      }
     }
 
     // Plantilla HTML Season 6 híbrida (Código + 1-Clic Web + App Deep-Link)
@@ -11004,10 +11088,17 @@ app.get('/api/auth/oauth/google/callback', async (req, res) => {
       saveUsers(users);
     }
 
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = getClientIp(req);
     if (clientHwid) {
       const devices = loadDevices();
-      const changed = activateProTrialOrPermanentDemo(devices, clientHwid, cleanEmail, clientIp);
+      const existingDev = devices[clientHwid];
+      const changed = activateProTrialOrPermanentDemo(devices, clientHwid, cleanEmail, clientIp, existingDev ? {
+        isEmulator: existingDev.isEmulator,
+        deviceModel: existingDev.deviceModel,
+        deviceBrand: existingDev.deviceBrand,
+        fingerprint: existingDev.fingerprint,
+        detectionReason: existingDev.detectionReason
+      } : null);
       if (changed) {
         saveDevices(devices);
       } else if (devices[clientHwid]) {
@@ -11358,7 +11449,7 @@ const failedLogins = new Map();
 app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
   const { hwid, deviceModel, deviceBrand, isEmulator } = req.body || {};
   const cleanHwid = String(hwid || '').trim();
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+  const clientIp = getClientIp(req);
 
   if (cleanHwid) {
     const devices = loadDevices();
@@ -11390,7 +11481,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
           return res.status(403).json({
             success: false,
             error: 'QUICK_DEMO_EXPIRED',
-            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate para disfrutar de tu prueba PRO de 24 horas y Modo DEMO permanente.'
           });
         }
         if (dev.quickDemoExpiresAt && new Date(dev.quickDemoExpiresAt).getTime() <= Date.now()) {
@@ -11399,7 +11490,7 @@ app.post('/api/auth/demo-login', authRateLimitMiddleware, (req, res) => {
           return res.status(403).json({
             success: false,
             error: 'QUICK_DEMO_EXPIRED',
-            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate y crea tu cuenta para disfrutar de 72 horas de prueba completa.'
+            message: 'El tiempo de prueba rápida de 10 minutos para este dispositivo ha finalizado. Por favor regístrate para disfrutar de tu prueba PRO de 24 horas y Modo DEMO permanente.'
           });
         }
         if (!dev.quickDemoStartedAt) {
@@ -11441,7 +11532,7 @@ app.post('/api/auth/demo-quick-consumed', (req, res) => {
       devices[cleanHwid].quickDemoExpiresAt = new Date().toISOString();
     }
     saveDevices(devices);
-    addAuditLog('DEMO_QUICK_EXPIRED', cleanHwid, req.socket.remoteAddress || '127.0.0.1', 'Prueba rápida de 10 minutos consumida por dispositivo');
+    addAuditLog('DEMO_QUICK_EXPIRED', cleanHwid, getClientIp(req), 'Prueba rápida de 10 minutos consumida por dispositivo');
   }
   res.json({ success: true });
 });
@@ -13176,14 +13267,14 @@ app.post('/api/admin/device/update-note', async (req, res) => {
   res.json({ success: true, hwid, note: devices[hwid].note });
 });
 
-// Eliminar dispositivo del registro y enviarlo a la lista de exclusión (Tombstones)
+// Eliminar dispositivo del registro, purgar historial y desvincular cuentas asociadas
 app.post('/api/admin/device/delete', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (!isValidAdminKey(adminKey)) {
     return res.status(401).json({ success: false, error: 'Acceso no autorizado. Clave de administrador requerida.' });
   }
 
-  const { hwid, exclude } = req.body;
+  const { hwid, exclude, unlinkUser, clearHistory } = req.body || {};
   if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
   const cleanHwid = String(hwid).trim().toUpperCase();
 
@@ -13195,14 +13286,86 @@ app.post('/api/admin/device/delete', async (req, res) => {
   const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || hwid;
   const targetDev = devices[targetKey] || devices[cleanHwid];
 
-  const tombstones = loadTombstones();
-  tombstones.deletedDevices = tombstones.deletedDevices || {};
-  tombstones.deletedDevices[cleanHwid] = Date.now();
-  tombstones._deletedTombstones = tombstones._deletedTombstones || {};
+  // 1. DESVINCULAR CUENTA(S) DE USUARIO ASOCIADAS A ESTE DISPOSITIVO
+  const unlinkedAccounts = [];
+  if (unlinkUser !== false) {
+    const users = loadUsers();
+    let usersChanged = false;
+    const targetUserAccount = targetDev && targetDev.currentUser ? String(targetDev.currentUser).toLowerCase().trim() : '';
 
-  // Al eliminar un celular del panel, pasa a la lista de excluidos (tombstones)
-  // para evitar que los pings automáticos de la APK vuelvan a crearlo en la lista activa
-  if (exclude !== false) {
+    users.forEach(u => {
+      const uHwid = (u.hwid || '').trim().toUpperCase();
+      const uActiveHwid = (u.activeHwid || '').trim().toUpperCase();
+      const uEmail = (u.email || '').trim().toLowerCase();
+      const uUsername = (u.username || '').trim().toLowerCase();
+
+      const matchesHwid = (uHwid && uHwid === cleanHwid) || (uActiveHwid && uActiveHwid === cleanHwid);
+      const matchesUser = targetUserAccount && (uEmail === targetUserAccount || uUsername === targetUserAccount);
+
+      if (matchesHwid || matchesUser) {
+        if (u.hwid && u.hwid.trim().toUpperCase() === cleanHwid) {
+          u.hwid = '';
+        }
+        u.activeHwid = null;
+        u.activeSessionAt = null;
+        u.sessionVersion = (typeof u.sessionVersion === 'number' ? u.sessionVersion : 1) + 1;
+        usersChanged = true;
+        unlinkedAccounts.push(u.username || u.email);
+      }
+    });
+
+    if (usersChanged) {
+      saveUsers(users);
+    }
+  }
+
+  // 2. LIMPIAR HISTORIAL ESPECÍFICO DE ESTE DISPOSITIVO (AUDITORÍA, SEGURIDAD, SOLICITUDES)
+  if (clearHistory !== false) {
+    // a) Limpiar registros de auditoría vinculados a este celular
+    for (let i = auditLogs.length - 1; i >= 0; i--) {
+      if (auditLogs[i] && auditLogs[i].hwid && String(auditLogs[i].hwid).trim().toUpperCase() === cleanHwid) {
+        auditLogs.splice(i, 1);
+      }
+    }
+    if (CLOUD_STORAGE.enabled && typeof queueCloudWrite === 'function') {
+      queueCloudWrite(CLOUD_STORAGE.set('mumanager:auditLogs', auditLogs.slice(0, MAX_AUDIT_LOGS)));
+    }
+
+    // b) Limpiar registros de fallos/seguridad vinculados a este celular
+    const secLogs = loadSecurityLogs();
+    const filteredSec = secLogs.filter(l => !l.hwid || String(l.hwid).trim().toUpperCase() !== cleanHwid);
+    if (filteredSec.length !== secLogs.length) {
+      saveSecurityLogs(filteredSec);
+    }
+
+    // c) Limpiar solicitudes PRO vinculadas a este celular
+    const proReqs = loadProRequests();
+    const filteredReqs = proReqs.filter(r => !r.hwid || String(r.hwid).trim().toUpperCase() !== cleanHwid);
+    if (filteredReqs.length !== proReqs.length) {
+      saveProRequests(filteredReqs);
+    }
+  }
+
+  // 3. GESTIÓN DE EXCLUSIÓN / TOMBSTONES
+  const tombstones = loadTombstones();
+  if (clearHistory === true || exclude === false) {
+    // Limpieza total: remover de tombstones para que el registro quede completamente limpio
+    tombstones._deletedTombstones = tombstones._deletedTombstones || {};
+    tombstones._deletedTombstones[cleanHwid] = Date.now();
+    for (const k of Object.keys(tombstones)) {
+      if (k.toUpperCase() === cleanHwid) {
+        delete tombstones[k];
+      }
+    }
+    delete tombstones[cleanHwid];
+    delete tombstones[hwid];
+    delete tombstones[targetKey];
+    if (tombstones.deletedDevices) delete tombstones.deletedDevices[cleanHwid];
+  } else {
+    // Exclusión preventiva estándar
+    tombstones.deletedDevices = tombstones.deletedDevices || {};
+    tombstones.deletedDevices[cleanHwid] = Date.now();
+    tombstones._deletedTombstones = tombstones._deletedTombstones || {};
     const oldKey = targetDev ? (targetDev.licenseKey || targetDev.generatedKey) : '';
     if (!tombstones.revokedKeys) tombstones.revokedKeys = {};
     if (oldKey) {
@@ -13220,14 +13383,10 @@ app.post('/api/admin/device/delete', async (req, res) => {
       reason: req.body.reason || 'Eliminado del panel por el administrador'
     };
     delete tombstones._deletedTombstones[cleanHwid];
-  } else {
-    tombstones._deletedTombstones[cleanHwid] = Date.now();
-    delete tombstones[cleanHwid];
-    delete tombstones[hwid];
-    delete tombstones[targetKey];
   }
   saveTombstones(tombstones);
 
+  // 4. ELIMINAR DISPOSITIVO DEL REGISTRO ACTIVO
   if (devices[targetKey]) delete devices[targetKey];
   if (devices[cleanHwid]) delete devices[cleanHwid];
   saveDevices(devices);
@@ -13236,8 +13395,140 @@ app.post('/api/admin/device/delete', async (req, res) => {
     await flushCloudWrites();
   }
 
-  addAuditLog('DEVICE_CLEARED', cleanHwid, getClientIp(req), 'Registro de celular eliminado y movido a la lista de exclusión.');
-  res.json({ success: true, hwid: cleanHwid, message: 'Registro de celular eliminado con éxito y movido a exclusión.' });
+  const unlinkedMsg = unlinkedAccounts.length > 0 ? ` Cuenta(s) desvinculada(s): ${unlinkedAccounts.join(', ')}.` : '';
+  addAuditLog('DEVICE_CLEARED', cleanHwid, getClientIp(req), `Dispositivo eliminado, historial purgado.${unlinkedMsg}`);
+  res.json({
+    success: true,
+    hwid: cleanHwid,
+    unlinkedAccounts,
+    message: `Dispositivo ${cleanHwid} eliminado exitosamente. Historial purgado.${unlinkedMsg}`
+  });
+});
+
+// CONTROL DE PRUEBA PRO 24H: Reiniciar o activar prueba PRO por 24 horas
+app.post('/api/admin/device/reset-pro-trial', async (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  const { hwid, hours } = req.body || {};
+  if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
+  const devices = loadDevices();
+  let dev = devices[cleanHwid] || devices[hwid];
+  const now = new Date().toISOString();
+  const durationHours = Number.isFinite(parseFloat(hours)) && parseFloat(hours) > 0 ? parseFloat(hours) : 24;
+  const proExpires = new Date(Date.now() + durationHours * 3600 * 1000).toISOString();
+  const key = generateKey(cleanHwid, 'PRO');
+
+  if (!dev) {
+    dev = {
+      hwid: cleanHwid,
+      mode: 'PRO',
+      licenseKey: key,
+      generatedKey: key,
+      firstSeen: now,
+      lastSeen: now,
+      totalPings: 1,
+      ip: getClientIp(req),
+      platform: 'Android',
+      appVersion: '2.0.8',
+      blocked: false,
+      blockReason: '',
+      note: 'Prueba PRO de 24h asignada manualmente por Admin',
+      currentUser: '',
+      expiresAt: proExpires,
+      isLifetime: false,
+      isEmulator: false,
+      deviceModel: '',
+      deviceBrand: '',
+      proTrialUsed: true,
+      proTrialStartedAt: now,
+      proTrialExpiresAt: proExpires,
+      demoExtendedHours: 0,
+      isTest: false,
+      forceDemo: false,
+      authRevision: 1,
+      authUpdatedAt: Date.now(),
+      authAction: 'PRO_TRIAL_24H'
+    };
+  } else {
+    dev.mode = 'PRO';
+    dev.licenseKey = key;
+    dev.generatedKey = key;
+    dev.expiresAt = proExpires;
+    dev.isLifetime = false;
+    dev.proTrialUsed = true;
+    dev.proTrialStartedAt = now;
+    dev.proTrialExpiresAt = proExpires;
+    dev.blocked = false;
+    dev.forceDemo = false;
+    dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+    dev.authUpdatedAt = Date.now();
+    dev.authAction = 'PRO_TRIAL_24H';
+  }
+
+  devices[cleanHwid] = dev;
+  saveDevices(devices);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
+
+  addAuditLog('PRO_TRIAL_RESET', cleanHwid, getClientIp(req), `Prueba Demo PRO restablecida a ${durationHours}h para HWID: ${cleanHwid}`);
+  res.json({
+    success: true,
+    message: `Prueba Demo PRO activada por ${durationHours} horas con éxito.`,
+    expiresAt: proExpires,
+    hwid: cleanHwid
+  });
+});
+
+// CONTROL DE PRUEBA PRO 24H: Finalizar prueba PRO y regresar a DEMO Vitalicio
+app.post('/api/admin/device/end-pro-trial', async (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  const { hwid } = req.body || {};
+  if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(true);
+  }
+
+  const devices = loadDevices();
+  const dev = devices[cleanHwid] || devices[hwid];
+  if (!dev) {
+    return res.status(404).json({ success: false, error: 'Dispositivo no encontrado' });
+  }
+
+  dev.mode = 'DEMO';
+  dev.licenseKey = '';
+  dev.expiresAt = null; // Vitalicio según reglas canónicas
+  dev.isLifetime = false;
+  dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+  dev.authUpdatedAt = Date.now();
+  dev.authAction = 'PRO_TRIAL_EXPIRED';
+  dev.expireReason = 'Prueba PRO finalizada por el administrador. Continúa en Modo DEMO vitalicio.';
+
+  devices[cleanHwid] = dev;
+  saveDevices(devices);
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
+
+  addAuditLog('PRO_TRIAL_ENDED', cleanHwid, getClientIp(req), `Prueba Demo PRO finalizada por Admin. Celular pasa a DEMO vitalicio.`);
+  res.json({
+    success: true,
+    message: 'Prueba Demo PRO finalizada. El celular ahora está en DEMO vitalicio sin bloqueo.',
+    hwid: cleanHwid
+  });
 });
 
 // Eliminar un registro específico de la lista de exclusión (Tombstones) sin bloquear el celular
@@ -14189,9 +14480,15 @@ app.delete('/api/admin/pro-request/:id', async (req, res) => {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
   const { id } = req.params;
+  const cleanId = String(id || '').trim();
   let requests = loadProRequests();
   const initLen = requests.length;
-  requests = requests.filter(r => r.id !== id);
+  requests = requests.filter(r => {
+    const rId = String(r.id || '').trim();
+    const rHwid = String(r.hwid || '').trim();
+    const rComposite = String((r.phone || '') + '_' + (r.createdAt || '')).trim();
+    return rId !== cleanId && rHwid !== cleanId && rComposite !== cleanId;
+  });
   if (requests.length === initLen) {
     return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
   }
@@ -14199,7 +14496,7 @@ app.delete('/api/admin/pro-request/:id', async (req, res) => {
   if (typeof flushCloudWrites === 'function') {
     await flushCloudWrites();
   }
-  addAuditLog('PRO_REQUEST_DELETED', id, req.socket.remoteAddress || '127.0.0.1', `Solicitud PRO eliminada: ${id}`);
+  addAuditLog('PRO_REQUEST_DELETED', cleanId, req.socket.remoteAddress || '127.0.0.1', `Solicitud PRO eliminada: ${cleanId}`);
   res.json({ success: true, message: 'Solicitud eliminada con éxito' });
 });
 
@@ -14287,6 +14584,7 @@ app.post('/api/admin/settings', (req, res) => {
   }
   const current = loadSettings();
   const demoDurationHours = req.body.demoDurationHours !== undefined ? parseFloat(req.body.demoDurationHours) : current.demoDurationHours;
+  const proTrialDurationHours = req.body.proTrialDurationHours !== undefined ? parseFloat(req.body.proTrialDurationHours) : current.proTrialDurationHours;
   const updated = {
     ...current,
     globalMaintenance: req.body.globalMaintenance !== undefined ? !!req.body.globalMaintenance : current.globalMaintenance,
@@ -14294,6 +14592,8 @@ app.post('/api/admin/settings', (req, res) => {
     broadcastAnnouncement: req.body.broadcastAnnouncement !== undefined ? String(req.body.broadcastAnnouncement) : current.broadcastAnnouncement,
     whitelistOnly: req.body.whitelistOnly !== undefined ? !!req.body.whitelistOnly : current.whitelistOnly,
     demoDurationHours: Number.isFinite(demoDurationHours) && demoDurationHours > 0 ? demoDurationHours : (current.demoDurationHours || 72),
+    proTrialEnabled: req.body.proTrialEnabled !== undefined ? !!req.body.proTrialEnabled : (current.proTrialEnabled !== false),
+    proTrialDurationHours: Number.isFinite(proTrialDurationHours) && proTrialDurationHours > 0 ? proTrialDurationHours : (current.proTrialDurationHours || 24),
   };
   saveSettings(updated);
   addAuditLog(
@@ -14517,6 +14817,25 @@ app.get('/', (req, res) => {
     return res.sendFile(indexFile);
   }
   res.send('<h1>Mu Manager PRO Gateway Activo</h1>');
+});
+
+// SEO & Rastreo de Googlebot
+app.get('/robots.txt', (req, res) => {
+  const robotsPath = path.join(websiteDir, 'robots.txt');
+  if (fs.existsSync(robotsPath)) {
+    res.type('text/plain');
+    return res.sendFile(robotsPath);
+  }
+  res.type('text/plain').send('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nSitemap: https://mumanager.pro/sitemap.xml\n');
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  const sitemapPath = path.join(websiteDir, 'sitemap.xml');
+  if (fs.existsSync(sitemapPath)) {
+    res.type('application/xml');
+    return res.sendFile(sitemapPath);
+  }
+  res.status(404).send('Sitemap not found');
 });
 
 // Redirecciones cortas de marca a canales oficiales (Vanity URLs)

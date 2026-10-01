@@ -75,7 +75,7 @@ export interface TelemetryPingResult {
 const CONFIG_STORAGE_KEY = '@mumanager_sql_config';
 
 export class SqlClient {
-  public static readonly DEFAULT_CLOUD_GATEWAY = 'https://mumanagerpro.vercel.app';
+  public static readonly DEFAULT_CLOUD_GATEWAY = 'https://mumanager.pro';
   private static config: SqlServerConfig = {
     host: 'localhost',
     port: 1433,
@@ -159,7 +159,7 @@ export class SqlClient {
         try {
           const parsed = JSON.parse(saved);
           if (parsed && typeof parsed === 'object') {
-            if (parsed.bridgeUrl && (parsed.bridgeUrl.includes('onrender.com') || parsed.bridgeUrl.includes('localhost') || parsed.bridgeUrl.includes('127.0.0.1'))) {
+            if (parsed.bridgeUrl && (parsed.bridgeUrl.includes('onrender.com') || parsed.bridgeUrl.includes('localhost') || parsed.bridgeUrl.includes('127.0.0.1') || parsed.bridgeUrl.includes('mumanagerpro.vercel.app'))) {
               parsed.bridgeUrl = this.DEFAULT_CLOUD_GATEWAY;
             }
             if (parsed.useBridge === undefined) {

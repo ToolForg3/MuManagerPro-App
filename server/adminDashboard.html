@@ -749,6 +749,12 @@
     <div class="context-menu-item" onclick="contextAction('toggle-pro')">
       <span>⚡</span> <span id="ctx-pro-text">Activar Licencia PRO</span>
     </div>
+    <div class="context-menu-item" onclick="contextAction('reset-pro-trial')">
+      <span>⚡</span> <span id="ctx-protrial-text">Activar / Reiniciar Demo PRO (24h)</span>
+    </div>
+    <div class="context-menu-item" onclick="contextAction('end-pro-trial')">
+      <span>⏹️</span> Finalizar Demo PRO ➔ DEMO Vitalicio
+    </div>
     <div class="context-menu-item" onclick="contextAction('quick-key')">
       <span>🔑</span> Generar Clave Criptográfica PRO
     </div>
@@ -1643,6 +1649,9 @@
           <button id="view-btn-expired" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('expired')">
             ⏳ Vencidos <span id="count-expired" class="badge" style="background: rgba(255, 179, 0, 0.2); color: #FFB300; margin-left: 6px; font-weight: 700;">0</span>
           </button>
+          <button id="view-btn-protrial" class="btn btn-dark" style="font-size: 12px; padding: 7px 14px;" onclick="setDeviceView('protrial')">
+            ⚡ Demo PRO 24h <span id="count-protrial" class="badge" style="background: rgba(255, 179, 0, 0.2); color: #FFB300; margin-left: 6px; font-weight: 700;">0</span>
+          </button>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
           <button class="btn btn-dark btn-sm" onclick="openPurgeInactiveModal()" title="Eliminar celulares desconectados por varios días">🧹 Purgar Inactivos</button>
@@ -2333,6 +2342,34 @@
           <input type="checkbox" id="whitelist-toggle">
           <span class="slider"></span>
         </label>
+      </div>
+
+      <!-- Control de Prueba PRO (24 Horas) -->
+      <div class="switch-container" style="margin-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px;">
+        <div class="switch-info">
+          <h4>⚡ Prueba PRO Automática para Registros Nuevos</h4>
+          <p>Otorga automáticamente 24 horas continuas de prueba PRO a cada nuevo celular físico que complete su registro.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="protrial-auto-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="form-row" style="margin-bottom: 20px;">
+        <div class="form-group" style="flex: 1;">
+          <label>Duración de la Prueba PRO Automática:</label>
+          <select id="protrial-duration-select" class="form-control">
+            <option value="12">⚡ 12 Horas</option>
+            <option value="24" selected>📅 24 Horas (Canónico / Recomendado)</option>
+            <option value="48">📅 48 Horas (2 Días)</option>
+            <option value="72">📅 72 Horas (3 Días)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label>Blindaje Anti-Granjas (IP Pública):</label>
+          <input type="text" class="form-control" value="Máximo 1 prueba PRO por IP cada 48h (Emuladores pasan a DEMO)" disabled style="opacity: 0.75; cursor: not-allowed;" />
+        </div>
       </div>
 
       <button class="btn btn-green" onclick="saveGlobalSettings()">💾 Guardar Ajustes Maestros</button>
@@ -3516,6 +3553,17 @@
         ? `<span class="badge" style="background: rgba(66, 133, 244, 0.15); color: #4285F4; border: 1px solid rgba(66, 133, 244, 0.4); font-size: 10px; margin-left: 6px; padding: 1px 6px; font-weight: 700;">🌐 GOOGLE</span>`
         : '';
 
+      const rawCreated = u.createdAt || u.registeredAt;
+      let createdDate = 'Reciente';
+      if (rawCreated) {
+        const parsed = new Date(rawCreated);
+        if (!isNaN(parsed.getTime())) {
+          createdDate = parsed.toLocaleDateString() + ' ' + parsed.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } else {
+          createdDate = escapeHtml(String(rawCreated));
+        }
+      }
+
       return `
         <td>
           <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
@@ -3980,7 +4028,7 @@
 
     function setDeviceView(view) {
       currentDeviceView = view;
-      ['all', 'online', 'clients', 'tests', 'expired'].forEach(v => {
+      ['all', 'online', 'clients', 'tests', 'expired', 'protrial'].forEach(v => {
         const b = document.getElementById(`view-btn-${v}`);
         if (b) {
           if (v === view) b.classList.add('active');
@@ -4077,6 +4125,9 @@
       const flag = dev.flag || '🌐';
       const noteDisplay = dev.note ? `<div class="client-note">📌 <strong>${safeNote}</strong></div>` : `<div class="client-note" style="opacity:0.5;">Sin nota asignada</div>`;
 
+      const isProTrial = (dev.mode === 'PRO' && dev.authAction === 'PRO_TRIAL_24H') ||
+                         (dev.mode === 'PRO' && !dev.isLifetime && dev.proTrialUsed && dev.proTrialStartedAt);
+
       let badgeClass = 'badge-demo';
       let statusText = '♾️ DEMO (VITALICIO)';
       if (dev.blocked) {
@@ -4085,6 +4136,9 @@
       } else if (isExpired && dev.mode === 'PRO') {
         badgeClass = 'badge-expired-pro';
         statusText = '⏳ PRO VENCIDO';
+      } else if (isProTrial) {
+        badgeClass = 'badge-demo';
+        statusText = '⚡ DEMO PRO (24H)';
       } else if (dev.mode === 'PRO') {
         badgeClass = 'badge-pro';
         statusText = 'LICENCIA PRO';
@@ -4192,8 +4246,13 @@
         <td class="dev-last-seen-cell"><small class="dev-last-seen-text" style="color: ${isOnline ? '#3FCF8E' : 'inherit'}; font-weight: ${isOnline ? '600' : 'normal'};">${dateStr}</small></td>
         <td class="actions-cell">
           ${dev.mode === 'PRO'
-            ? `<button type="button" class="btn btn-warning btn-sm" data-action="toggle-plan" data-target-plan="DEMO" title="Remover Licencia PRO y volver a DEMO">⭐ Quitar PRO</button>`
-            : `<button type="button" class="btn btn-pro btn-sm" data-action="toggle-plan" data-target-plan="PRO" title="Activar Licencia PRO en 1 clic (sin claves)">⚡ Activar PRO</button>`
+            ? (isProTrial
+                ? `<button type="button" class="btn btn-dark btn-sm" style="color:#FFB300; border-color:#FFB300; padding:2px 7px;" data-action="reset-pro-trial" title="Reiniciar período de prueba PRO a 24 horas completas">🔄 Reset 24h</button>
+                   <button type="button" class="btn btn-dark btn-sm" style="color:#E2703A; border-color:#E2703A; padding:2px 7px;" data-action="end-pro-trial" title="Finalizar prueba PRO y pasar a DEMO vitalicio">⏹️ Fin 24h</button>`
+                : `<button type="button" class="btn btn-warning btn-sm" data-action="toggle-plan" data-target-plan="DEMO" title="Remover Licencia PRO y volver a DEMO">⭐ Quitar PRO</button>`
+              )
+            : `<button type="button" class="btn btn-pro btn-sm" data-action="toggle-plan" data-target-plan="PRO" title="Activar Licencia PRO en 1 clic (sin claves)">⚡ Activar PRO</button>
+               <button type="button" class="btn btn-dark btn-sm" style="color:#FFB300; border-color:rgba(255,179,0,0.45); padding:2px 7px;" data-action="reset-pro-trial" title="Otorgar o reactivar prueba PRO de 24 horas">⚡ Dar 24h PRO</button>`
           }
           <button type="button" class="btn btn-green btn-sm" data-action="quick-key" title="Generar clave PRO">🔑 Clave</button>
           <button type="button" class="btn btn-dark btn-sm" data-action="expiration" title="Modificar vigencia o alternar entre Vitalicio y Días">⏱️ Vigencia</button>
@@ -4217,6 +4276,7 @@
       let countTests = 0;
       let countOnline = 0;
       let countExpired = 0;
+      let countProTrial = 0;
       let countAll = list.length;
 
       list.forEach(d => {
@@ -4225,6 +4285,10 @@
         if (d.isOnline) countOnline++;
 
         const isExp = d.mode === 'PRO' && d.expiresAt && new Date(d.expiresAt) < new Date();
+        const isTrial = (d.mode === 'PRO' && d.authAction === 'PRO_TRIAL_24H') ||
+                        (d.mode === 'PRO' && !d.isLifetime && d.proTrialUsed && d.proTrialStartedAt);
+        if (isTrial) countProTrial++;
+
         if (d.blocked) {
           blockedCount++;
         } else if (isExp) {
@@ -4245,6 +4309,7 @@
       updateTextIfDifferent('count-tests', countTests);
       updateTextIfDifferent('count-online', countOnline);
       updateTextIfDifferent('count-expired', countExpired);
+      updateTextIfDifferent('count-protrial', countProTrial);
       updateTextIfDifferent('count-all', countAll);
 
       // Banner de notificación en vivo para dispositivos vencidos
@@ -4268,6 +4333,8 @@
         displayList = list.filter(d => !!d.isOnline);
       } else if (currentDeviceView === 'expired') {
         displayList = list.filter(d => !d.blocked && d.mode === 'PRO' && d.expiresAt && new Date(d.expiresAt) < new Date());
+      } else if (currentDeviceView === 'protrial') {
+        displayList = list.filter(d => (d.mode === 'PRO' && d.authAction === 'PRO_TRIAL_24H') || (d.mode === 'PRO' && !d.isLifetime && d.proTrialUsed && d.proTrialStartedAt));
       }
 
       const tbody = document.getElementById('devices-body');
@@ -4283,6 +4350,8 @@
           emptyMsg = 'No hay celulares conectados activamente en este instante.';
         } else if (currentDeviceView === 'expired') {
           emptyMsg = '✨ No hay dispositivos con vigencia vencida. ¡Todas las licencias y pruebas están al día!';
+        } else if (currentDeviceView === 'protrial') {
+          emptyMsg = '⚡ No hay celulares en período de prueba PRO de 24 horas en este momento.';
         }
         if (!tbody.querySelector('.empty-devices-cell') || tbody.dataset.emptyView !== currentDeviceView || tbody.querySelector('#devices-loading-row')) {
           tbody.innerHTML = `<tr><td colspan="7" class="empty-devices-cell" style="text-align:center; padding: 28px; color: var(--muted);">${emptyMsg}</td></tr>`;
@@ -4449,6 +4518,10 @@
             openExpirationModal(hwid);
           } else if (action === 'note') {
             openNoteModal(hwid, note);
+          } else if (action === 'reset-pro-trial') {
+            resetProTrial(hwid);
+          } else if (action === 'end-pro-trial') {
+            endProTrial(hwid);
           } else if (action === 'delete') {
             deleteDevice(hwid);
           }
@@ -5067,18 +5140,24 @@
     }
 
     async function deleteDevice(hwid) {
-      if (!await showGothicConfirm({ title: 'Limpiar Registro de Celular', message: `¿Deseas limpiar el celular "${hwid}" del panel?\n\nEl dispositivo se eliminará de la lista activa y pasará al historial de excluidos (sin ser bloqueado).`, icon: '🗑️', confirmText: 'Limpiar Celular', isDanger: true })) return;
+      if (!await showGothicConfirm({ 
+        title: 'Eliminar y Limpiar Dispositivo', 
+        message: `¿Deseas eliminar el celular "${hwid}" del panel?\n\n• Se desvinculará cualquier cuenta de usuario asociada.\n• Se limpiará su historial de eventos y registros.\n• Se removerá de la lista activa del panel.`, 
+        icon: '🗑️', 
+        confirmText: 'Eliminar y Desvincular', 
+        isDanger: true 
+      })) return;
       const key = getAdminKey();
       try {
         const res = await fetch('/api/admin/device/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
-          body: JSON.stringify({ hwid, exclude: true })
+          body: JSON.stringify({ hwid, exclude: false, clearHistory: true, unlinkUser: true })
         });
         const data = await res.json().catch(() => ({}));
         if ((res.ok && data.success) || res.status === 404) {
-          showToast(res.status === 404 ? 'El dispositivo no existía en el servidor. Registro local limpiado.' : 'Registro de celular limpiado exitosamente (pasó al historial de excluidos).');
           const cleanHwid = String(hwid).trim().toUpperCase();
+          showToast(`Dispositivo ${cleanHwid} eliminado. Historial purgado y cuenta desvinculada.`);
           locallyDeletedHwids.add(cleanHwid);
           locallyDeletedTombstones.delete(cleanHwid);
           try {
@@ -5091,13 +5170,88 @@
           try { sessionStorage.setItem('mumanager_devices_cache', JSON.stringify(allDevicesCache)); } catch (_) {}
           renderDevicesTable(allDevicesCache);
           updateTextIfDifferent('metric-devices-total', allDevicesCache.length);
+
+          // Desvincular optimista inmediato en allUsersCache
+          let usersChanged = false;
+          allUsersCache.forEach(u => {
+            if ((u.hwid && u.hwid.trim().toUpperCase() === cleanHwid) || (u.activeHwid && u.activeHwid.trim().toUpperCase() === cleanHwid)) {
+              u.hwid = '';
+              u.activeHwid = null;
+              usersChanged = true;
+            }
+          });
+          if (usersChanged) {
+            try { sessionStorage.setItem('mumanager_users_cache', JSON.stringify(allUsersCache)); } catch (_) {}
+            renderUsersTable(allUsersCache);
+          }
+
           refreshDevices();
+          refreshUsers();
           loadAllLicensesModule();
+          loadAuditLogs();
         } else {
           showToast('Error al limpiar celular: ' + (data.error || 'Operación fallida'), true);
         }
       } catch (e) {
         showToast('Error al limpiar celular: ' + e.message, true);
+      }
+    }
+
+    async function resetProTrial(hwid) {
+      if (!await showGothicConfirm({
+        title: 'Activar / Reiniciar Demo PRO 24h',
+        message: `¿Deseas activar o reiniciar la prueba PRO de 24 horas para el celular "${hwid}"?\n\n• Acceso PRO ilimitado durante 24 horas continuas.\n• Clave matemática PRO generada y sincronizada.\n• No altera el estado de la cuenta.`,
+        icon: '⚡',
+        confirmText: 'Activar 24h PRO',
+        isDanger: false
+      })) return;
+      const key = getAdminKey();
+      try {
+        const res = await fetch('/api/admin/device/reset-pro-trial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ hwid, hours: 24 })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('⚡ Prueba PRO de 24 horas activada con éxito para ' + hwid);
+          refreshDevices();
+          loadAllLicensesModule();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo activar prueba PRO'), true);
+        }
+      } catch (e) {
+        showToast('Error de conexión: ' + e.message, true);
+      }
+    }
+
+    async function endProTrial(hwid) {
+      if (!await showGothicConfirm({
+        title: 'Finalizar Prueba PRO 24h',
+        message: `¿Deseas finalizar la prueba PRO para el celular "${hwid}" y regresarlo a Modo DEMO Vitalicio?\n\nEl celular NO será bloqueado; continuará funcionando en DEMO permanente de lectura.`,
+        icon: '⏹️',
+        confirmText: 'Pasar a DEMO Vitalicio',
+        isDanger: false
+      })) return;
+      const key = getAdminKey();
+      try {
+        const res = await fetch('/api/admin/device/end-pro-trial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ hwid })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Prueba PRO finalizada. Celular en Modo DEMO Vitalicio.');
+          refreshDevices();
+          loadAllLicensesModule();
+          loadAuditLogs();
+        } else {
+          showToast('Error: ' + (data.error || 'No se pudo finalizar prueba PRO'), true);
+        }
+      } catch (e) {
+        showToast('Error de conexión: ' + e.message, true);
       }
     }
 
@@ -5167,6 +5321,12 @@
       switch (action) {
         case 'toggle-pro':
           togglePlan(hwid, isPro ? 'DEMO' : 'PRO');
+          break;
+        case 'reset-pro-trial':
+          resetProTrial(hwid);
+          break;
+        case 'end-pro-trial':
+          endProTrial(hwid);
           break;
         case 'quick-key':
           openQuickKey(hwid);
@@ -5316,10 +5476,16 @@
           return true;
         });
         updateNotificationBadges();
+        renderProRequestsTable(allProRequestsCache);
+      } catch (e) {
+        console.error('Error cargando solicitudes PRO', e);
+      }
+    }
 
-        const tbody = document.getElementById('pro-requests-body');
-        if (!tbody) return;
-
+    function renderProRequestsTable(list) {
+      const tbody = document.getElementById('pro-requests-body');
+      if (!tbody) return;
+      try {
         const badge = document.getElementById('pro-badge');
         const pendingCount = allProRequestsCache.filter(r => r.status === 'PENDING').length;
         if (badge) {
@@ -6282,6 +6448,12 @@
 
           const maintEl = document.getElementById('metric-maint');
           const dot = document.getElementById('header-status-dot');
+          if (document.getElementById('protrial-auto-toggle')) {
+            document.getElementById('protrial-auto-toggle').checked = s.proTrialEnabled !== false;
+          }
+          if (document.getElementById('protrial-duration-select')) {
+            document.getElementById('protrial-duration-select').value = String(s.proTrialDurationHours || 24);
+          }
           if (s.globalMaintenance) {
             maintEl.innerText = '🔴 ACTIVO';
             maintEl.style.color = '#E2703A';
@@ -6305,6 +6477,8 @@
         globalMaintenance: document.getElementById('maint-toggle').checked,
         maintenanceMessage: document.getElementById('maint-message').value,
         whitelistOnly: document.getElementById('whitelist-toggle').checked,
+        proTrialEnabled: document.getElementById('protrial-auto-toggle') ? document.getElementById('protrial-auto-toggle').checked : true,
+        proTrialDurationHours: document.getElementById('protrial-duration-select') ? (parseFloat(document.getElementById('protrial-duration-select').value) || 24) : 24,
       };
 
       try {
