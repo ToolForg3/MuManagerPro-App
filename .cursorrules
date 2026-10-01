@@ -17,6 +17,9 @@
 - **Prohibición Total de Bordes Lisos/Planos**: Cero bordes rectos de un solo color CSS sin relieve. Toda superficie, botón, slot, celda, tarjeta e input debe contar con biseles chiseled multidireccionales (relieve 3D con luz en borde superior/izquierdo y sombra en inferior/derecho, o ranura hundida inversa) o texturas oficiales del cliente MU.
 - **Cero Sobreposiciones de Botones**: Prohibido sobreponer pestañas o marcos artificiales sobre sprites de botones nativos de MU (`btn_small.png`, `btn_big.png`, etc.). Deben renderizarse limpios y originales según su diseño.
 - 🎮 **Texturas Nativas Obligatorias en Botones y Pestañas**: Pestañas y subnavegadores deben renderizarse con `tabModeActive` y `tabModeInactive`; botones de acción de tarjetas y cabeceras deben usar texturas metálicas de MU (`btn_small.png`, `btn_medium.png`, `btn_big.png` vía `MuButton` o `ImageBackground`). Cero cajas planas de CSS con bordes de 1px.
+- 🔆 **Estándar de Contraste Tipográfico y Nitidez**: Texto principal en oro radiante (`#FEDF99` / `#EFD28D`) sobre texturas activas y plata gótica (`#CDC6B9`) sobre inactivas. Aplicar sombra tipográfica profunda (`textShadowColor: 'rgba(0, 0, 0, 0.95)'`, `textShadowOffset: { width: 1, height: 1 }`, `textShadowRadius: 2` o `THEME.effects.textShadowHigh`). Textos secundarios en plata clara mínima `#C8C0B0` (WCAG AAA).
+- 🖼️ **Erradicación de Bordes Blancos/Matte en Sprites**: Todo icono o sprite (`tab_ajustes.png`, `ajustes_clean.png`, joyas, armas) debe poseer transparencia alfa 100% limpia sin bordes blancos ni fondos matte de software de diseño.
+- 🚫 **Abolición del Botón de Soporte de WhatsApp en el APK**: Erradicado el botón de WhatsApp en la app móvil (`ConfigScreen.tsx`). Soporte y comunidad centralizados exclusivamente en **Discord** (`https://discord.gg/4YXguuBFV` o `/discord`) y **Telegram** (`https://t.me/ToolForg3` o `/telegram`).
 - **Depuración Completa del Diseño Antiguo**: Cuadrículas de inventario, baúl (vault), catálogo de skills, stats, barras de progreso, creador de items y herramientas deben lucir con texturas y biselados nativos de MU, erradicando fondos planos o estilos desincronizados de IA.
 - Ante cualquier contradicción visual, prevalece `DESIGN.md`; ante cualquier contradicción funcional, prevalecen `PROJECT_RULES.md` y el código real.
 
@@ -47,6 +50,11 @@ Cada vez que se suba una versión, **DEBES ACTUALIZAR SIMULTÁNEAMENTE ESTOS 6 A
 4. **`android/app/build.gradle`**: `versionCode XX` y `versionName 'X.X.X'`
 5. **`version.json`**: `version: 'X.X.X'`, `build: XX`, y `downloadUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/vX.X.X/MuManagerPro.apk'`
 6. **`data/settings.json` y `server/data/settings.json`**: `latestVersion: 'X.X.X'`, `versionCode: XX`, `latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/vX.X.X/MuManagerPro.apk'`
+
+- **Política Mandatoria de Incremento de Versión/Build para Entrega OTA**:
+  - El mecanismo OTA (`isNewerVersion` / `fetchGitHubUpdateFallback`) evalúa estrictamente `remoteVer > localVer || (remoteVer === localVer && remoteBuild > localBuild)`.
+  - Queda prohibido lanzar actualizaciones para usuarios con la misma versión o build ya instalada; de lo contrario, `hasUpdate` resuelve `false` y el cliente no recibe el modal de descarga.
+  - Toda actualización a usuarios exige incrementar versión patch o build en los 6 archivos y sincronizar Upstash Redis.
 
 ---
 
@@ -288,8 +296,10 @@ Cada vez que se suba una versión, **DEBES ACTUALIZAR SIMULTÁNEAMENTE ESTOS 6 A
 
 ---
 
-## 15. ALERTAS WHATSAPP, BLINDAJE WAF Y SESIONES DE DISPOSITIVOS
+## 15. SISTEMA MULTI-CANAL DE ALERTAS (TELEGRAM, DISCORD, CALLMEBOT), CANALES OFICIALES Y SEGURIDAD
 
-- **Alertas WhatsApp (CallMeBot)**: Bot oficial exclusivo **`+34 684 728 023`** (`https://wa.me/34684728023`). Abolido el número revocado `+34 644 10 55 84`. Exige consentimiento opt-in (`I allow callmebot to send me messages`) y API Key personal vinculada al número. Pruebas desacopladas con reporte en vivo de errores remotos y paridad entre `bridgeServer.js`, `adminDashboard.html`, `MuManager-Connector` y `MuManagerPro-Gateway`.
+- **Canales Oficiales**: Discord oficial `https://discord.gg/4YXguuBFV` (`/discord`) y Telegram oficial `https://t.me/ToolForg3` (`/telegram`). Abolido el soporte directo por WhatsApp en la aplicación móvil; la atención se concentra en Discord y Telegram.
+- **Sistema Multi-Canal Modular**: Alertas independientes en `settings.json` (`channels.telegram`, `channels.discord`, `channels.callmebot`, `channels.webhook`). Telegram Bot (`sendMessage` con `botToken`/`chatId`), Discord Webhook (embeds en oro/grafito con avatar oficial y mención `@here`/`@everyone` opcional), y CallMeBot WhatsApp (`+34 684 728 023`, opt-in mandatorio y API Key).
+- **Despacho Asíncrono Non-Blocking**: Envíos con `Promise.allSettled()`, sin añadir latencia a clientes o administradores. Pruebas desacopladas en vivo (`/api/admin/alerts/test` y `/api/admin/whatsapp/test`) y paridad estricta entre `bridgeServer.js`, `adminDashboard.html`, `MuManager-Connector` y `MuManagerPro-Gateway`.
 - **Blindaje WAF y Proxies Inversos**: Mandatorio `app.set('trust proxy', 1)` para resolver IPs reales desde `x-forwarded-for` / `x-real-ip`. Inmunidad estricta para loopback (`127.0.0.1`, `::1`, `localhost` jamás entran a `BANNED_IPS`). Desbloqueo y bypass automático con `X-Admin-Key` o `?adminKey=`.
 - **Sincronización y Cierre de Sesión Silencioso**: En login y validación de token se asocia `devices[hwid].currentUser`. `GET /api/admin/devices` reconcilia dispositivos sin usuario contra `users.json`. `POST /api/auth/logout` invocado por `sqlClient.logoutDevice()` limpia de inmediato `currentUser` y `activeHwid`. `adminDashboard.html` actualiza exclusivamente el nodo `.dev-user-text` in-situ sin parpadeos ni reconstrucción de filas.

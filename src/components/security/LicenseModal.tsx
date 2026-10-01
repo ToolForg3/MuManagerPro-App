@@ -133,29 +133,30 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
     });
   };
 
-  const handleSendProRequest = async () => {
+  const handleSendProRequest = async (isDirect: boolean = false) => {
     setSendingReq(true);
     try {
-      const cleanPhone = reqPhone.trim() || 'Sin número';
+      const cleanPhone = isDirect ? 'Sin número (Contacto vía Email/Discord/Telegram)' : (reqPhone.trim() || 'Sin número');
+      const cleanEmail = reqEmail.trim() || undefined;
       const res = await SqlClient.sendProRequest({
-        name: reqName.trim() || 'Administrador',
+        name: isDirect ? 'Usuario App' : (reqName.trim() || 'Administrador'),
         phone: cleanPhone,
-        email: reqEmail.trim() || undefined,
-        serverName: reqServer.trim() || undefined,
-        notes: reqNotes.trim() || undefined,
+        email: cleanEmail,
+        serverName: isDirect ? undefined : (reqServer.trim() || undefined),
+        notes: isDirect ? 'Solicitud directa (1 Clic) desde modal de licencia.' : (reqNotes.trim() || undefined),
       });
 
       if (res.success) {
         Alert.alert(
-          '[ÉXITO] Solicitud Enviada al Panel',
-          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${status.hwid || 'Registrado'}\n[CONTACTO]: ${cleanPhone !== 'Sin número' ? cleanPhone : 'Registrado en sistema'}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
+          '⚡ Solicitud Enviada al Panel',
+          `Tu solicitud de Licencia PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${status.hwid || 'Registrado'}\n[CONTACTO]: ${cleanEmail || cleanPhone}\n\nEl administrador revisará tu solicitud para activar tu Licencia PRO. También puedes contactar al soporte por nuestros canales oficiales de Discord o Telegram.`,
           [{ text: 'Entendido' }]
         );
         setReqNotes('');
       } else if (res.alreadyRequested) {
         Alert.alert(
-          '[AVISO] Solicitud Previa Registrada',
-          res.message || `Este dispositivo (${status.hwid || 'HWID'}) ya tiene una solicitud previa registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
+          'Solicitud Registrada',
+          res.message || `Este dispositivo (${status.hwid || 'HWID'}) ya tiene una solicitud registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
           [{ text: 'Entendido' }]
         );
       } else {
@@ -212,10 +213,10 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   const licenseBadgeText = isPro
     ? status.isLifetime || !status.expiresAt
       ? 'LICENCIA PRO (VITALICIA)'
-      : `LICENCIA PRO (${status.daysRemaining !== undefined ? `${status.daysRemaining}D` : 'ACTIVA'})`
-    : status.hoursRemaining !== undefined && status.hoursRemaining > 0
-      ? `MODO DEMO (${status.hoursRemaining}H)`
-      : 'MODO DEMO';
+      : status.timeRemainingFormatted
+        ? `PRUEBA PRO (${status.timeRemainingFormatted})`
+        : `LICENCIA PRO (${status.daysRemaining !== undefined && status.daysRemaining > 0 ? `${status.daysRemaining}D` : `${status.hoursRemaining || 24}H`})`
+    : 'MODO DEMO (VITALICIO)';
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose} statusBarTranslucent>
@@ -435,6 +436,34 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                 </View>
               ) : (
                 <View style={styles.activationFormContainer}>
+                  {/* Botón 1-Clic Directo */}
+                  <TouchableOpacity
+                    style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginBottom: 12 }}
+                    onPress={() => handleSendProRequest(true)}
+                    disabled={sendingReq}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Enviar Solicitud Directa (1 Clic)"
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.tabs.tabModeActive}
+                      style={styles.bigBtnWrap}
+                      resizeMode="stretch"
+                    >
+                      <Text style={[styles.bigBtnTextGold, { color: '#0D0E0D' }]}>
+                        {sendingReq ? 'ENVIANDO...' : '⚡ ENVIAR SOLICITUD DIRECTA (1 CLIC)'}
+                      </Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+                    <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
+                    <Text style={{ marginHorizontal: 8, fontSize: 10, color: THEME.colors.textoSecundarioLuminoso, fontWeight: '700' }}>
+                      O PERSONALIZAR DATOS (OPCIONAL)
+                    </Text>
+                    <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
+                  </View>
+
                   <Text style={styles.fieldLabel}>TU NOMBRE / ALIAS (OPCIONAL)</Text>
                   <View style={styles.texturedInputContainer}>
                     <TextInput
@@ -496,19 +525,19 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
 
                   <TouchableOpacity
                     style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}
-                    onPress={handleSendProRequest}
+                    onPress={() => handleSendProRequest(false)}
                     disabled={sendingReq}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Enviar Solicitud al Equipo"
+                    accessibilityLabel="Enviar Solicitud Personalizada"
                   >
                     <ImageBackground
-                      source={STITCH_ASSETS.tabs.tabModeActive}
-                      style={styles.bigBtnWrap}
+                      source={STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.secondaryBtnWrap}
                       resizeMode="stretch"
                     >
-                      <Text style={[styles.bigBtnTextGold, { color: '#0D0E0D' }]}>
-                        {sendingReq ? 'ENVIANDO...' : 'ENVIAR SOLICITUD AL EQUIPO'}
+                      <Text style={styles.bigBtnTextSilver}>
+                        {sendingReq ? 'ENVIANDO...' : 'ENVIAR SOLICITUD PERSONALIZADA'}
                       </Text>
                     </ImageBackground>
                   </TouchableOpacity>

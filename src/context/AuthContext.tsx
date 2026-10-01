@@ -309,6 +309,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const bridgeUrl = SqlClient.getBridgeUrl();
       const hwid = await SecurityService.getDeviceHwid();
+      const meta = SecurityService.getDeviceMetadata();
       const res = await fetch(`${bridgeUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -317,6 +318,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: cleanUser,
           password: cleanPass,
           hwid,
+          isEmulator: meta.isEmulator,
+          deviceModel: meta.model,
+          deviceBrand: meta.brand,
+          fingerprint: meta.fingerprint,
         }),
       });
       const data = await res.json();
@@ -479,6 +484,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             deviceModel: meta.model,
             deviceBrand: meta.brand,
             isEmulator: meta.isEmulator,
+            fingerprint: meta.fingerprint,
           }),
         });
         const data = await res.json();
@@ -561,6 +567,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const bridgeUrl = SqlClient.getBridgeUrl();
       const hwid = await SecurityService.getDeviceHwid();
+      const meta = SecurityService.getDeviceMetadata();
       const res = await fetch(`${bridgeUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -569,6 +576,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           password: cleanPass,
           username: username?.trim(),
           hwid,
+          isEmulator: meta.isEmulator,
+          deviceModel: meta.model,
+          deviceBrand: meta.brand,
+          fingerprint: meta.fingerprint,
         }),
       });
 

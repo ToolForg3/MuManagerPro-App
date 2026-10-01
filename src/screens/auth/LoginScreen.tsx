@@ -581,14 +581,14 @@ export const LoginScreen = () => {
   const promptDemoAccess = () => {
     Alert.alert(
       'Acceso Rápido Demo (10 Minutos)',
-      'Este modo te permite explorar la aplicación de forma inmediata durante 10 minutos sin necesidad de registrarte.\n\nUna vez culminados los 10 minutos, podrás crear tu cuenta registrada para adquirir 72 horas completas de demo gratuita o solicitar el Plan PRO.',
+      'Este modo te permite dar un vistazo rápido a la aplicación durante 10 minutos sin necesidad de registrarte (1 uso por dispositivo).\n\nAl crear tu cuenta registrada, cada dispositivo físico (HWID) recibe automáticamente 24 horas de Prueba PRO para testear todas las funciones avanzadas. Finalizadas las 24 horas, tu cuenta continuará activa en Modo DEMO permanente de forma vitalicia.',
       [
         {
           text: '⚡ Iniciar Demo (10 min)',
           onPress: () => executeDemoLogin(),
         },
         {
-          text: 'Crear Cuenta (72h Demo)',
+          text: 'Crear Cuenta (24h Prueba PRO)',
           onPress: () => setIsRegisterMode(true),
         },
         {
@@ -617,11 +617,11 @@ export const LoginScreen = () => {
           res.error,
           [
             {
-              text: '⭐ Solicitar Prueba PRO',
+              text: '⭐ Solicitar Licencia PRO',
               onPress: () => openProModal(),
             },
             {
-              text: 'Crear Cuenta (72h)',
+              text: 'Crear Cuenta (24h Prueba PRO)',
               onPress: () => setIsRegisterMode(true),
             },
             { text: 'Cancelar', style: 'cancel' },
@@ -635,24 +635,29 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleSendProRequest = async () => {
-    const cleanName = proName.trim() || username.trim() || 'Administrador';
-    const cleanPhone = proPhone.trim() || 'Sin número';
+  const handleSendProRequest = async (isDirect: boolean = false) => {
+    const cleanName = isDirect
+      ? (username.trim() || email.trim().split('@')[0] || 'Usuario App')
+      : (proName.trim() || username.trim() || 'Usuario App');
+    const cleanPhone = isDirect
+      ? 'Sin número (Contacto vía Email/Discord/Telegram)'
+      : (proPhone.trim() || 'Sin número (Contacto vía Email/Discord/Telegram)');
+    const cleanEmail = proEmail.trim() || email.trim() || undefined;
 
     setProLoading(true);
     try {
       const res = await SqlClient.sendProRequest({
         name: cleanName,
         phone: cleanPhone,
-        email: proEmail.trim() || undefined,
-        serverName: proServer.trim() || undefined,
-        notes: proNotes.trim() || undefined,
+        email: cleanEmail,
+        serverName: isDirect ? undefined : (proServer.trim() || undefined),
+        notes: isDirect ? 'Solicitud directa (1 Clic) desde pantalla de inicio.' : (proNotes.trim() || undefined),
       });
 
       if (res.success) {
         Alert.alert(
-          '[ÉXITO] Solicitud Enviada al Panel',
-          `Tu solicitud de prueba para el Plan PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${proHwid || 'Registrado'}\n[CONTACTO]: ${cleanPhone !== 'Sin número' ? cleanPhone : (proEmail.trim() || 'Registrado en sistema')}\n\nEl administrador revisará tu solicitud para activar tu período de prueba PRO.`,
+          '⚡ Solicitud Enviada al Panel',
+          `Tu solicitud de Licencia PRO fue enviada con éxito directamente al panel de control del administrador.\n\n[DISPOSITIVO]: ${proHwid || 'Registrado'}\n[CONTACTO]: ${cleanEmail || cleanPhone}\n\nEl administrador revisará tu solicitud para activar tu Licencia PRO. También puedes contactar al soporte por nuestros canales oficiales de Discord o Telegram.`,
           [
             {
               text: 'Entendido',
@@ -665,8 +670,8 @@ export const LoginScreen = () => {
         );
       } else if (res.alreadyRequested) {
         Alert.alert(
-          '[AVISO] Solicitud Previa Registrada',
-          res.message || `Este dispositivo (${proHwid || 'HWID'}) ya tiene una solicitud previa registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
+          'Solicitud Registrada',
+          res.message || `Este dispositivo (${proHwid || 'HWID'}) ya tiene una solicitud registrada en el panel de control. El administrador ya tiene tus datos y se pondrá en contacto contigo.`,
           [
             {
               text: 'Entendido',
@@ -1418,6 +1423,24 @@ export const LoginScreen = () => {
                 </View>
               </View>
 
+              {/* Botón 1-Clic Directo al Panel */}
+              <BotonOro
+                titulo="⚡ Enviar Solicitud Directa (1 Clic)"
+                onPress={() => handleSendProRequest(true)}
+                cargando={proLoading}
+                icono="zap"
+                altura={48}
+                style={{ marginTop: 10, marginBottom: 8 }}
+              />
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
+                <Text style={{ marginHorizontal: 8, fontSize: 10, color: THEME.colors.textoSecundarioLuminoso, fontWeight: '700' }}>
+                  O PERSONALIZAR DATOS (OPCIONAL)
+                </Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
+              </View>
+
               {/* Nombre / Administrador */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nombre o Apodo</Text>
@@ -1498,8 +1521,8 @@ export const LoginScreen = () => {
 
               {/* Enviar Solicitud Button */}
               <BotonOro
-                titulo="Enviar Solicitud al Panel"
-                onPress={handleSendProRequest}
+                titulo="Enviar Solicitud Personalizada"
+                onPress={() => handleSendProRequest(false)}
                 cargando={proLoading}
                 icono="check-circle"
                 altura={48}

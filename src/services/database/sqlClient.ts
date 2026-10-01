@@ -1430,6 +1430,7 @@ export class SqlClient {
         isEmulator: meta.isEmulator,
         deviceModel: meta.model,
         deviceBrand: meta.brand,
+        fingerprint: meta.fingerprint,
         isExplicitActivation: !!isExplicitActivation,
       }, 7000);
 

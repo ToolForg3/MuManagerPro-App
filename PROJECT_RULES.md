@@ -45,10 +45,14 @@ Las reglas visuales históricas presentes en respaldos, prompts, auditorías o c
   - 🚫 **Prohibición de Alturas Porcentuales en Touchables No Acotados (Anti-Estiramiento Yoga)**: Queda terminantemente prohibido utilizar `height: '100%'` en un `ImageBackground` o `View` cuando su `TouchableOpacity` padre carece de altura rígida (por ejemplo, con solo `minHeight: 34` o sin altura acotada). En el motor de maquetación Yoga de React Native, una altura porcentual en un contenedor flexible se evalúa contra el viewport completo, estirando los botones verticalmente hasta abarcar el 100% de la pantalla. Todo botón o selector con textura debe declarar una altura numérica explícita fija en dp (`height: 32`, `height: 36`, `height: 40`, `height: 44`).
   - 🏛️ **Estiramiento Completo Borde a Borde en Zócalos Góticos (`gothicBottomFooter`)**: Todo zócalo o marco inferior gótico (`STITCH_ASSETS.decorations.gothicBottomFooter`) debe renderizarse obligatoriamente con `resizeMode="stretch"` y `width: '100%'` (o acotado al ancho de su tarjeta/modal). Prohibido utilizar `resizeMode="contain"` en pies de modales o pantallas, ya que la relación de aspecto 190x45 colapsa la imagen a una franja angosta central (~135-180 px), dejando los extremos del borde vacíos.
   - 📏 **Blindaje de Encabezados Compactos Anti-Aplastamiento**: En cabeceras ricas (ej. `CharacterEditScreen`), los botones de acción (`VOLVER`, `SYNC`, `BORRAR`) deben tener anchos y alturas fijas compactas (`width: 68`, `altura: 34`, `flexShrink: 0`). El área de título central debe declarar `flex: 1`, `minWidth: 80`, `numberOfLines={1}` y `ellipsizeMode="tail"` con `flexWrap: 'nowrap'` para evitar el aplastamiento horizontal a pocos píxeles y el envoltura vertical de badges.
-- 🔆 **Estándar de Contraste Tipográfico Canónico (WCAG AAA)**:
-  - **Pestañas y Botones Activos (`tabModeActive`, `btn_*.png`)**: El texto e iconos deben renderizarse obligatoriamente en oro radiante `#FEDF99` o `#EFD28D` con `fontWeight: '900'` y sombra sutil (`...THEME.effects.textShadowSubtle`), garantizando contraste óptico nítido superior a 12:1 sobre el fondo de piedra oscura de la textura. ❌ **Cero texto negro u oscuro (`#0D0E0D`, `#252625`) sobre texturas nativas**.
+- 🔆 **Estándar de Contraste Tipográfico y Nitidez Canónica (WCAG AAA)**:
+  - **Pestañas y Botones Activos (`tabModeActive`, `btn_*.png`)**: El texto e iconos deben renderizarse obligatoriamente en oro radiante `#FEDF99` o `#EFD28D` con `fontWeight: '900'` y sombra profunda (`...THEME.effects.textShadowHigh` o `textShadowSubtle`), garantizando contraste óptico nítido superior a 12:1 sobre el fondo de piedra oscura de la textura. ❌ **Cero texto negro u oscuro (`#0D0E0D`, `#252625`) sobre texturas nativas**.
   - **Pestañas Inactivas (`tabModeInactive`)**: El texto e iconos deben renderizarse en plata/acero gótico `#CDC6B9` o `#A8A296` con `fontWeight: '700'`.
+  - **Sombra Tipográfica Profunda para Máxima Nitidez**: Todo texto principal, título, métrica, etiqueta de pestaña y cabecera de tarjeta sobre fondos oscuros o texturas metálicas debe aplicar sombra tipográfica profunda (`textShadowColor: 'rgba(0, 0, 0, 0.95)'`, `textShadowOffset: { width: 1, height: 1 }`, `textShadowRadius: 2` o `THEME.effects.textShadowHigh`), asegurando legibilidad nítida y separación cristalina respecto al fondo texturizado.
+  - **Contraste de Textos Secundarios y Subtítulos**: Prohibido el uso de grises oscuros o atenuados que se confundan con el fondo de piedra. Los textos secundarios deben mantener un tono acero/plata claro mínimo (`#C8C0B0` o `#D4CDBC`) con contraste óptico superior a 4.5:1.
   - **Superficies de Alerta Doradas Sólidas (CSS plano excepcional)**: Si se usa un fondo sólido amarillo oro `#EFD28D`, el texto usa `#0D0E0D` gótico oscuro. Sobre cualquier textura nativa de MU, el texto siempre es oro radiante o plata clara.
+- 🖼️ **Erradicación de Bordes Blancos/Matte en Sprites e Iconos**: Todo sprite, icono o textura recortada (incluyendo `tab_ajustes.png`, `ajustes_clean.png`, engranajes, joyas, alas, armas y armaduras) debe poseer transparencia alfa 100% limpia sin bordes blancos accidentales, halos de compresión ni marcos o fondos tipo "matte" derivados de software de diseño gráfico.
+- 🚫 **Abolición del Botón de Soporte de WhatsApp en el APK Móvil**: Queda terminantemente abolido el botón o enlace flotante de soporte de WhatsApp en las pantallas del APK móvil (ej. `ConfigScreen.tsx`). La asistencia y comunidad para los usuarios se canaliza con exclusividad a través de los canales oficiales de **Discord** (`https://discord.gg/4YXguuBFV` o `/discord`) y **Telegram** (`https://t.me/ToolForg3` o `/telegram`).
 - 🛡️ **Depuración Completa del Diseño Antiguo e Integración de Texturas Nativas**: Todo módulo de la app móvil (stats, barras de progreso, catálogo de skills, cuadrículas de inventario, baúl/almacén [vault], creador de objetos, modales de seguridad/bloqueo, banners de watermark y pestañas de herramientas) debe utilizar acabados metálicos y texturas nativas de MU, erradicando fondos planos, paletas genéricas o colores desincronizados de IA.
 - 📱 **Adaptabilidad Multi-Resolución y Legibilidad**: Todo componente debe adaptarse a diferentes densidades y anchos de pantalla móvil sin desbordes horizontales, manteniendo una jerarquía tipográfica legible (alto contraste con `...THEME.effects.textShadow` o `textShadowSubtle` sobre superficies oscuras) y un espaciado limpio sin ruido visual.
 
@@ -80,6 +84,12 @@ Cada vez que se suba una versión (ej. de `1.7.5` a `1.7.6`), **DEBES ACTUALIZAR
 4. **`android/app/build.gradle`**: `versionCode XX` y `versionName 'X.X.X'`
 5. **`version.json`**: `version: 'X.X.X'`, `build: XX`, y `downloadUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/vX.X.X/MuManagerPro.apk'` *(Alojamiento oficial en GitHub Releases AWS S3 sin límites de concurrencia)*
 6. **`data/settings.json` y `server/data/settings.json`**: `latestVersion: 'X.X.X'`, `versionCode: XX`, `latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/vX.X.X/MuManagerPro.apk'`
+
+### Política Mandatoria de Incremento de Versión/Build para Entrega OTA (Over-The-Air)
+- 📡 **Mecanismo Estricto de Comparación**: El evaluador de actualizaciones de la app (`isNewerVersion(targetVer, currentVer)` en backend y `fetchGitHubUpdateFallback()` en cliente) evalúa estrictamente:
+  `remoteVer > localVer || (remoteVer === localVer && remoteBuild > localBuild)`
+- ❌ **Prohibición de Lanzamientos con Misma Versión**: Queda **terminantemente prohibido** desplegar cambios de código, estilos o binarios destinados a usuarios conservando la versión y build anteriores. Si la versión remota es idéntica a la versión local ya instalada en los celulares de los usuarios, el evaluador resolverá `hasUpdate: false` y **los dispositivos jamás recibirán el aviso de descarga de actualización**.
+- 🚀 **Obligatoriedad de Bumping**: Todo parche o actualización funcional/visual requiere obligatoriamente incrementar la versión patch (ej. `2.3.1` ➔ `2.3.2`) o el build (ej. `133` ➔ `134`), sincronizar los 6 archivos simultáneamente y actualizar la configuración en Upstash Redis (`update-settings`).
 
 ---
 
@@ -570,22 +580,44 @@ Cualquier cambio de código, script o despliegue debe respetar estas reglas de f
 
 ---
 
-## 20. SISTEMA DE ALERTAS WHATSAPP, BLINDAJE WAF Y SESIONES DE DISPOSITIVOS
+## 20. SISTEMA MULTI-CANAL DE ALERTAS (TELEGRAM, DISCORD, CALLMEBOT), CANALES OFICIALES Y SEGURIDAD
 
-1. **SISTEMA CANÓNICO DE ALERTAS DE SEGURIDAD POR WHATSAPP**:
-   - **Proveedor Oficial CallMeBot**:
-     - El bot oficial activo es exclusivamente **`+34 684 728 023`** (`https://wa.me/34684728023`). Queda permanentemente abolido cualquier número histórico revocado (`+34 644 10 55 84`).
+1. **CANALES OFICIALES DE COMUNIDAD Y SOPORTE**:
+   - 💬 **Discord Oficial**: Servidor oficial de la comunidad y soporte técnico: `https://discord.gg/4YXguuBFV` (o ruta corta `/discord`).
+   - ✈️ **Telegram Oficial**: Canal y grupo oficial: `https://t.me/ToolForg3` (o ruta corta `/telegram`).
+   - ❌ **Abolición de Soporte Directo por WhatsApp en la App**: La interfaz del APK móvil no debe exhibir botones flotantes ni enlaces directos de atención individual por WhatsApp. La asistencia comunitaria se centraliza con exclusividad en Discord y Telegram para mayor transparencia y escalabilidad.
+
+2. **SISTEMA MULTI-CANAL MODULAR DE ALERTAS DE SEGURIDAD Y SOLICITUDES PRO**:
+   - 🎛️ **Enrutamiento Modular Independiente**: Cada canal de notificación cuenta con activación independiente mediante checkboxes en la configuración (`settings.json` / Upstash Redis):
+     `channels.telegram`, `channels.discord`, `channels.callmebot`, `channels.webhook`.
+   - ✈️ **Telegram Bot**:
+     - Despacho directo vía Telegram Bot API (`https://api.telegram.org/bot<token>/sendMessage`).
+     - Requiere `botToken` y `chatId` numérico del administrador o grupo de control.
+     - Formato en HTML/Markdown con badges claros de severidad (`🚨 ALERTA DE SEGURIDAD`, `⭐ SOLICITUD PRO`, `🔑 LOGIN ADMINISTRATIVO`).
+   - 🎮 **Discord Webhook**:
+     - Despacho directo mediante webhook HTTP POST con embeds visuales enriquecidos (`embeds: [{ title, description, color, fields }]`).
+     - Color canónico en oro antiguo (`#FEDF99` / `16703385`) o hierro forjado según la severidad.
+     - Avatar oficial del bot configurado (`mumanager_bot_avatar`) y nombre de bot personalizable (`username: "MuManager PRO"`).
+     - Soporte opcional de mención rápida (`content: "@here"` o `@everyone`) para eventos críticos de intrusión o fuerza bruta.
+   - 📱 **CallMeBot (WhatsApp)**:
+     - Canal secundario o de respaldo para alertas críticas al teléfono del administrador.
+     - Bot oficial activo exclusivo: **`+34 684 728 023`** (`https://wa.me/34684728023`). Queda permanentemente abolido cualquier número histórico revocado (`+34 644 10 55 84`).
      - **Opt-in de WhatsApp Mandatorio**: Por directivas anti-spam de Meta/WhatsApp, el receptor debe enviar primero el mensaje `I allow callmebot to send me messages` al bot para autorizar la recepción de alertas antes de intentar envíos.
      - **API Key Obligatoria**: La API Key generada por el bot debe guardarse en la configuración (`apiKey`). Sin ella, CallMeBot rechaza la entrega con código HTTP 203.
-     - **Diagnóstico en Tiempo Real y Desacoplamiento de Pruebas**: El endpoint `/api/admin/whatsapp/test` está desacoplado de las reglas de filtrado de eventos de producción y reporta en vivo el código HTTP y el mensaje de error o éxito retornado por el proveedor (CallMeBot / Webhook). Prohibido simular envíos exitosos en la interfaz si la llamada remota falla.
-     - **Paridad Obligatoria**: Toda modificación a la lógica o parámetros de WhatsApp debe replicarse exactamente en `server/bridgeServer.js`, `server/adminDashboard.html`, `MuManager-Connector/server.js` y `MuManagerPro-Gateway`.
+   - 🌐 **Webhook Personalizado**: Integración HTTP POST para sistemas de monitoreo externos o SIEM corporativo con payload JSON tipado.
+   - ⚡ **Despacho Asíncrono en Paralelo (Non-Blocking)**:
+     - Las alertas se despachan en paralelo usando `Promise.allSettled()`, garantizando que ninguna falla o lentitud en una API externa (Meta, Telegram, Discord) bloquee o degrade la velocidad de respuesta al cliente móvil ni a las operaciones administrativas.
+   - 🔍 **Diagnóstico en Tiempo Real y Desacoplamiento de Pruebas**:
+     - Los endpoints `/api/admin/alerts/test` y `/api/admin/whatsapp/test` permiten verificar cada canal individualmente o en conjunto.
+     - Reportan en vivo el código HTTP exacto y los errores devueltos por cada proveedor en el panel web (`adminDashboard.html`), prohibiendo terminantemente simular envíos exitosos en la interfaz cuando la llamada remota falla.
+   - 🔄 **Paridad Obligatoria**: Toda modificación a la lógica o parámetros del sistema multi-canal de alertas debe replicarse exactamente en `server/bridgeServer.js`, `server/adminDashboard.html`, `MuManager-Connector/server.js` y `MuManagerPro-Gateway`.
 
-2. **ENDURECIMIENTO WAF, PROXIES INVERSOS E INMUNIDAD LOOPBACK**:
+3. **ENDURECIMIENTO WAF, PROXIES INVERSOS E INMUNIDAD LOOPBACK**:
    - **Confianza en Proxy Inverso (`trust proxy`)**: Todo servidor Express alojado tras infraestructura de borde o proxy inverso (Vercel Serverless, Render, Cloudflare, Koyeb) debe declarar obligatoriamente `app.set('trust proxy', 1)` para resolver la IP pública real del cliente desde `x-forwarded-for` / `x-real-ip`.
    - **Inmunidad Estricta de Bucle Local (`isLoopbackIp`)**: Queda terminantemente prohibido incorporar direcciones de bucle local (`127.0.0.1`, `::1`, `localhost`) en `BANNED_IPS` o estructuras de baneo del WAF. Las consultas internas, escaneos de salud o llamadas serverless jamás deben provocar bloqueos cruzados (*cross-tenant lockout*).
    - **Bypass de Emergencia y Auto-Desbloqueo de Administrador**: Si una petición entrante incluye una cabecera `X-Admin-Key` o parámetro `?adminKey=` criptográficamente válido, el middleware WAF debe eliminar de inmediato la IP del mapa `BANNED_IPS` y otorgar paso sin interrupciones.
 
-3. **VINCULACIÓN CUENTA-DISPOSITIVO Y DESCONEXIÓN SILENCIOSA (ZERO-FLICKER)**:
+4. **VINCULACIÓN CUENTA-DISPOSITIVO Y DESCONEXIÓN SILENCIOSA (ZERO-FLICKER)**:
    - **Asociación en Login y Validación de Sesión**: Al autenticar con éxito (`/api/auth/login`) o validar token (`/api/auth/validate-session`), el backend debe asignar `devices[hwid].currentUser = user.email || user.username`.
    - **Reconciliación Proactiva de Celulares Conectados**: `GET /api/admin/devices` debe reconciliar de forma proactiva cualquier dispositivo con `currentUser` vacío contra `users.json`, garantizando que en el panel siempre figure la cuenta vinculada real.
    - **Ruta Dedicada de Desconexión (`POST /api/auth/logout`)**: Al invocar `logout()` o `logoutDemo()`, la app móvil invoca `sqlClient.logoutDevice(hwid, priorUser)`. El backend desvincula inmediatamente `currentUser` y `activeHwid` del dispositivo.

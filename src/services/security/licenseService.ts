@@ -215,34 +215,31 @@ export class LicenseService {
       this.notifyListeners();
     }
 
-    // Verificar expiración de período de prueba o licencia PRO (sin bloqueo automático; bloqueo solo manual por admin)
-    if ((res as any).expiresAt) {
+    // Verificar expiración de licencia PRO por tiempo (al expirar, regresa a DEMO vitalicio sin bloqueo)
+    if (res.mode === 'PRO' && (res as any).expiresAt) {
       const expiryTime = new Date((res as any).expiresAt).getTime();
       if (Date.now() > expiryTime) {
-        const wasExpiredAlready = !!this.currentStatus.isExpired;
-        this.currentStatus.isExpired = true;
-        // Solo marcar isBlocked si el servidor indicó res.blocked === true (bloqueo manual del administrador)
+        this.currentStatus.isExpired = false;
         this.currentStatus.isBlocked = !!res.blocked;
         this.currentStatus.blockReason = res.blocked
           ? ((res as any).reason || 'Dispositivo bloqueado por el administrador.')
-          : (res.mode === 'PRO'
-              ? 'Tu licencia PRO por tiempo ha finalizado. Contacta al administrador para renovar o solicitar tiempo extra de demo.'
-              : 'El período de prueba para este celular ha finalizado. Contacta al administrador para adquirir una licencia PRO o solicitar tiempo extra de demo.');
-        if (res.mode === 'PRO') {
-          this.currentStatus.isActivated = false;
-          this.currentStatus.plan = 'DEMO';
-          this.currentStatus.licenseKey = undefined;
-          this.currentStatus.isLifetime = false;
-          this.currentStatus.daysRemaining = 0;
-          this.queueStorageOperation(async () => {
-            await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
-          });
-        }
+          : undefined;
+        this.currentStatus.isActivated = false;
+        this.currentStatus.plan = 'DEMO';
+        this.currentStatus.licenseKey = undefined;
+        this.currentStatus.isLifetime = false;
+        this.currentStatus.daysRemaining = undefined;
+        this.currentStatus.hoursRemaining = undefined;
+        this.currentStatus.timeRemainingFormatted = undefined;
+        this.currentStatus.expiresAt = undefined;
+        this.queueStorageOperation(async () => {
+          await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+        });
         this.notifyListeners();
-        if (!wasExpiredAlready && !res.blocked) {
+        if (wasPro && !res.blocked) {
           Alert.alert(
-            'Período Finalizado',
-            this.currentStatus.blockReason,
+            'Prueba PRO Finalizada',
+            'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente con sus funciones básicas.',
             [{ text: 'Entendido' }]
           );
         }
@@ -262,6 +259,7 @@ export class LicenseService {
       this.currentStatus.isActivated = true;
       this.currentStatus.plan = 'PRO';
       this.currentStatus.isBlocked = false;
+      this.currentStatus.isExpired = false;
       this.currentStatus.isLifetime = isLifetime;
       this.currentStatus.daysRemaining = daysRemaining;
       this.currentStatus.hoursRemaining = hoursRemaining;
@@ -323,12 +321,13 @@ export class LicenseService {
           [{ text: '¡Excelente!' }]
         );
       }
-    } else if (res.forceWipeKey || ((res as any).authoritativeMode === 'DEMO' && res.forceDemo)) {
-      // Solo revocar si hay una orden estricta de borrado administrativo
+    } else if (res.mode === 'DEMO' || res.forceWipeKey || ((res as any).authoritativeMode === 'DEMO')) {
+      // Modo DEMO es vitalicio: limpiar credenciales PRO si las hubiera y asegurar DEMO permanente
       this.currentStatus.isActivated = false;
       this.currentStatus.plan = 'DEMO';
       this.currentStatus.licenseKey = undefined;
       this.currentStatus.isLifetime = false;
+      this.currentStatus.isExpired = false;
       this.currentStatus.daysRemaining = undefined;
       this.currentStatus.hoursRemaining = undefined;
       this.currentStatus.timeRemainingFormatted = undefined;
@@ -338,10 +337,10 @@ export class LicenseService {
       });
       if (wasPro) {
         this.notifyListeners();
-        // Notificación al APK cuando la licencia es revocada (PRO -> DEMO)
+        // Notificación al APK cuando la prueba concluye o la licencia es revocada (PRO -> DEMO)
         Alert.alert(
-          'Licencia PRO Revocada',
-          'Tu dispositivo ha sido regresado al Modo DEMO por el administrador.',
+          'Prueba PRO Finalizada',
+          'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente con sus funciones básicas.',
           [{ text: 'Entendido' }]
         );
       }

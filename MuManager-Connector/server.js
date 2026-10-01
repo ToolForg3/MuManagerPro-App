@@ -132,7 +132,8 @@ const DEFAULT_SETTINGS = {
   updateChangelog: '• Versión 1.0.0 oficial\n• Auto-registro de cuentas de usuario\n• Compatibilidad Louis Season 6 Update 40\n• Alertas de seguridad en tiempo real',
   forceUpdate: false,
   whitelistOnly: false,
-  demoDurationHours: 72,
+  demoDurationHours: null,
+  proTrialDurationHours: 24,
   broadcast: {
     active: false,
     id: 'ann_init',
@@ -1415,7 +1416,7 @@ app.use((req, res, next) => {
         mode: 'DEMO',
         plan: 'DEMO',
         registeredAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + (settings.demoDurationHours || 72) * 3600 * 1000).toISOString(),
+        expiresAt: null, // Modo DEMO vitalicio
         blocked: false,
       };
       _devices[hwid] = _dev;
@@ -1959,6 +1960,88 @@ function verifyKey(hwid, key) {
   const expectedKey = generateKey(hwid, 'PRO');
   return key.trim().toUpperCase() === expectedKey;
 }
+
+/**
+ * Activa la prueba PRO de 24 horas a un dispositivo nuevo al registrar cuenta,
+ * o asegura Modo DEMO vitalicio si ya utilizó su prueba PRO de 24 horas.
+ */
+function activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp, platform, appVersion) {
+  if (!cleanHwid) return false;
+  const now = new Date().toISOString();
+  let dev = devices[cleanHwid];
+  let changed = false;
+
+  if (!dev) {
+    // Dispositivo nuevo registrando cuenta por primera vez: otorga 24 Horas de Demo PRO
+    const key = generateKey(cleanHwid, 'PRO');
+    const proExpires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+    dev = {
+      hwid: cleanHwid,
+      mode: 'PRO',
+      licenseKey: key,
+      generatedKey: key,
+      firstSeen: now,
+      lastSeen: now,
+      totalPings: 1,
+      ip: clientIp || '127.0.0.1',
+      platform: platform || 'Android',
+      appVersion: appVersion || '2.0.8',
+      blocked: false,
+      blockReason: '',
+      note: '',
+      currentUser: userAccountIdentifier || '',
+      expiresAt: proExpires,
+      isLifetime: false,
+      isEmulator: false,
+      deviceModel: '',
+      deviceBrand: '',
+      proTrialUsed: true,
+      proTrialStartedAt: now,
+      proTrialExpiresAt: proExpires,
+      demoExtendedHours: 0,
+      isTest: false,
+      forceDemo: false,
+      authRevision: 1,
+      authUpdatedAt: Date.now(),
+      authAction: 'PRO_TRIAL_24H'
+    };
+    devices[cleanHwid] = dev;
+    addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+    changed = true;
+  } else {
+    // Dispositivo existente
+    if (userAccountIdentifier) dev.currentUser = userAccountIdentifier;
+    dev.lastSeen = now;
+    if (clientIp) dev.ip = clientIp;
+
+    // Verificar si es elegible para la prueba PRO de 24 horas:
+    // Solo si NUNCA ha usado la prueba (!dev.proTrialUsed), no es PRO actualmente y no está bloqueado por el admin
+    if (!dev.proTrialUsed && dev.mode !== 'PRO' && !dev.blocked && !dev.forceDemo) {
+      const key = generateKey(cleanHwid, 'PRO');
+      dev.mode = 'PRO';
+      dev.generatedKey = key;
+      dev.licenseKey = key;
+      dev.proTrialUsed = true;
+      dev.proTrialStartedAt = now;
+      dev.expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      dev.proTrialExpiresAt = dev.expiresAt;
+      dev.isLifetime = false;
+      dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+      dev.authUpdatedAt = Date.now();
+      dev.authAction = 'PRO_TRIAL_24H';
+      addAuditLog('PRO_TRIAL_ACTIVATED', cleanHwid, clientIp || '127.0.0.1', `Prueba PRO de 24h activada para cuenta: ${userAccountIdentifier}`);
+      changed = true;
+    } else if (dev.mode === 'DEMO') {
+      // Modo DEMO es vitalicio: asegurar que expiresAt sea null para que nunca expire ni bloquee
+      if (dev.expiresAt !== null) {
+        dev.expiresAt = null;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
 
 const getDbConfig = (cfg) => ({
   user: cfg.user || 'sa',
@@ -8361,12 +8444,9 @@ app.post('/api/telemetry/ping', (req, res) => {
   const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !devices[hwid]?.forceDemo && !devices[hwid]?.blocked && (!devices[hwid]?.expiresAt || new Date(devices[hwid]?.expiresAt).getTime() > Date.now());
 
   if (!devices[hwid]) {
-    const demoDurationHours = Number(settings.demoDurationHours) || 72;
-    const demoExpires = new Date(Date.now() + demoDurationHours * 3600 * 1000).toISOString();
-
     devices[hwid] = {
       hwid,
-      mode: 'DEMO', // Siempre DEMO para nuevos dispositivos en telemetría
+      mode: 'DEMO', // Siempre DEMO vitalicio para nuevos dispositivos en telemetría
       licenseKey: '',
       isLifetime: false,
       firstSeen: now,
@@ -8379,7 +8459,7 @@ app.post('/api/telemetry/ping', (req, res) => {
       blockReason: isAutoBlocked ? 'Dispositivo nuevo en espera de aprobación del administrador.' : '',
       note: '',
       currentUser: userEmail || '',
-      expiresAt: demoExpires,
+      expiresAt: null, // Modo DEMO vitalicio por defecto
       isEmulator: authoritativeIsEmulator,
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
@@ -8432,19 +8512,26 @@ app.post('/api/telemetry/ping', (req, res) => {
     if (deviceModel) devices[hwid].deviceModel = deviceModel;
     if (deviceBrand) devices[hwid].deviceBrand = deviceBrand;
 
-    // Verificar si expiró PRO o DEMO (sin bloqueo automático; solo el administrador decide bloquear manualmente)
+    // Verificar si expiró PRO (la prueba PRO de 24h regresa a DEMO vitalicio de forma transparente, sin bloqueo de usuario)
     const isDeviceExpired = devices[hwid].expiresAt && new Date(devices[hwid].expiresAt) < new Date();
     if (isDeviceExpired) {
       if (devices[hwid].mode === 'PRO') {
         devices[hwid].mode = 'DEMO';
-        devices[hwid].forceDemo = true;
+        devices[hwid].expiresAt = null;
+        devices[hwid].forceDemo = false;
         devices[hwid].licenseKey = '';
-        devices[hwid].expireReason = 'Tu licencia PRO por tiempo ha vencido. Contacta al administrador para renovar o solicitar tiempo extra de demo.';
-        addAuditLog('PRO_EXPIRED', hwid, clientIp, 'Licencia PRO por tiempo vencida. Celular en espera de renovación (sin bloqueo automático).');
+        devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
+        devices[hwid].authUpdatedAt = Date.now();
+        devices[hwid].authAction = 'PRO_TRIAL_EXPIRED';
+        devices[hwid].expireReason = 'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente.';
+        addAuditLog('PRO_EXPIRED', hwid, clientIp, 'Prueba PRO de 24h finalizada. Celular regresa a Modo DEMO permanente.');
       } else {
-        devices[hwid].expireReason = 'Período de prueba finalizado. Contacta al administrador para adquirir PRO o solicitar tiempo extra de demo.';
-        addAuditLog('EXPIRED', hwid, clientIp, 'Período de prueba finalizado. Celular en espera de renovación (sin bloqueo automático).');
+        devices[hwid].expiresAt = null;
+        devices[hwid].expireReason = '';
       }
+    } else if (devices[hwid].mode === 'DEMO' && devices[hwid].expiresAt !== null) {
+      // Modo DEMO es vitalicio: limpiar cualquier fecha residual
+      devices[hwid].expiresAt = null;
     }
   }
 
@@ -8749,6 +8836,13 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
   const token = generateSessionToken(newUser.email, newUser.role, hwid);
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+
+  if (hwid) {
+    const devices = loadDevices();
+    const changed = activateProTrialOrPermanentDemo(devices, hwid, cleanEmail, clientIp);
+    if (changed) saveDevices(devices);
+  }
+
   addAuditLog('USER_REGISTER', hwid, clientIp, `Cuenta creada: ${cleanUser} (${cleanEmail})`);
 
   res.json({
@@ -9052,37 +9146,8 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
 
   if (cleanHwid) {
     const userAccountIdentifier = (user.email || user.username || loginIdentifier || '').trim();
-    if (devices[cleanHwid]) {
-      devices[cleanHwid].currentUser = userAccountIdentifier;
-      devices[cleanHwid].lastSeen = new Date().toISOString();
-      saveDevices(devices);
-    } else {
-      devices[cleanHwid] = {
-        hwid: cleanHwid,
-        mode: 'DEMO',
-        licenseKey: '',
-        firstSeen: new Date().toISOString(),
-        lastSeen: new Date().toISOString(),
-        totalPings: 1,
-        ip: clientIp,
-        platform: 'Android',
-        appVersion: '1.0.0',
-        blocked: false,
-        blockReason: '',
-        note: '',
-        currentUser: userAccountIdentifier,
-        expiresAt: new Date(Date.now() + 72 * 3600000).toISOString(),
-        isLifetime: false,
-        isEmulator: false,
-        deviceModel: '',
-        deviceBrand: '',
-        demoExtendedHours: 0,
-        isTest: false,
-        forceDemo: false,
-        authRevision: 1,
-        authUpdatedAt: Date.now(),
-        authAction: 'LOGIN_REGISTER'
-      };
+    const changed = activateProTrialOrPermanentDemo(devices, cleanHwid, userAccountIdentifier, clientIp);
+    if (changed) {
       saveDevices(devices);
     }
   }
@@ -10135,40 +10200,37 @@ app.post('/api/license/request-pro', async (req, res) => {
 
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
   const requests = loadProRequests();
+  const devices = loadDevices();
 
-  // Control estricto: Verificar si este HWID ya envió una solicitud previa
-  const existing = requests.find(r => r.hwid && r.hwid.trim() === hwidTrim);
-  if (existing) {
-    const statusMap = {
-      PENDING: 'Pendiente de revisión en el panel',
-      CONTACTED: 'En contacto con soporte',
-      APPROVED: 'Aprobada (Licencia PRO activa)',
-      DISMISSED: 'Descartada por el administrador'
-    };
-    const stText = statusMap[existing.status] || existing.status;
-    const fechaStr = new Date(existing.createdAt).toLocaleDateString() + ' ' + new Date(existing.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Control de duplicados: Solo limitar si ya hay una solicitud en estado PENDING para este HWID
+  const existingPending = requests.find(r => r.hwid && r.hwid.trim() === hwidTrim && r.status === 'PENDING');
+  if (existingPending) {
+    const fechaStr = new Date(existingPending.createdAt).toLocaleDateString() + ' ' + new Date(existingPending.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return res.json({
-      success: false,
+      success: true,
       alreadyRequested: true,
-      existingStatus: existing.status,
-      existingCreatedAt: existing.createdAt,
-      message: `Este dispositivo (HWID: ${hwidTrim}) ya tiene una solicitud previa registrada el ${fechaStr}.\n\nEstado actual: ${stText}.\n\nEl administrador ya cuenta con tus datos en el panel de control.`
+      existingStatus: 'PENDING',
+      existingCreatedAt: existingPending.createdAt,
+      message: `Tu solicitud ya se encuentra registrada en el panel desde el ${fechaStr}.\n\nEl administrador ya cuenta con tus datos para contactarte por correo o por los canales oficiales de Discord y Telegram.`
     });
   }
 
-  const cleanName = String(name || '').trim() || 'Administrador';
-  const cleanPhone = String(phone || '').trim() || 'Sin número';
+  // Resolver correo e identidad automáticamente desde el dispositivo o la cuenta registrada
+  const linkedUser = (devices[hwidTrim] && devices[hwidTrim].currentUser) || '';
+  const cleanEmail = String(email || linkedUser || '').trim();
+  const cleanName = String(name || '').trim() || (cleanEmail ? cleanEmail.split('@')[0] : 'Usuario App');
+  const cleanPhone = String(phone || '').trim() || 'Sin número (Contacto vía Email/Discord/Telegram)';
 
   const newReq = {
     id: 'req_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
     name: cleanName,
     phone: cleanPhone,
-    email: (email || '').trim(),
+    email: cleanEmail,
     serverName: (serverName || '').trim(),
-    notes: (notes || '').trim(),
+    notes: (notes || '').trim() || 'Solicitud directa de Licencia PRO desde la aplicación.',
     hwid: hwidTrim,
-    deviceModel: (deviceModel || '').trim(),
-    deviceBrand: (deviceBrand || '').trim(),
+    deviceModel: (deviceModel || (devices[hwidTrim] && devices[hwidTrim].deviceModel) || '').trim(),
+    deviceBrand: (deviceBrand || (devices[hwidTrim] && devices[hwidTrim].deviceBrand) || '').trim(),
     ip: clientIp,
     status: 'PENDING',
     createdAt: new Date().toISOString()
@@ -10177,7 +10239,7 @@ app.post('/api/license/request-pro', async (req, res) => {
   requests.unshift(newReq);
   saveProRequests(requests);
 
-  addAuditLog('PRO_REQUEST', hwidTrim, clientIp, `Nueva solicitud PRO: ${newReq.name} (${newReq.phone})`);
+  addAuditLog('PRO_REQUEST', hwidTrim, clientIp, `Nueva solicitud PRO: ${newReq.name} (${newReq.email || newReq.phone})`);
 
   // Notificar al WhatsApp del Administrador inmediatamente
   sendWhatsAppAlert(

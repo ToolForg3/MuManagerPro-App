@@ -26,10 +26,14 @@ Antigravity debe leer [`DESIGN.md`](./DESIGN.md) completo antes de modificar est
   - 🚫 **Prohibición de Alturas Porcentuales en Touchables No Acotados (Anti-Estiramiento Yoga)**: Queda terminantemente prohibido utilizar `height: '100%'` en un `ImageBackground` o `View` cuando su `TouchableOpacity` padre carece de altura rígida (por ejemplo, con solo `minHeight: 34` o sin altura acotada). En el motor de maquetación Yoga de React Native, una altura porcentual en un contenedor flexible se evalúa contra el viewport completo, estirando los botones verticalmente hasta abarcar el 100% de la pantalla. Todo botón o selector con textura debe declarar una altura numérica explícita fija en dp (`height: 32`, `height: 36`, `height: 40`, `height: 44`).
   - 🏛️ **Estiramiento Completo Borde a Borde en Zócalos Góticos (`gothicBottomFooter`)**: Todo zócalo o marco inferior gótico (`STITCH_ASSETS.decorations.gothicBottomFooter`) debe renderizarse obligatoriamente con `resizeMode="stretch"` y `width: '100%'` (o acotado al ancho de su tarjeta/modal). Prohibido utilizar `resizeMode="contain"` en pies de modales o pantallas, ya que la relación de aspecto 190x45 colapsa la imagen a una franja angosta central (~135-180 px), dejando los extremos del borde vacíos.
   - 📏 **Blindaje de Encabezados Compactos Anti-Aplastamiento**: En cabeceras ricas (ej. `CharacterEditScreen`), los botones de acción (`VOLVER`, `SYNC`, `BORRAR`) deben tener anchos y alturas fijas compactas (`width: 68`, `altura: 34`, `flexShrink: 0`). El área de título central debe declarar `flex: 1`, `minWidth: 80`, `numberOfLines={1}` y `ellipsizeMode="tail"` con `flexWrap: 'nowrap'` para evitar el aplastamiento horizontal a pocos píxeles y el envoltura vertical de badges.
-- 🔆 **Estándar de Contraste Tipográfico Canónico (WCAG AAA)**:
-  - **Pestañas y Botones Activos (`tabModeActive`, `btn_*.png`)**: El texto e iconos deben renderizarse obligatoriamente en oro radiante `#FEDF99` o `#EFD28D` con `fontWeight: '900'` y sombra sutil (`...THEME.effects.textShadowSubtle`), garantizando contraste óptico nítido superior a 12:1 sobre el fondo de piedra oscura de la textura. ❌ **Cero texto negro u oscuro (`#0D0E0D`, `#252625`) sobre texturas nativas**.
+- 🔆 **Estándar de Contraste Tipográfico y Nitidez Canónica (WCAG AAA)**:
+  - **Pestañas y Botones Activos (`tabModeActive`, `btn_*.png`)**: El texto e iconos deben renderizarse obligatoriamente en oro radiante `#FEDF99` o `#EFD28D` con `fontWeight: '900'` y sombra profunda (`...THEME.effects.textShadowHigh` o `textShadowSubtle`), garantizando contraste óptico nítido superior a 12:1 sobre el fondo de piedra oscura de la textura. ❌ **Cero texto negro u oscuro (`#0D0E0D`, `#252625`) sobre texturas nativas**.
   - **Pestañas Inactivas (`tabModeInactive`)**: El texto e iconos deben renderizarse en plata/acero gótico `#CDC6B9` o `#A8A296` con `fontWeight: '700'`.
+  - **Sombra Tipográfica Profunda para Máxima Nitidez**: Todo texto principal, título, métrica, etiqueta de pestaña y cabecera de tarjeta sobre fondos oscuros o texturas metálicas debe aplicar sombra tipográfica profunda (`textShadowColor: 'rgba(0, 0, 0, 0.95)'`, `textShadowOffset: { width: 1, height: 1 }`, `textShadowRadius: 2` o `THEME.effects.textShadowHigh`), asegurando legibilidad nítida y separación cristalina respecto al fondo texturizado.
+  - **Contraste de Textos Secundarios y Subtítulos**: Prohibido el uso de grises oscuros o atenuados que se confundan con el fondo de piedra. Los textos secundarios deben mantener un tono acero/plata claro mínimo (`#C8C0B0` o `#D4CDBC`) con contraste óptico superior a 4.5:1.
   - **Superficies de Alerta Doradas Sólidas (CSS plano excepcional)**: Si se usa un fondo sólido amarillo oro `#EFD28D`, el texto usa `#0D0E0D` gótico oscuro. Sobre cualquier textura nativa de MU, el texto siempre es oro radiante o plata clara.
+- 🖼️ **Erradicación de Bordes Blancos/Matte en Sprites e Iconos**: Todo sprite, icono o textura recortada (incluyendo `tab_ajustes.png`, `ajustes_clean.png`, engranajes, joyas, alas, armas y armaduras) debe poseer transparencia alfa 100% limpia sin bordes blancos accidentales, halos de compresión ni marcos o fondos tipo "matte" derivados de software de diseño gráfico.
+- 🚫 **Abolición del Botón de Soporte de WhatsApp en el APK Móvil**: Queda terminantemente abolido el botón o enlace flotante de soporte de WhatsApp en las pantallas del APK móvil (ej. `ConfigScreen.tsx`). La asistencia y comunidad para los usuarios se canaliza con exclusividad a través de los canales oficiales de **Discord** (`https://discord.gg/4YXguuBFV` o `/discord`) y **Telegram** (`https://t.me/ToolForg3` o `/telegram`).
 - 🛡️ **Depuración Completa del Diseño Antiguo e Integración de Texturas Nativas**: Todo módulo de la app móvil (stats, barras de progreso, catálogo de skills, cuadrículas de inventario, baúl/almacén [vault], creador de objetos, modales de seguridad/bloqueo, banners de watermark y pestañas de herramientas) debe utilizar acabados metálicos y texturas nativas de MU, erradicando fondos planos, paletas genéricas o colores desincronizados de IA.
 - 📱 **Adaptabilidad Multi-Resolución y Legibilidad**: Todo componente debe adaptarse dinámicamente a diferentes densidades y anchos de pantalla sin desbordes horizontales, manteniendo una jerarquía tipográfica legible (alto contraste con `...THEME.effects.textShadow` o `textShadowSubtle` sobre superficies oscuras) y un espaciado limpio sin ruido visual.
 - Si una decisión visual no está definida, detenerse y reportarla; no revivir el diseño anterior ni inventar una nueva estética.
@@ -54,6 +58,10 @@ Toda subida de versión debe sincronizar simultáneamente los 6 archivos:
 - **Bloqueo Incondicional de Publicación**: Si existen defectos comprobados de severidad Crítica o Alta en seguridad, integridad de datos o flujos esenciales, queda estrictamente bloqueada cualquier recomendación o ejecución de publicación.
 - **Compilación Gradle Obligatoria**: Jamás publicar sin compilar previamente el APK (`gradlew assembleRelease`). El pipeline `release-update.js` inspecciona obligatoriamente con `aapt.exe` que `versionCode` y `versionName` del APK coincidan exactamente con `version.json`.
 - **Política de Actualizaciones Forzadas (`forceUpdate`)**: `forceUpdate` debe mantenerse en `false` en `version.json` y `settings.json` para parches y releases menores. Solo se permite `forceUpdate = true` ante incidentes de integridad crítica, rollbacks de emergencia o roturas de esquema SQL incompatibles.
+- **Política Mandatoria de Incremento de Versión/Build para Entrega OTA**:
+  - El mecanismo OTA (`isNewerVersion(targetVer, currentVer)` en backend y `fetchGitHubUpdateFallback()` en cliente) evalúa `remoteVer > localVer || (remoteVer === localVer && remoteBuild > localBuild)`.
+  - Queda **estrictamente prohibido** publicar parches o compilaciones para usuarios conservando la versión y build anteriores. Si coinciden con la versión instalada en el dispositivo, resolverá `hasUpdate: false` y **los celulares jamás recibirán el diálogo de actualización**.
+  - Todo cambio funcional/visual a distribuir exige incrementar versión (patch) o build en los 6 archivos simultáneamente y actualizar Upstash Redis (`update-settings`).
 
 ## 4. VERIFICACIONES PREVIAS Y MEDICIONES DE RENDIMIENTO
 - `npm run ts:check` (0 errores de tipado).
@@ -264,13 +272,20 @@ Toda subida de versión debe sincronizar simultáneamente los 6 archivos:
 - No declarar cobertura completa con controles omitidos, parciales o no verificados.
 - No tocar lógica, rutas, datos, permisos, SQL, licencias, publicación ni versión estable.
 
-## 18. ALERTAS WHATSAPP, BLINDAJE WAF Y SESIONES DE DISPOSITIVOS
+## 18. SISTEMA MULTI-CANAL DE ALERTAS (TELEGRAM, DISCORD, CALLMEBOT), CANALES OFICIALES Y SEGURIDAD
 
-- **Alertas de Seguridad WhatsApp (CallMeBot)**:
-  - Bot oficial activo exclusivo: **`+34 684 728 023`** (`https://wa.me/34684728023`). Prohibido referenciar el número revocado `+34 644 10 55 84`.
-  - Requisito de consentimiento (Opt-in previo): El receptor debe autorizar explícitamente enviando `I allow callmebot to send me messages` al bot antes de recibir alertas en cumplimiento de las políticas anti-spam de Meta/WhatsApp.
-  - API Key personal obligatoria: Vinculada al número de teléfono y exigida en `POST /api/admin/whatsapp/test` y alertas en producción.
-  - Diagnóstico en vivo sin falsos positivos: El endpoint de prueba reporta en tiempo real códigos y respuestas del proveedor. Prohibido simular envíos exitosos en la interfaz ante fallos HTTP.
+- **Canales Oficiales de Comunidad y Soporte**:
+  - Discord oficial: `https://discord.gg/4YXguuBFV` (o ruta corta `/discord`).
+  - Telegram oficial: `https://t.me/ToolForg3` (o ruta corta `/telegram`).
+  - ❌ **Abolición de Soporte Directo por WhatsApp en el APK**: Prohibido incluir botones o enlaces de soporte por WhatsApp en las pantallas de la app móvil. La atención se centraliza en Discord y Telegram.
+- **Sistema Multi-Canal Modular de Alertas de Seguridad y Solicitudes PRO**:
+  - Activación modular e independiente en `settings.json` / Upstash Redis: `channels.telegram`, `channels.discord`, `channels.callmebot`, `channels.webhook`.
+  - **Telegram Bot**: Despacho directo vía Bot API (`sendMessage`) con `botToken` y `chatId` en formato Markdown/HTML.
+  - **Discord Webhook**: Despacho directo con embeds enriquecidos en oro y grafito, avatar personalizado (`mumanager_bot_avatar`), nombre configurable y menciones `@here` / `@everyone` para incidentes críticos.
+  - **CallMeBot (WhatsApp)**: Respaldo para administradores vía bot oficial `+34 684 728 023`, requiriendo opt-in previo obligatorio (`I allow callmebot to send me messages`) y API Key personal vinculada. Prohibido referenciar el número revocado `+34 644 10 55 84`.
+  - **Webhook Personalizado**: Integración HTTP POST para sistemas de monitoreo externos.
+  - **Despacho Asíncrono en Paralelo (Non-Blocking)**: Envíos ejecutados con `Promise.allSettled()`, garantizando cero latencia o degradación para el usuario si una API externa tarda o falla.
+  - Diagnóstico en vivo sin falsos positivos: `/api/admin/alerts/test` y `/api/admin/whatsapp/test` reportan códigos HTTP y respuestas reales de los proveedores. Prohibido simular envíos exitosos ante fallos.
   - Paridad obligatoria entre `bridgeServer.js`, `adminDashboard.html`, `MuManager-Connector` y `MuManagerPro-Gateway`.
 - **Blindaje WAF y Proxies Inversos**:
   - `app.set('trust proxy', 1)` obligatorio en servidores Express tras proxies inversos (Vercel Serverless, Cloudflare, Render) para resolver IPs reales desde `x-forwarded-for` / `x-real-ip`.

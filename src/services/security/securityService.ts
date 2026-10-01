@@ -1,4 +1,4 @@
-import { Platform, Dimensions } from 'react-native';
+import { Platform, Dimensions, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
@@ -221,21 +221,64 @@ export class SecurityService {
   /**
    * Detects if the current running environment is an Android emulator
    * (BlueStacks, Nox, LDPlayer, MEmu, Android Studio AVD, Genymotion, MuMu, WSA, etc.)
-   * Uses x86/x64 ABI detection which CANNOT be spoofed by PC emulators.
+   * Uses NativeModule (pipes, QEMU drivers, hardware) + Fingerprint analysis that CANNOT be spoofed by PC emulators.
    */
   static detectIsEmulator(): boolean {
     if (Platform.OS !== 'android') return false;
+
+    // 0. Comprobación autoritativa por Módulo Nativo Android (QEMU pipes, drivers, Build.HARDWARE real)
+    try {
+      const nativeSec = NativeModules.DeviceSecurityModule;
+      if (nativeSec) {
+        const isNative = typeof nativeSec.isEmulator === 'boolean' 
+          ? nativeSec.isEmulator 
+          : nativeSec.getConstants?.()?.isEmulator;
+        if (isNative === true) return true;
+      }
+    } catch (_) {}
+
     const c: any = Platform.constants || {};
 
     const brand = String(c.Brand || c.brand || '').toLowerCase().trim();
     const model = String(c.Model || c.model || '').toLowerCase().trim();
     const manufacturer = String(c.Manufacturer || c.manufacturer || '').toLowerCase().trim();
-    const hardware = String(c.Hardware || c.hardware || '').toLowerCase().trim();
-    const product = String(c.Product || c.product || '').toLowerCase().trim();
-    const board = String(c.Board || c.board || '').toLowerCase().trim();
     const fingerprint = String(c.Fingerprint || c.fingerprint || '').toLowerCase().trim();
+    const serial = String(c.Serial || c.serial || '').toLowerCase().trim();
 
-    // 1. Detección explícita de nombres de emuladores conocidos
+    // 1. Detección en Fingerprint (lo que ningún emulador que spoofa modelo Samsung puede ocultar)
+    if (
+      fingerprint.includes('generic') ||
+      fingerprint.includes('vbox') ||
+      fingerprint.includes('test-keys') ||
+      fingerprint.includes('x86') ||
+      fingerprint.includes('sdk_gphone') ||
+      fingerprint.includes('bluestacks') ||
+      fingerprint.includes('ldplayer') ||
+      fingerprint.includes('nox') ||
+      fingerprint.includes('goldfish') ||
+      fingerprint.includes('ranchu') ||
+      fingerprint.includes('ttvm') ||
+      fingerprint.includes('cancro') ||
+      fingerprint.includes('microvirt')
+    ) {
+      return true;
+    }
+
+    // 2. Seriales sintéticos típicos de emuladores
+    if (
+      serial === 'unknown' ||
+      serial === 'null' ||
+      serial === '0123456789abcdef' ||
+      serial === '1234567890' ||
+      serial === '000000000000' ||
+      serial.startsWith('emulator')
+    ) {
+      if (!fingerprint.includes('release-keys') || brand === 'generic' || model.includes('sdk')) {
+        return true;
+      }
+    }
+
+    // 3. Detección explícita de nombres de emuladores conocidos
     const isExplicitEmulator = (
       brand === 'nox' ||
       brand === 'bluestacks' ||
@@ -257,41 +300,23 @@ export class SecurityService {
       model.includes('genymotion') ||
       model.includes('bluestacks') ||
       model.includes('ldplayer') ||
-      model.includes('noxplayer') ||
-      product.includes('vbox') ||
-      product.includes('genymotion') ||
-      product.includes('bluestacks') ||
-      product.includes('ldplayer') ||
-      product.includes('noxplayer') ||
-      hardware === 'goldfish' ||
-      hardware === 'ranchu' ||
-      hardware === 'vbox86' ||
-      hardware === 'ttvm' ||
-      hardware === 'nemu' ||
-      hardware === 'microvirt' ||
-      hardware.includes('goldfish') ||
-      hardware.includes('ranchu') ||
-      hardware.includes('vbox86') ||
-      board === 'goldfish' ||
-      board === 'vbox' ||
-      board.includes('android-x86') ||
-      board === 'nox'
+      model.includes('noxplayer')
     );
     if (isExplicitEmulator) return true;
 
-    // 2. Lista blanca estricta de fabricantes de teléfonos celulares físicos legítimos
+    // 4. Lista blanca estricta de fabricantes SOLO si el fingerprint está firmado con release-keys comerciales
     const isKnownPhysicalOem = [
       'samsung', 'honor', 'huawei', 'xiaomi', 'redmi', 'poco',
       'motorola', 'moto', 'oppo', 'vivo', 'realme', 'oneplus',
       'sony', 'lg', 'asus', 'tcl', 'zte', 'nokia', 'tecno', 'infinix', 'google', 'apple'
     ].some(oem => brand.includes(oem) || manufacturer.includes(oem));
 
-    if (isKnownPhysicalOem) {
+    if (isKnownPhysicalOem && fingerprint.includes('release-keys') && !fingerprint.includes('test-keys')) {
       return false;
     }
 
-    // 3. Fallback genérico para marcas no reconocidas
-    if (brand === 'generic' || model.includes('sdk') || fingerprint.startsWith('generic')) {
+    // 5. Fallback genérico para marcas no reconocidas o sin firmas comerciales
+    if (brand === 'generic' || model.includes('sdk') || fingerprint.startsWith('generic') || fingerprint.includes('test-keys')) {
       return true;
     }
 
@@ -306,11 +331,13 @@ export class SecurityService {
     model: string;
     brand: string;
     platformVersion: string;
+    fingerprint?: string;
   } {
     const c: any = Platform.constants || {};
     const brand = String(c.Brand || c.brand || (Platform.OS === 'android' ? 'Android' : 'iOS')).trim();
     const model = String(c.Model || c.model || 'Dispositivo').trim();
     const platformVersion = String(Platform.Version || 'N/A');
+    const fingerprint = String(c.Fingerprint || c.fingerprint || '').trim();
     const isEmulator = this.detectIsEmulator();
 
     return {
@@ -318,6 +345,7 @@ export class SecurityService {
       model,
       brand,
       platformVersion,
+      fingerprint,
     };
   }
 
