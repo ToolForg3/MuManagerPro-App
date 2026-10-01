@@ -258,7 +258,6 @@ export class SecurityService {
       fingerprint.includes('goldfish') ||
       fingerprint.includes('ranchu') ||
       fingerprint.includes('ttvm') ||
-      fingerprint.includes('cancro') ||
       fingerprint.includes('microvirt')
     ) {
       return true;
