@@ -58,7 +58,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   visible,
   item,
   slotIndex,
-  initialEditing = false,
+  initialEditing = true,
   onClose,
   onSave,
   onDelete,

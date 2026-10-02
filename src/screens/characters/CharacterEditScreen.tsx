@@ -1082,6 +1082,13 @@ export const CharacterEditScreen = () => {
     }, 150);
   };
 
+  const handleItemUpdateQuick = (updated: ParsedItem, slotIdx: number) => {
+    const withModified: ParsedItem = { ...updated, slot: slotIdx, isModified: true };
+    setParsedItems(prev => prev.map(i => (i.slot === slotIdx ? withModified : i)));
+    setHasUnsavedInventory(true);
+    setActionItem(withModified);
+  };
+
   const handleItemSave = (updated: ParsedItem) => {
     const targetSlot = (modalSlot !== undefined && modalSlot !== null) ? modalSlot : updated.slot;
     const withModified: ParsedItem = { ...updated, slot: targetSlot, isModified: true };
@@ -3025,6 +3032,7 @@ export const CharacterEditScreen = () => {
         onMove={(item, slot) => setMovingInvItem({ item, slot })}
         onQuickMax={handleQuickMaxItem}
         onDuplicate={handleDuplicateItem}
+        onUpdateItem={handleItemUpdateQuick}
       />
 
       {/* Item Inspection & Edit Modal */}

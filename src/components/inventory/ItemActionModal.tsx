@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  TextInput,
+  ImageBackground,
 } from 'react-native';
 import { GothicAlert as Alert } from '../common/GothicAlert';
 import { ParsedItem } from '../../types/item';
@@ -16,6 +18,7 @@ import { getAncientInfo } from '../../constants/ancientCatalog';
 import { Panel } from '../ui/Panel';
 import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { MuButton } from '../ui/MuButton';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { isJewelBundle, getBundleQuantity, isItemStackable } from '../../constants/jewelAssets';
 
 interface ItemActionModalProps {
@@ -28,6 +31,7 @@ interface ItemActionModalProps {
   onMove?: (item: ParsedItem, slotIndex: number) => void;
   onQuickMax?: (item: ParsedItem, slotIndex: number) => void;
   onDuplicate?: (item: ParsedItem, slotIndex: number) => void;
+  onUpdateItem?: (updatedItem: ParsedItem, slotIndex: number) => void;
 }
 
 export const ItemActionModal: React.FC<ItemActionModalProps> = ({
@@ -40,6 +44,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
   onMove,
   onQuickMax,
   onDuplicate,
+  onUpdateItem,
 }) => {
   if (!visible || !item) return null;
 
@@ -148,6 +153,155 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
               {item.luck ? <Text style={styles.attrLine}>• Luck (Suerte)</Text> : null}
               {item.skill ? <Text style={styles.attrLine}>• Skill (Habilidad)</Text> : null}
             </View>
+
+            {/* Control Rápido de Cantidad en Pila (Pociones / Consumibles) */}
+            {isItemStackable(item.group, item.index, item.category) && onUpdateItem && (
+              <View style={styles.stackControlCard}>
+                <View style={styles.stackControlHeader}>
+                  <Text style={styles.stackControlTitle}>CANTIDAD EN PILA (APILADO):</Text>
+                  <Text style={styles.stackControlCurrentVal}>
+                    {item.durability ?? 1} / 255
+                  </Text>
+                </View>
+
+                {/* Steppers e Input Centrado */}
+                <View style={styles.stackStepperRow}>
+                  <TouchableOpacity
+                    style={styles.stackStepBtnTouchable}
+                    onPress={() => {
+                      const cur = item.durability ?? 1;
+                      const next = Math.max(1, cur - 10);
+                      onUpdateItem({ ...item, durability: next, isModified: true }, slotIndex);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground source={STITCH_ASSETS.buttons.small} style={styles.stackStepBtnBg} resizeMode="stretch">
+                      <Text style={styles.stackStepBtnText}>-10</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.stackStepBtnTouchable}
+                    onPress={() => {
+                      const cur = item.durability ?? 1;
+                      const next = Math.max(1, cur - 1);
+                      onUpdateItem({ ...item, durability: next, isModified: true }, slotIndex);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground source={STITCH_ASSETS.buttons.small} style={styles.stackStepBtnBg} resizeMode="stretch">
+                      <Text style={styles.stackStepBtnText}>-1</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TextInput
+                    style={styles.stackNumInput}
+                    keyboardType="numeric"
+                    value={String(item.durability ?? 1)}
+                    selectTextOnFocus
+                    maxLength={3}
+                    onChangeText={(txt) => {
+                      const cleaned = txt.replace(/[^0-9]/g, '');
+                      const parsed = parseInt(cleaned, 10);
+                      const finalVal = isNaN(parsed) ? 1 : Math.max(1, Math.min(255, parsed));
+                      onUpdateItem({ ...item, durability: finalVal, isModified: true }, slotIndex);
+                    }}
+                  />
+
+                  <TouchableOpacity
+                    style={styles.stackStepBtnTouchable}
+                    onPress={() => {
+                      const cur = item.durability ?? 1;
+                      const next = Math.min(255, cur + 1);
+                      onUpdateItem({ ...item, durability: next, isModified: true }, slotIndex);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground source={STITCH_ASSETS.buttons.small} style={styles.stackStepBtnBg} resizeMode="stretch">
+                      <Text style={styles.stackStepBtnText}>+1</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.stackStepBtnTouchable}
+                    onPress={() => {
+                      const cur = item.durability ?? 1;
+                      const next = Math.min(255, cur + 10);
+                      onUpdateItem({ ...item, durability: next, isModified: true }, slotIndex);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground source={STITCH_ASSETS.buttons.small} style={styles.stackStepBtnBg} resizeMode="stretch">
+                      <Text style={styles.stackStepBtnText}>+10</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Presets Rápidos de Cantidad */}
+                <View style={styles.stackPresetsRow}>
+                  {[1, 10, 30, 50, 100, 255].map((qtyVal) => {
+                    const isActive = (item.durability ?? 1) === qtyVal;
+                    return (
+                      <TouchableOpacity
+                        key={`quick_stack_${qtyVal}`}
+                        style={styles.stackPresetChipTouchable}
+                        onPress={() => onUpdateItem({ ...item, durability: qtyVal, isModified: true }, slotIndex)}
+                        activeOpacity={0.7}
+                      >
+                        <ImageBackground
+                          source={isActive ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={styles.stackPresetChipBg}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.stackPresetChipText, isActive && styles.stackPresetChipTextActive]}>
+                            {qtyVal === 255 ? 'x255' : `x${qtyVal}`}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Selector de Paquete de Joyas (Bundle: x10, x20, x30) */}
+            {isJewelBundle(item.group, item.index, item.name) && onUpdateItem && (
+              <View style={styles.stackControlCard}>
+                <View style={styles.stackControlHeader}>
+                  <Text style={styles.stackControlTitle}>TAMAÑO DEL PAQUETE (BUNDLE):</Text>
+                  <Text style={styles.stackControlCurrentVal}>
+                    {getBundleQuantity(item.level, item.durability)} Joyas
+                  </Text>
+                </View>
+                <View style={styles.stackPresetsRow}>
+                  {[
+                    { lvl: 0, count: 10, label: 'x10 Joyas' },
+                    { lvl: 1, count: 20, label: 'x20 Joyas' },
+                    { lvl: 2, count: 30, label: 'x30 Joyas' },
+                  ].map((b) => {
+                    const isSelected = item.level === b.lvl;
+                    return (
+                      <TouchableOpacity
+                        key={`quick_bundle_${b.lvl}`}
+                        style={[styles.stackPresetChipTouchable, { flex: 1 }]}
+                        onPress={() => onUpdateItem({ ...item, level: b.lvl, durability: b.count, isModified: true }, slotIndex)}
+                        activeOpacity={0.7}
+                      >
+                        <ImageBackground
+                          source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={styles.stackPresetChipBg}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.stackPresetChipText, isSelected && styles.stackPresetChipTextActive]}>
+                            {b.label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             {/* Opciones Excelentes si las tiene */}
             {activeExcOptions.length > 0 && (
@@ -481,6 +635,101 @@ const styles = StyleSheet.create({
   btnDeleteText: {
     color: '#FFA87D',
     fontSize: 11,
+    fontWeight: '900',
+    ...THEME.effects.textShadowSubtle,
+  },
+  stackControlCard: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#121312',
+    borderWidth: 1,
+    borderTopColor: '#3A3C38',
+    borderLeftColor: '#3A3C38',
+    borderBottomColor: '#1A1B1A',
+    borderRightColor: '#1A1B1A',
+    borderRadius: 2,
+    gap: 8,
+  },
+  stackControlHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  stackControlTitle: {
+    color: THEME.colors.oroClaro,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  stackControlCurrentVal: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  stackStepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  stackStepBtnTouchable: {
+    width: 36,
+    height: 36,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  stackStepBtnBg: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stackStepBtnText: {
+    color: THEME.colors.texto,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  stackNumInput: {
+    backgroundColor: '#090A09',
+    borderWidth: 1,
+    borderTopColor: '#141514',
+    borderLeftColor: '#141514',
+    borderRightColor: '#5A5242',
+    borderBottomColor: '#5A5242',
+    borderRadius: 2,
+    color: THEME.colors.oroClaro,
+    fontSize: 16,
+    fontWeight: '900',
+    textAlign: 'center',
+    minWidth: 64,
+    height: 36,
+    paddingHorizontal: 6,
+  },
+  stackPresetsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  stackPresetChipTouchable: {
+    flex: 1,
+    height: 28,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  stackPresetChipBg: {
+    width: '100%',
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stackPresetChipText: {
+    color: THEME.colors.textoSecundarioLuminoso,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  stackPresetChipTextActive: {
+    color: THEME.colors.oroClaro,
     fontWeight: '900',
     ...THEME.effects.textShadowSubtle,
   },

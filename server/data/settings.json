@@ -3,10 +3,10 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.4.1",
-  "latestBuild": 143,
+  "latestVersion": "2.4.2",
+  "latestBuild": 144,
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.4.1 (Build 143) - Métricas Interactivas, Apilado x255 y Master Skills:\n• MÉTRICAS CLAVE EDITABLES: Todos los 5 indicadores (Level, Points, Reset, Gran Reset, Master Level) ahora son 100% interactivos con modales dedicados, presets rápidos, steppers y guardado directo en SQL Server.\n• APILADO Y BUNDLES VISUALES: Visualización directa de pociones apiladas (hasta x255), flechas y paquetes de joyas (x10, x20, x30) en cuadrículas de inventario, baúl y modales de inspección.\n• HABILIDADES DEL ÁRBOL MASTER: Decodificación exacta de IDs compuestos y asignación de texturas e iconos nativos oficiales del cliente MU Season 6 para skills evolucionados (Blood Storm, Plasma Storm, Sword Slash, etc.).\n• BLINDAJE STITCH APPROVED IRONFORGE: Acabados metálicos chiseled, alto contraste WCAG AAA y cero texto plano.",
+  "updateChangelog": "MuManager PRO v2.4.2 (Build 144) - Editor Rápido de Pilas y Paquetes de Joyas:\n• EDITOR RÁPIDO DE APILADOS EN 1 TOQUE: Ajusta cantidades de pociones y flechas al instante (presets x1 a x255 MAX, steppers +/- y teclado directo) desde el diálogo de acción sin abrir pantallas secundarias.\n• SELECTOR DINÁMICO DE BUNDLES: Conversión inmediata de paquetes de joyas comprimidas (Bless, Soul, Life, Chaos, etc.) entre x10, x20 y x30 con un solo tap.\n• APERTURA DIRECTA EN MODO EDICIÓN: El editor detallado de ítems se activa automáticamente en modo edición al ingresar.\n• DEPURACIÓN VISUAL DE JOYAS SUELTAS: Erradicadas insignias redundantes 'x1' en joyas individuales y plumas, reservando los badges exclusivamente para paquetes y consumibles apilados.\n• SINCRONIZACIÓN SQL BIDIRECCIONAL: Actualización en caliente de inventario y baúl de cuentas protegida contra desbordamientos.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": null,
@@ -75,15 +75,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.4.1 (Build 143)",
+  "updateTitle": "MuManager PRO v2.4.2 (Build 144)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 143,
+  "versionCode": 144,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.4.1 (Build 143) - Métricas Interactivas, Apilado x255 y Master Skills:\n• MÉTRICAS CLAVE EDITABLES: Todos los 5 indicadores (Level, Points, Reset, Gran Reset, Master Level) ahora son 100% interactivos con modales dedicados, presets rápidos, steppers y guardado directo en SQL Server.\n• APILADO Y BUNDLES VISUALES: Visualización directa de pociones apiladas (hasta x255), flechas y paquetes de joyas (x10, x20, x30) en cuadrículas de inventario, baúl y modales de inspección.\n• HABILIDADES DEL ÁRBOL MASTER: Decodificación exacta de IDs compuestos y asignación de texturas e iconos nativos oficiales del cliente MU Season 6 para skills evolucionados (Blood Storm, Plasma Storm, Sword Slash, etc.).\n• BLINDAJE STITCH APPROVED IRONFORGE: Acabados metálicos chiseled, alto contraste WCAG AAA y cero texto plano.",
+  "releaseNotes": "MuManager PRO v2.4.2 (Build 144) - Editor Rápido de Pilas y Paquetes de Joyas:\n• EDITOR RÁPIDO DE APILADOS EN 1 TOQUE: Ajusta cantidades de pociones y flechas al instante (presets x1 a x255 MAX, steppers +/- y teclado directo) desde el diálogo de acción sin abrir pantallas secundarias.\n• SELECTOR DINÁMICO DE BUNDLES: Conversión inmediata de paquetes de joyas comprimidas (Bless, Soul, Life, Chaos, etc.) entre x10, x20 y x30 con un solo tap.\n• APERTURA DIRECTA EN MODO EDICIÓN: El editor detallado de ítems se activa automáticamente en modo edición al ingresar.\n• DEPURACIÓN VISUAL DE JOYAS SUELTAS: Erradicadas insignias redundantes 'x1' en joyas individuales y plumas, reservando los badges exclusivamente para paquetes y consumibles apilados.\n• SINCRONIZACIÓN SQL BIDIRECCIONAL: Actualización en caliente de inventario y baúl de cuentas protegida contra desbordamientos.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.4.1",
-  "buildNumber": 143,
+  "appVersion": "2.4.2",
+  "buildNumber": 144,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -95,6 +95,6 @@
       "pass": ""
     }
   },
-  "version": "2.4.1",
-  "build": 143
+  "version": "2.4.2",
+  "build": 144
 }

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.1",
+  "version": "2.4.2",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-02T19:53:00.000Z",
+  "publishedAt": "2026-10-02T20:14:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 143,
+  "build": 144,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.1 (Build 143) - Métricas Interactivas, Apilado x255 y Master Skills:\n• MÉTRICAS CLAVE EDITABLES: Todos los 5 indicadores (Level, Points, Reset, Gran Reset, Master Level) ahora son 100% interactivos con modales dedicados, presets rápidos, steppers y guardado directo en SQL Server.\n• APILADO Y BUNDLES VISUALES: Visualización directa de pociones apiladas (hasta x255), flechas y paquetes de joyas (x10, x20, x30) en cuadrículas de inventario, baúl y modales de inspección.\n• HABILIDADES DEL ÁRBOL MASTER: Decodificación exacta de IDs compuestos y asignación de texturas e iconos nativos oficiales del cliente MU Season 6 para skills evolucionados (Blood Storm, Plasma Storm, Sword Slash, etc.).\n• BLINDAJE STITCH APPROVED IRONFORGE: Acabados metálicos chiseled, alto contraste WCAG AAA y cero texto plano."
+  "changelog": "MuManager PRO v2.4.2 (Build 144) - Editor Rápido de Pilas y Paquetes de Joyas:\n• EDITOR RÁPIDO DE APILADOS EN 1 TOQUE: Ajusta cantidades de pociones y flechas al instante (presets x1 a x255 MAX, steppers +/- y teclado directo) desde el diálogo de acción sin abrir pantallas secundarias.\n• SELECTOR DINÁMICO DE BUNDLES: Conversión inmediata de paquetes de joyas comprimidas (Bless, Soul, Life, Chaos, etc.) entre x10, x20 y x30 con un solo tap.\n• APERTURA DIRECTA EN MODO EDICIÓN: El editor detallado de ítems se activa automáticamente en modo edición al ingresar.\n• DEPURACIÓN VISUAL DE JOYAS SUELTAS: Erradicadas insignias redundantes 'x1' en joyas individuales y plumas, reservando los badges exclusivamente para paquetes y consumibles apilados.\n• SINCRONIZACIÓN SQL BIDIRECCIONAL: Actualización en caliente de inventario y baúl de cuentas protegida contra desbordamientos."
 }

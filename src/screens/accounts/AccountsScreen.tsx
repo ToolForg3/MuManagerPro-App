@@ -1694,6 +1694,23 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
     }
   };
 
+  const handleVaultItemUpdateQuick = async (updated: ParsedItem, slotIndex: number) => {
+    const withModified: ParsedItem = { ...updated, slot: slotIndex, isModified: true };
+    const nextItems = warehouseItems.map(i => (i.slot === slotIndex ? withModified : i));
+    setWarehouseItems(nextItems);
+    setActionVaultItem(withModified);
+
+    if (warehouseAccount && LicenseService.canSaveInventory()) {
+      try {
+        const newHex = MuItemParser.rebuildInventoryHex(nextItems, 240, warehouseData?.ItemsHex);
+        await SqlClient.saveAccountWarehouse(warehouseAccount, activeVaultIndex, newHex, vaultMoney);
+        setWarehouseData((prev: any) => ({ ...prev, ItemsHex: newHex, Money: vaultMoney }));
+      } catch (e) {
+        console.warn('Error en auto-sincronizar baúl:', e);
+      }
+    }
+  };
+
   const handleSaveVaultItem = async (updated: ParsedItem) => {
     const targetSlot = (selectedVaultSlot !== null && selectedVaultSlot !== undefined) ? selectedVaultSlot : updated.slot;
     const isExpanded = targetSlot >= 120 || warehouseViewTab === 'vault_ext';
@@ -5322,6 +5339,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         onMove={(item, slot) => setMovingVaultItem({ item, slot })}
         onQuickMax={handleQuickMaxVaultItem}
         onDuplicate={handleDuplicateVaultItem}
+        onUpdateItem={handleVaultItemUpdateQuick}
       />
 
       {/* Modal para Editar / Inspeccionar / Guardar Ítem del Baúl */}

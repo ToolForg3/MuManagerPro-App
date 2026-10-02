@@ -134,8 +134,24 @@ export function getBundleQuantity(level?: number, durability?: number): number {
 export function isItemStackable(group?: number, index?: number, category?: string): boolean {
   if (isJewelBundle(group, index)) return false;
 
-  // Grupo 14: Pociones y consumibles (HP, MP, SD, Complex, Antidote, Apple, Ale, Town Portal, Rena)
+  // Joyas individuales NO son apilables (Bless, Soul, Life, Creation, Guardian, Gemstone, Harmony, LowStone, HighStone, Kundun)
   if (group === 14) {
+    if (
+      index === 11 || // Box of Kundun
+      index === 13 || // Jewel of Bless
+      index === 14 || // Jewel of Soul
+      index === 16 || // Jewel of Life
+      index === 22 || // Jewel of Creation
+      index === 31 || // Jewel of Guardian
+      index === 41 || // GemStone
+      index === 42 || // Harmony
+      index === 43 || // LowStone
+      index === 44    // HighStone
+    ) {
+      return false;
+    }
+
+    // Pociones y consumibles apilables oficiales (HP, MP, SD, Complex, Antidote, Apple, Ale, Town Portal, Remedy of Love)
     if (
       index !== undefined &&
       (index <= 10 ||
@@ -149,15 +165,25 @@ export function isItemStackable(group?: number, index?: number, category?: strin
     }
   }
 
+  // Chaos en grupo 12 index 15 NO es apilable individualmente
+  if (group === 12 && index === 15) {
+    return false;
+  }
+
+  // Loch's Feather (13, 14) y Crest of Monarch (13, 30) NO son apilables
+  if (group === 13 && (index === 14 || index === 30)) {
+    return false;
+  }
+
   // Grupo 4: Flechas y Dardos de Elfa (Ammunition)
   if (group === 4 && (index === 7 || index === 15)) {
     return true;
   }
 
-  // Por categoría canónica
+  // Por categoría canónica estricta (solo pociones y munición)
   if (category) {
     const c = category.toLowerCase();
-    if (c === 'potion' || c === 'consumable' || c === 'ammunition') {
+    if (c === 'potion' || c === 'ammunition') {
       return true;
     }
   }
