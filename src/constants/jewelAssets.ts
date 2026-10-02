@@ -97,3 +97,70 @@ export function getJewelImageByName(name: string): any | null {
   if (n.includes('kundun +5') || n.includes('kundun 5') || n.includes('kundun+5') || n.includes('box 5') || n.includes('bok5') || n.includes('bok 5')) return JEWEL_ASSET_IMAGES.Kundun5;
   return null;
 }
+
+/**
+ * Determina si un ítem corresponde a un paquete (Bundle) de joyas comprimidas de Mu Online
+ */
+export function isJewelBundle(group?: number, index?: number, name?: string): boolean {
+  if (group === 12 && (index === 30 || index === 31 || (index !== undefined && index >= 136 && index <= 143))) {
+    return true;
+  }
+  if (name) {
+    const n = name.toLowerCase();
+    if (n.includes('bundle') || n.includes('paquete') || n.includes('paq.')) return true;
+  }
+  return false;
+}
+
+/**
+ * Obtiene la cantidad de joyas que contiene un paquete comprimido (Season 6)
+ * Level 0 = 10 unidades
+ * Level 1 = 20 unidades
+ * Level 2 = 30 unidades
+ */
+export function getBundleQuantity(level?: number, durability?: number): number {
+  if (level !== undefined && level >= 0 && level <= 2) {
+    return (level + 1) * 10;
+  }
+  if (durability && durability > 2) {
+    return durability;
+  }
+  return 10;
+}
+
+/**
+ * Determina si un ítem es consumible apilable (Pociones HP/MP/SD/Complex, Flechas, Dardos, etc.)
+ */
+export function isItemStackable(group?: number, index?: number, category?: string): boolean {
+  if (isJewelBundle(group, index)) return false;
+
+  // Grupo 14: Pociones y consumibles (HP, MP, SD, Complex, Antidote, Apple, Ale, Town Portal, Rena)
+  if (group === 14) {
+    if (
+      index !== undefined &&
+      (index <= 10 ||
+        index === 20 ||
+        index === 21 ||
+        (index >= 35 && index <= 40) ||
+        index === 70 ||
+        index === 71)
+    ) {
+      return true;
+    }
+  }
+
+  // Grupo 4: Flechas y Dardos de Elfa (Ammunition)
+  if (group === 4 && (index === 7 || index === 15)) {
+    return true;
+  }
+
+  // Por categoría canónica
+  if (category) {
+    const c = category.toLowerCase();
+    if (c === 'potion' || c === 'consumable' || c === 'ammunition') {
+      return true;
+    }
+  }
+
+  return false;
+}

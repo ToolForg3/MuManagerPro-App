@@ -87,7 +87,9 @@ export const CharacterEditScreen = () => {
   const [zen, setZen] = useState('0');
   const [ruud, setRuud] = useState('0');
   const [level, setLevel] = useState('400');
-  const [levelModalVisible, setLevelModalVisible] = useState(false);
+  const [activeMetricModal, setActiveMetricModal] = useState<'level' | 'point' | 'reset' | 'granReset' | 'masterLevel' | null>(null);
+  const levelModalVisible = activeMetricModal === 'level';
+  const setLevelModalVisible = (val: boolean) => setActiveMetricModal(val ? 'level' : null);
   const [lvlPoints, setLvlPoints] = useState('0');
   const [mLevel, setMLevel] = useState('0');
   const [mPoints, setMPoints] = useState('0');
@@ -1546,32 +1548,58 @@ export const CharacterEditScreen = () => {
                 <View style={styles.stitchMetricsGrid}>
                   <TouchableOpacity
                     style={styles.stitchMetricBox}
-                    onPress={() => setLevelModalVisible(true)}
+                    onPress={() => setActiveMetricModal('level')}
                     activeOpacity={0.8}
+                    accessibilityLabel="Editar Nivel Base"
                   >
+                    <MuIcon name="pencil" size={10} color={THEME.colors.textMuted} style={styles.stitchMetricEditIcon} />
                     <Text style={styles.stitchMetricLabel}>LEVEL</Text>
                     <Text style={styles.stitchMetricValue}>{level}</Text>
                   </TouchableOpacity>
 
-                  <View style={[styles.stitchMetricBox, styles.stitchMetricBoxHighlight]}>
+                  <TouchableOpacity
+                    style={[styles.stitchMetricBox, styles.stitchMetricBoxHighlight]}
+                    onPress={() => setActiveMetricModal('point')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Editar Puntos Libres"
+                  >
+                    <MuIcon name="pencil" size={10} color={THEME.colors.oroClaro} style={styles.stitchMetricEditIcon} />
                     <Text style={[styles.stitchMetricLabel, { color: THEME.colors.oroClaro }]}>POINT</Text>
                     <Text style={[styles.stitchMetricValue, { color: THEME.colors.oroClaro }]}>{lvlPoints}</Text>
-                  </View>
+                  </TouchableOpacity>
 
-                  <View style={styles.stitchMetricBox}>
+                  <TouchableOpacity
+                    style={styles.stitchMetricBox}
+                    onPress={() => setActiveMetricModal('reset')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Editar Resets"
+                  >
+                    <MuIcon name="pencil" size={10} color={THEME.colors.textMuted} style={styles.stitchMetricEditIcon} />
                     <Text style={styles.stitchMetricLabel}>RESET</Text>
                     <Text style={styles.stitchMetricValue}>{resets}</Text>
-                  </View>
+                  </TouchableOpacity>
 
-                  <View style={styles.stitchMetricBox}>
+                  <TouchableOpacity
+                    style={styles.stitchMetricBox}
+                    onPress={() => setActiveMetricModal('granReset')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Editar Gran Reset"
+                  >
+                    <MuIcon name="pencil" size={10} color={THEME.colors.textMuted} style={styles.stitchMetricEditIcon} />
                     <Text style={styles.stitchMetricLabel}>GRAN RESET</Text>
                     <Text style={styles.stitchMetricValue}>{mResets}</Text>
-                  </View>
+                  </TouchableOpacity>
 
-                  <View style={[styles.stitchMetricBox, { flex: 2 }]}>
+                  <TouchableOpacity
+                    style={[styles.stitchMetricBox, { flex: 2 }]}
+                    onPress={() => setActiveMetricModal('masterLevel')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Editar Master Level"
+                  >
+                    <MuIcon name="pencil" size={10} color={THEME.colors.textMuted} style={styles.stitchMetricEditIcon} />
                     <Text style={styles.stitchMetricLabel}>MASTER LEVEL</Text>
                     <Text style={styles.stitchMetricValue}>{mLevel}</Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Botón Rápido +5000 Puntos Disponibles */}
@@ -3139,26 +3167,37 @@ export const CharacterEditScreen = () => {
         </View>
       </Modal>
 
-      {/* Modal de Edición Rápida de Nivel Base (cLevel) */}
+      {/* Modal Unificado de Edición de Métricas Clave (Stitch Approved Ironforge) */}
       <Modal
-        visible={levelModalVisible}
+        visible={activeMetricModal !== null}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setLevelModalVisible(false)}
+        onRequestClose={() => setActiveMetricModal(null)}
       >
         <View style={styles.levelModalOverlay}>
           <View style={styles.levelModalContent}>
             {/* Header */}
             <View style={styles.levelModalHeader}>
-              <View>
-                <Text style={styles.levelModalTitle}>EDITAR NIVEL BASE (cLevel)</Text>
-                <Text style={styles.levelModalSubtitle}>
-                  Personaje: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{character?.Name || charName}</Text> • Rango: 1 - 400
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={styles.levelModalTitle}>
+                  {activeMetricModal === 'level' && 'EDITAR NIVEL BASE (cLevel)'}
+                  {activeMetricModal === 'point' && 'EDITAR PUNTOS LIBRES (LevelUpPoint)'}
+                  {activeMetricModal === 'reset' && 'EDITAR RESETS (ResetCount)'}
+                  {activeMetricModal === 'granReset' && 'EDITAR GRAN RESET (MasterResetCount)'}
+                  {activeMetricModal === 'masterLevel' && 'EDITAR MASTER LEVEL (MasterLevel)'}
+                </Text>
+                <Text style={styles.levelModalSubtitle} numberOfLines={1}>
+                  Personaje: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{character?.Name || charName}</Text>
+                  {activeMetricModal === 'level' && ' • Rango: 1 - 400'}
+                  {activeMetricModal === 'point' && ' • Rango: 0 - 65,535'}
+                  {activeMetricModal === 'reset' && ' • Rango: 0 - 32,767'}
+                  {activeMetricModal === 'granReset' && ' • Rango: 0 - 32,767'}
+                  {activeMetricModal === 'masterLevel' && ' • Rango: 0 - 200'}
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.levelModalCloseBtn}
-                onPress={() => setLevelModalVisible(false)}
+                onPress={() => setActiveMetricModal(null)}
                 activeOpacity={0.7}
               >
                 <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
@@ -3167,18 +3206,63 @@ export const CharacterEditScreen = () => {
 
             {/* Presets Rápidos */}
             <View style={styles.levelModalQuickRow}>
-              {[
-                { val: '1', label: 'Nv 1' },
-                { val: '220', label: 'Nv 220' },
-                { val: '380', label: 'Nv 380' },
-                { val: '400', label: 'Nv 400 (MAX)' },
-              ].map((p) => {
-                const isActive = level === p.val;
+              {(activeMetricModal === 'level'
+                ? [
+                    { val: '1', label: 'Nv 1' },
+                    { val: '220', label: 'Nv 220' },
+                    { val: '380', label: 'Nv 380' },
+                    { val: '400', label: 'Nv 400 (MAX)' },
+                  ]
+                : activeMetricModal === 'point'
+                ? [
+                    { val: '0', label: '0 Pts' },
+                    { val: '5000', label: '5k' },
+                    { val: '15000', label: '15k' },
+                    { val: '32767', label: '32k' },
+                    { val: '65535', label: '65k' },
+                  ]
+                : activeMetricModal === 'reset'
+                ? [
+                    { val: '0', label: '0' },
+                    { val: '50', label: '50' },
+                    { val: '100', label: '100' },
+                    { val: '250', label: '250' },
+                    { val: '500', label: '500' },
+                  ]
+                : activeMetricModal === 'granReset'
+                ? [
+                    { val: '0', label: '0' },
+                    { val: '1', label: '1' },
+                    { val: '5', label: '5' },
+                    { val: '10', label: '10' },
+                    { val: '25', label: '25' },
+                  ]
+                : [
+                    { val: '0', label: '0' },
+                    { val: '50', label: '50' },
+                    { val: '100', label: '100' },
+                    { val: '150', label: '150' },
+                    { val: '200', label: '200 (MAX)' },
+                  ]
+              ).map((p) => {
+                const currentVal =
+                  activeMetricModal === 'level' ? level :
+                  activeMetricModal === 'point' ? lvlPoints :
+                  activeMetricModal === 'reset' ? resets :
+                  activeMetricModal === 'granReset' ? mResets :
+                  mLevel;
+                const isActive = currentVal === p.val;
                 return (
                   <TouchableOpacity
                     key={p.val}
                     style={styles.levelModalQuickBtnTouchable}
-                    onPress={() => setLevel(p.val)}
+                    onPress={() => {
+                      if (activeMetricModal === 'level') setLevel(p.val);
+                      else if (activeMetricModal === 'point') setLvlPoints(p.val);
+                      else if (activeMetricModal === 'reset') setResets(p.val);
+                      else if (activeMetricModal === 'granReset') setMResets(p.val);
+                      else if (activeMetricModal === 'masterLevel') setMLevel(p.val);
+                    }}
                     activeOpacity={0.7}
                   >
                     <ImageBackground
@@ -3196,78 +3280,126 @@ export const CharacterEditScreen = () => {
             </View>
 
             {/* Stepper e Input Centrado */}
-            <View style={styles.levelModalStepperRow}>
-              <TouchableOpacity
-                style={styles.levelModalStepBtnTouchable}
-                onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 10)))}
-                activeOpacity={0.7}
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.buttons.small}
-                  style={styles.levelModalStepBtnBg}
-                  resizeMode="stretch"
-                >
-                  <Text style={styles.levelModalStepBtnText}>-10</Text>
-                </ImageBackground>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.levelModalStepBtnTouchable}
-                onPress={() => setLevel(String(Math.max(1, (parseInt(level, 10) || 1) - 1)))}
-                activeOpacity={0.7}
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.buttons.small}
-                  style={styles.levelModalStepBtnBg}
-                  resizeMode="stretch"
-                >
-                  <Text style={styles.levelModalStepBtnText}>-1</Text>
-                </ImageBackground>
-              </TouchableOpacity>
+            {(() => {
+              const currentVal =
+                activeMetricModal === 'level' ? level :
+                activeMetricModal === 'point' ? lvlPoints :
+                activeMetricModal === 'reset' ? resets :
+                activeMetricModal === 'granReset' ? mResets :
+                mLevel;
+              const currentNum = parseInt(currentVal, 10) || 0;
+              const minVal = activeMetricModal === 'level' ? 1 : 0;
+              const maxVal =
+                activeMetricModal === 'level' ? 400 :
+                activeMetricModal === 'point' ? 65535 :
+                activeMetricModal === 'masterLevel' ? 200 :
+                32767;
+              const steps =
+                activeMetricModal === 'point' ? [-1000, -100, 100, 1000] :
+                activeMetricModal === 'granReset' ? [-5, -1, 1, 5] :
+                [-10, -1, 1, 10];
+              const maxLength = activeMetricModal === 'level' || activeMetricModal === 'masterLevel' ? 3 : 5;
 
-              <TextInput
-                style={styles.levelModalInput}
-                value={level}
-                onChangeText={(txt) => {
-                  const num = parseInt(txt.replace(/[^0-9]/g, ''), 10);
-                  if (isNaN(num)) setLevel('');
-                  else setLevel(String(Math.max(1, Math.min(400, num))));
-                }}
-                keyboardType="numeric"
-                selectTextOnFocus
-                maxLength={3}
-              />
+              const updateVal = (newNum: number) => {
+                const clamped = Math.max(minVal, Math.min(maxVal, newNum));
+                if (activeMetricModal === 'level') setLevel(String(clamped));
+                else if (activeMetricModal === 'point') setLvlPoints(String(clamped));
+                else if (activeMetricModal === 'reset') setResets(String(clamped));
+                else if (activeMetricModal === 'granReset') setMResets(String(clamped));
+                else if (activeMetricModal === 'masterLevel') setMLevel(String(clamped));
+              };
 
-              <TouchableOpacity
-                style={styles.levelModalStepBtnTouchable}
-                onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 1)))}
-                activeOpacity={0.7}
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.buttons.small}
-                  style={styles.levelModalStepBtnBg}
-                  resizeMode="stretch"
-                >
-                  <Text style={styles.levelModalStepBtnText}>+1</Text>
-                </ImageBackground>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.levelModalStepBtnTouchable}
-                onPress={() => setLevel(String(Math.min(400, (parseInt(level, 10) || 1) + 10)))}
-                activeOpacity={0.7}
-              >
-                <ImageBackground
-                  source={STITCH_ASSETS.buttons.small}
-                  style={styles.levelModalStepBtnBg}
-                  resizeMode="stretch"
-                >
-                  <Text style={styles.levelModalStepBtnText}>+10</Text>
-                </ImageBackground>
-              </TouchableOpacity>
-            </View>
+              return (
+                <View style={styles.levelModalStepperRow}>
+                  <TouchableOpacity
+                    style={styles.levelModalStepBtnTouchable}
+                    onPress={() => updateVal(currentNum + steps[0])}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={styles.levelModalStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.levelModalStepBtnText}>{steps[0] > 0 ? `+${steps[0]}` : String(steps[0])}</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
 
-            {/* Nota informativa Season 6 */}
+                  <TouchableOpacity
+                    style={styles.levelModalStepBtnTouchable}
+                    onPress={() => updateVal(currentNum + steps[1])}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={styles.levelModalStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.levelModalStepBtnText}>{steps[1] > 0 ? `+${steps[1]}` : String(steps[1])}</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TextInput
+                    style={[styles.levelModalInput, { minWidth: 96, paddingHorizontal: 6 }]}
+                    value={currentVal}
+                    onChangeText={(txt) => {
+                      const cleaned = txt.replace(/[^0-9]/g, '');
+                      if (cleaned === '') {
+                        if (activeMetricModal === 'level') setLevel('');
+                        else if (activeMetricModal === 'point') setLvlPoints('');
+                        else if (activeMetricModal === 'reset') setResets('');
+                        else if (activeMetricModal === 'granReset') setMResets('');
+                        else if (activeMetricModal === 'masterLevel') setMLevel('');
+                      } else {
+                        const parsed = parseInt(cleaned, 10);
+                        if (!isNaN(parsed)) {
+                          updateVal(parsed);
+                        }
+                      }
+                    }}
+                    keyboardType="numeric"
+                    selectTextOnFocus
+                    maxLength={maxLength}
+                  />
+
+                  <TouchableOpacity
+                    style={styles.levelModalStepBtnTouchable}
+                    onPress={() => updateVal(currentNum + steps[2])}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={styles.levelModalStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.levelModalStepBtnText}>{steps[2] > 0 ? `+${steps[2]}` : String(steps[2])}</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.levelModalStepBtnTouchable}
+                    onPress={() => updateVal(currentNum + steps[3])}
+                    activeOpacity={0.7}
+                  >
+                    <ImageBackground
+                      source={STITCH_ASSETS.buttons.small}
+                      style={styles.levelModalStepBtnBg}
+                      resizeMode="stretch"
+                    >
+                      <Text style={styles.levelModalStepBtnText}>{steps[3] > 0 ? `+${steps[3]}` : String(steps[3])}</Text>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+              );
+            })()}
+
+            {/* Nota informativa */}
             <Text style={styles.levelModalDesc}>
-              El nivel base determina las fórmulas de ataque, defensa, evolución de clase y requerimientos de equipo (cLevel oficial: 1 a 400).
+              {activeMetricModal === 'level' && 'El nivel base determina las fórmulas de ataque, defensa, evolución de clase y requerimientos de equipo (cLevel oficial: 1 a 400).'}
+              {activeMetricModal === 'point' && 'Puntos de nivel acumulados para distribuir libremente entre Fuerza, Agilidad, Vitalidad, Energía o Comando.'}
+              {activeMetricModal === 'reset' && 'Cantidad de reinicios acumulados por el personaje al alcanzar nivel 400. Influye en recompensas, ranking y fórmulas de daño del servidor.'}
+              {activeMetricModal === 'granReset' && 'Gran Reset (Master Reset) acumulado tras alcanzar el tope de resets configurado en el servidor. Otorga monedas especiales y prestigio.'}
+              {activeMetricModal === 'masterLevel' && 'Nivel de Maestro (Master Level) para personajes de 3ra clase evolución (Master Tree). Otorga puntos para el árbol de habilidades especiales.'}
             </Text>
 
             {/* Acciones */}
@@ -3276,17 +3408,26 @@ export const CharacterEditScreen = () => {
                 titulo="Cerrar"
                 variante="secondary"
                 altura={42}
-                onPress={() => setLevelModalVisible(false)}
+                onPress={() => setActiveMetricModal(null)}
               />
               <MuButton
-                titulo="Guardar Nivel en SQL"
+                titulo={
+                  activeMetricModal === 'point'
+                    ? 'Guardar Puntos en SQL'
+                    : `Guardar ${activeMetricModal === 'level' ? 'Nivel' : activeMetricModal === 'reset' ? 'Resets' : activeMetricModal === 'granReset' ? 'Gran Reset' : 'Master Level'} en SQL`
+                }
                 icono="content-save"
                 variante="primary"
                 altura={42}
-                disabled={savingProgress}
+                disabled={activeMetricModal === 'point' ? saving : savingProgress}
                 onPress={() => {
-                  setLevelModalVisible(false);
-                  handleSaveProgress();
+                  const targetModal = activeMetricModal;
+                  setActiveMetricModal(null);
+                  if (targetModal === 'point') {
+                    handleSaveStats();
+                  } else {
+                    handleSaveProgress();
+                  }
                 }}
               />
             </View>
@@ -3561,6 +3702,13 @@ const styles = StyleSheet.create({
     padding: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  stitchMetricEditIcon: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    opacity: 0.5,
   },
   stitchMetricBoxHighlight: {
     borderTopColor: '#EFD28D',

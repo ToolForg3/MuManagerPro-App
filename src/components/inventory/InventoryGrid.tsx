@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, ImageBac
 import { THEME } from '../../constants/theme';
 import { ParsedItem } from '../../types/item';
 import { ItemImage } from '../common/ItemImage';
+import { isJewelBundle, getBundleQuantity, isItemStackable } from '../../constants/jewelAssets';
 
 interface InventoryGridProps {
   startSlot: number;
@@ -170,14 +171,26 @@ export const InventoryGrid: React.FC<InventoryGridProps> = memo(({
             fallbackColor={cardBorderColor}
           />
 
-          {/* Badges de nivel y rareza */}
-          {item.level > 0 && (
+          {/* Badges de nivel, paquete (bundle) o cantidad apilada (pociones/municiones) */}
+          {isJewelBundle(item.group, item.index, item.name) ? (
+            <View style={styles.bundleBadgeContainer}>
+              <Text style={styles.bundleBadgeText}>
+                x{getBundleQuantity(item.level, item.durability)}
+              </Text>
+            </View>
+          ) : isItemStackable(item.group, item.index, item.category) ? (
+            <View style={[styles.stackBadgeContainer, (item.durability ?? 1) >= 255 && styles.stackBadgeMax]}>
+              <Text style={[styles.stackBadgeText, (item.durability ?? 1) >= 255 && styles.stackBadgeTextMax]}>
+                x{item.durability ?? 1}
+              </Text>
+            </View>
+          ) : item.level > 0 ? (
             <View style={[styles.levelBadgeContainer, { borderColor: cardBorderColor }]}>
               <Text style={[styles.levelBadgeText, { color: rarityColor }]}>
                 +{item.level}
               </Text>
             </View>
-          )}
+          ) : null}
 
           {/* Indicador de Ítem Seleccionado para Mover */}
           {isThisMoving && (
@@ -334,6 +347,47 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: '900',
     ...THEME.effects.textShadow,
+  },
+  bundleBadgeContainer: {
+    position: 'absolute',
+    bottom: 1,
+    right: 1,
+    backgroundColor: 'rgba(10, 9, 6, 0.95)',
+    borderWidth: 1,
+    borderColor: '#EFD28D',
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
+    borderRadius: 2,
+  },
+  bundleBadgeText: {
+    color: '#FEDF99',
+    fontSize: 9.5,
+    fontWeight: '900',
+    ...THEME.effects.textShadowHigh,
+  },
+  stackBadgeContainer: {
+    position: 'absolute',
+    bottom: 1,
+    right: 1,
+    backgroundColor: 'rgba(7, 10, 15, 0.92)',
+    borderWidth: 0.8,
+    borderColor: '#717882',
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
+    borderRadius: 2,
+  },
+  stackBadgeMax: {
+    borderColor: '#EFD28D',
+    backgroundColor: 'rgba(14, 12, 6, 0.95)',
+  },
+  stackBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9.5,
+    fontWeight: '900',
+    ...THEME.effects.textShadowHigh,
+  },
+  stackBadgeTextMax: {
+    color: '#FEDF99',
   },
   topBadgeRow: {
     position: 'absolute',

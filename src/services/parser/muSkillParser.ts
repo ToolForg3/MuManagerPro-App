@@ -58,14 +58,64 @@ export class MuSkillParser {
         continue;
       }
 
-      const skillLevel = isNaN(b2) ? 0 : b2;
-      const def = getSkillById(skillId);
+      // Mapeo canónico del Árbol de Habilidades Maestras de Mu Online Season 6 (Louis & Webzen)
+      // Mapea TreeIndex (b0) -> Skill ID canónico en caso de que b1 contenga el nivel asignado (1..20)
+      const MASTER_TREE_INDEX_MAP: Record<number, number> = {
+        41: 326, // Cyclone Strengthener
+        42: 327, // Slash Strengthener
+        43: 328, // Falling Slash Strengthener
+        44: 329, // Lunge Strengthener
+        45: 330, // Twisting Slash Strengthener
+        46: 331, // Rageful Blow Strengthener
+        49: 332, // Twisting Slash Mastery
+        50: 333, // Rageful Blow Mastery
+        51: 334, // Maximum Life Increase
+        52: 335, // Weapon Mastery
+        53: 336, // Death Stab Strengthener
+        54: 337, // Strike of Destruction Strengthener
+        57: 339, // Death Stab Proficiency
+        58: 340, // Strike of Destruction Proficiency
+        61: 342, // Death Stab Mastery
+        62: 343, // Strike of Destruction Mastery
+        65: 345, // Combo Strengthener
+        66: 344, // Fire Slash (Master)
+        70: 346, // Sword Slash / Blood Storm
+        73: 347, // PvP Attack Rate
+        76: 76,  // Plasma Storm (Fenrir) / Recovery (Master)
+        77: 348, // Two-Handed Sword Strengthener
+        78: 349, // One-Handed Sword Strengthener
+        79: 350, // Mace Strengthener
+        80: 351, // Spear Strengthener
+        81: 352, // Two-Handed Sword Mastery
+        82: 353, // One-Handed Sword Mastery
+        83: 354, // Mace Mastery
+        84: 355, // Spear Mastery
+        85: 356, // Swell Life Strengthener
+        89: 360, // Swell Life Proficiency
+        93: 363, // Swell Life Mastery
+      };
+
+      // 1. Búsqueda por ID directo o ID compuesto ya registrado
+      let def = getSkillById(skillId);
+      let resolvedLevel = isNaN(b2) ? 0 : b2;
+
+      // 2. Si no se encontró por ID directo, verificar si b1 es el nivel del árbol (1..20) y b0 es el TreeIndex
+      if (!def && b1 > 0 && b1 <= 20) {
+        resolvedLevel = b1;
+        const mappedMasterSkillId = MASTER_TREE_INDEX_MAP[b0] || (b0 === 76 ? 76 : undefined);
+        if (mappedMasterSkillId) {
+          def = getSkillById(mappedMasterSkillId);
+        } else {
+          // Búsqueda directa por b0 si existe en el catálogo básico
+          def = getSkillById(b0);
+        }
+      }
 
       if (def) {
         parsedSkills.push({
           slotIndex: slot,
           id: skillId,
-          level: skillLevel,
+          level: resolvedLevel > 0 ? resolvedLevel : (def.name.includes('Nv.') ? parseInt(def.name.match(/Nv\.\s*(\d+)/)?.[1] || '0', 10) : 0),
           name: def.name,
           nameEs: def.nameEs,
           category: def.category,
@@ -77,7 +127,7 @@ export class MuSkillParser {
         parsedSkills.push({
           slotIndex: slot,
           id: skillId,
-          level: skillLevel,
+          level: resolvedLevel,
           name: `Skill #${skillId}`,
           nameEs: `Habilidad #${skillId}`,
           category: 'Especial',

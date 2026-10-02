@@ -16,6 +16,7 @@ import { getAncientInfo } from '../../constants/ancientCatalog';
 import { Panel } from '../ui/Panel';
 import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { MuButton } from '../ui/MuButton';
+import { isJewelBundle, getBundleQuantity, isItemStackable } from '../../constants/jewelAssets';
 
 interface ItemActionModalProps {
   visible: boolean;
@@ -122,9 +123,28 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
             <Text style={styles.sectionHeader}>Básico</Text>
             
             <View style={styles.attrList}>
-              <Text style={styles.attrLine}>• Level: +{item.level}</Text>
-              <Text style={styles.attrLine}>• Option: +{item.option * 4}</Text>
-              <Text style={styles.attrLine}>• Durability: {item.durability}</Text>
+              {isJewelBundle(item.group, item.index, item.name) ? (
+                <>
+                  <Text style={[styles.attrLine, { color: THEME.colors.oroClaro, fontWeight: 'bold' }]}>
+                    • Paquete (Bundle): {getBundleQuantity(item.level, item.durability)} Joyas
+                  </Text>
+                  <Text style={styles.attrLine}>• Nivel del Paquete: +{item.level} (x{getBundleQuantity(item.level, item.durability)})</Text>
+                  <Text style={styles.attrLine}>• Durabilidad: {item.durability}</Text>
+                </>
+              ) : isItemStackable(item.group, item.index, item.category) ? (
+                <>
+                  <Text style={[styles.attrLine, { color: THEME.colors.oroClaro, fontWeight: 'bold' }]}>
+                    • Cantidad en Pila: {item.durability ?? 1} / 255 unidades
+                  </Text>
+                  {item.level > 0 && <Text style={styles.attrLine}>• Nivel / Grado: +{item.level}</Text>}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.attrLine}>• Level: +{item.level}</Text>
+                  <Text style={styles.attrLine}>• Option: +{item.option * 4}</Text>
+                  <Text style={styles.attrLine}>• Durability: {item.durability}</Text>
+                </>
+              )}
               {item.luck ? <Text style={styles.attrLine}>• Luck (Suerte)</Text> : null}
               {item.skill ? <Text style={styles.attrLine}>• Skill (Habilidad)</Text> : null}
             </View>

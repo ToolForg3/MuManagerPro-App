@@ -3,10 +3,10 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.4.0",
-  "latestBuild": 142,
+  "latestVersion": "2.4.1",
+  "latestBuild": 143,
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.4.0 (Build 142) - Conexión Inteligente Dual & Blindaje Universal:\n• CONEXIÓN DUAL CON/SIN CONECTOR: Elige libremente entre Modo Directo SQL (1433 vía Gateway) o Conector Seguro (3001 vía MuManager-Connector en VPS).\n• DETECCIÓN Y CAMBIO BIDIRECCIONAL: La APK detecta automáticamente el puerto configurado y adapta el modo de conexión y placeholders.\n• HERRAMIENTA UNIVERSAL DE APERTURA: Nuevo script oficial 'Configurador-SQL-Remoto-1433.bat' para apertura segura del puerto SQL en Windows en 1 clic.\n• PERFILES MULTI-SERVIDOR CON BADGES: Identificación visual en verde para Conector 3001 y dorado para Directo 1433 en perfiles guardados.\n• DISEÑO STITCH APPROVED IRONFORGE: Botones y selectores con texturas metálicas nativas MU Season 6, 100% WCAG AAA y contrastes dorados nítidos.",
+  "updateChangelog": "MuManager PRO v2.4.1 (Build 143) - Métricas Interactivas, Apilado x255 y Master Skills:\n• MÉTRICAS CLAVE EDITABLES: Todos los 5 indicadores (Level, Points, Reset, Gran Reset, Master Level) ahora son 100% interactivos con modales dedicados, presets rápidos, steppers y guardado directo en SQL Server.\n• APILADO Y BUNDLES VISUALES: Visualización directa de pociones apiladas (hasta x255), flechas y paquetes de joyas (x10, x20, x30) en cuadrículas de inventario, baúl y modales de inspección.\n• HABILIDADES DEL ÁRBOL MASTER: Decodificación exacta de IDs compuestos y asignación de texturas e iconos nativos oficiales del cliente MU Season 6 para skills evolucionados (Blood Storm, Plasma Storm, Sword Slash, etc.).\n• BLINDAJE STITCH APPROVED IRONFORGE: Acabados metálicos chiseled, alto contraste WCAG AAA y cero texto plano.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": null,
@@ -75,15 +75,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.4.0 (Build 142)",
+  "updateTitle": "MuManager PRO v2.4.1 (Build 143)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 142,
+  "versionCode": 143,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.4.0 (Build 142) - Conexión Inteligente Dual & Blindaje Universal:\n• CONEXIÓN DUAL CON/SIN CONECTOR: Elige libremente entre Modo Directo SQL (1433 vía Gateway) o Conector Seguro (3001 vía MuManager-Connector en VPS).\n• DETECCIÓN Y CAMBIO BIDIRECCIONAL: La APK detecta automáticamente el puerto configurado y adapta el modo de conexión y placeholders.\n• HERRAMIENTA UNIVERSAL DE APERTURA: Nuevo script oficial 'Configurador-SQL-Remoto-1433.bat' para apertura segura del puerto SQL en Windows en 1 clic.\n• PERFILES MULTI-SERVIDOR CON BADGES: Identificación visual en verde para Conector 3001 y dorado para Directo 1433 en perfiles guardados.\n• DISEÑO STITCH APPROVED IRONFORGE: Botones y selectores con texturas metálicas nativas MU Season 6, 100% WCAG AAA y contrastes dorados nítidos.",
+  "releaseNotes": "MuManager PRO v2.4.1 (Build 143) - Métricas Interactivas, Apilado x255 y Master Skills:\n• MÉTRICAS CLAVE EDITABLES: Todos los 5 indicadores (Level, Points, Reset, Gran Reset, Master Level) ahora son 100% interactivos con modales dedicados, presets rápidos, steppers y guardado directo en SQL Server.\n• APILADO Y BUNDLES VISUALES: Visualización directa de pociones apiladas (hasta x255), flechas y paquetes de joyas (x10, x20, x30) en cuadrículas de inventario, baúl y modales de inspección.\n• HABILIDADES DEL ÁRBOL MASTER: Decodificación exacta de IDs compuestos y asignación de texturas e iconos nativos oficiales del cliente MU Season 6 para skills evolucionados (Blood Storm, Plasma Storm, Sword Slash, etc.).\n• BLINDAJE STITCH APPROVED IRONFORGE: Acabados metálicos chiseled, alto contraste WCAG AAA y cero texto plano.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.4.0",
-  "buildNumber": 142,
+  "appVersion": "2.4.1",
+  "buildNumber": 143,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -95,6 +95,6 @@
       "pass": ""
     }
   },
-  "version": "2.4.0",
-  "build": 142
+  "version": "2.4.1",
+  "build": 143
 }

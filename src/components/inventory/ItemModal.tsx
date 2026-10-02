@@ -42,6 +42,7 @@ import {
   getQuickSocketOptions,
   SEED_SPHERE_LEVELS,
 } from '../../constants/socketCatalog';
+import { isJewelBundle, getBundleQuantity, isItemStackable } from '../../constants/jewelAssets';
 
 interface ItemModalProps {
   visible: boolean;
@@ -258,58 +259,109 @@ export const ItemModal: React.FC<ItemModalProps> = ({
             <View style={styles.section}>
               <Text style={styles.sectionHeading}>NIVEL Y OPCIÓN</Text>
 
-              {/* Level Control */}
+              {/* Level Control / Bundle Size */}
               <View style={styles.rowItem}>
-                <Text style={styles.rowLabel}>Nivel (+0 a +15):</Text>
+                <Text style={styles.rowLabel}>
+                  {isJewelBundle(editedItem.group, editedItem.index, editedItem.name)
+                    ? 'Paquete de Joyas (Bundle):'
+                    : 'Nivel (+0 a +15):'}
+                </Text>
                 {isEditing ? (
-                  <View style={styles.stepper}>
-                    <TouchableOpacity
-                      style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
-                      onPress={() =>
-                        setEditedItem({ ...editedItem, level: Math.max(0, editedItem.level - 1), isModified: true })
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <ImageBackground
-                        source={STITCH_ASSETS.buttons.small}
-                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
-                        resizeMode="stretch"
+                  isJewelBundle(editedItem.group, editedItem.index, editedItem.name) ? (
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      {[
+                        { lvl: 0, count: 10, label: 'x10 Joyas' },
+                        { lvl: 1, count: 20, label: 'x20 Joyas' },
+                        { lvl: 2, count: 30, label: 'x30 Joyas' },
+                      ].map((b) => {
+                        const isSelected = editedItem.level === b.lvl;
+                        return (
+                          <TouchableOpacity
+                            key={`bundle_lvl_${b.lvl}`}
+                            style={{ height: 32, borderRadius: 2, overflow: 'hidden' }}
+                            onPress={() =>
+                              setEditedItem({
+                                ...editedItem,
+                                level: b.lvl,
+                                durability: b.count,
+                                isModified: true,
+                              })
+                            }
+                            activeOpacity={0.7}
+                          >
+                            <ImageBackground
+                              source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              style={{ height: '100%', paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}
+                              resizeMode="stretch"
+                            >
+                              <Text
+                                style={{
+                                  color: isSelected ? THEME.colors.oroClaro : THEME.colors.textoSecundarioLuminoso,
+                                  fontSize: 11,
+                                  fontWeight: 'bold',
+                                }}
+                              >
+                                {b.label}
+                              </Text>
+                            </ImageBackground>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <View style={styles.stepper}>
+                      <TouchableOpacity
+                        style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() =>
+                          setEditedItem({ ...editedItem, level: Math.max(0, editedItem.level - 1), isModified: true })
+                        }
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.stepBtnText}>-</Text>
-                      </ImageBackground>
-                    </TouchableOpacity>
-                    <Text style={styles.stepperVal}>+{editedItem.level}</Text>
-                    <TouchableOpacity
-                      style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
-                      onPress={() =>
-                        setEditedItem({ ...editedItem, level: Math.min(15, editedItem.level + 1), isModified: true })
-                      }
-                      activeOpacity={0.7}
-                    >
-                      <ImageBackground
-                        source={STITCH_ASSETS.buttons.small}
-                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
-                        resizeMode="stretch"
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.stepBtnText}>-</Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                      <Text style={styles.stepperVal}>+{editedItem.level}</Text>
+                      <TouchableOpacity
+                        style={{ width: 38, height: 38, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() =>
+                          setEditedItem({ ...editedItem, level: Math.min(15, editedItem.level + 1), isModified: true })
+                        }
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.stepBtnText}>+</Text>
-                      </ImageBackground>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
-                      onPress={() => setEditedItem({ ...editedItem, level: 15, isModified: true })}
-                      activeOpacity={0.7}
-                    >
-                      <ImageBackground
-                        source={STITCH_ASSETS.tabs.tabModeActive}
-                        style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
-                        resizeMode="stretch"
+                        <ImageBackground
+                          source={STITCH_ASSETS.buttons.small}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.stepBtnText}>+</Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{ width: 48, height: 38, borderRadius: 2, overflow: 'hidden', marginLeft: 4 }}
+                        onPress={() => setEditedItem({ ...editedItem, level: 15, isModified: true })}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.maxBtnText}>MAX</Text>
-                      </ImageBackground>
-                    </TouchableOpacity>
-                  </View>
+                        <ImageBackground
+                          source={STITCH_ASSETS.tabs.tabModeActive}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text style={styles.maxBtnText}>MAX</Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    </View>
+                  )
                 ) : (
-                  <Text style={styles.rowVal}>+{editedItem.level}</Text>
+                  <Text style={styles.rowVal}>
+                    {isJewelBundle(editedItem.group, editedItem.index, editedItem.name)
+                      ? `x${getBundleQuantity(editedItem.level, editedItem.durability)} Joyas (+${editedItem.level})`
+                      : `+${editedItem.level}`}
+                  </Text>
                 )}
               </View>
 

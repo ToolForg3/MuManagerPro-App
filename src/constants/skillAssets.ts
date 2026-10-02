@@ -90,6 +90,44 @@ export const SKILL_ASSET_IMAGES: Record<number, any> = {
   268: require('../../assets/skills/skill_268.png'),
   269: require('../../assets/skills/skill_269.png'),
   270: require('../../assets/skills/skill_270.png'),
+
+  // Habilidades Maestras y Especiales (Season 6)
+  76: require('../../assets/skills/skill_44.png'), // Plasma Storm (Fenrir)
+  326: require('../../assets/skills/skill_22.png'), // Cyclone Strengthener
+  327: require('../../assets/skills/skill_23.png'), // Slash Strengthener
+  328: require('../../assets/skills/skill_19.png'), // Falling Slash Strengthener
+  329: require('../../assets/skills/skill_20.png'), // Lunge Strengthener
+  330: require('../../assets/skills/skill_41.png'), // Twisting Slash Strengthener
+  331: require('../../assets/skills/skill_42.png'), // Rageful Blow Strengthener
+  332: require('../../assets/skills/skill_41.png'), // Twisting Slash Mastery
+  333: require('../../assets/skills/skill_42.png'), // Rageful Blow Mastery
+  336: require('../../assets/skills/skill_43.png'), // Death Stab Strengthener
+  337: require('../../assets/skills/skill_232.png'), // Strike of Destruction Strengthener
+  339: require('../../assets/skills/skill_43.png'), // Death Stab Proficiency
+  340: require('../../assets/skills/skill_232.png'), // Strike of Destruction Proficiency
+  342: require('../../assets/skills/skill_43.png'), // Death Stab Mastery
+  343: require('../../assets/skills/skill_232.png'), // Strike of Destruction Mastery
+  344: require('../../assets/skills/skill_55.png'), // Fire Slash (Master)
+  345: require('../../assets/skills/skill_111.png'), // Combo Strengthener
+  346: require('../../assets/skills/skill_232.png'), // Sword Slash / Blood Storm
+  347: require('../../assets/skills/skill_44.png'), // PvP Attack Rate
+  348: require('../../assets/skills/skill_23.png'), // Two-Handed Sword Strengthener
+  349: require('../../assets/skills/skill_23.png'), // One-Handed Sword Strengthener
+  350: require('../../assets/skills/skill_18.png'), // Mace Strengthener
+  351: require('../../assets/skills/skill_20.png'), // Spear Strengthener
+  352: require('../../assets/skills/skill_23.png'), // Two-Handed Sword Mastery
+  353: require('../../assets/skills/skill_23.png'), // One-Handed Sword Mastery
+  354: require('../../assets/skills/skill_18.png'), // Mace Mastery
+  355: require('../../assets/skills/skill_20.png'), // Spear Mastery
+  356: require('../../assets/skills/skill_48.png'), // Swell Life Strengthener
+  360: require('../../assets/skills/skill_48.png'), // Swell Life Proficiency
+  363: require('../../assets/skills/skill_48.png'), // Swell Life Mastery
+
+  // Mapeos de IDs compuestos del Árbol Maestro (Season 6 MagicList)
+  4678: require('../../assets/skills/skill_232.png'), // Sword Slash / Blood Storm [Nv. 18]
+  4684: require('../../assets/skills/skill_44.png'), // Plasma Storm / Master Recovery [Nv. 18]
+  1613: require('../../assets/skills/skill_23.png'), // Two-Handed Sword Strengthener [Nv. 6]
+  4688: require('../../assets/skills/skill_20.png'), // Spear Strengthener [Nv. 18]
 };
 
 export const SKILL_UNKNOWN_IMAGE = require('../../assets/skills/skill_unknown.png');
@@ -185,6 +223,44 @@ export const SKILL_CLEAN_ASSET_IMAGES: Record<number, any> = {
   268: require('../../assets/skills/clean/skill_268.png'),
   269: require('../../assets/skills/clean/skill_269.png'),
   270: require('../../assets/skills/clean/skill_270.png'),
+
+  // Habilidades Maestras y Especiales (Season 6) - Clean Sprites
+  76: require('../../assets/skills/clean/skill_44.png'), // Plasma Storm (Fenrir)
+  326: require('../../assets/skills/clean/skill_22.png'), // Cyclone Strengthener
+  327: require('../../assets/skills/clean/skill_23.png'), // Slash Strengthener
+  328: require('../../assets/skills/clean/skill_19.png'), // Falling Slash Strengthener
+  329: require('../../assets/skills/clean/skill_20.png'), // Lunge Strengthener
+  330: require('../../assets/skills/clean/skill_41.png'), // Twisting Slash Strengthener
+  331: require('../../assets/skills/clean/skill_42.png'), // Rageful Blow Strengthener
+  332: require('../../assets/skills/clean/skill_41.png'), // Twisting Slash Mastery
+  333: require('../../assets/skills/clean/skill_42.png'), // Rageful Blow Mastery
+  336: require('../../assets/skills/clean/skill_43.png'), // Death Stab Strengthener
+  337: require('../../assets/skills/clean/skill_232.png'), // Strike of Destruction Strengthener
+  339: require('../../assets/skills/clean/skill_43.png'), // Death Stab Proficiency
+  340: require('../../assets/skills/clean/skill_232.png'), // Strike of Destruction Proficiency
+  342: require('../../assets/skills/clean/skill_43.png'), // Death Stab Mastery
+  343: require('../../assets/skills/clean/skill_232.png'), // Strike of Destruction Mastery
+  344: require('../../assets/skills/clean/skill_55.png'), // Fire Slash (Master)
+  345: require('../../assets/skills/clean/skill_111.png'), // Combo Strengthener
+  346: require('../../assets/skills/clean/skill_232.png'), // Sword Slash / Blood Storm
+  347: require('../../assets/skills/clean/skill_44.png'), // PvP Attack Rate
+  348: require('../../assets/skills/clean/skill_23.png'), // Two-Handed Sword Strengthener
+  349: require('../../assets/skills/clean/skill_23.png'), // One-Handed Sword Strengthener
+  350: require('../../assets/skills/clean/skill_18.png'), // Mace Strengthener
+  351: require('../../assets/skills/clean/skill_20.png'), // Spear Strengthener
+  352: require('../../assets/skills/clean/skill_23.png'), // Two-Handed Sword Mastery
+  353: require('../../assets/skills/clean/skill_23.png'), // One-Handed Sword Mastery
+  354: require('../../assets/skills/clean/skill_18.png'), // Mace Mastery
+  355: require('../../assets/skills/clean/skill_20.png'), // Spear Mastery
+  356: require('../../assets/skills/clean/skill_48.png'), // Swell Life Strengthener
+  360: require('../../assets/skills/clean/skill_48.png'), // Swell Life Proficiency
+  363: require('../../assets/skills/clean/skill_48.png'), // Swell Life Mastery
+
+  // Mapeos de IDs compuestos del Árbol Maestro (Season 6 MagicList)
+  4678: require('../../assets/skills/clean/skill_232.png'), // Sword Slash / Blood Storm [Nv. 18]
+  4684: require('../../assets/skills/clean/skill_44.png'), // Plasma Storm / Master Recovery [Nv. 18]
+  1613: require('../../assets/skills/clean/skill_23.png'), // Two-Handed Sword Strengthener [Nv. 6]
+  4688: require('../../assets/skills/clean/skill_20.png'), // Spear Strengthener [Nv. 18]
 };
 
 export const SKILL_CLEAN_UNKNOWN_IMAGE = require('../../assets/skills/clean/skill_unknown.png');
