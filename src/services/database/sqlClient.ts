@@ -149,6 +149,7 @@ export class SqlClient {
       bridgeUrl: SqlClient.DEFAULT_CLOUD_GATEWAY,
       useBridge: true,
       emulatorType: 'MSPro',
+      connectionMode: 'direct',
     };
   }
 
@@ -159,11 +160,14 @@ export class SqlClient {
         try {
           const parsed = JSON.parse(saved);
           if (parsed && typeof parsed === 'object') {
-            if (parsed.bridgeUrl && (parsed.bridgeUrl.includes('onrender.com') || parsed.bridgeUrl.includes('localhost') || parsed.bridgeUrl.includes('127.0.0.1') || parsed.bridgeUrl.includes('mumanagerpro.vercel.app'))) {
+            if (parsed.bridgeUrl && (parsed.bridgeUrl.includes('onrender.com') || parsed.bridgeUrl.includes('mumanagerpro.vercel.app'))) {
               parsed.bridgeUrl = this.DEFAULT_CLOUD_GATEWAY;
             }
             if (parsed.useBridge === undefined) {
               parsed.useBridge = true;
+            }
+            if (!parsed.connectionMode) {
+              parsed.connectionMode = (parsed.port === 3001 || parsed.port === 30001) ? 'connector' : 'direct';
             }
             this.config = { ...this.config, ...parsed };
           }
@@ -249,8 +253,16 @@ export class SqlClient {
   }
 
   public static getBridgeUrl(): string {
-    let url = (this.config.bridgeUrl || '').trim();
-    if (!url || url.includes('127.0.0.1') || url.includes('localhost') || url.includes('onrender.com')) {
+    const isConnector = (this.config?.connectionMode === 'connector') || (this.config?.port === 3001) || (this.config?.port === 30001);
+    if (isConnector) {
+      const rawHost = (this.config?.host || '').trim() || '127.0.0.1';
+      const port = this.config?.port || 3001;
+      const protocol = this.config?.encrypt ? 'https' : 'http';
+      return `${protocol}://${rawHost}:${port}`;
+    }
+
+    let url = (this.config?.bridgeUrl || '').trim();
+    if (!url || url.includes('127.0.0.1') || url.includes('localhost') || url.includes('onrender.com') || url.includes('mumanagerpro.vercel.app')) {
       url = this.DEFAULT_CLOUD_GATEWAY;
     }
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -351,8 +363,19 @@ export class SqlClient {
       attempt++;
       const hwid = await SecurityService.getDeviceHwid();
       const effectiveAdminKey = await this.getStoredAdminKey();
-      const sessionToken = await this.getSessionToken();
-      const bodyStr = JSON.stringify(bodyPayload);
+      const isConnector = (this.config?.connectionMode === 'connector') || (this.config?.port === 3001) || (this.config?.port === 30001);
+      let effectivePayload = bodyPayload;
+      if (isConnector && bodyPayload && bodyPayload.config) {
+        effectivePayload = {
+          ...bodyPayload,
+          config: {
+            ...bodyPayload.config,
+            host: 'localhost',
+            port: 1433,
+          },
+        };
+      }
+      const bodyStr = JSON.stringify(effectivePayload);
       const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
 
       const bridgeUrl = this.getBridgeUrl();
@@ -369,8 +392,8 @@ export class SqlClient {
           ...secHeaders,
           ...(licKey ? { 'X-License-Key': licKey } : {}),
           ...(effectiveAdminKey && endpoint.startsWith('/api/admin') ? { 'X-Admin-Key': effectiveAdminKey } : {}),
-          ...(sessionToken ? {
-            'Authorization': `Bearer ${sessionToken}`,
+          ...(this.sessionToken ? {
+            'Authorization': `Bearer ${this.sessionToken}`,
           } : {}),
           ...(isMutation ? { 'X-Idempotency-Key': `${hwid}_${endpoint.replace(/[^a-zA-Z0-9_-]/g, '_')}_${secHeaders['X-Req-Nonce'] || Date.now()}` } : {}),
         };
@@ -460,22 +483,34 @@ export class SqlClient {
       const duration = Date.now() - startTime;
       const data = await this.safeJson(response);
 
+      const isConnector = (this.config?.connectionMode === 'connector') || (this.config?.port === 3001) || (this.config?.port === 30001);
       if (!response.ok || !data.success) {
         this.isConnected = false;
         const err = this.extractErrorMessage(data, `Error HTTP ${response.status}`);
         this.logQuery('TEST_CONNECTION', duration, false, 0, err);
+
+        let friendlyMessage = `Fallo de conexión: ${err}`;
+        if (err && (err.includes('Failed to connect') || err.includes('ETIMEDOUT') || err.includes('ESOCKET') || err.includes('7000ms') || err.includes('ECONNREFUSED'))) {
+          if (!isConnector) {
+            friendlyMessage = `Fallo de conexión a ${this.config?.host || 'servidor'}:${this.config?.port || 1433} (Tiempo de espera agotado).\n\n• Modo Directo (1433): Verifica que el puerto 1433 esté abierto en el Firewall de Windows y en el panel web de tu proveedor de hosting (ej. OVH, AWS, Contabo).\n• Alternativa: Si prefieres no abrir el puerto 1433 por seguridad, ejecuta 'MuManager-Connector' en tu servidor y selecciona 'Modo Conector (3001)'.`;
+          } else {
+            friendlyMessage = `Fallo de conexión con el Conector en ${this.config?.host || 'servidor'}:${this.config?.port || 3001}.\n\nVerifica que 'MuManager-Connector.exe' esté ejecutándose en tu servidor y que el puerto 3001 esté permitido en el firewall.`;
+          }
+        }
+
         return {
           success: false,
-          message: `Fallo de conexión: ${err}`,
+          message: friendlyMessage,
           latency: duration,
         };
       }
 
       this.isConnected = true;
       this.logQuery('TEST_CONNECTION', duration, true, 1);
+      const modeLabel = isConnector ? 'Conector Seguro (3001)' : 'Directo SQL (1433)';
       return {
         success: true,
-        message: data.message || `Conectado a ${this.config.host}:${this.config.port} (${duration}ms)`,
+        message: data.message || `Conectado a ${this.config?.host || 'servidor'}:${this.config?.port || 1433} [${modeLabel}] (${duration}ms)`,
         latency: duration,
       };
     } catch (err: any) {

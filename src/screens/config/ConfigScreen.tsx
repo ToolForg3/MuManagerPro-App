@@ -104,6 +104,9 @@ export const ConfigScreen = () => {
 
   const [host, setHost] = useState(config?.host || '');
   const [port, setPort] = useState(String(config?.port || 1433));
+  const [connectionMode, setConnectionMode] = useState<'direct' | 'connector'>(
+    config?.connectionMode || (Number(config?.port) === 3001 || Number(config?.port) === 30001 ? 'connector' : 'direct')
+  );
   const [database, setDatabase] = useState(config?.database || 'MuOnline');
   const [user, setUser] = useState(config?.user || 'sa');
   const [password, setPassword] = useState(config?.password || '');
@@ -144,6 +147,7 @@ export const ConfigScreen = () => {
     if (config?.database && (!database || database === 'MuOnline')) setDatabase(config.database);
     if (config?.user && (!user || user === 'sa')) setUser(config.user);
     if (config?.password && !password) setPassword(config.password);
+    if (config?.connectionMode) setConnectionMode(config.connectionMode);
   }, [config]);
 
   const loadServerProfiles = async () => {
@@ -168,17 +172,21 @@ export const ConfigScreen = () => {
       return;
     }
 
+    const cleanPort = parseInt(port, 10) || (connectionMode === 'connector' ? 3001 : 1433);
+    const effectiveMode = connectionMode || (cleanPort === 3001 || cleanPort === 30001 ? 'connector' : 'direct');
+
     const newProf: ServerProfile = {
       id: Date.now().toString(),
       name: trimmed,
       host,
-      port: parseInt(port, 10) || 1433,
+      port: cleanPort,
       database,
       user,
       password,
       isActive: false,
       encrypt,
       emulatorType: emulator,
+      connectionMode: effectiveMode,
       bridgeUrl,
       updatedAt: Date.now(),
     };
@@ -188,7 +196,7 @@ export const ConfigScreen = () => {
     setServerProfiles(updated);
     setSaveProfileModalVisible(false);
     setNewProfileName('');
-    await logAdminAction('PERFIL_CREADO', `Guardado perfil "${trimmed}" (${host})`);
+    await logAdminAction('PERFIL_CREADO', `Guardado perfil "${trimmed}" (${host}) [${effectiveMode}]`);
     Alert.alert('Perfil Guardado', `El perfil "${trimmed}" se ha guardado correctamente.`);
   };
 
@@ -201,6 +209,8 @@ export const ConfigScreen = () => {
         {
           text: 'Cargar',
           onPress: async () => {
+            const loadedMode = profile.connectionMode || (profile.port === 3001 || profile.port === 30001 ? 'connector' : 'direct');
+            setConnectionMode(loadedMode);
             setHost(profile.host);
             setPort(String(profile.port));
             setDatabase(profile.database);
@@ -219,11 +229,12 @@ export const ConfigScreen = () => {
               password: profile.password,
               encrypt: profile.encrypt ?? true,
               emulatorType: loadedEmu,
+              connectionMode: loadedMode,
               useBridge: true,
               bridgeUrl: profile.bridgeUrl || SqlClient.DEFAULT_CLOUD_GATEWAY,
             });
 
-            await logAdminAction('PERFIL_CARGADO', `Cargado perfil "${profile.name}" (${profile.host})`);
+            await logAdminAction('PERFIL_CARGADO', `Cargado perfil "${profile.name}" (${profile.host}) [${loadedMode}]`);
             Alert.alert('Perfil Cargado', `Configuración actualizada a "${profile.name}". Presiona Conectar si deseas iniciar la sesión.`);
           },
         },
@@ -386,19 +397,45 @@ export const ConfigScreen = () => {
     setHost(newHost);
   };
 
+  const handleSelectMode = (mode: 'direct' | 'connector') => {
+    setConnectionMode(mode);
+    if (mode === 'connector') {
+      if (port === '1433' || !port) {
+        setPort('3001');
+      }
+    } else {
+      if (port === '3001' || !port) {
+        setPort('1433');
+      }
+    }
+  };
+
+  const handlePortChange = (val: string) => {
+    setPort(val);
+    const num = parseInt(val, 10);
+    if (num === 3001 || num === 30001) {
+      setConnectionMode('connector');
+    } else if (num === 1433) {
+      setConnectionMode('direct');
+    }
+  };
+
   const handleConnect = async () => {
     const cleanHost = host.trim() || '127.0.0.1';
     let activeBridge = (bridgeUrl || '').trim() || SqlClient.DEFAULT_CLOUD_GATEWAY;
     if (activeBridge.includes('onrender.com')) activeBridge = SqlClient.DEFAULT_CLOUD_GATEWAY;
+    const cleanPort = parseInt(port, 10) || (connectionMode === 'connector' ? 3001 : 1433);
+    const effectiveMode = connectionMode || (cleanPort === 3001 || cleanPort === 30001 ? 'connector' : 'direct');
 
     await updateConfig({
       host: cleanHost,
-      port: parseInt(port, 10) || 1433,
+      port: cleanPort,
       database,
       user,
       password,
       encrypt,
       emulatorType: emulator,
+      connectionMode: effectiveMode,
       useBridge: true,
       bridgeUrl: activeBridge,
     });
@@ -425,6 +462,7 @@ export const ConfigScreen = () => {
               const defaults = SqlClient.getDefaultConfig();
               setHost(defaults.host);
               setPort(String(defaults.port));
+              setConnectionMode(defaults.connectionMode || 'direct');
               setDatabase(defaults.database);
               setUser(defaults.user);
               setPassword('');
@@ -802,6 +840,71 @@ export const ConfigScreen = () => {
               <MuCornerOrnaments size={12} />
               <Text style={styles.sectionTitle}>{t('sqlSection')}</Text>
 
+              {/* Selector Modo de Conexión: Directo SQL (1433) vs Conector Seguro (3001) */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('connectionModeTitle')}</Text>
+                <View style={styles.modeRow}>
+                  <TouchableOpacity
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                    onPress={() => handleSelectMode('direct')}
+                    activeOpacity={0.8}
+                  >
+                    <ImageBackground
+                      source={connectionMode === 'direct' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.modeBtn}
+                      resizeMode="stretch"
+                    >
+                      <MuIcon
+                        name="database"
+                        size={20}
+                        color={connectionMode === 'direct' ? '#FEDF99' : THEME.colors.primaryOrange}
+                      />
+                      <View style={{ marginLeft: 8, flex: 1 }}>
+                        <Text style={[styles.modeTitle, connectionMode === 'direct' && styles.modeTextActive]}>
+                          {t('modeDirectTitle')}
+                        </Text>
+                        <Text style={[styles.modeSub, connectionMode === 'direct' && styles.modeSubActive]} numberOfLines={1}>
+                          {t('modeDirectDesc')}
+                        </Text>
+                      </View>
+                    </ImageBackground>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
+                    onPress={() => handleSelectMode('connector')}
+                    activeOpacity={0.8}
+                  >
+                    <ImageBackground
+                      source={connectionMode === 'connector' ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                      style={styles.modeBtn}
+                      resizeMode="stretch"
+                    >
+                      <MuIcon
+                        name="shield-lock-outline"
+                        size={20}
+                        color={connectionMode === 'connector' ? '#FEDF99' : THEME.colors.primaryOrange}
+                      />
+                      <View style={{ marginLeft: 8, flex: 1 }}>
+                        <Text style={[styles.modeTitle, connectionMode === 'connector' && styles.modeTextActive]}>
+                          {t('modeConnectorTitle')}
+                        </Text>
+                        <Text style={[styles.modeSub, connectionMode === 'connector' && styles.modeSubActive]} numberOfLines={1}>
+                          {t('modeConnectorDesc')}
+                        </Text>
+                      </View>
+                    </ImageBackground>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.modeHintBox}>
+                  <Text style={styles.modeHintText}>
+                    {connectionMode === 'connector'
+                      ? '🔒 Conector Seguro: La app se enlaza a tu VPS por el puerto 3001 sin exponer SQL Server (1433) a internet.'
+                      : '⚡ Modo Directo: Conexión vía Gateway directo a SQL Server por el puerto 1433 (debe estar abierto en el firewall de la VPS).'}
+                  </Text>
+                </View>
+              </View>
+
               {/* Host IP with quick buttons */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('serverIp')}</Text>
@@ -845,8 +948,8 @@ export const ConfigScreen = () => {
                   <TextInput
                     style={styles.input}
                     value={port}
-                    onChangeText={setPort}
-                    placeholder="1433"
+                    onChangeText={handlePortChange}
+                    placeholder={connectionMode === 'connector' ? '3001' : '1433'}
                     placeholderTextColor={THEME.colors.textMuted}
                     keyboardType="numeric"
                   />
@@ -958,10 +1061,21 @@ export const ConfigScreen = () => {
                 serverProfiles.map((p) => (
                   <View key={p.id} style={styles.profileItemRow}>
                     <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <Text style={styles.profileItemTitle}>{p.name}</Text>
                         <View style={styles.profileItemBadge}>
                           <Text style={styles.profileItemBadgeText}>{p.emulatorType === 'Louis' ? 'Louis' : 'MSPro'}</Text>
+                        </View>
+                        <View style={[
+                          styles.profileItemBadge,
+                          (p.connectionMode === 'connector' || p.port === 3001) ? styles.profileBadgeConnector : styles.profileBadgeDirect
+                        ]}>
+                          <Text style={[
+                            styles.profileItemBadgeText,
+                            (p.connectionMode === 'connector' || p.port === 3001) ? styles.profileBadgeConnectorText : styles.profileBadgeDirectText
+                          ]}>
+                            {p.connectionMode === 'connector' || p.port === 3001 ? 'CONECTOR' : 'DIRECTO 1433'}
+                          </Text>
                         </View>
                       </View>
                       <Text style={styles.profileItemSub} numberOfLines={1}>
@@ -1982,6 +2096,58 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     textShadowOffset: { width: 0, height: 1 },
   },
+  modeRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minHeight: 52,
+  },
+  modeTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#E0C380',
+    ...THEME.effects.textShadowSubtle,
+  },
+  modeTextActive: {
+    color: '#FEDF99',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
+  },
+  modeSub: {
+    fontSize: 10,
+    color: THEME.colors.textoSecundarioLuminoso,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  modeSubActive: {
+    color: '#FEDF99',
+    fontWeight: '800',
+    textShadowColor: 'rgba(0, 0, 0, 0.95)',
+    textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
+  },
+  modeHintBox: {
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderRadius: 2,
+    borderLeftWidth: 3,
+    borderLeftColor: THEME.colors.oroClaro,
+  },
+  modeHintText: {
+    fontSize: 11,
+    color: THEME.colors.textoSecundarioLuminoso,
+    lineHeight: 15,
+  },
   inputGroup: {
     marginBottom: 10,
   },
@@ -2410,6 +2576,22 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: 'bold',
     color: THEME.colors.primaryOrange,
+  },
+  profileBadgeConnector: {
+    backgroundColor: 'rgba(76, 175, 80, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.55)',
+  },
+  profileBadgeConnectorText: {
+    color: '#81C784',
+  },
+  profileBadgeDirect: {
+    backgroundColor: 'rgba(239, 210, 141, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 210, 141, 0.55)',
+  },
+  profileBadgeDirectText: {
+    color: '#EFD28D',
   },
   profileItemSub: {
     fontSize: 11,

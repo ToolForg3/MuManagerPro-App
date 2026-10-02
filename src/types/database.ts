@@ -8,6 +8,7 @@ export interface SqlServerConfig {
   emulatorType: 'MSPro' | 'Louis' | 'Season6';
   useBridge: boolean;
   bridgeUrl?: string;
+  connectionMode?: 'direct' | 'connector';
 }
 
 export interface DashboardMetrics {

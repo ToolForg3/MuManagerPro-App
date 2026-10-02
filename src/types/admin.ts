@@ -28,6 +28,7 @@ export interface ServerProfile {
   encrypt?: boolean;
   emulatorType?: 'MSPro' | 'Louis' | 'Season6';
   bridgeUrl?: string;
+  connectionMode?: 'direct' | 'connector';
   updatedAt?: number;
 }
 

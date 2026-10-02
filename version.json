@@ -1,10 +1,10 @@
 {
-  "version": "2.3.9",
+  "version": "2.4.0",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-02T13:00:00.000Z",
+  "publishedAt": "2026-10-02T15:25:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 141,
+  "build": 142,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.3.9 (Build 141) - Optimización de Rendimiento & Blindaje de Telemetría:\n• OPTIMIZACIÓN DE HEARTBEAT (AuthContext): Suspensión inteligente de pings cuando la pantalla está apagada o en segundo plano (AppState), reduciendo consumo de batería y datos móviles.\n• FRECUENCIA SQL BALANCEADA: Intervalos de actualización ajustados en Dashboard (30s) y Cuentas/Personajes (45s).\n• EDGE CDN Y CACHÉ VERCEL: Entrega ultra rápida de recursos estáticos e imágenes desde la CDN global con 0 ms de latencia serverless.\n• CONECTOR WINDOWS ACTUALIZADO: Nuevo paquete ejecutable optimizado con soporte dual Louis S6 y MSPro."
+  "changelog": "MuManager PRO v2.4.0 (Build 142) - Conexión Inteligente Dual & Blindaje Universal:\n• CONEXIÓN DUAL CON/SIN CONECTOR: Elige libremente entre Modo Directo SQL (1433 vía Gateway) o Conector Seguro (3001 vía MuManager-Connector en VPS).\n• DETECCIÓN Y CAMBIO BIDIRECCIONAL: La APK detecta automáticamente el puerto configurado y adapta el modo de conexión y placeholders.\n• HERRAMIENTA UNIVERSAL DE APERTURA: Nuevo script oficial 'Configurador-SQL-Remoto-1433.bat' para apertura segura del puerto SQL en Windows en 1 clic.\n• PERFILES MULTI-SERVIDOR CON BADGES: Identificación visual en verde para Conector 3001 y dorado para Directo 1433 en perfiles guardados.\n• DISEÑO STITCH APPROVED IRONFORGE: Botones y selectores con texturas metálicas nativas MU Season 6, 100% WCAG AAA y contrastes dorados nítidos."
 }
