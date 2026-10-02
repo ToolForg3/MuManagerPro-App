@@ -255,9 +255,11 @@ export class SqlClient {
   public static getBridgeUrl(): string {
     const isConnector = (this.config?.connectionMode === 'connector') || (this.config?.port === 3001) || (this.config?.port === 30001);
     if (isConnector) {
-      const rawHost = (this.config?.host || '').trim() || '127.0.0.1';
+      let rawHost = (this.config?.host || '').trim().replace(/^https?:\/\//i, '').replace(/:\d+$/, '').trim();
+      if (!rawHost) rawHost = '127.0.0.1';
       const port = this.config?.port || 3001;
-      const protocol = this.config?.encrypt ? 'https' : 'http';
+      // El conector local/VPS es un servicio HTTP REST; el switch encrypt es exclusivo para la conexión TDS a SQL Server
+      const protocol = (this.config?.bridgeUrl && this.config.bridgeUrl.toLowerCase().startsWith('https://')) ? 'https' : 'http';
       return `${protocol}://${rawHost}:${port}`;
     }
 

@@ -421,10 +421,18 @@ export const ConfigScreen = () => {
   };
 
   const handleConnect = async () => {
-    const cleanHost = host.trim() || '127.0.0.1';
+    const rawHost = host.trim();
+    let cleanHost = rawHost.replace(/^https?:\/\//i, '').replace(/:\d+$/, '').trim();
+    const portMatch = rawHost.match(/:(\d+)$/);
+    let effectivePortStr = port;
+    if (portMatch && !port) {
+      effectivePortStr = portMatch[1];
+      setPort(effectivePortStr);
+    }
+    if (!cleanHost) cleanHost = '127.0.0.1';
     let activeBridge = (bridgeUrl || '').trim() || SqlClient.DEFAULT_CLOUD_GATEWAY;
     if (activeBridge.includes('onrender.com')) activeBridge = SqlClient.DEFAULT_CLOUD_GATEWAY;
-    const cleanPort = parseInt(port, 10) || (connectionMode === 'connector' ? 3001 : 1433);
+    const cleanPort = parseInt(effectivePortStr, 10) || (connectionMode === 'connector' ? 3001 : 1433);
     const effectiveMode = connectionMode || (cleanPort === 3001 || cleanPort === 30001 ? 'connector' : 'direct');
 
     await updateConfig({

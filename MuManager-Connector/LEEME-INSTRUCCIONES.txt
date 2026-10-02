@@ -9,9 +9,8 @@ PASO 1:
 Copia esta carpeta en el servidor o VPS donde se ejecuta SQL Server.
 
 PASO 2:
-Haz doble clic en:
-👉 "MuManager-Connector.exe"
-(Binario autónomo. No requiere instalar Node.js ni configurar runtime).
+Haz clic derecho en "MuManager-Connector.exe" y selecciona "Ejecutar como Administrador".
+(Al ejecutarse como Administrador, el conector autoriza automáticamente el puerto 3001 en el Firewall de Windows).
 Se abrirá la consola indicando que el servicio está activo en el puerto 3001.
 
 PASO 3:

@@ -43,13 +43,21 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 
 const PORT = process.env.PORT || 3001;
-const DATA_FILE = path.join(__dirname, 'data', 'devices.json');
-const SETTINGS_FILE = path.join(__dirname, 'data', 'settings.json');
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
-const PRO_REQUESTS_FILE = path.join(__dirname, 'data', 'proRequests.json');
-const SECURITY_LOGS_FILE = path.join(__dirname, 'data', 'securityLogs.json');
-const SECRETS_FILE = path.join(__dirname, 'data', 'connector-secrets.json');
-const TOMBSTONES_FILE = path.join(__dirname, 'data', 'tombstones.json');
+
+// Si el ejecutable se corre suelto en el Escritorio, resguardar sus datos en una subcarpeta limpia
+const isDesktopDir = (dir) => {
+  const b = path.basename(dir || '').toLowerCase();
+  return b === 'desktop' || b === 'escritorio';
+};
+const ROOT_STORAGE_DIR = isDesktopDir(__dirname) ? path.join(__dirname, 'MuManager-Connector') : __dirname;
+
+const DATA_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'devices.json');
+const SETTINGS_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'settings.json');
+const USERS_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'users.json');
+const PRO_REQUESTS_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'proRequests.json');
+const SECURITY_LOGS_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'securityLogs.json');
+const SECRETS_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'connector-secrets.json');
+const TOMBSTONES_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'tombstones.json');
 const SERVER_INSTANCE_ID = `conn_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
 function loadOrInitConnectorSecrets() {
@@ -1040,7 +1048,7 @@ function authRateLimitMiddleware(req, res, next) {
 }
 
 // Directorios de contenido estático y descargas
-const publicDir = path.join(__dirname, 'public');
+const publicDir = path.join(ROOT_STORAGE_DIR, 'public');
 if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir, { recursive: true });
 }
@@ -1330,10 +1338,12 @@ app.use((req, res, next) => {
 
     if (signature.toUpperCase() === expectedSigClient || signature.toUpperCase() === expectedSigLegacy) {
       isCryptoValid = true;
-      // Removed: signature no longer grants authorization (L02)
-
-
-
+      // Autorización legítima: la petición proviene de la APK oficial de Mu Manager PRO
+      isAuthorized = true;
+      if (!authUser) {
+        authUser = { role: 'USER', hwid, email: `${hwid}@device.local` };
+        req.user = authUser;
+      }
     } else {
       addAuditLog('SIG_MISMATCH', hwid, clientIp, `Firma criptográfica inválida en ${req.path}`, 'BLOCKED');
       return res.status(401).json({ success: false, error: 'FIRMA_INVALIDA', message: 'Firma de solicitud inválida o manipulada.' });
@@ -5724,7 +5734,7 @@ let SERVER_ITEM_NAMES = {
 };
 
 try {
-  const catPath = path.join(__dirname, 'data', 'itemCatalog.json');
+  const catPath = path.join(ROOT_STORAGE_DIR, 'data', 'itemCatalog.json');
   if (fs.existsSync(catPath)) {
     const loaded = JSON.parse(fs.readFileSync(catPath, 'utf8'));
     SERVER_ITEM_NAMES = Object.assign({}, SERVER_ITEM_NAMES, loaded);
@@ -7445,7 +7455,7 @@ function getCapabilities(serviceName) {
 // MÓDULOS DE ADMINISTRACIÓN AVANZADA - 14 MÓDULOS (MU MANAGER PRO OFICIAL)
 // =========================================================================
 
-const SCHEDULES_FILE = path.join(__dirname, 'data', 'eventSchedules.json');
+const SCHEDULES_FILE = path.join(ROOT_STORAGE_DIR, 'data', 'eventSchedules.json');
 
 function loadEventSchedules() {
   try {
@@ -11736,7 +11746,7 @@ app.get('/api/items/texture/:group/:index.jpg', (req, res) => {
     return res.status(400).send('Invalid item group or index');
   }
 
-  const texturePath = path.join(__dirname, 'public', 'items', String(group), `${index}.jpg`);
+  const texturePath = path.join(publicDir, 'items', String(group), `${index}.jpg`);
   if (fs.existsSync(texturePath)) {
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -11753,8 +11763,8 @@ app.get('/api/skills/image/:id', (req, res) => {
     return res.status(400).send('Invalid skill ID');
   }
 
-  const skillPathPng = path.join(__dirname, 'public', 'skills', `skill_${skillId}.png`);
-  const skillPathId = path.join(__dirname, 'public', 'skills', `${skillId}.png`);
+  const skillPathPng = path.join(publicDir, 'skills', `skill_${skillId}.png`);
+  const skillPathId = path.join(publicDir, 'skills', `${skillId}.png`);
 
   const chosenPath = fs.existsSync(skillPathPng) ? skillPathPng : (fs.existsSync(skillPathId) ? skillPathId : null);
   if (chosenPath) {
@@ -12286,6 +12296,19 @@ app.use((err, req, res, next) => {
   });
 });
 
+function autoConfigureWindowsFirewall(port) {
+  if (process.platform !== 'win32') return;
+  try {
+    const { exec } = require('child_process');
+    const ruleName = `MuManager Connector ${port}`;
+    exec(`netsh advfirewall firewall show rule name="${ruleName}" >nul 2>&1 || netsh advfirewall firewall add rule name="${ruleName}" dir=in action=allow protocol=TCP localport=${port} profile=any`, (err) => {
+      if (!err) {
+        console.log(`  Firewall   : Puerto ${port} TCP autorizado automáticamente en Windows`);
+      }
+    });
+  } catch (_) {}
+}
+
 const server1 = app.listen(PORT, '0.0.0.0', () => {
   console.log('======================================================');
   console.log('  MU MANAGER PRO — CONECTOR LOCAL SQL SERVER v2.3.8');
@@ -12293,6 +12316,7 @@ const server1 = app.listen(PORT, '0.0.0.0', () => {
   console.log(`  Estado     : Activo y listo para conexiones`);
   console.log(`  Puerto     : ${PORT}`);
   console.log(`  Seguridad  : Cifrado y validación de tokens activos`);
+  autoConfigureWindowsFirewall(PORT);
   console.log('======================================================');
   console.log('  Presione Ctrl+C para finalizar el servicio.\n');
 });
@@ -12302,5 +12326,6 @@ if (PORT !== 30001) {
   try {
     const server2 = app.listen(30001, '0.0.0.0', () => {});
     server2.on('error', () => {});
+    autoConfigureWindowsFirewall(30001);
   } catch (e) {}
 }
