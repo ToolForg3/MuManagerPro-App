@@ -326,16 +326,16 @@ var QRCodeLite = (function () {
     },
     createSvg: function (cellSize, margin) {
       cellSize = cellSize || 4;
-      margin = margin || 2;
+      margin = (margin !== undefined) ? margin : 4;
       var size = (this.getModuleCount() + margin * 2) * cellSize;
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%">';
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" shape-rendering="crispEdges">';
       svg += '<rect width="100%" height="100%" fill="#ffffff"/>';
       for (var r = 0; r < this.getModuleCount(); r++) {
         for (var c = 0; c < this.getModuleCount(); c++) {
           if (this.isDark(r, c)) {
             var x = (c + margin) * cellSize;
             var y = (r + margin) * cellSize;
-            svg += '<rect x="' + x + '" y="' + y + '" width="' + cellSize + '" height="' + cellSize + '" fill="#07080c"/>';
+            svg += '<rect x="' + x + '" y="' + y + '" width="' + cellSize + '" height="' + cellSize + '" fill="#000000"/>';
           }
         }
       }
@@ -354,7 +354,7 @@ var QRCodeLite = (function () {
     var model = new QRCodeModel(typeNum, QRErrorCorrectionLevel.M);
     model.addData(text);
     model.make();
-    return model.createSvg(6, 3);
+    return model.createSvg(6, 4);
   }
 
   return {

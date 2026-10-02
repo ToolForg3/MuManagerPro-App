@@ -98,7 +98,7 @@ export const DashboardScreen = () => {
       loadData();
       const interval = setInterval(() => {
         loadData();
-      }, 12000);
+      }, 30000);
       return () => clearInterval(interval);
     }, [])
   );

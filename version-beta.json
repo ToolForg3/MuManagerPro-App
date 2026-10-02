@@ -1,12 +1,11 @@
 {
-  "version": "2.0.4-beta.1",
-  "minRequiredVersion": "1.9.9",
-  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk",
-  "publishedAt": "2026-09-17T20:00:00.000Z",
-  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk",
-  "build": 106,
-  "versionCode": 106,
+  "version": "2.3.9-beta.1",
+  "build": 141,
+  "versionCode": 141,
   "isBeta": true,
+  "minRequiredVersion": "2.0.8",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk",
+  "publishedAt": "2026-10-01T23:32:00.000Z",
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.0.4 (Build 106) - Versión Oficial Estable:\n• CANAL BETA & STAGING: Arquitectura empresarial para pruebas segregadas y control de calidad.\n• QUALITY GATE & PROMOCIÓN: Promoción atómica de versiones probadas al 100% de usuarios.\n• ROLLBACK INDEPENDIENTE: Reversión selectiva en dos niveles sin alterar producción.\n• INVARIANZA DE LICENCIAS: Blindaje total de licencias PRO y DEMO en actualizaciones.\n• PANEL DE CONTROL: Rediseño modular Season 6 Piedra y Oro con contraste WCAG AAA (>7:1).\n• ESTABILIDAD: forceUpdate=false garantizado y retrocompatibilidad dual Louis S6 & MSPro."
+  "changelog": "• Canal Beta: Pruebas de nuevas funciones y optimizaciones en vivo."
 }

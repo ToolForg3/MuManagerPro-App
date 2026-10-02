@@ -1451,10 +1451,10 @@
   background: #FFF;
   padding: 8px;
   border-radius: var(--radius-sm);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.95);
   flex-shrink: 0;
-  width: 110px;
-  height: 110px;
+  width: 140px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;

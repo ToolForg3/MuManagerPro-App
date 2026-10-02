@@ -11664,7 +11664,7 @@ app.use((err, req, res, next) => {
 
 const server1 = app.listen(PORT, '0.0.0.0', () => {
   console.log('======================================================');
-  console.log('  MU MANAGER PRO — CONECTOR LOCAL SQL SERVER v2.1.5');
+  console.log('  MU MANAGER PRO — CONECTOR LOCAL SQL SERVER v2.3.8');
   console.log('======================================================');
   console.log(`  Estado     : Activo y listo para conexiones`);
   console.log(`  Puerto     : ${PORT}`);

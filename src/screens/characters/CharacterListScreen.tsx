@@ -138,7 +138,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
 
       const interval = setInterval(() => {
         fetchCharacters(undefined, true);
-      }, 15000);
+      }, 45000);
 
       return () => clearInterval(interval);
     }, [route.params?.filterAccount])

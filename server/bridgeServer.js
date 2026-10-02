@@ -915,12 +915,14 @@ function saveDevices(data, options = {}) {
   if (!safeAtomicWriteJson(DATA_FILE, data)) {
     throw new Error("Disk error saving devices");
   }
-  try {
-    const seed = path.join(__dirname, 'data', 'devices.json');
-    if (fs.existsSync(path.dirname(seed))) {
-      safeAtomicWriteJson(seed, data);
-    }
-  } catch (_) {}
+  if (typeof isVercel !== 'undefined' ? !isVercel : !(typeof process !== 'undefined' && process.env && process.env.VERCEL)) {
+    try {
+      const seed = path.join(__dirname, 'data', 'devices.json');
+      if (fs.existsSync(path.dirname(seed))) {
+        safeAtomicWriteJson(seed, data);
+      }
+    } catch (_) {}
+  }
 
   // Pings rutinarios de telemetría sin cambio de autorización omiten sobrescritura cloud
   // para no perder cambios de otras instancias concurrentes.
@@ -1405,12 +1407,14 @@ function saveUsers(data) {
   if (!safeAtomicWriteJson(USERS_FILE, data)) {
     throw new Error("Disk error saving users");
   }
-  try {
-    const seed = path.join(__dirname, 'data', 'users.json');
-    if (fs.existsSync(path.dirname(seed))) {
-      safeAtomicWriteJson(seed, data);
-    }
-  } catch (_) {}
+  if (typeof isVercel !== 'undefined' ? !isVercel : !(typeof process !== 'undefined' && process.env && process.env.VERCEL)) {
+    try {
+      const seed = path.join(__dirname, 'data', 'users.json');
+      if (fs.existsSync(path.dirname(seed))) {
+        safeAtomicWriteJson(seed, data);
+      }
+    } catch (_) {}
+  }
   if (CLOUD_STORAGE.enabled) {
     const p = CLOUD_STORAGE.set('mumanager:users', data).catch(() => {});
     if (typeof queueCloudWrite === 'function') {
@@ -2059,7 +2063,7 @@ function verifySessionToken(token) {
 
 const replayNonceCache = new Map();
 if (typeof setInterval === 'function') {
-  setInterval(() => {
+  const nonceTimer = setInterval(() => {
     const now = Date.now();
     for (const [nonce, ts] of replayNonceCache.entries()) {
       if (now - ts > 10 * 60 * 1000) {
@@ -2067,6 +2071,9 @@ if (typeof setInterval === 'function') {
       }
     }
   }, 5 * 60 * 1000);
+  if (nonceTimer && typeof nonceTimer.unref === 'function') {
+    nonceTimer.unref();
+  }
 }
 
 function getLogCategory(type) {
@@ -2251,7 +2258,7 @@ function authRateLimitMiddleware(req, res, next) {
 
 // Purga periódica de entradas expiradas para prevenir fugas de memoria
 if (typeof setInterval === 'function') {
-  setInterval(() => {
+  const cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [ip, record] of requestCounts.entries()) {
       if (now - record.startTime > RATE_LIMIT_WINDOW_MS * 2) {
@@ -2269,6 +2276,9 @@ if (typeof setInterval === 'function') {
       }
     }
   }, 5 * 60 * 1000);
+  if (cleanupTimer && typeof cleanupTimer.unref === 'function') {
+    cleanupTimer.unref();
+  }
 }
 
 app.use((req, res, next) => {
@@ -2399,7 +2409,13 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    return res.redirect(302, 'https://files.catbox.moe/sbxpts.zip');
+    const localZip = path.join(__dirname, 'website', 'downloads', 'MuManager-Connector.zip');
+    if (fs.existsSync(localZip)) {
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename="MuManager-Connector.zip"');
+      return res.sendFile(localZip);
+    }
+    return res.redirect(302, 'https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManager-Connector.zip');
   }
   res.status(404).send('Archivo no encontrado.');
 });
@@ -12796,14 +12812,18 @@ app.post('/api/admin/database/reset-clean', async (req, res) => {
     // 2. Reiniciar dispositivos a limpio {}
     inMemoryFallback[DATA_FILE] = {};
     safeAtomicWriteJson(DATA_FILE, {});
-    const seedDev = path.join(__dirname, 'data', 'devices.json');
-    if (fs.existsSync(seedDev)) safeAtomicWriteJson(seedDev, {});
+    if (typeof isVercel !== 'undefined' ? !isVercel : !(typeof process !== 'undefined' && process.env && process.env.VERCEL)) {
+      const seedDev = path.join(__dirname, 'data', 'devices.json');
+      if (fs.existsSync(seedDev)) safeAtomicWriteJson(seedDev, {});
+    }
 
     // 3. Reiniciar tombstones a limpio {}
     inMemoryFallback[TOMBSTONES_FILE] = {};
     safeAtomicWriteJson(TOMBSTONES_FILE, {});
-    const seedTom = path.join(__dirname, 'data', 'tombstones.json');
-    if (fs.existsSync(seedTom)) safeAtomicWriteJson(seedTom, {});
+    if (typeof isVercel !== 'undefined' ? !isVercel : !(typeof process !== 'undefined' && process.env && process.env.VERCEL)) {
+      const seedTom = path.join(__dirname, 'data', 'tombstones.json');
+      if (fs.existsSync(seedTom)) safeAtomicWriteJson(seedTom, {});
+    }
 
     // 4. Reiniciar usuarios conservando únicamente la cuenta admin
     const cleanAdmin = [
@@ -12822,8 +12842,10 @@ app.post('/api/admin/database/reset-clean', async (req, res) => {
     ];
     inMemoryFallback[USERS_FILE] = cleanAdmin;
     safeAtomicWriteJson(USERS_FILE, cleanAdmin);
-    const seedUsr = path.join(__dirname, 'data', 'users.json');
-    if (fs.existsSync(seedUsr)) safeAtomicWriteJson(seedUsr, cleanAdmin);
+    if (typeof isVercel !== 'undefined' ? !isVercel : !(typeof process !== 'undefined' && process.env && process.env.VERCEL)) {
+      const seedUsr = path.join(__dirname, 'data', 'users.json');
+      if (fs.existsSync(seedUsr)) safeAtomicWriteJson(seedUsr, cleanAdmin);
+    }
 
     // 5. Reiniciar solicitudes PRO
     inMemoryFallback[PRO_REQUESTS_FILE] = [];
@@ -15411,6 +15433,15 @@ app.get('/sitemap.xml', (req, res) => {
   res.status(404).send('Sitemap not found');
 });
 
+app.get('/manifest.json', (req, res) => {
+  const manifestPath = path.join(websiteDir, 'manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    res.type('application/manifest+json');
+    return res.sendFile(manifestPath);
+  }
+  res.status(404).send('Manifest not found');
+});
+
 // Redirecciones cortas de marca a canales oficiales (Vanity URLs)
 app.get('/discord', (req, res) => {
   res.redirect(302, 'https://discord.gg/4YXguuBFV');
@@ -15616,7 +15647,7 @@ app.get('/api/items/texture/:group/:index.jpg', (req, res) => {
   const texturePath = path.join(__dirname, 'public', 'items', String(group), `${index}.jpg`);
   if (fs.existsSync(texturePath)) {
     res.setHeader('Content-Type', 'image/jpeg');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
     return res.sendFile(texturePath);
   }
 
@@ -15636,7 +15667,7 @@ app.get('/api/skills/image/:id', (req, res) => {
   const chosenPath = fs.existsSync(skillPathPng) ? skillPathPng : (fs.existsSync(skillPathId) ? skillPathId : null);
   if (chosenPath) {
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
     return res.sendFile(chosenPath);
   }
 
@@ -15656,7 +15687,7 @@ app.get('/api/items/image/:name', (req, res) => {
   if (itemImageCache.has(cleanName)) {
     const cached = itemImageCache.get(cleanName);
     res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
     return res.send(cached);
   }
 
@@ -15694,7 +15725,7 @@ app.get('/api/items/image/:name', (req, res) => {
         itemImageCache.set(cleanName, finalBuffer);
       }
       res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
       res.send(finalBuffer);
     });
   }).on('error', (err) => {

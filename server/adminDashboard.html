@@ -8072,6 +8072,37 @@
     let _isPolling = false;
     let _autoRefreshEnabled = true;
 
+    async function triggerFullRefresh() {
+      if (!getAdminKey() || !_autoRefreshEnabled || _isPolling) return;
+      _isPolling = true;
+      try {
+        await Promise.allSettled([
+          refreshDevices(),
+          refreshUsers(),
+          loadProRequests(),
+          loadAllLicensesModule(),
+          checkSecurityAlerts()
+        ]);
+        if (document.getElementById('tab-all-licenses') && document.getElementById('tab-all-licenses').classList.contains('active')) {
+          // Licencias sincronizadas con DOM
+        }
+        if (document.getElementById('tab-pro-requests') && document.getElementById('tab-pro-requests').classList.contains('active')) {
+          // Solicitudes PRO sincronizadas con DOM
+        }
+        if (document.getElementById('tab-security') && document.getElementById('tab-security').classList.contains('active')) {
+          await loadSecurityLogs();
+        }
+        if (document.getElementById('tab-logs') && document.getElementById('tab-logs').classList.contains('active')) {
+          await loadAuditLogs();
+        }
+        if (document.getElementById('tab-beta') && document.getElementById('tab-beta').classList.contains('active')) {
+          await loadBetaRequests();
+        }
+      } finally {
+        _isPolling = false;
+      }
+    }
+
     function toggleAutoRefresh() {
       _autoRefreshEnabled = !_autoRefreshEnabled;
       const btn = document.getElementById('btn-toggle-autorefresh');
@@ -8081,6 +8112,7 @@
           btn.className = 'btn btn-dark btn-sm';
           btn.title = 'Clic para pausar el auto-refresco en segundo plano';
           showToast('▶️ Auto-refresco en segundo plano activado (cada 15s)');
+          triggerFullRefresh();
         } else {
           btn.innerHTML = '▶️ Reanudar (Pausado)';
           btn.className = 'btn btn-warning btn-sm';
@@ -8090,10 +8122,18 @@
       }
     }
 
-    // Auto-actualizar presencia y listas en tiempo real cada 15 segundos (silencioso, sin visual flickering)
+    // Al regresar a la pestaña del panel, refrescar inmediatamente sin esperar
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && _autoRefreshEnabled && getAdminKey()) {
+        triggerFullRefresh();
+      }
+    });
+
+    // Auto-actualizar presencia y listas en tiempo real cada 15 segundos (silencioso, sin visual flickering, pausado si la pestaña está oculta)
     setInterval(async () => {
       if (!getAdminKey()) return;
       if (!_autoRefreshEnabled) return; // Pausado por el administrador
+      if (document.hidden) return; // Protección Vercel CPU: si la pestaña está oculta/minimizada, 0 peticiones
       if (_isPolling) return; // evitar solapamiento de polls
       _isPolling = true;
       try {

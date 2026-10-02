@@ -325,7 +325,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
       fetchAccounts(false);
       const interval = setInterval(() => {
         fetchAccounts(true);
-      }, 15000);
+      }, 45000);
       return () => clearInterval(interval);
     }, [])
   );

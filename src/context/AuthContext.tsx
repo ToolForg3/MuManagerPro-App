@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AppState } from 'react-native';
 import { GothicAlert as Alert } from '../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SecurityService, sha256 } from '../services/security/securityService';
@@ -312,10 +313,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [isAuthenticated, isDemoSession]);
 
-  // Heartbeat periódico (30s autenticado / 45s sin autenticar) para sincronización de telemetría y desvinculación inmediata desde el panel
+  // Heartbeat optimizado (120s autenticado / 180s sin autenticar) con detección inteligente de AppState
+  // Pausa automática cuando el celular bloquea pantalla o minimiza la app (0 peticiones / 0 CPU)
+  // Sincronización inmediata apenas la app regresa a primer plano (active)
   useEffect(() => {
-    const intervalMs = isAuthenticated ? 30000 : 45000;
-    const heartbeatInterval = setInterval(async () => {
+    let heartbeatInterval: NodeJS.Timeout | null = null;
+
+    const performSync = async () => {
       try {
         const hwid = await SecurityService.getDeviceHwid();
         if (!hwid) return;
@@ -328,10 +332,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           userName || (savedUsername || '')
         );
       } catch (_) {}
-    }, intervalMs);
+    };
+
+    const startInterval = () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      const intervalMs = isAuthenticated ? 120000 : 180000;
+      heartbeatInterval = setInterval(performSync, intervalMs);
+    };
+
+    const stopInterval = () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
+    };
+
+    if (AppState.currentState === 'active') {
+      startInterval();
+    }
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        performSync();
+        startInterval();
+      } else {
+        stopInterval();
+      }
+    });
 
     return () => {
-      clearInterval(heartbeatInterval);
+      stopInterval();
+      subscription.remove();
     };
   }, [isAuthenticated, userEmail, userName, savedEmail, savedUsername]);
 
