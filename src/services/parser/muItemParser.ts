@@ -17,30 +17,34 @@ export class MuItemParser {
   }
 
   /**
-   * Checks whether a 32-character hex slot is empty
+   * Checks whether a hex slot is empty (supports 20, 32, or 64 hex characters)
    */
-  static isSlotEmpty(hex32: string): boolean {
-    const clean = this.sanitizeHex(hex32);
-    if (!clean || clean.length < 32) return true;
-    return /^F{32}$/i.test(clean.substring(0, 32));
+  static isSlotEmpty(hex: string, charsPerItem: number = 32): boolean {
+    const clean = this.sanitizeHex(hex);
+    if (!clean) return true;
+    const targetLen = charsPerItem || (clean.length === 20 ? 20 : (clean.length >= 64 ? 64 : 32));
+    if (clean.length < targetLen) return true;
+    const chunk = clean.substring(0, targetLen);
+    return /^F+$/i.test(chunk) || /^0+$/.test(chunk);
   }
 
   /**
-   * Decodes a single 16-byte (32-character hex) item slot
+   * Decodes a single item slot (supports 10-byte/20-hex for 97d/99b, 16-byte/32-hex for S1-S6, and 32-byte/64-hex for S8+)
    */
-  static decodeItem(slot: number, hex32: string): ParsedItem | null {
-    const clean = this.sanitizeHex(hex32);
-    if (clean.length < 32 || this.isSlotEmpty(clean)) {
+  static decodeItem(slot: number, hex: string, charsPerItem: number = 32): ParsedItem | null {
+    const clean = this.sanitizeHex(hex);
+    const targetLen = charsPerItem || (clean.length === 20 ? 20 : (clean.length >= 64 ? 64 : 32));
+    if (clean.length < targetLen || this.isSlotEmpty(clean, targetLen)) {
       return null;
     }
 
     // Hallazgo 6: Rechazar estrictamente caracteres no hexadecimales
-    if (!/^[0-9A-F]{32}$/i.test(clean.substring(0, 32))) {
+    if (!new RegExp(`^[0-9A-F]{${targetLen}}$`, 'i').test(clean.substring(0, targetLen))) {
       return null;
     }
 
     const bytes: number[] = [];
-    for (let i = 0; i < 32; i += 2) {
+    for (let i = 0; i < targetLen; i += 2) {
       bytes.push(parseInt(clean.substring(i, i + 2), 16));
     }
 
@@ -52,15 +56,26 @@ export class MuItemParser {
     const byte5 = bytes[5];
     const byte6 = bytes[6];
     const byte7 = bytes[7];
-    const byte8 = bytes[8];
-    const byte9 = bytes[9];
-    const byte10 = bytes[10];
+    const byte8 = bytes[8] !== undefined ? bytes[8] : 0;
+    const byte9 = bytes[9] !== undefined ? bytes[9] : 0;
+    const byte10 = bytes[10] !== undefined ? bytes[10] : 0;
 
-    // Byte 0, 7 y 9: Grupo (0-15) e Índice (0-511) Season 6 / Louis
-    // Grupo en byte9 bits 4-7: (byte9 >> 4) & 0x0F
-    // Índice: byte0 (bits 0-7) + bit 7 de byte7 (bit 8 = +256)
-    const group = (byte9 >> 4) & 0x0F;
-    const index = byte0 | ((byte7 & 0x80) ? 0x100 : 0);
+    let group = 0;
+    let index = 0;
+
+    if (targetLen === 20) {
+      // MU Season 97d / 99b: 10 bytes (20 hex chars)
+      // byte0: item ID = Group * 32 + Index (5 bits index 0-31, 3 bits group 0-7 or 0-15)
+      group = Math.floor(byte0 / 32);
+      index = byte0 % 32;
+    } else {
+      // MU Season 1 - Season 6 / Louis / Season 8+:
+      // Byte 0, 7 y 9: Grupo (0-15) e Índice (0-511) Season 6 / Louis
+      // Grupo en byte9 bits 4-7: (byte9 >> 4) & 0x0F
+      // Índice: byte0 (bits 0-7) + bit 7 de byte7 (bit 8 = +256)
+      group = (byte9 >> 4) & 0x0F;
+      index = byte0 | ((byte7 & 0x80) ? 0x100 : 0);
+    }
 
     // Byte 1: Level, Skill, Luck, Option low bits
     const level = (byte1 >> 3) & 0x0F;
@@ -96,7 +111,7 @@ export class MuItemParser {
     const harmonyLevel = byte10 & 0x0F;
 
     // Bytes 11-15: Sockets
-    const sockets = [bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]];
+    const sockets = [bytes[11] ?? 0xFF, bytes[12] ?? 0xFF, bytes[13] ?? 0xFF, bytes[14] ?? 0xFF, bytes[15] ?? 0xFF];
 
     // Retrieve item definition from database
     const def = ItemDatabase.findItem(group, index, byte0);
@@ -291,23 +306,43 @@ export class MuItemParser {
 
   /**
    * Parses the full Inventory hex string from SQL Server (varbinary)
-   * Splits into 32-character chunks and decodes each slot
+   * Supports Season 97d (20-hex/10-byte), Season 6 (32-hex/16-byte), and Season 8+ (64-hex/32-byte)
+   * @param slotOrCharOption Either totalSlots (e.g. 108, 120, 240) or charsPerItem (e.g. 20, 32, 64)
    */
-  static parseInventory(inventoryHex: string): ParsedItem[] {
+  static parseInventory(inventoryHex: string, slotOrCharOption?: number): ParsedItem[] {
     const clean = this.sanitizeHex(inventoryHex);
-    // Validar que el hex tenga al menos la longitud de 1 slot (32 caracteres)
-    if (!clean || clean.length < INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM) {
+    if (!clean) {
+      return [];
+    }
+
+    let slotHexLen = INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM; // default 32
+    if (slotOrCharOption === 20 || slotOrCharOption === 32 || slotOrCharOption === 64) {
+      slotHexLen = slotOrCharOption;
+    } else if (slotOrCharOption && slotOrCharOption > 64) {
+      const derived = Math.floor(clean.length / slotOrCharOption);
+      slotHexLen = (derived === 20 || derived === 32 || derived === 64) ? derived : INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM;
+    } else {
+      if (clean.length > 7680 && clean.length % 64 === 0) {
+        slotHexLen = 64;
+      } else if (clean.length <= 2400 && clean.length % 20 === 0 && clean.length % 32 !== 0) {
+        slotHexLen = 20;
+      } else {
+        slotHexLen = INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM;
+      }
+    }
+
+    if (clean.length < slotHexLen) {
       return [];
     }
 
     const items: ParsedItem[] = [];
-    const slotCount = Math.floor(clean.length / INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM);
+    const slotCount = Math.floor(clean.length / slotHexLen);
     for (let slot = 0; slot < slotCount; slot++) {
       const chunk = clean.substring(
-        slot * INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM,
-        (slot + 1) * INVENTORY_CONSTANTS.HEX_CHARS_PER_ITEM
+        slot * slotHexLen,
+        (slot + 1) * slotHexLen
       );
-      const parsed = this.decodeItem(slot, chunk);
+      const parsed = this.decodeItem(slot, chunk, slotHexLen);
       if (parsed) {
         items.push(parsed);
       }

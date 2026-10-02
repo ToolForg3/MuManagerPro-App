@@ -2217,7 +2217,7 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/admin') || req.path === '/' || req.path.endsWith('.html')) {
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:;"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https:; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com https:; connect-src 'self' https:;"
     );
   }
   next();
@@ -2904,7 +2904,12 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
       normalizedPath.startsWith('/api/guilds/create') ||
       normalizedPath.startsWith('/api/pk/clear') ||
       normalizedPath.startsWith('/api/kit/deliver') ||
-      normalizedPath.startsWith('/api/prizes/deliver');
+      normalizedPath.startsWith('/api/prizes/deliver') ||
+      normalizedPath.startsWith('/api/castle-siege/update') ||
+      normalizedPath.startsWith('/api/giftcodes/create') ||
+      normalizedPath.startsWith('/api/giftcodes/delete') ||
+      normalizedPath.startsWith('/api/giftcodes/claim') ||
+      normalizedPath.startsWith('/api/marry/divorce');
 
     let isDemoStatsAllowed = false;
     let isDemoLimitExceeded = false;
@@ -2978,6 +2983,10 @@ function inspectForSqlThreats(val, keyName = '', reqPath = '') {
       normalizedPath === '/api/pk/list' ||
       normalizedPath === '/api/players/online' ||
       normalizedPath === '/api/players/list' ||
+      normalizedPath === '/api/tools/server-capabilities' ||
+      normalizedPath === '/api/castle-siege/status' ||
+      normalizedPath === '/api/giftcodes/list' ||
+      normalizedPath === '/api/marry/list' ||
       (normalizedPath === '/api/warehouse' && (!req.body || !req.body.warehouseIndex || Number(req.body.warehouseIndex) === 0) && !req.body.items && !req.body.save && !req.body.update);
 
     const isDemoPermitted = isDemoActive && !isMultiVaultBlocked && !isProExclusiveRoute && (
@@ -4804,21 +4813,29 @@ app.post('/api/character/update-quest', async (req, res) => {
         // Byte 2: Marlon Quest 1 (Ring of Honor / Glory) -> 0xAA / 0x02
         // Byte 3: Marlon Quest 2 (Dark Stone - Combo Skill) -> 0xAA / 0x02
         // Bytes 4-49 se preservan intactos para no corromper estados del GameServer S6.
-        if (thirdClassComplete) {
-          qBytes[0] = 0xAA;
-          qBytes[1] = 0xAA;
-          qBytes[2] = 0xAA;
-          if (marlonCombo) {
-            qBytes[3] = 0xAA;
-          }
-        } else {
+        if (marlonPoints !== undefined) {
           if (marlonPoints) {
             qBytes[0] = 0xAA;
             qBytes[1] = 0xAA;
             qBytes[2] = 0xAA;
+          } else {
+            qBytes[0] = 0xFF;
+            qBytes[1] = 0xFF;
+            qBytes[2] = 0xFF;
           }
-          if (marlonCombo) {
-            qBytes[3] = 0xAA;
+        }
+        if (marlonCombo !== undefined) {
+          qBytes[3] = marlonCombo ? 0xAA : 0xFF;
+        }
+        if (thirdClassComplete !== undefined) {
+          if (thirdClassComplete) {
+            qBytes[0] = 0xAA;
+            qBytes[1] = 0xAA;
+            qBytes[2] = 0xAA;
+          } else if (!marlonPoints) {
+            qBytes[0] = 0xFF;
+            qBytes[1] = 0xFF;
+            qBytes[2] = 0xFF;
           }
         }
 
@@ -4837,13 +4854,22 @@ app.post('/api/character/update-quest', async (req, res) => {
       }
 
       let mstSql = '';
-      if (hasMstTable && (thirdClassComplete || [2, 3, 18, 19, 34, 35, 49, 50, 65, 66, 82, 83, 97, 98].includes(parseInt(classId, 10)))) {
+      const cleanClassNum = parseInt(classId, 10);
+      const isFirstClass = [0, 16, 32, 48, 64, 80, 96].includes(cleanClassNum);
+      const isThirdClass = thirdClassComplete || [2, 3, 18, 19, 34, 35, 49, 50, 65, 66, 82, 83, 97, 98].includes(cleanClassNum);
+
+      if (hasMstTable && isThirdClass) {
         mstSql = `
           IF NOT EXISTS (SELECT 1 FROM MasterSkillTree WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName)
           BEGIN
             INSERT INTO MasterSkillTree (Name, MasterLevel, MasterPoint, MasterExperience)
             VALUES (@CharName, 1, 0, 0);
           END
+        `;
+      } else if (hasMstTable && isFirstClass && thirdClassComplete === false) {
+        // Al degradar a 1ra clase, limpiar MasterSkillTree para prevenir crash del GameServer al conectar
+        mstSql = `
+          DELETE FROM MasterSkillTree WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;
         `;
       }
 
@@ -5947,13 +5973,6 @@ app.post('/api/warehouse', async (req, res) => {
               CONSTRAINT [PK_ExtWarehouse] PRIMARY KEY CLUSTERED ([AccountID] ASC, [Number] ASC)
             );
           END
-          ELSE
-          BEGIN
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ExtWarehouse') AND name = 'Items' AND max_length < 3840 AND max_length > 0)
-            BEGIN
-              ALTER TABLE ExtWarehouse ALTER COLUMN Items VARBINARY(MAX);
-            END
-          END
         `);
       } catch (tblErr) {
         console.warn('[bridgeServer] Notice: Could not auto-create/alter ExtWarehouse table:', tblErr.message);
@@ -6072,11 +6091,6 @@ app.post('/api/warehouse/save', async (req, res) => {
           .input('ItemsHex', sql.VarChar, finalHex)
           .input('Money', sql.Int, cleanMoney)
           .query(`
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('warehouse') AND name = 'Items' AND max_length < 3840 AND max_length > 0)
-            BEGIN
-              ALTER TABLE warehouse ALTER COLUMN Items VARBINARY(MAX);
-            END
-
             IF EXISTS (SELECT 1 FROM warehouse WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc)
             BEGIN
               UPDATE warehouse
@@ -6091,7 +6105,7 @@ app.post('/api/warehouse/save', async (req, res) => {
             END
           `);
       } else {
-        // Auto-crear o actualizar tabla ExtWarehouse si no existe
+        // Auto-crear tabla ExtWarehouse si no existe
         await pool.request().query(`
           IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ExtWarehouse')
           BEGIN
@@ -6102,13 +6116,6 @@ app.post('/api/warehouse/save', async (req, res) => {
               [Money] [int] NULL DEFAULT 0,
               CONSTRAINT [PK_ExtWarehouse] PRIMARY KEY CLUSTERED ([AccountID] ASC, [Number] ASC)
             );
-          END
-          ELSE
-          BEGIN
-            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ExtWarehouse') AND name = 'Items' AND max_length < 3840 AND max_length > 0)
-            BEGIN
-              ALTER TABLE ExtWarehouse ALTER COLUMN Items VARBINARY(MAX);
-            END
           END
         `);
 
@@ -6205,15 +6212,10 @@ app.post('/api/warehouse/set-expansion', async (req, res) => {
           END
         `);
 
-      // 3. Asegurar columna Items en warehouse y ampliar a 3840 bytes si es necesario
+      // 3. Inicializar o completar buffer de warehouse
       await pool.request()
         .input('Acc', sql.VarChar, accountId.trim())
         .query(`
-          IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('warehouse') AND name = 'Items' AND max_length < 3840 AND max_length > 0)
-          BEGIN
-            ALTER TABLE warehouse ALTER COLUMN Items VARBINARY(MAX);
-          END
-
           IF EXISTS (SELECT 1 FROM warehouse WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc)
           BEGIN
             DECLARE @CurLen INT = (SELECT DATALENGTH(Items) FROM warehouse WHERE LTRIM(RTRIM(AccountID)) = LTRIM(RTRIM(@Acc)) OR AccountID = @Acc);
@@ -6267,16 +6269,45 @@ app.post('/api/account/create', async (req, res) => {
         .input('Email', sql.VarChar, email || (username + '@mu.com'))
         .input('Level', sql.Int, parseInt(accountLevel, 10) || 0)
         .query(`
-          INSERT INTO MEMB_INFO (
-            memb___id, memb__pwd, memb_name, sno__numb, post_code, addr_info, addr_deta, 
-            tel__numb, mail_addr, phon_numb, fpas_ques, fpas_answ, job__code, 
-            appl_days, modi_days, out__days, true_days, mail_chek, bloc_code, ctl1_code, AccountLevel
-          )
-          VALUES (
-            @User, @Pass, @User, '1111111111111', '1234', 'Local', 'Local', 
-            '12345678', @Email, '12345678', 'pregunta', 'respuesta', '1', 
-            GETDATE(), GETDATE(), GETDATE(), GETDATE(), '1', '0', '0', @Level
-          );
+          DECLARE @PwdType VARCHAR(20) = 'VARCHAR';
+          DECLARE @PwdLen INT = 10;
+          DECLARE @HasFnMd5 INT = 0;
+          IF OBJECT_ID('dbo.fn_md5', 'FN') IS NOT NULL SET @HasFnMd5 = 1;
+          SELECT @PwdType = DATA_TYPE, @PwdLen = CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'MEMB_INFO' AND COLUMN_NAME = 'memb__pwd';
+
+          IF @PwdType IN ('binary', 'varbinary')
+          BEGIN
+            IF @HasFnMd5 = 1
+              EXEC sp_executesql N'INSERT INTO MEMB_INFO (memb___id, memb__pwd, memb_name, sno__numb, post_code, addr_info, addr_deta, tel__numb, mail_addr, phon_numb, fpas_ques, fpas_answ, job__code, appl_days, modi_days, out__days, true_days, mail_chek, bloc_code, ctl1_code, AccountLevel) VALUES (@User, [dbo].[fn_md5](@Pass, @User), @User, ''1111111111111'', ''1234'', ''Local'', ''Local'', ''12345678'', @Email, ''12345678'', ''pregunta'', ''respuesta'', ''1'', GETDATE(), GETDATE(), GETDATE(), GETDATE(), ''1'', ''0'', ''0'', @Level)', N'@User VARCHAR(10), @Pass VARCHAR(50), @Email VARCHAR(50), @Level INT', @User = @User, @Pass = @Pass, @Email = @Email, @Level = @Level;
+            ELSE
+              EXEC sp_executesql N'INSERT INTO MEMB_INFO (memb___id, memb__pwd, memb_name, sno__numb, post_code, addr_info, addr_deta, tel__numb, mail_addr, phon_numb, fpas_ques, fpas_answ, job__code, appl_days, modi_days, out__days, true_days, mail_chek, bloc_code, ctl1_code, AccountLevel) VALUES (@User, HASHBYTES(''MD5'', @Pass), @User, ''1111111111111'', ''1234'', ''Local'', ''Local'', ''12345678'', @Email, ''12345678'', ''pregunta'', ''respuesta'', ''1'', GETDATE(), GETDATE(), GETDATE(), GETDATE(), ''1'', ''0'', ''0'', @Level)', N'@User VARCHAR(10), @Pass VARCHAR(50), @Email VARCHAR(50), @Level INT', @User = @User, @Pass = @Pass, @Email = @Email, @Level = @Level;
+          END
+          ELSE IF @PwdType IN ('varchar', 'nvarchar', 'char') AND @PwdLen >= 64
+          BEGIN
+            INSERT INTO MEMB_INFO (
+              memb___id, memb__pwd, memb_name, sno__numb, post_code, addr_info, addr_deta, 
+              tel__numb, mail_addr, phon_numb, fpas_ques, fpas_answ, job__code, 
+              appl_days, modi_days, out__days, true_days, mail_chek, bloc_code, ctl1_code, AccountLevel
+            )
+            VALUES (
+              @User, LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', @Pass), 2)), @User, '1111111111111', '1234', 'Local', 'Local', 
+              '12345678', @Email, '12345678', 'pregunta', 'respuesta', '1', 
+              GETDATE(), GETDATE(), GETDATE(), GETDATE(), '1', '0', '0', @Level
+            );
+          END
+          ELSE
+          BEGIN
+            INSERT INTO MEMB_INFO (
+              memb___id, memb__pwd, memb_name, sno__numb, post_code, addr_info, addr_deta, 
+              tel__numb, mail_addr, phon_numb, fpas_ques, fpas_answ, job__code, 
+              appl_days, modi_days, out__days, true_days, mail_chek, bloc_code, ctl1_code, AccountLevel
+            )
+            VALUES (
+              @User, @Pass, @User, '1111111111111', '1234', 'Local', 'Local', 
+              '12345678', @Email, '12345678', 'pregunta', 'respuesta', '1', 
+              GETDATE(), GETDATE(), GETDATE(), GETDATE(), '1', '0', '0', @Level
+            );
+          END
 
           IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'MEMB_INFO' AND COLUMN_NAME = 'AccountExpireDate')
           BEGIN
@@ -6572,7 +6603,7 @@ app.post('/api/account/update', async (req, res) => {
       await pool.request()
         .input('OldUser', sql.VarChar(10), cleanUser)
         .input('NewUser', sql.VarChar(10), cleanNewUser)
-        .input('Pwd', sql.VarChar(10), password !== undefined && password !== null && String(password).trim() !== '' ? String(password).trim() : null)
+        .input('Pwd', sql.VarChar(64), password !== undefined && password !== null && String(password).trim() !== '' ? String(password).trim() : null)
         .input('MembName', sql.VarChar(50), name !== undefined && name !== null ? String(name).trim() : null)
         .input('Email', sql.VarChar(50), email !== undefined && email !== null ? String(email).trim() : null)
         .input('AccLevel', sql.Int, accountLevel !== undefined && accountLevel !== null ? (parseInt(accountLevel, 10) || 0) : null)
@@ -6588,10 +6619,34 @@ app.post('/api/account/update', async (req, res) => {
           BEGIN TRY
             BEGIN TRANSACTION;
 
-            -- 1. Actualizar MEMB_INFO
+            -- 1. Actualizar MEMB_INFO (Password determinista multi-versión)
+            DECLARE @PwdType VARCHAR(20) = 'VARCHAR';
+            DECLARE @PwdLen INT = 10;
+            DECLARE @HasFnMd5 INT = 0;
+            IF OBJECT_ID('dbo.fn_md5', 'FN') IS NOT NULL SET @HasFnMd5 = 1;
+            SELECT @PwdType = DATA_TYPE, @PwdLen = CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'MEMB_INFO' AND COLUMN_NAME = 'memb__pwd';
+
+            IF @Pwd IS NOT NULL
+            BEGIN
+              IF @PwdType IN ('binary', 'varbinary')
+              BEGIN
+                IF @HasFnMd5 = 1
+                  EXEC sp_executesql N'UPDATE MEMB_INFO SET memb__pwd = [dbo].[fn_md5](@P, @U) WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@U)) OR memb___id = @U', N'@P VARCHAR(50), @U VARCHAR(10)', @P = @Pwd, @U = @OldUser;
+                ELSE
+                  EXEC sp_executesql N'UPDATE MEMB_INFO SET memb__pwd = HASHBYTES(''MD5'', @P) WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@U)) OR memb___id = @U', N'@P VARCHAR(50), @U VARCHAR(10)', @P = @Pwd, @U = @OldUser;
+              END
+              ELSE IF @PwdType IN ('varchar', 'nvarchar', 'char') AND @PwdLen >= 64
+              BEGIN
+                UPDATE MEMB_INFO SET memb__pwd = LOWER(CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', @Pwd), 2)) WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
+              END
+              ELSE
+              BEGIN
+                UPDATE MEMB_INFO SET memb__pwd = @Pwd WHERE LTRIM(RTRIM(memb___id)) = LTRIM(RTRIM(@OldUser)) OR memb___id = @OldUser;
+              END
+            END
+
             UPDATE MEMB_INFO
             SET 
-              memb__pwd = COALESCE(@Pwd, memb__pwd),
               memb_name = COALESCE(@MembName, memb_name),
               mail_addr = COALESCE(@Email, mail_addr),
               AccountLevel = COALESCE(@AccLevel, AccountLevel),
@@ -7250,7 +7305,7 @@ app.post('/api/tools/search-items', async (req, res) => {
           const buf = row.Items;
           if (!buf || !Buffer.isBuffer(buf)) continue;
           const hex = buf.toString('hex').toUpperCase();
-          const totalSlots = Math.min(Math.floor(hex.length / 32), 120);
+          const totalSlots = Math.min(Math.floor(hex.length / 32), 240);
           for (let s = 0; s < totalSlots; s++) {
             checkMatch(hex.substring(s * 32, (s + 1) * 32), {
               location: 'Baúl #0',
@@ -7268,7 +7323,7 @@ app.post('/api/tools/search-items', async (req, res) => {
               const buf = row.Items;
               if (!buf || !Buffer.isBuffer(buf)) continue;
               const hex = buf.toString('hex').toUpperCase();
-              const totalSlots = Math.min(Math.floor(hex.length / 32), 120);
+              const totalSlots = Math.min(Math.floor(hex.length / 32), 240);
               for (let s = 0; s < totalSlots; s++) {
                 checkMatch(hex.substring(s * 32, (s + 1) * 32), {
                   location: `Baúl #${row.Number || 1}`,
@@ -7632,7 +7687,7 @@ app.post('/api/tools/rankings', async (req, res) => {
       // 1. Detectar tablas disponibles
       const tablesRes = await pool.request().query(`
         SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
-        WHERE TABLE_NAME IN ('Character', 'MEMB_STAT', 'Guild');
+        WHERE TABLE_NAME IN ('Character', 'MEMB_STAT', 'Guild', 'GuildMember');
       `);
       const tables = new Set((tablesRes.recordset || []).map(r => r.TABLE_NAME.toUpperCase()));
 
@@ -7645,7 +7700,13 @@ app.post('/api/tools/rankings', async (req, res) => {
         const nameCol = guildCols.has('g_name') ? 'G_Name' : (guildCols.has('name') ? 'Name' : "'' AS G_Name");
         const masterCol = guildCols.has('g_master') ? 'G_Master' : (guildCols.has('master') ? 'Master' : "'' AS G_Master");
         const scoreCol = guildCols.has('g_score') ? 'ISNULL(G_Score, 0)' : (guildCols.has('score') ? 'ISNULL(Score, 0)' : '0');
-        const countCol = guildCols.has('g_count') ? 'ISNULL(G_Count, 0)' : (guildCols.has('count') ? 'ISNULL(Count, 0)' : '0');
+        const countCol = guildCols.has('g_count') 
+          ? 'ISNULL(Guild.G_Count, 0)' 
+          : (guildCols.has('count') 
+            ? 'ISNULL(Guild.Count, 0)' 
+            : (tables.has('GUILDMEMBER') 
+              ? '(SELECT COUNT(*) FROM GuildMember gm WITH (NOLOCK) WHERE gm.G_Name = Guild.G_Name)' 
+              : '0'));
 
         const gQuery = `
           SELECT TOP 20 
@@ -7671,10 +7732,12 @@ app.post('/api/tools/rankings', async (req, res) => {
       let resetExpr = '0';
       if (charCols.has('resetcount')) resetExpr = 'ISNULL(c.ResetCount, 0)';
       else if (charCols.has('resets')) resetExpr = 'ISNULL(c.Resets, 0)';
+      else if (charCols.has('reset')) resetExpr = 'ISNULL(c.Reset, 0)';
 
       let mresetExpr = '0';
       if (charCols.has('masterresetcount')) mresetExpr = 'ISNULL(c.MasterResetCount, 0)';
       else if (charCols.has('mresetcount')) mresetExpr = 'ISNULL(c.MResetCount, 0)';
+      else if (charCols.has('grandreset')) mresetExpr = 'ISNULL(c.GrandReset, 0)';
 
       const hasMembStat = tables.has('MEMB_STAT');
 
@@ -9060,13 +9123,43 @@ app.post('/api/kit/deliver', async (req, res) => {
         currentHex = currentHex.padEnd(3840, 'F');
       }
 
-      // 2. Inyectar ítems en slots vacíos
+      // 2. Construir mapa 2D de slots ocupados (8x15 o 8x30)
+      const occupiedSlots = new Set();
+      const totalSlots = Math.min(Math.floor(currentHex.length / 32), 240);
+      for (let s = 0; s < totalSlots; s++) {
+        const chunk = currentHex.substring(s * 32, (s + 1) * 32);
+        if (!chunk || chunk.length < 32 || /^F{32}$/i.test(chunk) || /^0{32}$/.test(chunk)) continue;
+        const b0 = parseInt(chunk.substring(0, 2), 16);
+        if (b0 === 0xFF) continue;
+        const item = decodeItemBasic(chunk);
+        if (item) {
+          const isExp = s >= 120;
+          const baseOffset = isExp ? 120 : 0;
+          const rel = s - baseOffset;
+          const baseCol = rel % 8;
+          const baseRow = Math.floor(rel / 8);
+          const dims = getItemDimensions(item.group, item.index);
+          for (let r = 0; r < dims.h; r++) {
+            for (let c = 0; c < dims.w; c++) {
+              if (baseCol + c < 8 && baseRow + r < 15) {
+                occupiedSlots.add(baseOffset + (baseRow + r) * 8 + (baseCol + c));
+              }
+            }
+          }
+        } else {
+          occupiedSlots.add(s);
+        }
+      }
+
+      // Inyectar ítems con huella 2D sin colisiones
       for (const rawHex of kitHexItems) {
         if (!rawHex || rawHex.length < 32) {
           failed++;
           continue;
         }
         let itemHex = rawHex.trim().toUpperCase().substring(0, 32);
+        const parsed = decodeItemBasic(itemHex);
+        const targetDims = parsed ? getItemDimensions(parsed.group, parsed.index) : { w: 1, h: 1 };
 
         // Generar serial único para ítems de equipamiento
         const freshSerial = Math.floor(Math.random() * 0x7FFFFFFF) + 100000;
@@ -9074,13 +9167,36 @@ app.post('/api/kit/deliver', async (req, res) => {
         itemHex = itemHex.substring(0, 6) + sHex + itemHex.substring(14);
 
         let placed = false;
-        for (let s = 0; s < 120; s++) {
-          const slotHex = currentHex.substring(s * 32, (s + 1) * 32);
-          if (/^F{32}$/i.test(slotHex) || slotHex.startsWith('FF') || /^0{32}$/.test(slotHex)) {
-            currentHex = currentHex.substring(0, s * 32) + itemHex + currentHex.substring((s + 1) * 32);
-            delivered++;
-            placed = true;
-            break;
+        for (let s = 0; s < totalSlots; s++) {
+          const isExp = s >= 120;
+          const baseOffset = isExp ? 120 : 0;
+          const rel = s - baseOffset;
+          const col = rel % 8;
+          const row = Math.floor(rel / 8);
+
+          if (col + targetDims.w <= 8 && row + targetDims.h <= 15) {
+            let canFit = true;
+            for (let r = 0; r < targetDims.h; r++) {
+              for (let c = 0; c < targetDims.w; c++) {
+                const checkS = baseOffset + (row + r) * 8 + (col + c);
+                if (occupiedSlots.has(checkS)) {
+                  canFit = false;
+                  break;
+                }
+              }
+              if (!canFit) break;
+            }
+            if (canFit) {
+              for (let r = 0; r < targetDims.h; r++) {
+                for (let c = 0; c < targetDims.w; c++) {
+                  occupiedSlots.add(baseOffset + (row + r) * 8 + (col + c));
+                }
+              }
+              currentHex = currentHex.substring(0, s * 32) + itemHex + currentHex.substring((s + 1) * 32);
+              delivered++;
+              placed = true;
+              break;
+            }
           }
         }
         if (!placed) failed++;
@@ -9404,19 +9520,73 @@ app.post('/api/prizes/deliver', async (req, res) => {
 
             if (currentHex.length < 3840) currentHex = currentHex.padEnd(3840, 'F');
 
+            // 4.1 Construir mapa 2D de slots ocupados
+            const occupiedSlots = new Set();
+            const totalSlots = Math.min(Math.floor(currentHex.length / 32), 240);
+            for (let s = 0; s < totalSlots; s++) {
+              const chunk = currentHex.substring(s * 32, (s + 1) * 32);
+              if (!chunk || chunk.length < 32 || /^F{32}$/i.test(chunk) || /^0{32}$/.test(chunk)) continue;
+              const b0 = parseInt(chunk.substring(0, 2), 16);
+              if (b0 === 0xFF) continue;
+              const item = decodeItemBasic(chunk);
+              if (item) {
+                const isExp = s >= 120;
+                const baseOffset = isExp ? 120 : 0;
+                const rel = s - baseOffset;
+                const baseCol = rel % 8;
+                const baseRow = Math.floor(rel / 8);
+                const dims = getItemDimensions(item.group, item.index);
+                for (let r = 0; r < dims.h; r++) {
+                  for (let c = 0; c < dims.w; c++) {
+                    if (baseCol + c < 8 && baseRow + r < 15) {
+                      occupiedSlots.add(baseOffset + (baseRow + r) * 8 + (baseCol + c));
+                    }
+                  }
+                }
+              } else {
+                occupiedSlots.add(s);
+              }
+            }
+
             let addedCount = 0;
             for (const itemHex of items) {
               let cleanHex = itemHex.trim().toUpperCase().substring(0, 32);
+              const parsed = decodeItemBasic(cleanHex);
+              const targetDims = parsed ? getItemDimensions(parsed.group, parsed.index) : { w: 1, h: 1 };
+
               const freshSerial = Math.floor(Math.random() * 0x7FFFFFFF) + 100000;
               const sHex = freshSerial.toString(16).padStart(8, '0').toUpperCase();
               cleanHex = cleanHex.substring(0, 6) + sHex + cleanHex.substring(14);
 
-              for (let s = 0; s < 120; s++) {
-                const chunk = currentHex.substring(s * 32, (s + 1) * 32);
-                if (/^F{32}$/i.test(chunk) || chunk.startsWith('FF') || /^0{32}$/.test(chunk)) {
-                  currentHex = currentHex.substring(0, s * 32) + cleanHex + currentHex.substring((s + 1) * 32);
-                  addedCount++;
-                  break;
+              for (let s = 0; s < totalSlots; s++) {
+                const isExp = s >= 120;
+                const baseOffset = isExp ? 120 : 0;
+                const rel = s - baseOffset;
+                const col = rel % 8;
+                const row = Math.floor(rel / 8);
+
+                if (col + targetDims.w <= 8 && row + targetDims.h <= 15) {
+                  let canFit = true;
+                  for (let r = 0; r < targetDims.h; r++) {
+                    for (let c = 0; c < targetDims.w; c++) {
+                      const checkS = baseOffset + (row + r) * 8 + (col + c);
+                      if (occupiedSlots.has(checkS)) {
+                        canFit = false;
+                        break;
+                      }
+                    }
+                    if (!canFit) break;
+                  }
+                  if (canFit) {
+                    for (let r = 0; r < targetDims.h; r++) {
+                      for (let c = 0; c < targetDims.w; c++) {
+                        occupiedSlots.add(baseOffset + (row + r) * 8 + (col + c));
+                      }
+                    }
+                    currentHex = currentHex.substring(0, s * 32) + cleanHex + currentHex.substring((s + 1) * 32);
+                    addedCount++;
+                    break;
+                  }
                 }
               }
             }
@@ -9470,14 +9640,14 @@ app.post('/api/gm/list', async (req, res) => {
       const r = await pool.request().query(`
         SELECT Name AS charName, AccountID AS accountId, Class AS class, cLevel AS level, ISNULL(CtlCode, 0) AS ctlCode
         FROM Character
-        WHERE ISNULL(CtlCode, 0) > 0;
+        WHERE ISNULL(CtlCode, 0) >= 8;
       `);
       return (r.recordset || []).map(row => ({
         charName: row.charName,
         accountId: row.accountId,
         class: row.class,
         level: row.level,
-        gmLevel: row.ctlCode === 32 ? 3 : (row.ctlCode >= 8 ? 2 : (row.ctlCode >= 1 ? 1 : 0)),
+        gmLevel: row.ctlCode >= 32 ? 3 : 2,
         ctlCode: row.ctlCode
       }));
     });
@@ -9497,8 +9667,8 @@ app.post('/api/gm/set-level', async (req, res) => {
     const levelNum = parseInt(gmLevel, 10) || 0;
     let ctlCode = 0;
     if (levelNum === 3) ctlCode = 32;
-    else if (levelNum === 2) ctlCode = 8;
-    else if (levelNum === 1) ctlCode = 1;
+    else if (levelNum === 2 || levelNum === 1) ctlCode = 8;
+    else ctlCode = 0;
 
     await executeSql(config, async (pool) => {
       await pool.request()
@@ -9513,6 +9683,461 @@ app.post('/api/gm/set-level', async (req, res) => {
         ? `Permisos GM revocados para '${charName}' (CtlCode = 0).`
         : `Rango GM asignado a '${charName}': Nivel ${levelNum} (CtlCode = ${ctlCode}).`
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10.1 DESCUBRIMIENTO UNIVERSAL DE CAPACIDADES DEL SERVIDOR (TODAS LAS SEASONS)
+app.post('/api/tools/server-capabilities', async (req, res) => {
+  try {
+    const { config } = req.body;
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const caps = await executeSql(config, async (pool) => {
+      try {
+        const spRes = await pool.request().execute('dbo.sp_MuManager_DiscoverServer');
+        if (spRes.recordset && spRes.recordset.length > 0) {
+          return spRes.recordset[0];
+        }
+      } catch (_) {}
+
+      const fallbackQuery = `
+        DECLARE @ItemBytesPerSlot INT = 16, @ItemHexChars INT = 32, @SeasonProfile VARCHAR(20) = 'SEASON6';
+        DECLARE @InvMaxLen INT = 0, @WhMaxLen INT = 0;
+        SELECT @InvMaxLen = max_length FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Inventory';
+        SELECT @WhMaxLen = max_length FROM sys.columns WHERE object_id = OBJECT_ID('warehouse') AND name = 'Items';
+
+        IF (@InvMaxLen > 0 AND @InvMaxLen <= 1200) OR (@WhMaxLen > 0 AND @WhMaxLen <= 1200)
+        BEGIN SET @ItemBytesPerSlot = 10; SET @ItemHexChars = 20; SET @SeasonProfile = 'SEASON97D'; END
+        ELSE IF (@InvMaxLen >= 7552) OR (@WhMaxLen >= 7680)
+        BEGIN SET @ItemBytesPerSlot = 32; SET @ItemHexChars = 64; SET @SeasonProfile = 'SEASON8_PLUS'; END
+
+        DECLARE @PwdType VARCHAR(30) = 'PLAIN', @PwdDataType VARCHAR(20) = 'varchar', @PwdMaxLen INT = 10;
+        SELECT @PwdDataType = DATA_TYPE, @PwdMaxLen = CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'MEMB_INFO' AND COLUMN_NAME = 'memb__pwd';
+        IF @PwdDataType IN ('binary', 'varbinary')
+        BEGIN
+          IF OBJECT_ID('dbo.fn_md5', 'FN') IS NOT NULL SET @PwdType = 'MD5_WEBZEN';
+          ELSE SET @PwdType = 'MD5_BINARY';
+        END
+        ELSE IF @PwdDataType IN ('varchar', 'nvarchar', 'char') AND @PwdMaxLen >= 64 SET @PwdType = 'SHA256';
+
+        DECLARE @ResetCol VARCHAR(30) = 'None';
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'ResetCount') SET @ResetCol = 'ResetCount';
+        ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Resets') SET @ResetCol = 'Resets';
+        ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Reset') SET @ResetCol = 'Reset';
+
+        DECLARE @MResetCol VARCHAR(30) = 'None';
+        IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'MasterResetCount') SET @MResetCol = 'MasterResetCount';
+        ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'MResetCount') SET @MResetCol = 'MResetCount';
+
+        DECLARE @StatsType VARCHAR(20) = 'SMALLINT';
+        SELECT @StatsType = UPPER(DATA_TYPE) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Character' AND COLUMN_NAME = 'Strength';
+
+        SELECT 
+          1 AS Success,
+          @SeasonProfile AS SeasonProfile,
+          @ItemBytesPerSlot AS ItemBytesPerSlot,
+          @ItemHexChars AS ItemHexChars,
+          @PwdType AS PasswordType,
+          @ResetCol AS ResetColumn,
+          @MResetCol AS MasterResetColumn,
+          @StatsType AS StatsDataType,
+          CAST(CASE WHEN OBJECT_ID('MasterSkillTree', 'U') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasMasterSkillTree,
+          CAST(CASE WHEN OBJECT_ID('MuCastle_DATA', 'U') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasCastleSiege,
+          CAST(CASE WHEN OBJECT_ID('CashShopData', 'U') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasCashShop,
+          CAST(CASE WHEN OBJECT_ID('ExtWarehouse', 'U') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasExtWarehouse,
+          CAST(CASE WHEN OBJECT_ID('Gens_UserInfo', 'U') IS NOT NULL OR OBJECT_ID('Gens_Rank', 'U') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasGens,
+          CAST(CASE WHEN OBJECT_ID('Mu_Marry', 'U') IS NOT NULL OR EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name IN ('MarryName', 'Married')) THEN 1 ELSE 0 END AS BIT) AS HasMarriage,
+          CAST(CASE WHEN OBJECT_ID('MuManager_GiftCodes', 'U') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasGiftCodes,
+          CAST(CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasMultiDb;
+      `;
+      const fallbackRes = await pool.request().query(fallbackQuery);
+      return fallbackRes.recordset && fallbackRes.recordset[0] ? fallbackRes.recordset[0] : null;
+    });
+
+    res.json({ success: true, capabilities: caps });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10.2 GESTION DE CASTLE SIEGE (100% NATIVO SQL)
+app.post('/api/castle-siege/status', async (req, res) => {
+  try {
+    const { config } = req.body;
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const data = await executeSql(config, async (pool) => {
+      const hasCastleTable = await pool.request().query("SELECT OBJECT_ID('MuCastle_DATA', 'U') AS HasCastle;");
+      if (!hasCastleTable.recordset || !hasCastleTable.recordset[0] || !hasCastleTable.recordset[0].HasCastle) {
+        return { available: false, message: 'La tabla MuCastle_DATA no existe en este servidor.' };
+      }
+
+      const q = await pool.request().query(`
+        SELECT TOP 1
+          ISNULL(MAP_SVR_GROUP, 0) AS mapSvrGroup,
+          ISNULL(CASTLE_OCCUPY, 0) AS isOccupied,
+          LTRIM(RTRIM(ISNULL(OWNER_GUILD, ''))) AS ownerGuild,
+          ISNULL(MONEY_CHAOS, 0) AS moneyChaos,
+          ISNULL(TAX_RATE_CHAOS, 0) AS taxRateChaos,
+          ISNULL(TAX_RATE_STORE, 0) AS taxRateStore,
+          SIEGE_START_DATE AS siegeStartDate,
+          SIEGE_END_DATE AS siegeEndDate
+        FROM MuCastle_DATA WITH (NOLOCK);
+      `);
+
+      let registeredGuilds = [];
+      const hasReg = await pool.request().query("SELECT OBJECT_ID('MuCastle_REG_DL', 'U') AS HasReg;");
+      if (hasReg.recordset && hasReg.recordset[0] && hasReg.recordset[0].HasReg) {
+        const regRes = await pool.request().query(`
+          SELECT LTRIM(RTRIM(REG_SIEGE_GUILD)) AS guildName, ISNULL(REG_MARKS, 0) AS marks
+          FROM MuCastle_REG_DL WITH (NOLOCK)
+          ORDER BY marks DESC;
+        `);
+        registeredGuilds = regRes.recordset || [];
+      }
+
+      const castle = q.recordset && q.recordset[0] ? q.recordset[0] : null;
+      return { available: true, castle, registeredGuilds };
+    });
+
+    res.json({ success: true, ...data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/castle-siege/update-tax', async (req, res) => {
+  try {
+    const { taxRateChaos, taxRateStore, config } = req.body;
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const cTax = Math.min(3, Math.max(0, parseInt(taxRateChaos, 10) || 0));
+    const sTax = Math.min(3, Math.max(0, parseInt(taxRateStore, 10) || 0));
+
+    await executeSql(config, async (pool) => {
+      await pool.request()
+        .input('ChaosTax', sql.Int, cTax)
+        .input('StoreTax', sql.Int, sTax)
+        .query('UPDATE MuCastle_DATA SET TAX_RATE_CHAOS = @ChaosTax, TAX_RATE_STORE = @StoreTax;');
+    });
+
+    res.json({ success: true, message: `Impuestos de Castle Siege actualizados: Chaos ${cTax}%, Tienda ${sTax}%.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/castle-siege/update-owner', async (req, res) => {
+  try {
+    const { ownerGuild, config } = req.body;
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const cleanGuild = (ownerGuild || '').trim();
+    const isOcc = cleanGuild.length > 0 ? 1 : 0;
+
+    await executeSql(config, async (pool) => {
+      await pool.request()
+        .input('Owner', sql.VarChar(10), cleanGuild)
+        .input('Occ', sql.TinyInt, isOcc)
+        .query('UPDATE MuCastle_DATA SET OWNER_GUILD = @Owner, CASTLE_OCCUPY = @Occ;');
+    });
+
+    res.json({
+      success: true,
+      message: cleanGuild.length > 0
+        ? `Dueño del castillo actualizado al Guild '${cleanGuild}'.`
+        : 'Castillo liberado (sin dueño ocupante).'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10.3 SISTEMA DE GIFT CODES (CANJEABLE 100% NATIVO SQL)
+app.post('/api/giftcodes/list', async (req, res) => {
+  try {
+    const { config } = req.body;
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const codes = await executeSql(config, async (pool) => {
+      const checkTable = await pool.request().query("SELECT OBJECT_ID('MuManager_GiftCodes', 'U') AS HasTable;");
+      if (!checkTable.recordset || !checkTable.recordset[0] || !checkTable.recordset[0].HasTable) {
+        return [];
+      }
+      const r = await pool.request().query(`
+        SELECT 
+          Code AS code,
+          Description AS description,
+          ItemHex AS itemHex,
+          Zen AS zen,
+          WCoinC AS wCoinC,
+          WCoinP AS wCoinP,
+          GoblinPoint AS goblinPoint,
+          Ruud AS ruud,
+          VipDays AS vipDays,
+          MaxUses AS maxUses,
+          UsedCount AS usedCount,
+          ExpiresAt AS expiresAt,
+          CreatedAt AS createdAt,
+          CreatedBy AS createdBy,
+          IsActive AS isActive
+        FROM MuManager_GiftCodes WITH (NOLOCK)
+        ORDER BY CreatedAt DESC;
+      `);
+      return r.recordset || [];
+    });
+
+    res.json({ success: true, codes });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/giftcodes/create', async (req, res) => {
+  try {
+    const { code, description, itemHex, zen = 0, wCoinC = 0, wCoinP = 0, goblinPoint = 0, ruud = 0, vipDays = 0, maxUses = 1, expiresAt = null, config } = req.body;
+    if (!code || typeof code !== 'string' || !code.trim()) {
+      return res.status(400).json({ success: false, error: 'El código es requerido.' });
+    }
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const cleanCode = code.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+
+    await executeSql(config, async (pool) => {
+      await pool.request().query(`
+        IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MuManager_GiftCodes')
+        BEGIN
+          CREATE TABLE dbo.MuManager_GiftCodes (
+            Code VARCHAR(32) NOT NULL PRIMARY KEY,
+            Description VARCHAR(100) NULL,
+            ItemHex VARCHAR(MAX) NULL,
+            Zen INT NOT NULL DEFAULT 0,
+            WCoinC INT NOT NULL DEFAULT 0,
+            WCoinP INT NOT NULL DEFAULT 0,
+            GoblinPoint INT NOT NULL DEFAULT 0,
+            Ruud INT NOT NULL DEFAULT 0,
+            VipDays INT NOT NULL DEFAULT 0,
+            MaxUses INT NOT NULL DEFAULT 1,
+            UsedCount INT NOT NULL DEFAULT 0,
+            ExpiresAt DATETIME NULL,
+            CreatedAt DATETIME DEFAULT GETDATE(),
+            CreatedBy VARCHAR(50) DEFAULT 'ADMIN',
+            IsActive BIT NOT NULL DEFAULT 1
+          );
+        END
+        IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MuManager_GiftCodeClaims')
+        BEGIN
+          CREATE TABLE dbo.MuManager_GiftCodeClaims (
+            ClaimID BIGINT IDENTITY(1,1) PRIMARY KEY,
+            Code VARCHAR(32) NOT NULL,
+            AccountID VARCHAR(10) NOT NULL,
+            CharName VARCHAR(10) NULL,
+            ClaimDate DATETIME DEFAULT GETDATE(),
+            CONSTRAINT UQ_MuManager_GiftCode_Account UNIQUE (Code, AccountID)
+          );
+        END
+      `);
+
+      await pool.request()
+        .input('Code', sql.VarChar(32), cleanCode)
+        .input('Desc', sql.VarChar(100), description || null)
+        .input('Hex', sql.VarChar(sql.MAX), itemHex || null)
+        .input('Zen', sql.Int, parseInt(zen, 10) || 0)
+        .input('CoinC', sql.Int, parseInt(wCoinC, 10) || 0)
+        .input('CoinP', sql.Int, parseInt(wCoinP, 10) || 0)
+        .input('Goblin', sql.Int, parseInt(goblinPoint, 10) || 0)
+        .input('Ruud', sql.Int, parseInt(ruud, 10) || 0)
+        .input('Vip', sql.Int, parseInt(vipDays, 10) || 0)
+        .input('MaxUses', sql.Int, Math.max(1, parseInt(maxUses, 10) || 1))
+        .input('Exp', sql.DateTime, expiresAt ? new Date(expiresAt) : null)
+        .query(`
+          IF EXISTS (SELECT 1 FROM MuManager_GiftCodes WHERE UPPER(LTRIM(RTRIM(Code))) = @Code)
+          BEGIN
+            UPDATE MuManager_GiftCodes
+            SET Description = @Desc, ItemHex = @Hex, Zen = @Zen, WCoinC = @CoinC, WCoinP = @CoinP,
+                GoblinPoint = @Goblin, Ruud = @Ruud, VipDays = @Vip, MaxUses = @MaxUses, ExpiresAt = @Exp, IsActive = 1
+            WHERE UPPER(LTRIM(RTRIM(Code))) = @Code;
+          END
+          ELSE
+          BEGIN
+            INSERT INTO MuManager_GiftCodes (Code, Description, ItemHex, Zen, WCoinC, WCoinP, GoblinPoint, Ruud, VipDays, MaxUses, ExpiresAt)
+            VALUES (@Code, @Desc, @Hex, @Zen, @CoinC, @CoinP, @Goblin, @Ruud, @Vip, @MaxUses, @Exp);
+          END
+        `);
+    });
+
+    res.json({ success: true, message: `Código de regalo '${cleanCode}' creado exitosamente.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/giftcodes/delete', async (req, res) => {
+  try {
+    const { code, config } = req.body;
+    if (!code) return res.status(400).json({ success: false, error: 'Código requerido.' });
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    await executeSql(config, async (pool) => {
+      await pool.request()
+        .input('Code', sql.VarChar(32), code.trim().toUpperCase())
+        .query('DELETE FROM MuManager_GiftCodes WHERE UPPER(LTRIM(RTRIM(Code))) = @Code;');
+    });
+
+    res.json({ success: true, message: `Código '${code}' eliminado exitosamente.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/giftcodes/claim', async (req, res) => {
+  try {
+    const { code, accountId, charName, config } = req.body;
+    if (!code || !accountId) return res.status(400).json({ success: false, error: 'Código y accountId requeridos.' });
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const result = await executeSql(config, async (pool) => {
+      try {
+        const spRes = await pool.request()
+          .input('Code', sql.VarChar(32), code.trim().toUpperCase())
+          .input('AccountID', sql.VarChar(10), accountId.trim())
+          .input('CharName', sql.VarChar(10), charName ? charName.trim() : null)
+          .execute('dbo.sp_MuManager_ClaimGiftCode');
+
+        if (spRes.recordset && spRes.recordset.length > 0) {
+          return spRes.recordset[0];
+        }
+      } catch (_) {}
+
+      const r = await pool.request()
+        .input('Code', sql.VarChar(32), code.trim().toUpperCase())
+        .input('AccountID', sql.VarChar(10), accountId.trim())
+        .query(`
+          SELECT IsActive, MaxUses, UsedCount, ExpiresAt, Zen, WCoinC, WCoinP, GoblinPoint, Ruud, VipDays, ItemHex
+          FROM MuManager_GiftCodes WITH (UPDLOCK)
+          WHERE UPPER(LTRIM(RTRIM(Code))) = @Code;
+        `);
+
+      if (!r.recordset || r.recordset.length === 0) {
+        return { Success: 0, Message: 'El código ingresado no existe.' };
+      }
+      const c = r.recordset[0];
+      if (!c.IsActive) return { Success: 0, Message: 'Este código ha sido desactivado.' };
+      if (c.ExpiresAt && new Date(c.ExpiresAt).getTime() < Date.now()) return { Success: 0, Message: 'Este código ha expirado.' };
+      if (c.MaxUses > 0 && c.UsedCount >= c.MaxUses) return { Success: 0, Message: 'Este código ha alcanzado el límite de usos permitidos.' };
+
+      const claimChk = await pool.request()
+        .input('Code', sql.VarChar(32), code.trim().toUpperCase())
+        .input('Acc', sql.VarChar(10), accountId.trim())
+        .query('SELECT 1 FROM MuManager_GiftCodeClaims WHERE UPPER(LTRIM(RTRIM(Code))) = @Code AND LTRIM(RTRIM(AccountID)) = @Acc;');
+
+      if (claimChk.recordset && claimChk.recordset.length > 0) {
+        return { Success: 0, Message: 'Esta cuenta ya canjeó este código previamente.' };
+      }
+
+      await pool.request()
+        .input('Code', sql.VarChar(32), code.trim().toUpperCase())
+        .input('Acc', sql.VarChar(10), accountId.trim())
+        .query(`
+          INSERT INTO MuManager_GiftCodeClaims (Code, AccountID, ClaimDate) VALUES (@Code, @Acc, GETDATE());
+          UPDATE MuManager_GiftCodes SET UsedCount = UsedCount + 1 WHERE UPPER(LTRIM(RTRIM(Code))) = @Code;
+        `);
+
+      return { Success: 1, Message: 'Código canjeado con éxito.', ...c };
+    });
+
+    if (!result.Success) {
+      return res.status(400).json({ success: false, error: result.Message });
+    }
+
+    res.json({ success: true, message: result.Message, details: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10.4 SISTEMA DE MATRIMONIOS Y DIVORCIOS (100% NATIVO SQL)
+app.post('/api/marry/list', async (req, res) => {
+  try {
+    const { config } = req.body;
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const couples = await executeSql(config, async (pool) => {
+      const hasMarryTable = await pool.request().query("SELECT OBJECT_ID('Mu_Marry', 'U') AS HasMarry;");
+      if (hasMarryTable.recordset && hasMarryTable.recordset[0] && hasMarryTable.recordset[0].HasMarry) {
+        const r = await pool.request().query(`
+          SELECT 
+            LTRIM(RTRIM(Husband)) AS husband,
+            LTRIM(RTRIM(Wife)) AS wife,
+            MarryDate AS marryDate
+          FROM Mu_Marry WITH (NOLOCK);
+        `);
+        return r.recordset || [];
+      }
+
+      const colsRes = await pool.request().query("SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name IN ('MarryName', 'Married');");
+      const cols = new Set((colsRes.recordset || []).map(c => c.name.toLowerCase()));
+      if (cols.has('marryname')) {
+        const r = await pool.request().query(`
+          SELECT 
+            LTRIM(RTRIM(Name)) AS husband,
+            LTRIM(RTRIM(MarryName)) AS wife,
+            GETDATE() AS marryDate
+          FROM Character WITH (NOLOCK)
+          WHERE MarryName IS NOT NULL AND LEN(LTRIM(RTRIM(MarryName))) > 0 AND Name < MarryName;
+        `);
+        return r.recordset || [];
+      }
+
+      return [];
+    });
+
+    res.json({ success: true, couples });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/marry/divorce', async (req, res) => {
+  try {
+    const { husband, wife, config } = req.body;
+    if (!husband) return res.status(400).json({ success: false, error: 'husband requerido' });
+    if (!sql) return res.status(500).json({ success: false, error: 'mssql not installed' });
+
+    const cleanHusband = husband.trim();
+    const cleanWife = (wife || '').trim();
+
+    await executeSql(config, async (pool) => {
+      const hasMarryTable = await pool.request().query("SELECT OBJECT_ID('Mu_Marry', 'U') AS HasMarry;");
+      if (hasMarryTable.recordset && hasMarryTable.recordset[0] && hasMarryTable.recordset[0].HasMarry) {
+        await pool.request()
+          .input('H', sql.VarChar(10), cleanHusband)
+          .input('W', sql.VarChar(10), cleanWife)
+          .query(`
+            DELETE FROM Mu_Marry 
+            WHERE (LTRIM(RTRIM(Husband)) = @H OR LTRIM(RTRIM(Wife)) = @H)
+               OR (@W <> '' AND (LTRIM(RTRIM(Husband)) = @W OR LTRIM(RTRIM(Wife)) = @W));
+          `);
+      }
+
+      const colsRes = await pool.request().query("SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name IN ('MarryName', 'Married');");
+      const cols = new Set((colsRes.recordset || []).map(c => c.name.toLowerCase()));
+      if (cols.has('marryname')) {
+        await pool.request()
+          .input('H', sql.VarChar(10), cleanHusband)
+          .input('W', sql.VarChar(10), cleanWife)
+          .query(`
+            UPDATE Character 
+            SET MarryName = NULL, Married = 0 
+            WHERE LTRIM(RTRIM(Name)) IN (@H, @W) 
+               OR LTRIM(RTRIM(MarryName)) IN (@H, @W);
+          `);
+      }
+    });
+
+    res.json({ success: true, message: `Divorcio ejecutado exitosamente para '${cleanHusband}'.` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -31,3 +31,22 @@ export interface SqlLogEntry {
   rowCount?: number;
   error?: string;
 }
+
+export interface ServerCapabilities {
+  Success: number;
+  SeasonProfile: 'SEASON97D' | 'SEASON6' | 'SEASON8_PLUS' | string;
+  ItemBytesPerSlot: number;
+  ItemHexChars: number;
+  PasswordType: 'PLAIN' | 'MD5_WEBZEN' | 'MD5_BINARY' | 'SHA256' | string;
+  ResetColumn: string;
+  MasterResetColumn: string;
+  StatsDataType: string;
+  HasMasterSkillTree: boolean;
+  HasCastleSiege: boolean;
+  HasCashShop: boolean;
+  HasExtWarehouse: boolean;
+  HasGens: boolean;
+  HasMarriage: boolean;
+  HasGiftCodes: boolean;
+  HasMultiDb: boolean;
+}

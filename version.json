@@ -1,10 +1,10 @@
 {
-  "version": "2.4.2",
+  "version": "2.4.4",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-02T20:14:00.000Z",
+  "publishedAt": "2026-10-02T21:33:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 144,
+  "build": 146,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.2 (Build 144) - Editor Rápido de Pilas y Paquetes de Joyas:\n• EDITOR RÁPIDO DE APILADOS EN 1 TOQUE: Ajusta cantidades de pociones y flechas al instante (presets x1 a x255 MAX, steppers +/- y teclado directo) desde el diálogo de acción sin abrir pantallas secundarias.\n• SELECTOR DINÁMICO DE BUNDLES: Conversión inmediata de paquetes de joyas comprimidas (Bless, Soul, Life, Chaos, etc.) entre x10, x20 y x30 con un solo tap.\n• APERTURA DIRECTA EN MODO EDICIÓN: El editor detallado de ítems se activa automáticamente en modo edición al ingresar.\n• DEPURACIÓN VISUAL DE JOYAS SUELTAS: Erradicadas insignias redundantes 'x1' en joyas individuales y plumas, reservando los badges exclusivamente para paquetes y consumibles apilados.\n• SINCRONIZACIÓN SQL BIDIRECCIONAL: Actualización en caliente de inventario y baúl de cuentas protegida contra desbordamientos."
+  "changelog": "MuManager PRO v2.4.4 (Build 146) - Motor de Descubrimiento SQL Universal y Módulos Nativos:\n• DESCUBRIMIENTO UNIVERSAL SQL (Todas las Seasons): Detección automática de Season (97d, 99b, S1-S6, S8, S18/S19+), hashing de contraseñas (MD5 Webzen, SHA-256, Plain), bytes de ítems (10, 16, 32 bytes) y columnas de resets.\n• GESTOR DE CASTLE SIEGE NATIVO SQL: Monitoreo en tiempo real de ocupación, impuestos, gremio dueño e inscripciones (MuCastle_DATA y MuCastle_REG_DL).\n• SISTEMA DE GIFT CODES TRANSACCIONAL: Creación, administración y canje atómico de códigos con recompensas de Zen, WCoins, Goblin Points, Ruud, VIP e ítems sin duplicación.\n• GESTOR DE MATRIMONIOS Y DIVORCIOS: Auditoría y disolución de enlaces matrimoniales compatible con Mu_Marry y columnas de Character.\n• CORRECCIÓN CRÍTICA DE GM CTLCODE Y PREVENCIÓN DE COLISIÓN 2D: Corrección de falsos positivos en Staff y algoritmo de huella espacial 2D en baúles (240 slots).\n• RENDIMIENTO SQL ÓPTIMO: Erradicación total de bloqueos de esquema por DDL en caliente (ALTER TABLE) en baúl."
 }

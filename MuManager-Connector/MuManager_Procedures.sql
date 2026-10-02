@@ -404,6 +404,311 @@ BEGIN
 END
 GO
 
+-- ============================================================================
+-- 8. sp_MuManager_DiscoverServer
+-- Descubrimiento determinista de versión, esquemas, bytes de ítems y hashing
+-- Compatible con 97d, 99b, S1-S6, S8, S12, S16, S18/S19+
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.sp_MuManager_DiscoverServer
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Detección de Item Bytes por Slot
+    DECLARE @ItemBytesPerSlot INT = 16;
+    DECLARE @ItemHexChars INT = 32;
+    DECLARE @SeasonProfile VARCHAR(20) = 'SEASON6';
+
+    DECLARE @InvMaxLen INT = 0;
+    SELECT @InvMaxLen = max_length 
+    FROM sys.columns 
+    WHERE object_id = OBJECT_ID('Character') AND name = 'Inventory';
+
+    DECLARE @WhMaxLen INT = 0;
+    SELECT @WhMaxLen = max_length 
+    FROM sys.columns 
+    WHERE object_id = OBJECT_ID('warehouse') AND name = 'Items';
+
+    IF (@InvMaxLen > 0 AND @InvMaxLen <= 1200) OR (@WhMaxLen > 0 AND @WhMaxLen <= 1200)
+    BEGIN
+        SET @ItemBytesPerSlot = 10;
+        SET @ItemHexChars = 20;
+        SET @SeasonProfile = 'SEASON97D';
+    END
+    ELSE IF (@InvMaxLen >= 7552) OR (@WhMaxLen >= 7680)
+    BEGIN
+        SET @ItemBytesPerSlot = 32;
+        SET @ItemHexChars = 64;
+        SET @SeasonProfile = 'SEASON8_PLUS';
+    END
+    ELSE
+    BEGIN
+        SET @ItemBytesPerSlot = 16;
+        SET @ItemHexChars = 32;
+        SET @SeasonProfile = 'SEASON6';
+    END
+
+    -- 2. Detección de Tipo de Contraseña (MEMB_INFO)
+    DECLARE @PwdType VARCHAR(30) = 'PLAIN';
+    DECLARE @PwdDataType VARCHAR(20) = 'varchar';
+    DECLARE @PwdMaxLen INT = 10;
+
+    SELECT @PwdDataType = DATA_TYPE, @PwdMaxLen = CHARACTER_MAXIMUM_LENGTH
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'MEMB_INFO' AND COLUMN_NAME = 'memb__pwd';
+
+    IF @PwdDataType IN ('binary', 'varbinary')
+    BEGIN
+        IF OBJECT_ID('dbo.fn_md5', 'FN') IS NOT NULL
+            SET @PwdType = 'MD5_WEBZEN';
+        ELSE
+            SET @PwdType = 'MD5_BINARY';
+    END
+    ELSE IF @PwdDataType IN ('varchar', 'nvarchar', 'char')
+    BEGIN
+        IF @PwdMaxLen >= 64
+            SET @PwdType = 'SHA256';
+        ELSE
+            SET @PwdType = 'PLAIN';
+    END
+
+    -- 3. Detección de Columna de Resets
+    DECLARE @ResetCol VARCHAR(30) = 'None';
+    IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'ResetCount')
+        SET @ResetCol = 'ResetCount';
+    ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Resets')
+        SET @ResetCol = 'Resets';
+    ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'Reset')
+        SET @ResetCol = 'Reset';
+
+    -- 4. Detección de Columna de Master Resets
+    DECLARE @MResetCol VARCHAR(30) = 'None';
+    IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'MasterResetCount')
+        SET @MResetCol = 'MasterResetCount';
+    ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'MResetCount')
+        SET @MResetCol = 'MResetCount';
+    ELSE IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name = 'GrandReset')
+        SET @MResetCol = 'GrandReset';
+
+    -- 5. Detección de Tipo de Stats (smallint vs int)
+    DECLARE @StatsType VARCHAR(20) = 'SMALLINT';
+    SELECT @StatsType = UPPER(DATA_TYPE)
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'Character' AND COLUMN_NAME = 'Strength';
+
+    -- 6. Detección de Tablas y Módulos
+    DECLARE @HasMasterTree BIT = CASE WHEN OBJECT_ID('MasterSkillTree', 'U') IS NOT NULL THEN 1 ELSE 0 END;
+    DECLARE @HasCastleSiege BIT = CASE WHEN OBJECT_ID('MuCastle_DATA', 'U') IS NOT NULL THEN 1 ELSE 0 END;
+    DECLARE @HasCashShop BIT = CASE WHEN OBJECT_ID('CashShopData', 'U') IS NOT NULL THEN 1 ELSE 0 END;
+    DECLARE @HasExtWarehouse BIT = CASE WHEN OBJECT_ID('ExtWarehouse', 'U') IS NOT NULL THEN 1 ELSE 0 END;
+    DECLARE @HasGens BIT = CASE WHEN OBJECT_ID('Gens_UserInfo', 'U') IS NOT NULL OR OBJECT_ID('Gens_Rank', 'U') IS NOT NULL THEN 1 ELSE 0 END;
+    DECLARE @HasMarriage BIT = CASE WHEN OBJECT_ID('Mu_Marry', 'U') IS NOT NULL OR EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Character') AND name IN ('MarryName', 'Married')) THEN 1 ELSE 0 END;
+    DECLARE @HasGiftCodes BIT = CASE WHEN OBJECT_ID('MuManager_GiftCodes', 'U') IS NOT NULL THEN 1 ELSE 0 END;
+    DECLARE @HasMultiDb BIT = CASE WHEN DB_ID('Me_MuOnline') IS NOT NULL THEN 1 ELSE 0 END;
+
+    -- Devolver JSON o Recordset determinista
+    SELECT 
+        1 AS Success,
+        @SeasonProfile AS SeasonProfile,
+        @ItemBytesPerSlot AS ItemBytesPerSlot,
+        @ItemHexChars AS ItemHexChars,
+        @PwdType AS PasswordType,
+        @ResetCol AS ResetColumn,
+        @MResetCol AS MasterResetColumn,
+        @StatsType AS StatsDataType,
+        @HasMasterTree AS HasMasterSkillTree,
+        @HasCastleSiege AS HasCastleSiege,
+        @HasCashShop AS HasCashShop,
+        @HasExtWarehouse AS HasExtWarehouse,
+        @HasGens AS HasGens,
+        @HasMarriage AS HasMarriage,
+        @HasGiftCodes AS HasGiftCodes,
+        @HasMultiDb AS HasMultiDb;
+END
+GO
+
+-- ============================================================================
+-- 9. TABLA DE GIFT CODES (CANJEABLE NATIVO 100% SQL)
+-- ============================================================================
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MuManager_GiftCodes')
+BEGIN
+    CREATE TABLE dbo.MuManager_GiftCodes (
+        Code VARCHAR(32) NOT NULL PRIMARY KEY,
+        Description VARCHAR(100) NULL,
+        ItemHex VARCHAR(MAX) NULL,
+        Zen INT NOT NULL DEFAULT 0,
+        WCoinC INT NOT NULL DEFAULT 0,
+        WCoinP INT NOT NULL DEFAULT 0,
+        GoblinPoint INT NOT NULL DEFAULT 0,
+        Ruud INT NOT NULL DEFAULT 0,
+        VipDays INT NOT NULL DEFAULT 0,
+        MaxUses INT NOT NULL DEFAULT 1,
+        UsedCount INT NOT NULL DEFAULT 0,
+        ExpiresAt DATETIME NULL,
+        CreatedAt DATETIME DEFAULT GETDATE(),
+        CreatedBy VARCHAR(50) DEFAULT 'ADMIN',
+        IsActive BIT NOT NULL DEFAULT 1
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MuManager_GiftCodeClaims')
+BEGIN
+    CREATE TABLE dbo.MuManager_GiftCodeClaims (
+        ClaimID BIGINT IDENTITY(1,1) PRIMARY KEY,
+        Code VARCHAR(32) NOT NULL,
+        AccountID VARCHAR(10) NOT NULL,
+        CharName VARCHAR(10) NULL,
+        ClaimDate DATETIME DEFAULT GETDATE(),
+        CONSTRAINT UQ_MuManager_GiftCode_Account UNIQUE (Code, AccountID)
+    );
+    CREATE NONCLUSTERED INDEX IX_GiftCodeClaims_Acc ON dbo.MuManager_GiftCodeClaims(AccountID);
+END
+GO
+
+-- ============================================================================
+-- 10. sp_MuManager_ClaimGiftCode
+-- Canje transaccional atómico 100% nativo SQL
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.sp_MuManager_ClaimGiftCode
+    @Code VARCHAR(32),
+    @AccountID VARCHAR(10),
+    @CharName VARCHAR(10) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @CleanCode VARCHAR(32) = UPPER(LTRIM(RTRIM(@Code)));
+    DECLARE @CleanAcc VARCHAR(10) = LTRIM(RTRIM(@AccountID));
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- 1. Validar existencia y vigencia del código
+        DECLARE @IsActive BIT, @MaxUses INT, @UsedCount INT, @ExpiresAt DATETIME;
+        DECLARE @Zen INT, @CoinC INT, @CoinP INT, @Goblin INT, @Ruud INT, @VipDays INT, @ItemHex VARCHAR(MAX);
+
+        SELECT 
+            @IsActive = IsActive,
+            @MaxUses = MaxUses,
+            @UsedCount = UsedCount,
+            @ExpiresAt = ExpiresAt,
+            @Zen = Zen,
+            @CoinC = WCoinC,
+            @CoinP = WCoinP,
+            @Goblin = GoblinPoint,
+            @Ruud = Ruud,
+            @VipDays = VipDays,
+            @ItemHex = ItemHex
+        FROM dbo.MuManager_GiftCodes WITH (UPDLOCK, HOLDLOCK)
+        WHERE UPPER(LTRIM(RTRIM(Code))) = @CleanCode;
+
+        IF @IsActive IS NULL
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS Success, 'El código ingresado no existe.' AS Message;
+            RETURN;
+        END
+
+        IF @IsActive = 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS Success, 'Este código ha sido desactivado por la administración.' AS Message;
+            RETURN;
+        END
+
+        IF @ExpiresAt IS NOT NULL AND @ExpiresAt < GETDATE()
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS Success, 'Este código ha expirado.' AS Message;
+            RETURN;
+        END
+
+        IF @MaxUses > 0 AND @UsedCount >= @MaxUses
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS Success, 'Este código ha alcanzado el límite máximo de usos permitidos.' AS Message;
+            RETURN;
+        END
+
+        -- 2. Validar que la cuenta no haya canjeado ya este código
+        IF EXISTS (SELECT 1 FROM dbo.MuManager_GiftCodeClaims WITH (HOLDLOCK) WHERE UPPER(LTRIM(RTRIM(Code))) = @CleanCode AND LTRIM(RTRIM(AccountID)) = @CleanAcc)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT 0 AS Success, 'Esta cuenta ya canjeó este código previamente.' AS Message;
+            RETURN;
+        END
+
+        -- 3. Registrar el reclamo
+        INSERT INTO dbo.MuManager_GiftCodeClaims (Code, AccountID, CharName, ClaimDate)
+        VALUES (@CleanCode, @CleanAcc, @CharName, GETDATE());
+
+        UPDATE dbo.MuManager_GiftCodes
+        SET UsedCount = UsedCount + 1
+        WHERE UPPER(LTRIM(RTRIM(Code))) = @CleanCode;
+
+        -- 4. Entregar Zen
+        IF @Zen > 0
+        BEGIN
+            IF EXISTS (SELECT 1 FROM warehouse WHERE LTRIM(RTRIM(AccountID)) = @CleanAcc OR AccountID = @CleanAcc)
+            BEGIN
+                UPDATE warehouse 
+                SET Money = CASE WHEN CAST(Money AS BIGINT) + @Zen > 2000000000 THEN 2000000000 ELSE Money + @Zen END
+                WHERE LTRIM(RTRIM(AccountID)) = @CleanAcc OR AccountID = @CleanAcc;
+            END
+            ELSE IF @CharName IS NOT NULL AND EXISTS (SELECT 1 FROM Character WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName)
+            BEGIN
+                UPDATE Character 
+                SET Money = CASE WHEN CAST(Money AS BIGINT) + @Zen > 2000000000 THEN 2000000000 ELSE Money + @Zen END
+                WHERE LTRIM(RTRIM(Name)) = LTRIM(RTRIM(@CharName)) OR Name = @CharName;
+            END
+        END
+
+        -- 5. Entregar Monedas CashShop
+        IF (@CoinC > 0 OR @CoinP > 0 OR @Goblin > 0) AND OBJECT_ID('CashShopData', 'U') IS NOT NULL
+        BEGIN
+            IF EXISTS (SELECT 1 FROM CashShopData WHERE LTRIM(RTRIM(AccountID)) = @CleanAcc OR AccountID = @CleanAcc)
+            BEGIN
+                UPDATE CashShopData
+                SET WCoinC = WCoinC + @CoinC,
+                    WCoinP = WCoinP + @CoinP,
+                    GoblinPoint = GoblinPoint + @Goblin
+                WHERE LTRIM(RTRIM(AccountID)) = @CleanAcc OR AccountID = @CleanAcc;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO CashShopData (AccountID, WCoinC, WCoinP, GoblinPoint)
+                VALUES (@CleanAcc, @CoinC, @CoinP, @Goblin);
+            END
+        END
+
+        -- 6. Entregar Días VIP
+        IF @VipDays > 0 AND EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'MEMB_INFO' AND COLUMN_NAME = 'AccountExpireDate')
+        BEGIN
+            UPDATE MEMB_INFO
+            SET AccountExpireDate = DATEADD(day, @VipDays, CASE WHEN AccountExpireDate IS NULL OR AccountExpireDate < GETDATE() THEN GETDATE() ELSE AccountExpireDate END),
+                AccountLevel = CASE WHEN AccountLevel < 1 THEN 1 ELSE AccountLevel END
+            WHERE LTRIM(RTRIM(memb___id)) = @CleanAcc OR memb___id = @CleanAcc;
+        END
+
+        COMMIT TRANSACTION;
+
+        SELECT 
+            1 AS Success,
+            'Código canjeado con éxito.' AS Message,
+            @Zen AS ZenAwarded,
+            @CoinC AS CoinCAwarded,
+            @CoinP AS CoinPAwarded,
+            @Goblin AS GoblinAwarded,
+            @VipDays AS VipDaysAwarded,
+            @ItemHex AS ItemHexToDeliver;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        SELECT 0 AS Success, ERROR_MESSAGE() AS Message;
+    END CATCH
+END
+GO
+
 PRINT '====================================================================';
 PRINT 'Todos los procedimientos y disparadores de Mu Manager PRO instalados.';
 PRINT '====================================================================';

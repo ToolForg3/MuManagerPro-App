@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SqlServerConfig, DashboardMetrics, SqlLogEntry } from '../../types/database';
+import { SqlServerConfig, DashboardMetrics, SqlLogEntry, ServerCapabilities } from '../../types/database';
 import { CharacterSummary, CharacterDetail, AccountSummary, AccountUpdateData } from '../../types/character';
-import { OnlinePlayer, BanEntry, GmEntry, GmLevel, ItemKitEntry, GuildEntry, GuildMemberEntry, PkPlayerEntry, JewelAuditParams, JewelAuditResult, JewelPurgeParams, JewelPurgeResult, JewelBankData } from '../../types/admin';
+import { OnlinePlayer, BanEntry, GmEntry, GmLevel, ItemKitEntry, GuildEntry, GuildMemberEntry, PkPlayerEntry, JewelAuditParams, JewelAuditResult, JewelPurgeParams, JewelPurgeResult, JewelBankData, CastleSiegeData, GiftCodeEntry, MarryEntry } from '../../types/admin';
 import { MuItemParser } from '../parser/muItemParser';
 import { SQL_QUERIES } from './sqlQueries';
 import { SecurityService } from '../security/securityService';
@@ -2757,5 +2757,189 @@ export class SqlClient {
       }
     }
     return { success: true, disconnected, message: `Desconectadas ${disconnected} cuentas excedentes.` };
+  }
+
+  // ==========================================
+  // SERVER CAPABILITIES (UNIVERSAL DISCOVERY)
+  // ==========================================
+  static async getServerCapabilities(): Promise<{ success: boolean; capabilities?: ServerCapabilities; error?: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/tools/server-capabilities', { config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al obtener capacidades');
+      this.logQuery('SERVER_CAPABILITIES', duration, true, 1);
+      return { success: true, capabilities: data.capabilities };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('SERVER_CAPABILITIES', duration, false, 0, e.message);
+      return { success: false, error: e.message };
+    }
+  }
+
+  // ==========================================
+  // CASTLE SIEGE MANAGER (100% NATIVE SQL)
+  // ==========================================
+  static async getCastleSiegeStatus(): Promise<{ success: boolean; data?: CastleSiegeData; error?: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/castle-siege/status', { config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al consultar Castle Siege');
+      this.logQuery('CASTLE_SIEGE_STATUS', duration, true, 1);
+      return { success: true, data };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('CASTLE_SIEGE_STATUS', duration, false, 0, e.message);
+      return { success: false, error: e.message };
+    }
+  }
+
+  static async updateCastleSiegeTax(taxRateChaos: number, taxRateStore: number): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/castle-siege/update-tax', { taxRateChaos, taxRateStore, config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al actualizar impuestos');
+      this.logQuery('CASTLE_SIEGE_TAX', duration, true, 1);
+      return { success: true, message: data.message };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('CASTLE_SIEGE_TAX', duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  static async updateCastleSiegeOwner(ownerGuild: string): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/castle-siege/update-owner', { ownerGuild, config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al actualizar dueño del castillo');
+      this.logQuery('CASTLE_SIEGE_OWNER', duration, true, 1);
+      return { success: true, message: data.message };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('CASTLE_SIEGE_OWNER', duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  // ==========================================
+  // GIFT CODES MANAGER (100% NATIVE SQL)
+  // ==========================================
+  static async getGiftCodes(): Promise<{ success: boolean; codes: GiftCodeEntry[]; error?: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/giftcodes/list', { config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al listar códigos');
+      this.logQuery('GIFTCODES_LIST', duration, true, (data.codes || []).length);
+      return { success: true, codes: data.codes || [] };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('GIFTCODES_LIST', duration, false, 0, e.message);
+      return { success: false, codes: [], error: e.message };
+    }
+  }
+
+  static async createGiftCode(payload: {
+    code: string;
+    description?: string;
+    itemHex?: string;
+    zen?: number;
+    wCoinC?: number;
+    wCoinP?: number;
+    goblinPoint?: number;
+    ruud?: number;
+    vipDays?: number;
+    maxUses?: number;
+    expiresAt?: string | null;
+  }): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/giftcodes/create', { ...payload, config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al crear código');
+      this.logQuery('GIFTCODES_CREATE', duration, true, 1);
+      return { success: true, message: data.message };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('GIFTCODES_CREATE', duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  static async deleteGiftCode(code: string): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/giftcodes/delete', { code, config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al eliminar código');
+      this.logQuery('GIFTCODES_DELETE', duration, true, 1);
+      return { success: true, message: data.message };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('GIFTCODES_DELETE', duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  static async claimGiftCode(code: string, accountId: string, charName?: string): Promise<{ success: boolean; message: string; details?: any }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/giftcodes/claim', { code, accountId, charName, config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al canjear código');
+      this.logQuery('GIFTCODES_CLAIM', duration, true, 1);
+      return { success: true, message: data.message, details: data.details };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('GIFTCODES_CLAIM', duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
+  }
+
+  // ==========================================
+  // MARRIAGE & DIVORCE (100% NATIVE SQL)
+  // ==========================================
+  static async getMarriedCouples(): Promise<{ success: boolean; couples: MarryEntry[]; error?: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/marry/list', { config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al listar matrimonios');
+      this.logQuery('MARRY_LIST', duration, true, (data.couples || []).length);
+      return { success: true, couples: data.couples || [] };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('MARRY_LIST', duration, false, 0, e.message);
+      return { success: false, couples: [], error: e.message };
+    }
+  }
+
+  static async divorceCouple(husband: string, wife?: string): Promise<{ success: boolean; message: string }> {
+    const startTime = Date.now();
+    try {
+      const res = await this.sendSecureRequest('/api/marry/divorce', { husband, wife, config: this.config }, 10000);
+      const data = await this.safeJson(res);
+      const duration = Date.now() - startTime;
+      if (!res.ok || !data.success) throw new Error(data.error || 'Error al tramitar divorcio');
+      this.logQuery('MARRY_DIVORCE', duration, true, 1);
+      return { success: true, message: data.message };
+    } catch (e: any) {
+      const duration = Date.now() - startTime;
+      this.logQuery('MARRY_DIVORCE', duration, false, 0, e.message);
+      return { success: false, message: e.message };
+    }
   }
 }

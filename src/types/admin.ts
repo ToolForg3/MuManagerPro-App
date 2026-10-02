@@ -218,3 +218,46 @@ export interface JewelBankData {
   Kundun5?: number;
   [key: string]: any;
 }
+
+export interface CastleSiegeData {
+  available: boolean;
+  message?: string;
+  castle?: {
+    mapSvrGroup: number;
+    isOccupied: number;
+    ownerGuild: string;
+    moneyChaos: number;
+    taxRateChaos: number;
+    taxRateStore: number;
+    siegeStartDate?: string;
+    siegeEndDate?: string;
+  };
+  registeredGuilds?: Array<{
+    guildName: string;
+    marks: number;
+  }>;
+}
+
+export interface GiftCodeEntry {
+  code: string;
+  description?: string;
+  itemHex?: string;
+  zen: number;
+  wCoinC: number;
+  wCoinP: number;
+  goblinPoint: number;
+  ruud: number;
+  vipDays: number;
+  maxUses: number;
+  usedCount: number;
+  expiresAt?: string;
+  createdAt: string;
+  createdBy?: string;
+  isActive: boolean;
+}
+
+export interface MarryEntry {
+  husband: string;
+  wife: string;
+  marryDate?: string;
+}

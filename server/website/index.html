@@ -139,7 +139,9 @@
   <!-- Tipografía Canónica Stitch Approved Ironforge -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap"></noscript>
 
   <!-- Hojas de Estilo Oficiales -->
   <link rel="stylesheet" href="./css/theme.css?v=3.5">
@@ -154,8 +156,8 @@
   <!-- Navbar -->
   <header class="navbar">
     <div class="container navbar-inner">
-      <a href="#" class="brand-logo" aria-label="Ir al inicio de Mu Manager PRO">
-        <img src="./assets/icon.png" alt="Logo Mu Manager PRO" class="brand-logo-img">
+      <a href="#" class="brand-logo" aria-label="Mu Manager PRO — Ir al inicio">
+        <img src="./assets/icon.png" alt="Logo Mu Manager PRO" class="brand-logo-img" width="38" height="38">
         <div class="brand-info">
           <span class="brand-name">Mu Manager PRO</span>
           <span class="brand-tag">
@@ -190,6 +192,9 @@
     </div>
   </header>
 
+  <!-- Contenedor Semántico Principal -->
+  <main id="main-content">
+
   <!-- Hero Section -->
   <section class="hero-section" id="inicio">
     <div class="hero-particles" id="hero-particles"></div>
@@ -197,7 +202,7 @@
     <div class="container hero-grid">
       <div class="hero-content">
         <div class="hero-mu-crest">
-          <img src="./assets/art/mu_logo_original.png" alt="MU Online Emblem" class="hero-mu-crest-img">
+          <img src="./assets/art/mu_logo_original.png" alt="MU Online Emblem" class="hero-mu-crest-img" width="140" height="70" fetchpriority="high">
         </div>
 
         <div class="hero-badge-wrap">
@@ -282,7 +287,7 @@
             <!-- Cabecera Oficial de la App -->
             <div class="apk-header">
               <div class="apk-header-left">
-                <img src="./assets/icon.png" alt="Icono App" class="apk-header-icon">
+                <img src="./assets/icon.png" alt="Icono App" class="apk-header-icon" width="22" height="22">
                 <div>
                   <div class="apk-header-title">Mu Manager PRO</div>
                   <div class="apk-header-subtitle">Online • Todas las Seasons</div>
@@ -360,7 +365,7 @@
               <div class="apk-view" id="view-character">
                 <div class="apk-card">
                   <div class="apk-char-header">
-                    <img src="./assets/classes/dk.jpg" alt="Blade Master" class="apk-char-avatar">
+                    <img src="./assets/classes/dk.jpg" alt="Blade Master" class="apk-char-avatar" width="40" height="40" loading="lazy" decoding="async">
                     <div>
                       <div style="font-family: var(--font-display); font-weight: 700; color: var(--gold-primary); font-size: 0.95rem;">ShadowBlade</div>
                       <div style="font-size: 0.72rem; color: var(--text-silver);">Blade Master (BM) • 3era Quest</div>
@@ -559,23 +564,23 @@
       <!-- Selector de Héroes -->
       <div class="hero-classes-selector">
         <button class="hero-class-tab active" data-class="dk">
-          <img src="./assets/classes/dk.jpg" alt="Dark Knight">
+          <img src="./assets/classes/dk.jpg" alt="Dark Knight" width="32" height="32" loading="lazy" decoding="async">
           <span>Dark Knight</span>
         </button>
         <button class="hero-class-tab" data-class="dw">
-          <img src="./assets/classes/dw.jpg" alt="Dark Wizard">
+          <img src="./assets/classes/dw.jpg" alt="Dark Wizard" width="32" height="32" loading="lazy" decoding="async">
           <span>Dark Wizard</span>
         </button>
         <button class="hero-class-tab" data-class="fe">
-          <img src="./assets/classes/fe.jpg" alt="Fairy Elf">
+          <img src="./assets/classes/fe.jpg" alt="Fairy Elf" width="32" height="32" loading="lazy" decoding="async">
           <span>Fairy Elf</span>
         </button>
         <button class="hero-class-tab" data-class="mg">
-          <img src="./assets/classes/mg.jpg" alt="Magic Gladiator">
+          <img src="./assets/classes/mg.jpg" alt="Magic Gladiator" width="32" height="32" loading="lazy" decoding="async">
           <span>Magic Gladiator</span>
         </button>
         <button class="hero-class-tab" data-class="dl">
-          <img src="./assets/classes/dl.jpg" alt="Dark Lord">
+          <img src="./assets/classes/dl.jpg" alt="Dark Lord" width="32" height="32" loading="lazy" decoding="async">
           <span>Dark Lord</span>
         </button>
       </div>
@@ -583,7 +588,7 @@
       <!-- Ficha del Héroe Activo -->
       <div class="hero-class-display-card" id="hero-class-card">
         <div class="hero-class-avatar-frame">
-          <img src="./assets/classes/dk.jpg" alt="Dark Knight • Blade Master" id="class-avatar-img">
+          <img src="./assets/classes/dk.jpg" alt="Dark Knight • Blade Master" id="class-avatar-img" width="200" height="200" loading="lazy" decoding="async">
         </div>
         <div class="hero-class-info-pane">
           <h3 id="class-title">Dark Knight • Blade Master</h3>
@@ -615,7 +620,7 @@
         <div class="feature-panel">
           <div class="feature-panel-header">
             <div class="feature-panel-icon">
-              <img src="./assets/art/icon_feature_character.png" alt="Editor de Personajes">
+              <img src="./assets/art/icon_feature_character.png" alt="Editor de Personajes" width="48" height="48" loading="lazy" decoding="async">
             </div>
             <div>
               <h3 class="feature-panel-title">Editor de Personajes & Stats</h3>
@@ -630,7 +635,7 @@
         <div class="feature-panel">
           <div class="feature-panel-header">
             <div class="feature-panel-icon">
-              <img src="./assets/art/icon_feature_vault.png" alt="Inventario & Baúl">
+              <img src="./assets/art/icon_feature_vault.png" alt="Inventario & Baúl" width="48" height="48" loading="lazy" decoding="async">
             </div>
             <div>
               <h3 class="feature-panel-title">Inventario 16-Bytes & Baúl</h3>
@@ -645,7 +650,7 @@
         <div class="feature-panel">
           <div class="feature-panel-header">
             <div class="feature-panel-icon">
-              <img src="./assets/art/icon_feature_jewels.png" alt="Banco de Joyas">
+              <img src="./assets/art/icon_feature_jewels.png" alt="Banco de Joyas" width="48" height="48" loading="lazy" decoding="async">
             </div>
             <div>
               <h3 class="feature-panel-title">Banco de Joyas & Starter Kits</h3>
@@ -660,7 +665,7 @@
         <div class="feature-panel">
           <div class="feature-panel-header">
             <div class="feature-panel-icon">
-              <img src="./assets/art/icon_feature_security.png" alt="Seguridad & Cuentas">
+              <img src="./assets/art/icon_feature_security.png" alt="Seguridad & Cuentas" width="48" height="48" loading="lazy" decoding="async">
             </div>
             <div>
               <h3 class="feature-panel-title">Gestión de Cuentas & Anti-Dupe</h3>
@@ -919,6 +924,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <!-- Footer -->
   <footer class="footer">
