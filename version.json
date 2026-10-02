@@ -1,10 +1,10 @@
 {
-  "version": "2.3.7",
+  "version": "2.3.8",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-01T22:40:00.000Z",
+  "publishedAt": "2026-10-01T23:32:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 139,
+  "build": 140,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.3.7 (Build 139) - Canales Oficiales, Blindaje de Scroll y Sincronización Continua de Licencias:\n• CANALES DE ASISTENCIA OFICIAL: Integración exclusiva de Discord y Telegram en modales de seguridad y licencia, aboliendo accesos obsoletos de WhatsApp.\n• CONTRASTE Y LEGIBILIDAD STITCH IRONFORGE: Corrección total de textos dorados (#FEDF99) de alta nitidez en botones y pestañas sobre texturas nativas metálicas.\n• SCROLL COMPLETO EN LICENCIAS: Desplazamiento fluido borde a borde sin recortes en la ventana de Licencias y Actualizaciones.\n• SINCRONIZACIÓN EN TIEMPO REAL: Heartbeat continuo y refresco instantáneo de telemetría de dispositivo para reflejar en vivo aprobaciones y revocaciones del panel."
+  "changelog": "MuManager PRO v2.3.8 (Build 140) - Reparación de Ventana PRO y Erradicación de Bordes Matte:\n• FIX ACTIVAR PRO (LicenseModal): Corrección de altura en Yoga para renderizado completo y fluido de los paneles de licencia y gestión con scroll borde a borde.\n• SPRITES LIMPIOS 100% ALFA: Erradicación del marco blanco en el icono de engranaje (sprite_options) para una visualización cristalina en el modal de actualización.\n• SINCRONIZACIÓN Y CONTRASTE STITCH: Refuerzo de tipografía dorada (#FEDF99) de alta nitidez sobre texturas nativas y sincronización de licencias en vivo."
 }

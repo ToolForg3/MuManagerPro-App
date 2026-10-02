@@ -750,6 +750,7 @@ const styles = StyleSheet.create({
   windowWrapper: {
     width: '100%',
     maxWidth: 410,
+    height: '88%',
     maxHeight: '92%',
     backgroundColor: '#131413',
     borderWidth: 1,
@@ -774,6 +775,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2E2920',
     position: 'relative',
+    flexShrink: 0,
   },
   headerGothicWindow: {
     width: '100%',
