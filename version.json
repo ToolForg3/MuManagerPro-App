@@ -1,10 +1,10 @@
 {
-  "version": "2.4.5",
+  "version": "2.4.6",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-02T22:30:00.000Z",
+  "publishedAt": "2026-10-02T23:15:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 147,
+  "build": 148,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.5 (Build 147) - Conectividad Mejorada Conector VPS y Android:\n• CONECTOR LOCAL SQL SERVER ROBUSTO: Optimización de carpetas de almacenamiento para evitar crear archivos en el escritorio del VPS. Autoconfiguración automática de reglas de Firewall de Windows en los puertos 3001 y 30001.\n• CONECTIVIDAD HTTP/IP ANDROID: Compatibilidad nativa en Android para conexiones directas al Conector Local en redes locales y servidores VPS externos sin bloqueos por tráfico en texto claro, manteniendo cifrado estricto y Certificate Pinning en servicios en la nube.\n• BLINDAJE DE CONFIGURACIÓN Y PROTOCOLOS: Saneamiento automático de prefijos http/https y puertos en la pantalla de configuración; independencia del flag de cifrado TDS para el transporte HTTP del puente."
+  "changelog": "MuManager PRO v2.4.6 (Build 148) - Conectividad Universal Conector HTTP:\n• RESOLUCIÓN DEFINITIVA DE CONECTOR: Corrección del protocolo de transporte en la app móvil; el conector local y VPS ahora enlaza limpiamente por HTTP en el puerto 3001 sin forzar SSL ni provocar errores de apretón de manos.\n• COMPATIBILIDAD MULTI-HOSTING: Enlace garantizado para servidores locales, VPS en la nube (OVH, Contabo, AWS, etc.) sin requerir configuraciones adicionales en SQL Server Configuration Manager."
 }

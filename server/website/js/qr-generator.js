@@ -366,8 +366,8 @@ var QRCodeLite = (function () {
 document.addEventListener('DOMContentLoaded', function () {
   var qrContainer = document.getElementById('qrcode-container');
   if (qrContainer) {
-    // URL oficial perpetua de GitHub Releases para descarga instantánea de la última versión en cualquier smartphone
-    var downloadUrl = 'https://github.com/ToolForg3/MuManagerPro-App/releases/latest/download/MuManagerPro.apk';
+    // URL oficial canónica para descarga instantánea de la última versión en cualquier smartphone
+    var downloadUrl = 'https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk';
     qrContainer.innerHTML = QRCodeLite.generateSvg(downloadUrl);
   }
 });

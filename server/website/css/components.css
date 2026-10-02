@@ -305,11 +305,14 @@
   display: flex;
   justify-content: flex-start;
   margin-bottom: 12px;
+  min-height: 70px;
 }
 
 .hero-mu-crest-img {
-  width: 170px;
-  height: auto;
+  width: 140px;
+  height: 70px;
+  aspect-ratio: 2 / 1;
+  object-fit: contain;
   filter: drop-shadow(0 0 16px rgba(239, 210, 141, 0.45));
 }
 
