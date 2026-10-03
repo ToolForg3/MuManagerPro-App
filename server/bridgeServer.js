@@ -220,11 +220,12 @@ const DEFAULT_SETTINGS = {
   globalMaintenance: false,
   maintenanceMessage: 'Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.',
   broadcastAnnouncement: '',
-  minRequiredVersion: '1.5.8',
-  latestVersion: '1.6.7',
-  latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/releases/download/latest/MuManagerPro.apk',
-  updateChangelog: '🔒 MuManager PRO v1.6.7 (Build 69):\n• 🛡️ Blindaje avanzado de seguridad (ProGuard/R8) activo en APK de release.\n• 🔒 Telemetria segura: la asociacion de identidad requiere sesion autenticada.\n• ⚠️ Verificacion de vars de entorno criticas al arranque (JWT_SECRET, ADMIN_KEY).\n• 🛡️ Validacion estricta de licencia PRO en el conector SQL.\n• 🔐 Eliminacion de metadatos sensibles en bytecode del APK.\n🚀 MuManager PRO v1.6.5 (Build 67):\n• 👑 Nueva Categoria Oficial Ancient y Box of Kundun +1 a +5.\n• 📢 Selector de Cantidades: x1, x10, x30, x50, x100, x255.\n• 🧩 Asignacion 2D sin colisiones en baul y boveda expandida.\n• 🔍 Filtros predictivos con autocompletado y chips de cuentas recientes.',
-  forceUpdate: true,
+  minRequiredVersion: '2.0.8',
+  latestVersion: '2.4.8',
+  latestBuild: 150,
+  latestApkUrl: 'https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk',
+  updateChangelog: 'MuManager PRO v2.4.8 (Build 150) - Sesión Persistente y Blindaje de Licencias',
+  forceUpdate: false,
   whitelistOnly: false,
   demoDurationHours: null,
   proTrialEnabled: true,
@@ -287,7 +288,7 @@ const DEFAULT_SETTINGS = {
     targetVersion: '1.1.7',
     targetApkUrl: '',
     reason: 'Rollback de emergencia preventivo por estabilidad.',
-    forceRollback: true,
+    forceRollback: false,
     triggeredAt: null
   }
 };
@@ -510,7 +511,7 @@ function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, h
 
       const postData = JSON.stringify({
         username: 'Mu Manager PRO Shield',
-        avatar_url: 'https://mumanagerpro.vercel.app/assets/icon.png',
+        avatar_url: 'https://mumanager.pro/assets/icon.png',
         embeds: [
           {
             title: formattedTitle,
@@ -1999,12 +2000,27 @@ async function verifyPassword(password, storedHash) {
   return { valid: false, needsUpgrade: false };
 }
 
-const EPHEMERAL_JWT_SECRET = crypto.randomBytes(32).toString('hex');
+function getDevJwtSecret() {
+  const secretPath = path.join(__dirname, 'data', 'dev-jwt-secret.json');
+  try {
+    if (fs.existsSync(secretPath)) {
+      const data = JSON.parse(fs.readFileSync(secretPath, 'utf8'));
+      if (data && data.secret && data.secret.length >= 16) return data.secret;
+    }
+  } catch (_) {}
+  const newSecret = crypto.randomBytes(32).toString('hex');
+  try {
+    fs.writeFileSync(secretPath, JSON.stringify({ secret: newSecret, createdAt: new Date().toISOString() }, null, 2), 'utf8');
+  } catch (_) {}
+  return newSecret;
+}
+
+const DEV_PERSISTED_JWT_SECRET = getDevJwtSecret();
 const JWT_SESSION_SECRET = (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 16)
   ? process.env.JWT_SECRET.trim()
   : (process.env.NODE_ENV === 'production'
       ? (() => { console.error('\x1b[31m[FATAL SECURITY] JWT_SECRET obligatorio en producción.\x1b[0m'); process.exit(1); })()
-      : EPHEMERAL_JWT_SECRET);
+      : DEV_PERSISTED_JWT_SECRET);
 
 function generateSessionToken(email, role = 'USER', hwid = '', sessionVersion) {
   let sv = sessionVersion;
@@ -2040,7 +2056,7 @@ function generateSessionToken(email, role = 'USER', hwid = '', sessionVersion) {
   return `${header}.${payloadB64}.${signature}`;
 }
 
-function verifySessionToken(token) {
+function verifySessionToken(token, options = {}) {
   if (!token || typeof token !== 'string') return null;
   const parts = token.trim().split('.');
   if (parts.length !== 3) return null;
@@ -2052,7 +2068,7 @@ function verifySessionToken(token) {
     }
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
     const nowSec = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < nowSec) {
+    if (!options.allowExpired && payload.exp && payload.exp < nowSec) {
       return null;
     }
     return payload;
@@ -2433,10 +2449,10 @@ app.get(['/version.json', '/api/version'], (req, res) => {
     return res.sendFile(target);
   }
   return res.json({
-    version: "1.9.5",
-    build: 97,
-    minRequiredVersion: "1.9.5",
-    downloadUrl: "https://github.com/ToolForg3/MuManagerPro-App/releases/download/v1.9.5/MuManagerPro.apk"
+    version: "2.4.7",
+    build: 149,
+    minRequiredVersion: "2.0.8",
+    downloadUrl: "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk"
   });
 });
 
@@ -10642,14 +10658,16 @@ app.post('/api/telemetry/ping', async (req, res) => {
 
   // Server-side authoritative check: El modo PRO solo puede ser otorgado por el servidor/administrador
   // Jamás se promueve a PRO mediante auto-activación matemática en telemetría pública
-  const storedMode = devices[hwid]?.mode;
-  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !devices[hwid]?.forceDemo && !devices[hwid]?.blocked && (!devices[hwid]?.expiresAt || new Date(devices[hwid]?.expiresAt).getTime() > Date.now());
+  const devKey = (cleanHwid && devices[cleanHwid]) ? cleanHwid : ((hwid && devices[hwid]) ? hwid : cleanHwid);
+  let devObj = devices[devKey];
+  const storedMode = devObj?.mode;
+  const isServerAuthoritativePro = storedMode === 'PRO' && !isRevokedByAdmin && !devObj?.forceDemo && !devObj?.blocked && (!devObj?.expiresAt || new Date(devObj?.expiresAt).getTime() > Date.now());
 
   // Evaluación autoritativa anti-falsos positivos de emulador en el Servidor
-  const cleanBrand = String(deviceBrand || (devices[hwid] && devices[hwid].deviceBrand) || '').toLowerCase().trim();
-  const cleanModel = String(deviceModel || (devices[hwid] && devices[hwid].deviceModel) || '').toLowerCase().trim();
-  const cleanFingerprint = String(fingerprint || req.body.fingerprint || (devices[hwid] && devices[hwid].fingerprint) || '').toLowerCase().trim();
-  const cleanDetectionReason = String(detectionReason || req.body.detectionReason || (devices[hwid] && devices[hwid].detectionReason) || '').trim();
+  const cleanBrand = String(deviceBrand || (devObj && devObj.deviceBrand) || '').toLowerCase().trim();
+  const cleanModel = String(deviceModel || (devObj && devObj.deviceModel) || '').toLowerCase().trim();
+  const cleanFingerprint = String(fingerprint || req.body.fingerprint || (devObj && devObj.fingerprint) || '').toLowerCase().trim();
+  const cleanDetectionReason = String(detectionReason || req.body.detectionReason || (devObj && devObj.detectionReason) || '').trim();
 
   const isExplicitEmulatorModel = (
     cleanModel.includes('google_sdk') ||
@@ -10706,10 +10724,10 @@ app.post('/api/telemetry/ping', async (req, res) => {
   }
 
   let isNewDevice = false;
-  if (!devices[hwid]) {
+  if (!devObj) {
     isNewDevice = true;
-    devices[hwid] = {
-      hwid,
+    devObj = {
+      hwid: cleanHwid,
       mode: 'DEMO',
       licenseKey: '',
       firstSeen: now,
@@ -10730,7 +10748,7 @@ app.post('/api/telemetry/ping', async (req, res) => {
       deviceModel: deviceModel || '',
       deviceBrand: deviceBrand || '',
       demoExtendedHours: 0,
-      isTest: authoritativeIsEmulator ? true : isTestDevice({ hwid, deviceModel }),
+      isTest: authoritativeIsEmulator ? true : isTestDevice({ hwid: cleanHwid, deviceModel }),
       forceDemo: isRevokedByAdmin || isKeyRevoked,
       authRevision: 1,
       authUpdatedAt: Date.now(),
@@ -10740,98 +10758,109 @@ app.post('/api/telemetry/ping', async (req, res) => {
       city: geo.city || '',
       flag: geo.flag || '🌐'
     };
-    addAuditLog('NEW_DEVICE', hwid, clientIp, `Nuevo celular registrado (${platform || 'Android'} v${appVersion || '1.0.0'}, ${devices[hwid].isEmulator ? 'EMULADOR' : 'FÍSICO'}: ${deviceBrand || ''} ${deviceModel || ''}) - ${geo.flag} ${geo.countryName}`);
+    devices[cleanHwid] = devObj;
+    if (hwid) devices[hwid] = devObj;
+    addAuditLog('NEW_DEVICE', cleanHwid, clientIp, `Nuevo celular registrado (${platform || 'Android'} v${appVersion || '1.0.0'}, ${devObj.isEmulator ? 'EMULADOR' : 'FÍSICO'}: ${deviceBrand || ''} ${deviceModel || ''}) - ${geo.flag} ${geo.countryName}`);
   } else {
+    // Dispositivo existente: consolidar bajo cleanHwid
+    if (devKey !== cleanHwid) {
+      devices[cleanHwid] = devObj;
+      delete devices[devKey];
+    }
+    devObj.hwid = cleanHwid;
+
     if (isRevokedByAdmin) {
       // Dispositivo revocado por el panel: forzar DEMO permanente
-      devices[hwid].mode = 'DEMO';
-      devices[hwid].licenseKey = '';
-      devices[hwid].generatedKey = '';
-      devices[hwid].forceDemo = true;
+      devObj.mode = 'DEMO';
+      devObj.licenseKey = '';
+      devObj.generatedKey = '';
+      devObj.forceDemo = true;
     } else if (isServerAuthoritativePro) {
       // Si el servidor determinó autoritativamente que el dispositivo es PRO,
       // una clave antigua o revocada enviada por el cliente NO destruye la concesión del servidor.
       // Solo si la clave autoritativa actual del servidor fue revocada, se degrada.
-      const activeServerKey = (devices[hwid].licenseKey || devices[hwid].generatedKey || '').trim().toUpperCase();
+      const activeServerKey = (devObj.licenseKey || devObj.generatedKey || '').trim().toUpperCase();
       const isCurrentActiveKeyRevoked = !!(activeServerKey && tombstones.revokedKeys && tombstones.revokedKeys[activeServerKey]);
       if (isCurrentActiveKeyRevoked) {
-        devices[hwid].mode = 'DEMO';
-        devices[hwid].forceDemo = true;
-        devices[hwid].licenseKey = '';
-        devices[hwid].generatedKey = '';
-        devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-        devices[hwid].authUpdatedAt = Date.now();
-        devices[hwid].authAction = 'KEY_REVOKED';
+        devObj.mode = 'DEMO';
+        devObj.forceDemo = true;
+        devObj.licenseKey = '';
+        devObj.generatedKey = '';
+        devObj.authRevision = (Number(devObj.authRevision) || 0) + 1;
+        devObj.authUpdatedAt = Date.now();
+        devObj.authAction = 'KEY_REVOKED';
       } else {
-        devices[hwid].mode = 'PRO';
-        devices[hwid].forceDemo = false;
+        devObj.mode = 'PRO';
+        devObj.forceDemo = false;
       }
-    } else if (devices[hwid].forceDemo || isKeyRevoked) {
+    } else if (devObj.forceDemo || isKeyRevoked) {
       // forceDemo tiene prioridad absoluta: mantener en DEMO
-      devices[hwid].mode = 'DEMO';
-      devices[hwid].forceDemo = true;
-      devices[hwid].licenseKey = '';
-      devices[hwid].generatedKey = '';
+      devObj.mode = 'DEMO';
+      devObj.forceDemo = true;
+      devObj.licenseKey = '';
+      devObj.generatedKey = '';
     } else {
       // Dispositivos DEMO se mantienen en DEMO, sin autoelevación matemática
-      devices[hwid].mode = 'DEMO';
+      devObj.mode = 'DEMO';
     }
+    devices[cleanHwid] = devObj;
+    if (hwid) devices[hwid] = devObj;
   }
-    devices[hwid].lastSeen = now;
-    devices[hwid].totalPings = (devices[hwid].totalPings || 0) + 1;
-    devices[hwid].ip = clientIp;
-    devices[hwid].appVersion = appVersion || devices[hwid].appVersion;
-    if (userEmail) devices[hwid].currentUser = userEmail;
+  devObj.lastSeen = now;
+  devObj.totalPings = (devObj.totalPings || 0) + 1;
+  devObj.ip = clientIp;
+  devObj.appVersion = appVersion || devObj.appVersion;
+  if (userEmail) devObj.currentUser = userEmail;
     if (authoritativeIsEmulator) {
-      devices[hwid].isEmulator = true;
-      devices[hwid].isTest = true;
-      if (devices[hwid].isEmulatorManual) {
-        delete devices[hwid].isEmulatorManual;
+      devObj.isEmulator = true;
+      devObj.isTest = true;
+      if (devObj.isEmulatorManual) {
+        delete devObj.isEmulatorManual;
       }
-    } else if (!devices[hwid].isEmulatorManual) {
-      devices[hwid].isEmulator = false;
+    } else if (!devObj.isEmulatorManual) {
+      devObj.isEmulator = false;
     }
     if (cleanDetectionReason) {
-      devices[hwid].detectionReason = cleanDetectionReason;
+      devObj.detectionReason = cleanDetectionReason;
     }
     if (cleanFingerprint) {
-      devices[hwid].fingerprint = cleanFingerprint;
+      devObj.fingerprint = cleanFingerprint;
     }
-    if (deviceModel) devices[hwid].deviceModel = deviceModel;
-    if (deviceBrand) devices[hwid].deviceBrand = deviceBrand;
+    if (deviceModel) devObj.deviceModel = deviceModel;
+    if (deviceBrand) devObj.deviceBrand = deviceBrand;
     if (geo.countryCode) {
-      devices[hwid].countryCode = geo.countryCode;
-      devices[hwid].country = geo.countryName;
-      devices[hwid].city = geo.city;
-      devices[hwid].flag = geo.flag;
+      devObj.countryCode = geo.countryCode;
+      devObj.country = geo.countryName;
+      devObj.city = geo.city;
+      devObj.flag = geo.flag;
     }
-    if (devices[hwid].isTest === undefined) {
-      devices[hwid].isTest = isTestDevice(devices[hwid]);
+    if (devObj.isTest === undefined) {
+      devObj.isTest = isTestDevice(devObj);
     }
 
     // Verificar si expiró PRO (la prueba PRO de 24h regresa a DEMO vitalicio de forma transparente, sin bloqueo de usuario)
-    const isDeviceExpired = devices[hwid].expiresAt && new Date(devices[hwid].expiresAt) < new Date();
+    const isDeviceExpired = devObj.expiresAt && new Date(devObj.expiresAt) < new Date();
     let authStateChanged = false;
     if (isDeviceExpired) {
-      if (devices[hwid].mode === 'PRO') {
-        devices[hwid].mode = 'DEMO';
-        devices[hwid].expiresAt = null;
-        devices[hwid].forceDemo = false;
-        devices[hwid].licenseKey = '';
-        devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-        devices[hwid].authUpdatedAt = Date.now();
-        devices[hwid].authAction = 'PRO_TRIAL_EXPIRED';
-        devices[hwid].expireReason = 'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente.';
+      if (devObj.mode === 'PRO') {
+        devObj.mode = 'DEMO';
+        devObj.expiresAt = null;
+        devObj.forceDemo = false;
+        devObj.licenseKey = '';
+        devObj.authRevision = (Number(devObj.authRevision) || 0) + 1;
+        devObj.authUpdatedAt = Date.now();
+        devObj.authAction = 'PRO_TRIAL_EXPIRED';
+        devObj.expireReason = 'Tu prueba PRO de 24 horas ha finalizado. Tu cuenta continúa activa en Modo DEMO permanente.';
         authStateChanged = true;
-        addAuditLog('PRO_EXPIRED', hwid, clientIp, 'Prueba PRO de 24h finalizada. Celular regresa a Modo DEMO permanente.');
+        addAuditLog('PRO_EXPIRED', cleanHwid, clientIp, 'Prueba PRO de 24h finalizada. Celular regresa a Modo DEMO permanente.');
       } else {
-        devices[hwid].expiresAt = null;
-        devices[hwid].expireReason = '';
+        devObj.expiresAt = null;
+        devObj.expireReason = '';
         authStateChanged = true;
       }
-    } else if (devices[hwid].mode === 'DEMO' && devices[hwid].expiresAt !== null) {
+    } else if (devObj.mode === 'DEMO' && devObj.expiresAt !== null) {
       // Modo DEMO es vitalicio: limpiar cualquier fecha residual
-      devices[hwid].expiresAt = null;
+      devObj.expiresAt = null;
       authStateChanged = true;
     }
 
@@ -10949,9 +10978,9 @@ app.post('/api/telemetry/ping', async (req, res) => {
     });
   }
 
-  const devMode = devices[hwid].mode || 'DEMO';
-  const isForcedDemo = !!(devices[hwid].forceDemo || isRevokedByAdmin || isKeyRevoked);
-  const authoritativeKey = String(devices[hwid].licenseKey || devices[hwid].generatedKey || '').trim().toUpperCase();
+  const devMode = devObj.mode || 'DEMO';
+  const isForcedDemo = !!(devObj.forceDemo || isRevokedByAdmin || isKeyRevoked);
+  const authoritativeKey = String(devObj.licenseKey || devObj.generatedKey || '').trim().toUpperCase();
   const hasValidKey = devMode === 'PRO' && !isForcedDemo && effectiveLicenseKey.length > 0 && (authoritativeKey.length > 0 && effectiveLicenseKey === authoritativeKey);
   const shouldWipeKey = isForcedDemo || (effectiveLicenseKey.length > 0 && !hasValidKey);
 
@@ -10963,13 +10992,13 @@ app.post('/api/telemetry/ping', async (req, res) => {
     updateInfo.latestVersion = (settings.latestVersion || '1.7.5').replace(/^v/i, '').trim();
 
     // Si estaba previamente bloqueado por la regla de versión obsoleta, restaurarlo para permitir la actualización fluida
-    if (devices[hwid].blocked && devices[hwid].blockReason && devices[hwid].blockReason.includes('Versión obsoleta')) {
-      devices[hwid].blocked = false;
-      devices[hwid].blockReason = '';
+    if (devObj.blocked && devObj.blockReason && devObj.blockReason.includes('Versión obsoleta')) {
+      devObj.blocked = false;
+      devObj.blockReason = '';
       saveDevices(devices);
     }
 
-    addAuditLog('UPDATE_PROMPT', hwid, clientIp, `Modal de actualización obligatoria presentado a APK v${currentVer} (disponible v${updateInfo.latestVersion})`);
+    addAuditLog('UPDATE_PROMPT', cleanHwid, clientIp, `Modal de actualización obligatoria presentado a APK v${currentVer} (disponible v${updateInfo.latestVersion})`);
 
     return res.json({
       success: true,
@@ -10979,20 +11008,20 @@ app.post('/api/telemetry/ping', async (req, res) => {
       authoritativeMode: devMode,
       forceWipeKey: shouldWipeKey,
       forceDemo: isForcedDemo,
-      licenseKey: (devMode === 'PRO' && !isForcedDemo) ? (devices[hwid].licenseKey || devices[hwid].generatedKey || '') : '',
+      licenseKey: (devMode === 'PRO' && !isForcedDemo) ? (devObj.licenseKey || devObj.generatedKey || '') : '',
       announcement: settings.broadcastAnnouncement || '',
       broadcast,
       updateInfo,
       releaseChannel,
       betaStatus,
-      isProTrial: !!(devMode === 'PRO' && !isForcedDemo && ((devices[hwid].authAction && devices[hwid].authAction.startsWith('PRO_TRIAL')) || devices[hwid].proTrialStartedAt || (devices[hwid].expiresAt && !devices[hwid].isLifetime))),
-      expiresAt: devices[hwid].expiresAt || null,
-      isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
-      daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
-      hoursRemaining: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
-      minutesRemaining: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 60000)) : null,
+      isProTrial: !!(devMode === 'PRO' && !isForcedDemo && ((devObj.authAction && devObj.authAction.startsWith('PRO_TRIAL')) || devObj.proTrialStartedAt || (devObj.expiresAt && !devObj.isLifetime))),
+      expiresAt: devObj.expiresAt || null,
+      isLifetime: !!(devMode === 'PRO' && devObj.isLifetime === true && !devObj.expiresAt),
+      daysRemaining: devObj.expiresAt ? Math.max(0, Math.ceil((new Date(devObj.expiresAt).getTime() - Date.now()) / 86400000)) : null,
+      hoursRemaining: devObj.expiresAt ? Math.max(0, Math.round((new Date(devObj.expiresAt).getTime() - Date.now()) / 3600000)) : null,
+      minutesRemaining: devObj.expiresAt ? Math.max(0, Math.round((new Date(devObj.expiresAt).getTime() - Date.now()) / 60000)) : null,
       timeRemainingFormatted: (typeof formatTimeRemaining === 'function')
-        ? formatTimeRemaining(devices[hwid].expiresAt, devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt, Date.now())
+        ? formatTimeRemaining(devObj.expiresAt, devMode === 'PRO' && devObj.isLifetime === true && !devObj.expiresAt, Date.now())
         : null,
       serverTime: now,
       // MEJORA 1: TTL de licencia — el APK fuerza DEMO si no confirma con el servidor en 48h
@@ -11001,19 +11030,19 @@ app.post('/api/telemetry/ping', async (req, res) => {
         : null,
       sessionInvalidated: sessionInvalidated,
       forceLogout: sessionInvalidated,
-      isEmulator: !!devices[hwid].isEmulator,
-      deviceModel: devices[hwid].deviceModel || '',
-      deviceBrand: devices[hwid].deviceBrand || '',
-      demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+      isEmulator: !!devObj.isEmulator,
+      deviceModel: devObj.deviceModel || '',
+      deviceBrand: devObj.deviceBrand || '',
+      demoRemainingHours: devObj.expiresAt ? Math.max(0, Math.round((new Date(devObj.expiresAt).getTime() - Date.now()) / 3600000)) : null,
       authRevision: devices[hwid].authRevision || 1,
-      authUpdatedAt: devices[hwid].authUpdatedAt || Date.now(),
+      authUpdatedAt: devObj.authUpdatedAt || Date.now(),
       serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'gateway_default')
     });
   }
 
   // L07 Hardening: Do not return plaintext licenseKey to anonymous unverified callers
   const incomingKey = String(licenseKey || '').trim();
-  const callerProvidedMatchingKey = incomingKey && incomingKey === (devices[hwid].licenseKey || devices[hwid].generatedKey);
+  const callerProvidedMatchingKey = incomingKey && incomingKey === (devObj.licenseKey || devObj.generatedKey);
   const pingSig = req.headers['x-req-signature'];
   const pingTs = req.headers['x-req-timestamp'];
   const pingNonce = req.headers['x-req-nonce'];
@@ -11021,20 +11050,20 @@ app.post('/api/telemetry/ping', async (req, res) => {
   if (pingSig && pingTs && pingNonce) {
     const bodyStr = req.rawBody !== undefined ? req.rawBody : (req.body ? JSON.stringify(req.body) : '');
     const bodyHash = sha256(bodyStr).substring(0, 16);
-    const expectedSigClient = sha256(`${hwid}:${pingTs}:${pingNonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
-    const expectedSigLegacy = sha256(`${hwid}:${pingTs}:${pingNonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
+    const expectedSigClient = sha256(`${cleanHwid}:${pingTs}:${pingNonce}:${bodyHash}:CLIENT_REQ`).toUpperCase();
+    const expectedSigLegacy = sha256(`${cleanHwid}:${pingTs}:${pingNonce}:${bodyHash}:${MASTER_SECURITY_SALT}`).toUpperCase();
     if (pingSig.toUpperCase() === expectedSigClient || pingSig.toUpperCase() === expectedSigLegacy) {
       isCallerSigned = true;
     }
   }
 
   const effectiveKey = (devMode === 'PRO' && !isForcedDemo && (callerProvidedMatchingKey || isCallerSigned || !incomingKey))
-    ? (devices[hwid].licenseKey || devices[hwid].generatedKey || (typeof generateKey === 'function' ? generateKey(hwid, 'PRO') : ''))
+    ? (devObj.licenseKey || devObj.generatedKey || (typeof generateKey === 'function' ? generateKey(cleanHwid, 'PRO') : ''))
     : '';
 
-  if (devMode === 'PRO' && !isForcedDemo && !devices[hwid].licenseKey && effectiveKey) {
-    devices[hwid].licenseKey = effectiveKey;
-    devices[hwid].generatedKey = effectiveKey;
+  if (devMode === 'PRO' && !isForcedDemo && !devObj.licenseKey && effectiveKey) {
+    devObj.licenseKey = effectiveKey;
+    devObj.generatedKey = effectiveKey;
     saveDevices(devices);
   }
 
@@ -11044,8 +11073,8 @@ app.post('/api/telemetry/ping', async (req, res) => {
 
   res.json({
     success: true,
-    blocked: !!devices[hwid].blocked,
-    reason: sessionInvalidated ? sessionInvalidatedReason : (devices[hwid].blockReason || ''),
+    blocked: !!devObj.blocked,
+    reason: sessionInvalidated ? sessionInvalidatedReason : (devObj.blockReason || ''),
     mode: devMode,
     authoritativeMode: devMode,
     forceWipeKey: shouldWipeKey,
@@ -11056,14 +11085,14 @@ app.post('/api/telemetry/ping', async (req, res) => {
     updateInfo,
     releaseChannel,
     betaStatus,
-    isProTrial: !!(devMode === 'PRO' && !isForcedDemo && ((devices[hwid].authAction && devices[hwid].authAction.startsWith('PRO_TRIAL')) || devices[hwid].proTrialStartedAt || (devices[hwid].expiresAt && !devices[hwid].isLifetime))),
-    expiresAt: devices[hwid].expiresAt || null,
-    isLifetime: !!(devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt),
-    daysRemaining: devices[hwid].expiresAt ? Math.max(0, Math.ceil((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 86400000)) : null,
-    hoursRemaining: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
-    minutesRemaining: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 60000)) : null,
+    isProTrial: !!(devMode === 'PRO' && !isForcedDemo && ((devObj.authAction && devObj.authAction.startsWith('PRO_TRIAL')) || devObj.proTrialStartedAt || (devObj.expiresAt && !devObj.isLifetime))),
+    expiresAt: devObj.expiresAt || null,
+    isLifetime: !!(devMode === 'PRO' && devObj.isLifetime === true && !devObj.expiresAt),
+    daysRemaining: devObj.expiresAt ? Math.max(0, Math.ceil((new Date(devObj.expiresAt).getTime() - Date.now()) / 86400000)) : null,
+    hoursRemaining: devObj.expiresAt ? Math.max(0, Math.round((new Date(devObj.expiresAt).getTime() - Date.now()) / 3600000)) : null,
+    minutesRemaining: devObj.expiresAt ? Math.max(0, Math.round((new Date(devObj.expiresAt).getTime() - Date.now()) / 60000)) : null,
     timeRemainingFormatted: (typeof formatTimeRemaining === 'function')
-      ? formatTimeRemaining(devices[hwid].expiresAt, devMode === 'PRO' && devices[hwid].isLifetime === true && !devices[hwid].expiresAt, Date.now())
+      ? formatTimeRemaining(devObj.expiresAt, devMode === 'PRO' && devObj.isLifetime === true && !devObj.expiresAt, Date.now())
       : null,
     serverTime: now,
     // MEJORA 1: TTL de licencia — el APK fuerza DEMO si no confirma con el servidor en 48h
@@ -11072,12 +11101,12 @@ app.post('/api/telemetry/ping', async (req, res) => {
       : null,
     sessionInvalidated,
     forceLogout: sessionInvalidated,
-    isEmulator: !!devices[hwid].isEmulator,
-    deviceModel: devices[hwid].deviceModel || '',
-    deviceBrand: devices[hwid].deviceBrand || '',
-    demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+    isEmulator: !!devObj.isEmulator,
+    deviceModel: devObj.deviceModel || '',
+    deviceBrand: devObj.deviceBrand || '',
+    demoRemainingHours: devObj.expiresAt ? Math.max(0, Math.round((new Date(devObj.expiresAt).getTime() - Date.now()) / 3600000)) : null,
     authRevision: devices[hwid].authRevision || 1,
-    authUpdatedAt: devices[hwid].authUpdatedAt || Date.now(),
+    authUpdatedAt: devObj.authUpdatedAt || Date.now(),
     serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'gateway_default')
   });
 });
@@ -12134,9 +12163,19 @@ app.post('/api/auth/validate-session', (req, res) => {
       return res.status(401).json({ success: false, valid: false, error: 'TOKEN_REQUERIDO' });
     }
 
-    const decoded = verifySessionToken(token);
+    const nowSec = Math.floor(Date.now() / 1000);
+    let decoded = verifySessionToken(token);
+    let isExpiredButAuthentic = false;
+
     if (!decoded) {
-      return res.status(401).json({ success: false, valid: false, error: 'TOKEN_INVALIDO_O_EXPIRADO' });
+      const decodedExpired = verifySessionToken(token, { allowExpired: true });
+      // Si la firma HMAC es 100% auténtica y no supera una ventana de gracia razonable (30 días tras exp)
+      if (decodedExpired && decodedExpired.exp && (nowSec - decodedExpired.exp) < (30 * 24 * 3600)) {
+        decoded = decodedExpired;
+        isExpiredButAuthentic = true;
+      } else {
+        return res.status(401).json({ success: false, valid: false, error: 'TOKEN_INVALIDO_O_EXPIRADO' });
+      }
     }
 
     const tokenHwid = decoded.hwid ? String(decoded.hwid).trim().toUpperCase() : '';
@@ -12144,6 +12183,7 @@ app.post('/api/auth/validate-session', (req, res) => {
       return res.status(403).json({ success: false, valid: false, error: 'HWID_MISMATCH' });
     }
 
+    let userRecord = null;
     if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
       const tombstones = loadTombstones();
       const cleanEmail = String(decoded.sub).toLowerCase().trim();
@@ -12159,7 +12199,7 @@ app.post('/api/auth/validate-session', (req, res) => {
         } else {
           // Si no está baneado, verificar si el usuario existe actualmente en users.json
           const allUsers = loadUsers();
-          const userRecord = allUsers.find(u =>
+          userRecord = allUsers.find(u =>
             (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
             (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
           );
@@ -12173,11 +12213,13 @@ app.post('/api/auth/validate-session', (req, res) => {
         }
       }
 
-      const allUsers = loadUsers();
-      const userRecord = allUsers.find(u =>
-        (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
-        (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
-      );
+      if (!userRecord) {
+        const allUsers = loadUsers();
+        userRecord = allUsers.find(u =>
+          (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
+          (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
+        );
+      }
 
       if (userRecord && (userRecord.status === 'BLOCKED' || userRecord.blocked)) {
         return res.status(401).json({ success: false, valid: false, error: 'USUARIO_BLOQUEADO' });
@@ -12194,18 +12236,29 @@ app.post('/api/auth/validate-session', (req, res) => {
     if (effectiveHwid && decoded.sub && decoded.sub !== 'demo@muonline.local') {
       const cleanSub = String(decoded.sub).toLowerCase().trim();
       const devices = loadDevices();
-      if (devices[effectiveHwid]) {
-        if (!devices[effectiveHwid].currentUser || devices[effectiveHwid].currentUser !== cleanSub) {
-          devices[effectiveHwid].currentUser = cleanSub;
-          devices[effectiveHwid].lastSeen = new Date().toISOString();
+      const targetDev = devices[effectiveHwid] || devices[clientHwid] || devices[tokenHwid];
+      if (targetDev) {
+        if (!targetDev.currentUser || targetDev.currentUser !== cleanSub) {
+          targetDev.currentUser = cleanSub;
+          targetDev.lastSeen = new Date().toISOString();
           saveDevices(devices);
         }
       }
     }
 
+    // Renovar token si estaba expirado o si le quedan menos de 2 días de vida útil
+    const expRemaining = decoded.exp ? (decoded.exp - nowSec) : 0;
+    let renewedToken = null;
+    if (isExpiredButAuthentic || expRemaining < (2 * 24 * 3600)) {
+      const targetSv = userRecord && typeof userRecord.sessionVersion === 'number' ? userRecord.sessionVersion : decoded.sessionVersion;
+      renewedToken = generateSessionToken(decoded.sub, decoded.role || 'USER', effectiveHwid, targetSv);
+    }
+
     return res.json({
       success: true,
       valid: true,
+      renewed: !!renewedToken,
+      token: renewedToken || token,
       user: {
         email: decoded.sub,
         role: decoded.role || 'USER',

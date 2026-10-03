@@ -185,6 +185,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   const valData = await valRes.json();
                   if (valData && valData.success && valData.valid) {
                     isValidSession = true;
+                    if (valData.token && valData.token !== token) {
+                      token = valData.token;
+                      await SqlClient.setSessionToken(valData.token);
+                    }
                   }
                 } else if (valRes.status === 401 || valRes.status === 403) {
                   // Token rechazado o expirado
@@ -335,6 +339,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           userEmail || (userName ? `${userName}@muonline.local` : (savedEmail || '')),
           userName || (savedUsername || '')
         );
+
+        // Renovación transparente en segundo plano (Sliding Session) mientras la sesión esté activa
+        if (isAuthenticated && !isDemoSession) {
+          const currentToken = await SqlClient.getSessionToken();
+          if (currentToken) {
+            const bridgeUrl = AUTH_GATEWAY_URL;
+            fetch(`${bridgeUrl}/api/auth/validate-session`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentToken}`,
+                'X-Device-Hwid': hwid,
+              },
+              body: JSON.stringify({ token: currentToken, hwid }),
+            })
+              .then((res) => (res.ok ? res.json() : null))
+              .then(async (data) => {
+                if (data && data.success && data.valid && data.token && data.token !== currentToken) {
+                  await SqlClient.setSessionToken(data.token);
+                }
+              })
+              .catch(() => {});
+          }
+        }
       } catch (_) {}
     };
 

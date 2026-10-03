@@ -913,7 +913,7 @@ function generateSessionToken(email, role = 'USER', hwid = '', sessionVersion) {
   return `${header}.${payloadB64}.${signature}`;
 }
 
-function verifySessionToken(token) {
+function verifySessionToken(token, options = {}) {
   if (!token || typeof token !== 'string') return null;
   const parts = token.trim().split('.');
   if (parts.length !== 3) return null;
@@ -925,7 +925,7 @@ function verifySessionToken(token) {
     }
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
     const nowSec = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < nowSec) {
+    if (!options.allowExpired && payload.exp && payload.exp < nowSec) {
       return null;
     }
     return payload;
@@ -9887,9 +9887,19 @@ app.post('/api/auth/validate-session', (req, res) => {
       return res.status(401).json({ success: false, valid: false, error: 'TOKEN_REQUERIDO' });
     }
 
-    const decoded = verifySessionToken(token);
+    const nowSec = Math.floor(Date.now() / 1000);
+    let decoded = verifySessionToken(token);
+    let isExpiredButAuthentic = false;
+
     if (!decoded) {
-      return res.status(401).json({ success: false, valid: false, error: 'TOKEN_INVALIDO_O_EXPIRADO' });
+      const decodedExpired = verifySessionToken(token, { allowExpired: true });
+      // Si la firma HMAC es 100% auténtica y no supera una ventana de gracia razonable (30 días tras exp)
+      if (decodedExpired && decodedExpired.exp && (nowSec - decodedExpired.exp) < (30 * 24 * 3600)) {
+        decoded = decodedExpired;
+        isExpiredButAuthentic = true;
+      } else {
+        return res.status(401).json({ success: false, valid: false, error: 'TOKEN_INVALIDO_O_EXPIRADO' });
+      }
     }
 
     const tokenHwid = decoded.hwid ? String(decoded.hwid).trim().toUpperCase() : '';
@@ -9897,6 +9907,7 @@ app.post('/api/auth/validate-session', (req, res) => {
       return res.status(403).json({ success: false, valid: false, error: 'HWID_MISMATCH' });
     }
 
+    let userRecord = null;
     if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
       const tombstones = loadTombstones();
       const cleanEmail = String(decoded.sub).toLowerCase().trim();
@@ -9905,7 +9916,7 @@ app.post('/api/auth/validate-session', (req, res) => {
       }
 
       const allUsers = loadUsers();
-      const userRecord = allUsers.find(u =>
+      userRecord = allUsers.find(u =>
         (u.email && String(u.email).toLowerCase().trim() === cleanEmail) ||
         (u.username && String(u.username).toLowerCase().trim() === cleanEmail)
       );
@@ -9921,7 +9932,7 @@ app.post('/api/auth/validate-session', (req, res) => {
       }
     }
 
-    const effectiveHwid = clientHwid;
+    const effectiveHwid = clientHwid || tokenHwid;
     if (effectiveHwid && decoded.sub && decoded.sub !== 'demo@muonline.local') {
       const cleanSub = String(decoded.sub).toLowerCase().trim();
       const devices = loadDevices();
@@ -9934,9 +9945,19 @@ app.post('/api/auth/validate-session', (req, res) => {
       }
     }
 
+    // Renovar token si estaba expirado o si le quedan menos de 2 días de vida útil
+    const expRemaining = decoded.exp ? (decoded.exp - nowSec) : 0;
+    let renewedToken = null;
+    if (isExpiredButAuthentic || expRemaining < (2 * 24 * 3600)) {
+      const targetSv = userRecord && typeof userRecord.sessionVersion === 'number' ? userRecord.sessionVersion : decoded.sessionVersion;
+      renewedToken = generateSessionToken(decoded.sub, decoded.role || 'USER', effectiveHwid, targetSv);
+    }
+
     return res.json({
       success: true,
       valid: true,
+      renewed: !!renewedToken,
+      token: renewedToken || token,
       user: {
         email: decoded.sub,
         role: decoded.role || 'USER',

@@ -3,10 +3,10 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.4.7",
-  "latestBuild": 149,
+  "latestVersion": "2.4.8",
+  "latestBuild": 150,
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.4.7 (Build 149) - Enrutamiento Cloud Exclusivo de Autenticación y Conector VPS:\n• BLINDAJE DE AUTENTICACIÓN: Enrutamiento absoluto y desacoplado del inicio de sesión, registro, recuperación y verificación de cuentas de usuario exclusivamente hacia la pasarela oficial en la nube (mumanager.pro), evitando que configuraciones locales o de VPS desvíen el login al conector.\n• CONECTIVIDAD UNIVERSAL SQL HTTP: Enlace directo por HTTP en el puerto 3001 para el conector local y VPS sin interferencias con el módulo de cuentas de usuario.",
+  "updateChangelog": "MuManager PRO v2.4.8 (Build 150) - Sesión Persistente y Blindaje de Licencias:\n• RENOVACIÓN TRANSPARENTE DE SESIÓN: Implementación de sesión deslizante (Sliding Session) con ventana de gracia criptográfica de 30 días y renovación automática en segundo plano (Heartbeat), eliminando la necesidad de volver a iniciar sesión tras actualizar la APK.\n• BLINDAJE ANTIFLAPPING DE LICENCIAS: Eliminación definitiva de la intermitencia de licencias PRO al arrancar la aplicación, garantizando sincronización atómica con AES-256 en SecureStorage y protegiendo contra degradaciones no autorizadas por respuestas desfasadas.\n• PARIDAD Y PERSISTENCIA GATEWAY/CONECTOR: Sincronización completa de la pasarela y conector local con persistencia de secretos para evitar desconexiones accidentales por reinicios.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": null,
@@ -75,15 +75,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.4.7 (Build 149)",
+  "updateTitle": "MuManager PRO v2.4.8 (Build 150)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 149,
+  "versionCode": 150,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.4.7 (Build 149) - Enrutamiento Cloud Exclusivo de Autenticación y Conector VPS:\n• BLINDAJE DE AUTENTICACIÓN: Enrutamiento absoluto y desacoplado del inicio de sesión, registro, recuperación y verificación de cuentas de usuario exclusivamente hacia la pasarela oficial en la nube (mumanager.pro), evitando que configuraciones locales o de VPS desvíen el login al conector.\n• CONECTIVIDAD UNIVERSAL SQL HTTP: Enlace directo por HTTP en el puerto 3001 para el conector local y VPS sin interferencias con el módulo de cuentas de usuario.",
+  "releaseNotes": "MuManager PRO v2.4.8 (Build 150) - Sesión Persistente y Blindaje de Licencias:\n• RENOVACIÓN TRANSPARENTE DE SESIÓN: Implementación de sesión deslizante (Sliding Session) con ventana de gracia criptográfica de 30 días y renovación automática en segundo plano (Heartbeat), eliminando la necesidad de volver a iniciar sesión tras actualizar la APK.\n• BLINDAJE ANTIFLAPPING DE LICENCIAS: Eliminación definitiva de la intermitencia de licencias PRO al arrancar la aplicación, garantizando sincronización atómica con AES-256 en SecureStorage y protegiendo contra degradaciones no autorizadas por respuestas desfasadas.\n• PARIDAD Y PERSISTENCIA GATEWAY/CONECTOR: Sincronización completa de la pasarela y conector local con persistencia de secretos para evitar desconexiones accidentales por reinicios.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.4.7",
-  "buildNumber": 149,
+  "appVersion": "2.4.8",
+  "buildNumber": 150,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -95,6 +95,6 @@
       "pass": ""
     }
   },
-  "version": "2.4.7",
-  "build": 149
+  "version": "2.4.8",
+  "build": 150
 }

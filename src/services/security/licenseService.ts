@@ -1,6 +1,6 @@
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SecurityService } from './securityService';
+import { SecureStorage } from './secureStorage';
 import { SqlClient, TelemetryPingResult } from '../database/sqlClient';
 import { RemoteConfigService } from './remoteConfigService';
 
@@ -71,14 +71,14 @@ export class LicenseService {
     this.currentStatus.hwid = hwid;
 
     try {
-      const savedNotified = await AsyncStorage.getItem('@mumanager_notified_trial_expires_at');
+      const savedNotified = await SecureStorage.getItem('@mumanager_notified_trial_expires_at');
       if (savedNotified) {
         this.lastNotifiedTrialExpiresAt = savedNotified;
       }
     } catch (_) {}
 
     try {
-      const raw = await AsyncStorage.getItem(LICENSE_STORAGE_KEY);
+      const raw = await SecureStorage.getItem(LICENSE_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         // Verify anti-tamper checksum
@@ -86,7 +86,7 @@ export class LicenseService {
           // Si la licencia local ya venció por fecha, limpiar almacenamiento y pasar a DEMO de inmediato
           if (parsed.expiresAt && new Date(parsed.expiresAt).getTime() <= Date.now()) {
             console.log('[LicenseService] Licencia local expirada por fecha en inicio, pasando a DEMO');
-            await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+            await SecureStorage.removeItem(LICENSE_STORAGE_KEY);
           } else {
             // Blindaje anti-pérdida de licencia:
             // Si el dispositivo tiene una clave matemáticamente válida o es PRO, no destruir la licencia local
@@ -170,20 +170,18 @@ export class LicenseService {
     }
     this.lastProcessedHwid = currentHwid;
 
-    // Órdenes autoritativas del servidor: revocación, downgrade a DEMO, wipe de claves o bloqueo
-    const isAuthoritativeDowngradeOrWipe = (
-      res.mode === 'DEMO' ||
-      res.forceWipeKey === true ||
-      res.forceDemo === true ||
+    // Órdenes autoritativas explícitas del administrador: bloqueo explícito o purga de clave
+    const isExplicitAdminCommand = (
       res.blocked === true ||
-      (res as any).authoritativeMode === 'DEMO'
+      res.forceWipeKey === true
     );
 
-    // Control de orden: Solo descartar si la revisión es menor Y la fecha NO es más reciente,
-    // y NUNCA descartar si es una orden autoritativa de revocación/downgrade/wipe/bloqueo del servidor.
-    if (!isAuthoritativeDowngradeOrWipe && (incomingRev > 0 || this.lastProcessedRevision > 0)) {
+    // Control de orden: Solo descartar si la revisión es menor Y la fecha NO es más reciente.
+    // Una respuesta rutinaria (sea DEMO o PRO) con revisión inferior a la ya procesada
+    // es un descarte obvio (ej: contenedor frío de Vercel desfasado).
+    if (!isExplicitAdminCommand && (incomingRev > 0 || this.lastProcessedRevision > 0)) {
       if (incomingRev < this.lastProcessedRevision && incomingUpdatedAt <= this.lastProcessedUpdatedAt) {
-        console.warn(`[LicenseService] Descartando respuesta de telemetría obsoleta (rev ${incomingRev} < ${this.lastProcessedRevision})`);
+        console.warn(`[LicenseService] Descartando respuesta de telemetría obsoleta o desfasada (rev ${incomingRev} < ${this.lastProcessedRevision})`);
         return;
       }
     }
@@ -214,7 +212,7 @@ export class LicenseService {
         this.currentStatus.isLifetime = false;
         this.currentStatus.daysRemaining = 0;
         this.queueStorageOperation(async () => {
-          await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+          await SecureStorage.removeItem(LICENSE_STORAGE_KEY);
         });
       }
       this.notifyListeners();
@@ -253,7 +251,7 @@ export class LicenseService {
         this.currentStatus.timeRemainingFormatted = undefined;
         this.currentStatus.expiresAt = undefined;
         this.queueStorageOperation(async () => {
-          await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+          await SecureStorage.removeItem(LICENSE_STORAGE_KEY);
         });
         this.notifyListeners();
         if (wasPro && !res.blocked) {
@@ -294,7 +292,7 @@ export class LicenseService {
         const revToSave = incomingRev || this.lastProcessedRevision;
         const updatedToSave = incomingUpdatedAt || this.lastProcessedUpdatedAt;
         this.queueStorageOperation(async () => {
-          await AsyncStorage.setItem(
+          await SecureStorage.setItem(
             LICENSE_STORAGE_KEY,
             JSON.stringify({
               licenseKey: key,
@@ -344,7 +342,7 @@ export class LicenseService {
         const trialKey = expiresAt || 'trial_active';
         if (this.lastNotifiedTrialExpiresAt !== trialKey) {
           this.lastNotifiedTrialExpiresAt = trialKey;
-          AsyncStorage.setItem('@mumanager_notified_trial_expires_at', trialKey).catch(() => {});
+          SecureStorage.setItem('@mumanager_notified_trial_expires_at', trialKey).catch(() => {});
           Alert.alert(
             '🎉 ¡Bienvenido a MU Manager PRO!',
             `Se ha activado tu prueba PRO gratuita por 24 horas para este dispositivo.\n\n⏳ Tiempo disponible: ${duracionTxt}\n\nTienes acceso completo a todas las herramientas avanzadas, edición de personajes, baúl y diagnósticos SQL.`,
@@ -359,6 +357,15 @@ export class LicenseService {
         );
       }
     } else if (res.mode === 'DEMO' || res.forceWipeKey || ((res as any).authoritativeMode === 'DEMO')) {
+      // Si el dispositivo ya era PRO, verificar que la degradación a DEMO sea autoritativa
+      // (ej: forceDemo explícito del admin, bloqueo, wipe o revisión igual/mayor).
+      // Jamás degradar a DEMO por un ping rutinario desfasado si la licencia local está activa.
+      const isAuthorizedDowngrade = !wasPro || res.forceDemo === true || res.forceWipeKey === true || incomingRev >= this.lastProcessedRevision;
+      if (!isAuthorizedDowngrade) {
+        console.warn('[LicenseService] Ignorando degradación a DEMO no autoritativa de respuesta desfasada');
+        return;
+      }
+
       // Modo DEMO es vitalicio: limpiar credenciales PRO si las hubiera y asegurar DEMO permanente
       this.currentStatus.isActivated = false;
       this.currentStatus.plan = 'DEMO';
@@ -370,7 +377,7 @@ export class LicenseService {
       this.currentStatus.timeRemainingFormatted = undefined;
       this.currentStatus.expiresAt = undefined;
       this.queueStorageOperation(async () => {
-        await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+        await SecureStorage.removeItem(LICENSE_STORAGE_KEY);
       });
       if (wasPro) {
         this.notifyListeners();
@@ -450,7 +457,7 @@ export class LicenseService {
     };
 
     await this.queueStorageOperation(async () => {
-      await AsyncStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(statusData));
+      await SecureStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(statusData));
     });
     this.currentStatus = statusData;
     this.notifyListeners();
@@ -469,7 +476,7 @@ export class LicenseService {
    */
   static async resetToDemo(): Promise<void> {
     await this.queueStorageOperation(async () => {
-      await AsyncStorage.removeItem(LICENSE_STORAGE_KEY);
+      await SecureStorage.removeItem(LICENSE_STORAGE_KEY);
     });
     const hwid = await SecurityService.getDeviceHwid();
     this.currentStatus = {
