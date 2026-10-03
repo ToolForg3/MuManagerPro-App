@@ -55,11 +55,19 @@ export class LicenseService {
     return this.storagePromiseQueue;
   }
 
+  private static lastInvalidatedAt: number = 0;
+
   static onSessionInvalidated(cb: (reason?: string) => void) {
     this.sessionInvalidatedCallback = cb;
   }
 
   static triggerSessionInvalidated(reason?: string) {
+    const now = Date.now();
+    // Anti-ráfaga: Evitar modales duplicados ante peticiones concurrentes (3 segundos)
+    if (now - this.lastInvalidatedAt < 3000) {
+      return;
+    }
+    this.lastInvalidatedAt = now;
     if (this.sessionInvalidatedCallback) {
       this.sessionInvalidatedCallback(reason || 'Tu sesión ha sido finalizada.');
     }

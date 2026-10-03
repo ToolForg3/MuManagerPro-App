@@ -112,6 +112,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const storedUser = (authUser || savedUserVal || storedEmail.split('@')[0] || '').trim();
         const session = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
         let token = await SqlClient.getSessionToken();
+        if (token) {
+          await SqlClient.setSessionToken(token);
+        }
         if (savedUserVal) {
           setSavedUsername(savedUserVal);
         } else if (storedUser) {
@@ -185,10 +188,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   const valData = await valRes.json();
                   if (valData && valData.success && valData.valid) {
                     isValidSession = true;
-                    if (valData.token && valData.token !== token) {
-                      token = valData.token;
-                      await SqlClient.setSessionToken(valData.token);
-                    }
+                    const effectiveToken = valData.token || token;
+                    token = effectiveToken;
+                    await SqlClient.setSessionToken(effectiveToken);
                   }
                 } else if (valRes.status === 401 || valRes.status === 403) {
                   // Token rechazado o expirado
@@ -202,12 +204,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
 
             if (!isValidSession && token) {
-              // El token fue rechazado por el servidor (ej: tras actualizar el APK o reiniciar servidor)
-              await SqlClient.setSessionToken('');
-              await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-              setIsAuthenticated(false);
-              setIsDemoSession(false);
-              return;
+              // El token fue rechazado por el servidor
+              // Si el usuario cuenta con credenciales saladas guardadas, preservar la sesión en modo offline
+              const storedHash = await SecureStorage.getItem('@mumanager_auth_pwhash');
+              if (storedHash && (storedEmail || storedUser)) {
+                console.log('[AuthContext] Modo offline protegido activo con hash de credenciales.');
+                isValidSession = true;
+              } else {
+                await SqlClient.setSessionToken('');
+                await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+                setIsAuthenticated(false);
+                setIsDemoSession(false);
+                return;
+              }
             }
 
             setIsDemoSession(false);

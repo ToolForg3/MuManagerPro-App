@@ -1259,7 +1259,16 @@ app.use((req, res, next) => {
     const authHeader = req.headers['authorization'] || req.headers['x-session-token'];
     const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
     if (token) {
-      const decoded = verifySessionToken(token);
+      let decoded = verifySessionToken(token);
+      let isExpiredGrace = false;
+      if (!decoded) {
+        const decodedExp = verifySessionToken(token, { allowExpired: true });
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (decodedExp && decodedExp.exp && (nowSec - decodedExp.exp) < (30 * 24 * 3600)) {
+          decoded = decodedExp;
+          isExpiredGrace = true;
+        }
+      }
       if (decoded) {
         // Validación de usuario activo (para CUALQUIER usuario, sea USER o ADMIN):
         if (decoded.sub && decoded.sub !== 'demo@muonline.local') {
@@ -1337,6 +1346,12 @@ app.use((req, res, next) => {
         isAuthorized = true;
         authUser = decoded;
         req.user = decoded;
+
+        if (isExpiredGrace && decoded.sub && typeof generateSessionToken === 'function' && typeof res.setHeader === 'function') {
+          const targetSv = decoded.sessionVersion || 1;
+          const renewedToken = generateSessionToken(decoded.sub, decoded.role || 'USER', clientHwid || decoded.hwid, targetSv);
+          res.setHeader('x-renewed-token', renewedToken);
+        }
       }
     }
   }

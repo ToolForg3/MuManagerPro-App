@@ -367,6 +367,7 @@ export class SqlClient {
       attempt++;
       const hwid = await SecurityService.getDeviceHwid();
       const effectiveAdminKey = await this.getStoredAdminKey();
+      const effectiveToken = await this.getSessionToken();
       const isConnector = (this.config?.connectionMode === 'connector') || (this.config?.port === 3001) || (this.config?.port === 30001);
       let effectivePayload = bodyPayload;
       if (isConnector && bodyPayload && bodyPayload.config) {
@@ -397,8 +398,8 @@ export class SqlClient {
           ...secHeaders,
           ...(licKey ? { 'X-License-Key': licKey } : {}),
           ...(effectiveAdminKey && endpoint.startsWith('/api/admin') ? { 'X-Admin-Key': effectiveAdminKey } : {}),
-          ...(this.sessionToken ? {
-            'Authorization': `Bearer ${this.sessionToken}`,
+          ...(effectiveToken ? {
+            'Authorization': `Bearer ${effectiveToken}`,
           } : {}),
           ...(isMutation ? { 'X-Idempotency-Key': `${hwid}_${endpoint.replace(/[^a-zA-Z0-9_-]/g, '_')}_${secHeaders['X-Req-Nonce'] || Date.now()}` } : {}),
         };
@@ -411,11 +412,40 @@ export class SqlClient {
         });
         clearTimeout(timeoutId);
 
+        // Si el servidor emite renovación transparente de sesión deslizante (Sliding Session 30 días)
+        const renewedHeader = response.headers.get('x-renewed-token');
+        if (renewedHeader && renewedHeader.trim()) {
+          this.setSessionToken(renewedHeader.trim());
+        }
+
         // Si el servidor responde 401 (Sesión invalidada, expirada, revocada o token no autorizado)
         if (response.status === 401) {
           try {
             const errData = await this.safeJson(response.clone());
-            // Purgar token inválido o desactualizado para evitar bloqueos continuos
+
+            // Recuperación Transparente: Intentar refresco mediante la ventana de gracia criptográfica
+            if (effectiveToken && !isAuthEndpoint && attempt === 1) {
+              try {
+                const valRes = await fetch(`${this.DEFAULT_CLOUD_GATEWAY}/api/auth/validate-session`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${effectiveToken}`,
+                    'X-Device-Hwid': hwid,
+                  },
+                  body: JSON.stringify({ token: effectiveToken, hwid }),
+                });
+                if (valRes.ok) {
+                  const valData = await valRes.json();
+                  if (valData && valData.success && valData.valid && valData.token) {
+                    this.setSessionToken(valData.token);
+                    continue;
+                  }
+                }
+              } catch (_) {}
+            }
+
+            // Purgar token solo tras verificar que realmente no es recuperable
             this.sessionToken = '';
             SecureStorage.removeItem('@mumanager_session_token').catch(() => {});
 
