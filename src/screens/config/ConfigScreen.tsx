@@ -38,6 +38,7 @@ import { ServerProfile } from '../../types/admin';
 import { logAdminAction } from '../../services/adminLog';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
 import { SecureStorage } from '../../services/security/secureStorage';
+import { FeedbackService } from '../../services/feedback/feedbackService';
 const maskHost = (h?: string): string => {
   if (!h) return '';
   const ipMatch = h.match(/^(\d{1,3}\.\d{1,3})\.\d{1,3}\.\d{1,3}$/);
@@ -1622,6 +1623,28 @@ export const ConfigScreen = () => {
                   </ImageBackground>
                 </TouchableOpacity>
               </View>
+
+              {/* Botón para Calificar la Aplicación / Dejar Feedback */}
+              <TouchableOpacity
+                style={{ width: '100%', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}
+                activeOpacity={0.8}
+                onPress={() => FeedbackService.show({
+                  source: 'config_screen',
+                  title: '⭐ CALIFICAR MU MANAGER PRO',
+                  subtitle: 'Tu valoración y sugerencias nos ayudan directamente a seguir forjando la suite.',
+                })}
+              >
+                <ImageBackground
+                  source={STITCH_ASSETS.tabs.tabModeActive}
+                  style={styles.channelButtonConfig}
+                  resizeMode="stretch"
+                >
+                  <MuIcon name={"star" as any} size={16} color="#FEDF99" style={{ marginRight: 6 }} />
+                  <Text style={[styles.channelButtonTextConfig, { color: '#FEDF99', fontWeight: '800' }]}>
+                    Calificar Experiencia & Feedback (5★)
+                  </Text>
+                </ImageBackground>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 activeOpacity={0.7}

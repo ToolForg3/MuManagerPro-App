@@ -3,10 +3,10 @@
   "maintenanceMessage": "Servidor temporalmente en mantenimiento por el administrador. Intenta de nuevo en breve.",
   "broadcastAnnouncement": "",
   "minRequiredVersion": "2.0.8",
-  "latestVersion": "2.4.9",
-  "latestBuild": 151,
+  "latestVersion": "2.4.10",
+  "latestBuild": 152,
   "latestApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "updateChangelog": "MuManager PRO v2.4.9 (Build 151) - Blindaje de Seguridad y Control de Licencias:\n• BLINDAJE ANTI-BRUTE FORCE EN RECUPERACIÓN: Bloqueo estricto tras 5 intentos fallidos en todas las rutas de restablecimiento de contraseña y purga automática de tokens expirados.\n• PARIDAD EN TASA DE PETICIONES ADMINISTRATIVAS: Rate limiting de fuerza bruta en rutas /api/admin/* para el conector local y pasarela central con bloqueo de 15 minutos ante 10 intentos fallidos.\n• RESILIENCIA TOTAL DE DISPOSITIVOS Y TELEMETRÍA: Normalización de HWID contra discrepancias de mayúsculas/minúsculas y resolución defensiva contra bloqueos o fallos en telemetría.\n• ESTABILIDAD OPERATIVA: Control de licencias y panel administrativo 100% blindado sin afectación a bases de datos ni servicios activos.",
+  "updateChangelog": "MuManager PRO v2.4.10 (Build 152) - Sistema de Calificaciones Interactivo & Módulo de Feedback:\n• MODAL DE ESTRELLAS INTERACTIVO EN APK: Calificación de 5 estrellas con descriptores dinámicos, categorías temáticas (Experiencia, Sugerencia, Bug, Servidor) y comentario opcional bajo diseño Stitch Approved Ironforge.\n• DISPARADORES INTELIGENTES DE FEEDBACK: Activación automática de calificación al expirar la Prueba PRO de 24 horas, al concluir la Demo Rápida de 10 minutos y acceso manual permanente desde el panel de Ajustes.\n• MÓDULO VISUAL DE FEEDBACK EN PANEL WEB: Gestión administrativa completa en tiempo real con promedio general, tasa de satisfacción, filtros por estrellas y categorías, búsqueda y borrado seguro.\n• TRANSPARENCIA Y CONFIANZA CRIPTOGRÁFICA: Verificación oficial de integridad en portal web con hash SHA-256, certificado de firma y enlace directo a análisis de VirusTotal.",
   "forceUpdate": false,
   "whitelistOnly": false,
   "demoDurationHours": null,
@@ -75,15 +75,15 @@
     "triggeredAt": ""
   },
   "minVersion": "2.0.8",
-  "updateTitle": "MuManager PRO v2.4.9 (Build 151)",
+  "updateTitle": "MuManager PRO v2.4.10 (Build 152)",
   "apkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "versionCode": 151,
+  "versionCode": 152,
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
   "directApkUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "releaseNotes": "MuManager PRO v2.4.9 (Build 151) - Blindaje de Seguridad y Control de Licencias:\n• BLINDAJE ANTI-BRUTE FORCE EN RECUPERACIÓN: Bloqueo estricto tras 5 intentos fallidos en todas las rutas de restablecimiento de contraseña y purga automática de tokens expirados.\n• PARIDAD EN TASA DE PETICIONES ADMINISTRATIVAS: Rate limiting de fuerza bruta en rutas /api/admin/* para el conector local y pasarela central con bloqueo de 15 minutos ante 10 intentos fallidos.\n• RESILIENCIA TOTAL DE DISPOSITIVOS Y TELEMETRÍA: Normalización de HWID contra discrepancias de mayúsculas/minúsculas y resolución defensiva contra bloqueos o fallos en telemetría.\n• ESTABILIDAD OPERATIVA: Control de licencias y panel administrativo 100% blindado sin afectación a bases de datos ni servicios activos.",
+  "releaseNotes": "MuManager PRO v2.4.10 (Build 152) - Sistema de Calificaciones Interactivo & Módulo de Feedback:\n• MODAL DE ESTRELLAS INTERACTIVO EN APK: Calificación de 5 estrellas con descriptores dinámicos, categorías temáticas (Experiencia, Sugerencia, Bug, Servidor) y comentario opcional bajo diseño Stitch Approved Ironforge.\n• DISPARADORES INTELIGENTES DE FEEDBACK: Activación automática de calificación al expirar la Prueba PRO de 24 horas, al concluir la Demo Rápida de 10 minutos y acceso manual permanente desde el panel de Ajustes.\n• MÓDULO VISUAL DE FEEDBACK EN PANEL WEB: Gestión administrativa completa en tiempo real con promedio general, tasa de satisfacción, filtros por estrellas y categorías, búsqueda y borrado seguro.\n• TRANSPARENCIA Y CONFIANZA CRIPTOGRÁFICA: Verificación oficial de integridad en portal web con hash SHA-256, certificado de firma y enlace directo a análisis de VirusTotal.",
   "updateDownloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "appVersion": "2.4.9",
-  "buildNumber": 151,
+  "appVersion": "2.4.10",
+  "buildNumber": 152,
   "email": {
     "provider": "smtp",
     "from": "mumanagerpro@gmail.com",
@@ -95,6 +95,6 @@
       "pass": ""
     }
   },
-  "version": "2.4.9",
-  "build": 151
+  "version": "2.4.10",
+  "build": 152
 }

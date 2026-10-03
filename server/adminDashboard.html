@@ -1657,6 +1657,7 @@
       <button class="submodule-pill" data-tab="tab-all-licenses" onclick="switchTab('tab-all-licenses')">📋 Licencias Emitidas & Exclusiones</button>
       <button class="submodule-pill" data-tab="tab-keygen" onclick="switchTab('tab-keygen')">🔑 Generador Licencias PRO</button>
       <button class="submodule-pill" data-tab="tab-pro-requests" onclick="switchTab('tab-pro-requests')">⭐ Solicitudes PRO <span id="pro-badge" class="badge" style="background:#E2703A; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px;">0</span></button>
+      <button class="submodule-pill" data-tab="tab-feedbacks" onclick="switchTab('tab-feedbacks')">💬 Feedbacks & Opiniones <span id="feedback-badge" class="badge" style="background:#3FCF8E; color:#0D0E0D; font-size:10px; padding:1px 6px; border-radius:10px; display:none; margin-left:4px; font-weight:700;">0</span></button>
     </div>
 
     <!-- Submódulos Módulo 2: Cuentas de Usuarios -->
@@ -1852,6 +1853,72 @@
             <tr id="pro-loading-row"><td colspan="7" class="empty-pro-cell" style="text-align:center; padding: 24px; color: var(--muted);">Cargando solicitudes...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Feedbacks & Opiniones -->
+  <div id="tab-feedbacks" class="tab-content">
+    <div class="main-section">
+      <div class="section-header">
+        <div class="section-title" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          💬 Opiniones y Feedback de la Comunidad
+          <span id="fb-total-badge" class="badge" style="background: rgba(91, 141, 239, 0.15); color: #5B8DEF; border: 1px solid rgba(91, 141, 239, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 600;">
+            0 Comentarios
+          </span>
+          <span id="fb-avg-badge" class="badge" style="background: rgba(239, 210, 141, 0.15); color: #EFD28D; border: 1px solid rgba(239, 210, 141, 0.35); font-size: 11px; padding: 3px 8px; font-weight: 700;">
+            ⭐ 5.0 / 5.0
+          </span>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-dark btn-sm" onclick="loadFeedbacks()">🔄 Refrescar</button>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 18px;">
+        Opiniones, sugerencias y calificaciones de satisfacción enviadas por los administradores desde el APK y la web:
+      </p>
+
+      <!-- Métricas Resumen de Feedback -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div class="metric-card" style="cursor: default;">
+          <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Calificación Promedio</div>
+          <div id="fb-metric-avg" style="font-size: 26px; font-weight: 800; color: #FEDF99; margin: 4px 0;">5.0 <span style="font-size: 16px; color: #EFD28D;">★</span></div>
+          <div id="fb-metric-stars-bar" style="font-size: 12px; color: #CDC6B9;">Basado en opiniones reales</div>
+        </div>
+        <div class="metric-card" style="cursor: default;">
+          <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Total Recibidos</div>
+          <div id="fb-metric-total" style="font-size: 26px; font-weight: 800; color: #5B8DEF; margin: 4px 0;">0</div>
+          <div style="font-size: 12px; color: #CDC6B9;">Web & In-App APK</div>
+        </div>
+        <div class="metric-card" style="cursor: default;">
+          <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Satisfacción (4★ - 5★)</div>
+          <div id="fb-metric-positive-pct" style="font-size: 26px; font-weight: 800; color: #3FCF8E; margin: 4px 0;">100%</div>
+          <div id="fb-metric-positive-count" style="font-size: 12px; color: #CDC6B9;">0 valoraciones positivas</div>
+        </div>
+      </div>
+
+      <!-- Filtros Rápidos -->
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; padding: 12px 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px;">
+        <span style="font-size: 12px; color: var(--muted); font-weight: 600;">Filtrar:</span>
+        <button class="btn btn-sm fb-filter-btn active" data-filter="all" onclick="filterFeedbacks('all')">Todos</button>
+        <button class="btn btn-sm fb-filter-btn" data-filter="5" onclick="filterFeedbacks('5')">5 ★</button>
+        <button class="btn btn-sm fb-filter-btn" data-filter="4" onclick="filterFeedbacks('4')">4 ★</button>
+        <button class="btn btn-sm fb-filter-btn" data-filter="3" onclick="filterFeedbacks('3')">3 ★</button>
+        <button class="btn btn-sm fb-filter-btn" data-filter="2" onclick="filterFeedbacks('2')">2 ★</button>
+        <button class="btn btn-sm fb-filter-btn" data-filter="1" onclick="filterFeedbacks('1')">1 ★</button>
+        <span style="color: var(--border); margin: 0 4px;">|</span>
+        <button class="btn btn-sm fb-filter-btn" data-filter="feature" onclick="filterFeedbacks('feature')">💡 Funciones</button>
+        <button class="btn btn-sm fb-filter-btn" data-filter="bug" onclick="filterFeedbacks('bug')">🐛 Bugs</button>
+        <div style="margin-left: auto;">
+          <input type="text" id="fb-search-input" placeholder="Buscar en opiniones o HWID..." oninput="filterFeedbacks()" style="padding: 5px 10px; font-size: 12px; background: #0E0F0E; border: 1px solid var(--border); border-radius: 3px; color: #E4E2E0; width: 220px;">
+        </div>
+      </div>
+
+      <!-- Contenedor de Tarjetas de Feedback -->
+      <div id="fb-cards-container" style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="text-align:center; padding: 36px; color: var(--muted); font-size: 13px;">
+          Cargando opiniones de la comunidad...
+        </div>
       </div>
     </div>
   </div>
@@ -3327,6 +3394,7 @@
       'tab-all-licenses': 'mod-devices',
       'tab-keygen': 'mod-devices',
       'tab-pro-requests': 'mod-devices',
+      'tab-feedbacks': 'mod-devices',
       'tab-users': 'mod-users',
       'tab-security': 'mod-security',
       'tab-masters': 'mod-security',
@@ -3418,6 +3486,7 @@
       if (tabId === 'tab-users') refreshUsers();
       if (tabId === 'tab-all-licenses') loadAllLicensesModule();
       if (tabId === 'tab-pro-requests') loadProRequests();
+      if (tabId === 'tab-feedbacks') loadFeedbacks();
       if (tabId === 'tab-security') loadSecurityLogs();
       if (tabId === 'tab-whatsapp') loadWhatsAppSettings();
       if (tabId === 'tab-email') loadEmailSettings();
@@ -3443,6 +3512,7 @@
         refreshDevices(),
         refreshUsers(),
         loadProRequests(),
+        loadFeedbacks(),
         loadAllLicensesModule(),
         loadGlobalSettings(),
         loadWhatsAppSettings(),
@@ -5930,6 +6000,249 @@
     }
 
     /* ========================================================
+       FEEDBACKS & OPINIONES DE LA COMUNIDAD
+       ======================================================== */
+    let allFeedbacksCache = [];
+    let currentFeedbackFilter = 'all';
+
+    function copyToClipboard(text, msg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(msg || '📋 Copiado al portapapeles');
+        }).catch(() => {
+          showToast('📋 ' + text);
+        });
+      } else {
+        showToast('📋 ' + text);
+      }
+    }
+
+    async function loadFeedbacks() {
+      const key = getAdminKey();
+      if (!key) return;
+      try {
+        const res = await fetch('/api/admin/feedbacks', {
+          headers: { 'X-Admin-Key': key }
+        });
+        if (!res.ok) {
+          console.warn('Error al consultar feedbacks:', res.status);
+          return;
+        }
+        const data = await res.json();
+        if (data && Array.isArray(data.feedbacks)) {
+          allFeedbacksCache = data.feedbacks;
+          updateFeedbackBadges(allFeedbacksCache);
+          renderFeedbacks(allFeedbacksCache);
+        }
+      } catch (e) {
+        console.error('Error cargando feedbacks:', e);
+      }
+    }
+
+    function updateFeedbackBadges(list) {
+      const count = list ? list.length : 0;
+      const badge = document.getElementById('feedback-badge');
+      if (badge) {
+        badge.innerText = count;
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+      }
+      const totalBadge = document.getElementById('fb-total-badge');
+      if (totalBadge) {
+        totalBadge.innerText = `${count} Opinión${count === 1 ? '' : 'es'}`;
+      }
+
+      let avg = '5.0';
+      let positiveCount = 0;
+      if (count > 0) {
+        const sum = list.reduce((acc, f) => acc + (Number(f.rating) || 5), 0);
+        avg = (sum / count).toFixed(1);
+        positiveCount = list.filter(f => (Number(f.rating) || 5) >= 4).length;
+      }
+      const positivePct = count > 0 ? Math.round((positiveCount / count) * 100) : 100;
+
+      const avgBadge = document.getElementById('fb-avg-badge');
+      if (avgBadge) avgBadge.innerText = `⭐ ${avg} / 5.0`;
+
+      const metricAvg = document.getElementById('fb-metric-avg');
+      if (metricAvg) metricAvg.innerHTML = `${avg} <span style="font-size: 16px; color: #EFD28D;">★</span>`;
+
+      const metricTotal = document.getElementById('fb-metric-total');
+      if (metricTotal) metricTotal.innerText = count;
+
+      const metricPosPct = document.getElementById('fb-metric-positive-pct');
+      if (metricPosPct) metricPosPct.innerText = `${positivePct}%`;
+
+      const metricPosCount = document.getElementById('fb-metric-positive-count');
+      if (metricPosCount) metricPosCount.innerText = `${positiveCount} valoraciones de 4★ y 5★`;
+    }
+
+    function filterFeedbacks(filterVal) {
+      if (filterVal !== undefined) {
+        currentFeedbackFilter = filterVal;
+        document.querySelectorAll('.fb-filter-btn').forEach(btn => {
+          if (btn.getAttribute('data-filter') === filterVal) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+      renderFeedbacks(allFeedbacksCache);
+    }
+
+    function renderFeedbacks(list) {
+      const container = document.getElementById('fb-cards-container');
+      if (!container) return;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding: 48px 16px; background: rgba(0,0,0,0.25); border: 1px dashed var(--border); border-radius: 4px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">💬</div>
+            <div style="font-size: 14px; font-weight: 700; color: #EFD28D;">Aún no se han recibido opiniones</div>
+            <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Las valoraciones enviadas desde el APK y la web aparecerán aquí en tiempo real.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const searchVal = (document.getElementById('fb-search-input')?.value || '').toLowerCase().trim();
+
+      const filtered = list.filter(item => {
+        if (currentFeedbackFilter !== 'all') {
+          if (['1', '2', '3', '4', '5'].includes(currentFeedbackFilter)) {
+            if (String(item.rating) !== currentFeedbackFilter) return false;
+          } else {
+            if (String(item.category || '').toLowerCase() !== currentFeedbackFilter) return false;
+          }
+        }
+        if (searchVal) {
+          const matchMsg = String(item.message || '').toLowerCase().includes(searchVal);
+          const matchName = String(item.name || '').toLowerCase().includes(searchVal);
+          const matchContact = String(item.contact || '').toLowerCase().includes(searchVal);
+          const matchHwid = String(item.hwid || '').toLowerCase().includes(searchVal);
+          if (!matchMsg && !matchName && !matchContact && !matchHwid) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding: 36px 16px; color: var(--muted); font-size: 13px;">
+            No se encontraron opiniones que coincidan con el filtro seleccionado.
+          </div>
+        `;
+        return;
+      }
+
+      const categoryLabels = {
+        general: { label: '⭐ Experiencia', bg: 'rgba(239, 210, 141, 0.15)', color: '#EFD28D' },
+        feature: { label: '💡 Sugerencia', bg: 'rgba(91, 141, 239, 0.15)', color: '#5B8DEF' },
+        bug: { label: '🐛 Detalle / Bug', bg: 'rgba(226, 112, 58, 0.15)', color: '#E2703A' },
+        server: { label: '🎮 Servidor', bg: 'rgba(63, 207, 142, 0.15)', color: '#3FCF8E' },
+        opinion: { label: '💬 Opinión', bg: 'rgba(164, 179, 230, 0.15)', color: '#A4B3E6' }
+      };
+
+      const sourceLabels = {
+        pro_trial_expired: 'Fin Prueba PRO 24h',
+        quick_demo_expired: 'Fin Demo 10min',
+        config_screen: 'Ajustes APK',
+        apk_inapp_modal: 'Modal APK',
+        web: 'Web Oficial'
+      };
+
+      container.innerHTML = filtered.map(fb => {
+        const ratingNum = Math.max(1, Math.min(5, parseInt(fb.rating, 10) || 5));
+        const starsHtml = [1, 2, 3, 4, 5].map(i => {
+          if (i <= ratingNum) {
+            return '<span style="color: #FEDF99; font-size: 16px; text-shadow: 0 0 6px rgba(239,210,141,0.5);">★</span>';
+          }
+          return '<span style="color: #42413C; font-size: 16px;">★</span>';
+        }).join('');
+
+        const catInfo = categoryLabels[fb.category] || categoryLabels.general;
+        const srcText = sourceLabels[fb.source] || fb.source || 'Web';
+        const dateStr = fb.createdAt ? new Date(fb.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : 'Reciente';
+
+        const safeName = escapeHtml(fb.name || 'Administrador');
+        const safeContact = escapeHtml(fb.contact || '');
+        const safeHwid = escapeHtml(fb.hwid || 'N/A');
+        const safeMsg = escapeHtml(fb.message || '');
+
+        const contactHtml = safeContact && safeContact !== 'Sin contacto' ? `
+          <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 3px; font-size: 11px; color: #EFD28D; font-family: monospace;">
+            ✉️ ${safeContact}
+            <button class="btn btn-xs" style="padding: 1px 4px; font-size: 10px; background: transparent; border: none; cursor: pointer; color: #CDC6B9;" onclick="copyToClipboard('${safeContact}', 'Contacto copiado')" title="Copiar contacto">📋</button>
+          </span>
+        ` : '';
+
+        const hwidHtml = safeHwid && safeHwid !== 'N/A' ? `
+          <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.3); padding: 2px 7px; border-radius: 3px; font-size: 11px; color: #8C867A; font-family: monospace;" title="HWID del dispositivo">
+            📱 ${safeHwid.substring(0, 18)}...
+            <button class="btn btn-xs" style="padding: 1px 4px; font-size: 10px; background: transparent; border: none; cursor: pointer; color: #CDC6B9;" onclick="copyToClipboard('${safeHwid}', 'HWID copiado')" title="Copiar HWID">📋</button>
+          </span>
+        ` : '';
+
+        return `
+          <div class="card" style="background: var(--card); border: 1px solid var(--border); border-top: 1px solid #5A5242; border-left: 1px solid #5A5242; border-bottom: 1px solid #28251E; border-right: 1px solid #28251E; border-radius: 4px; padding: 14px 18px; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div>${starsHtml}</div>
+                <span class="badge" style="background: ${catInfo.bg}; color: ${catInfo.color}; border: 1px solid ${catInfo.color}40; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px;">
+                  ${catInfo.label}
+                </span>
+                <span class="badge" style="background: rgba(255,255,255,0.05); color: #A8A296; font-size: 10px; padding: 2px 6px; border-radius: 3px;">
+                  Origen: ${srcText}
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; color: var(--muted); font-family: monospace;">📅 ${dateStr}</span>
+                <button class="btn btn-danger btn-xs" style="padding: 3px 8px; font-size: 11px;" onclick="deleteFeedbackItem('${fb.id}')" title="Eliminar feedback">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <!-- Contenido del Mensaje -->
+            <div style="font-size: 13px; color: #E4E2E0; line-height: 1.55; margin-bottom: 12px; white-space: pre-wrap; font-family: sans-serif; background: rgba(0,0,0,0.2); padding: 10px 12px; border-radius: 3px; border-left: 3px solid #EFD28D;">
+              ${safeMsg}
+            </div>
+
+            <!-- Pie con Identificación del Usuario -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 12px; font-weight: 700; color: #FEDF99;">👤 ${safeName}</span>
+                ${contactHtml}
+                ${hwidHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteFeedbackItem(id) {
+      if (!await showGothicConfirm({ title: 'Eliminar Feedback', message: '¿Estás seguro de que deseas eliminar permanentemente este comentario?', icon: '🗑️', confirmText: 'Eliminar', isDanger: true })) return;
+      const key = getAdminKey();
+      try {
+        const res = await fetch(`/api/admin/feedback/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': key }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          showToast('🗑️ Feedback eliminado.');
+          allFeedbacksCache = allFeedbacksCache.filter(f => f.id !== id);
+          updateFeedbackBadges(allFeedbacksCache);
+          renderFeedbacks(allFeedbacksCache);
+        } else {
+          showToast(data.error || 'No se pudo eliminar el feedback', true);
+        }
+      } catch (err) {
+        showToast('Error de conexión al eliminar: ' + err.message, true);
+      }
+    }
+
+    /* ========================================================
        BUGS & MONITOREO DE CRASH / ANTI-HACK
        ======================================================== */
     let lastPlayedAlertId = null;
@@ -8089,6 +8402,9 @@
         if (document.getElementById('tab-pro-requests') && document.getElementById('tab-pro-requests').classList.contains('active')) {
           // Solicitudes PRO sincronizadas con DOM
         }
+        if (document.getElementById('tab-feedbacks') && document.getElementById('tab-feedbacks').classList.contains('active')) {
+          await loadFeedbacks();
+        }
         if (document.getElementById('tab-security') && document.getElementById('tab-security').classList.contains('active')) {
           await loadSecurityLogs();
         }
@@ -8149,6 +8465,9 @@
         }
         if (document.getElementById('tab-pro-requests') && document.getElementById('tab-pro-requests').classList.contains('active')) {
           // Solicitudes PRO sincronizadas con DOM
+        }
+        if (document.getElementById('tab-feedbacks') && document.getElementById('tab-feedbacks').classList.contains('active')) {
+          await loadFeedbacks();
         }
         if (document.getElementById('tab-security') && document.getElementById('tab-security').classList.contains('active')) {
           await loadSecurityLogs();

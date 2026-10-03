@@ -28,6 +28,7 @@ import { useAuth } from '../../context/AuthContext';
 import { APP_VERSION, TELEGRAM_URL, DISCORD_URL } from '../../constants/appVersion';
 import { SqlClient } from '../../services/database/sqlClient';
 import { SecurityService } from '../../services/security/securityService';
+import { FeedbackService } from '../../services/feedback/feedbackService';
 import { TermsAndConditionsModal } from '../../components/legal/TermsAndConditionsModal';
 import * as Clipboard from 'expo-clipboard';
 
@@ -55,14 +56,25 @@ export const LoginScreen = () => {
       setIsRegisterMode(true);
       Alert.alert(
         'Tiempo de Demo Finalizado',
-        'Tu acceso rápido de 10 minutos para este dispositivo ha finalizado.\n\nCrea tu cuenta para disfrutar de 24 horas completas de prueba PRO gratuita (y Modo DEMO permanente).',
+        'Tu acceso rápido de 10 minutos para este dispositivo ha finalizado.\n\nCrea tu cuenta para disfrutar de 24 horas completas de prueba PRO gratuita (y Modo DEMO permanente), o déjanos tu opinión para seguir mejorando.',
         [
           {
             text: 'Crear Cuenta (24h PRO)',
             onPress: () => clearDemoExpiredNotice(),
           },
           {
-            text: 'Entendido',
+            text: '⭐ Calificar Experiencia',
+            onPress: () => {
+              clearDemoExpiredNotice();
+              FeedbackService.show({
+                source: 'quick_demo_expired',
+                title: '⭐ CALIFICAR ACCESO RÁPIDO',
+                subtitle: 'Concluyó tu sesión de exploración rápida. ¿Qué te pareció la herramienta?',
+              });
+            },
+          },
+          {
+            text: 'Cerrar',
             style: 'cancel',
             onPress: () => clearDemoExpiredNotice(),
           },

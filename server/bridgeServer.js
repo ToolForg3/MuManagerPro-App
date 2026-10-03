@@ -124,6 +124,7 @@ const DATA_FILE = path.join(BASE_DATA_DIR, 'devices.json');
 const SETTINGS_FILE = path.join(BASE_DATA_DIR, 'settings.json');
 const USERS_FILE = path.join(BASE_DATA_DIR, 'users.json');
 const PRO_REQUESTS_FILE = path.join(BASE_DATA_DIR, 'proRequests.json');
+const FEEDBACK_FILE = path.join(BASE_DATA_DIR, 'feedback.json');
 const SECURITY_LOGS_FILE = path.join(BASE_DATA_DIR, 'securityLogs.json');
 const TOMBSTONES_FILE = path.join(BASE_DATA_DIR, 'tombstones.json');
 // [SEC-01] MASTER_SECURITY_SALT — Exclusivamente por variable de entorno (Vercel / .env)
@@ -1450,6 +1451,31 @@ function saveProRequests(data) {
   return true;
 }
 
+function loadFeedbacks() {
+  try {
+    if (fs.existsSync(FEEDBACK_FILE)) {
+      const parsed = safeJsonParse(fs.readFileSync(FEEDBACK_FILE, 'utf8'), []);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (e) {
+    console.error('Error reading feedback data', e);
+  }
+  return [];
+}
+
+function saveFeedbacks(data) {
+  if (!safeAtomicWriteJson(FEEDBACK_FILE, data)) {
+    throw new Error("Disk error saving feedback");
+  }
+  if (CLOUD_STORAGE.enabled) {
+    const p = CLOUD_STORAGE.set('mumanager:feedback', data).catch(() => {});
+    if (typeof queueCloudWrite === 'function') {
+      queueCloudWrite(p);
+    }
+  }
+  return true;
+}
+
 function loadSecurityLogs() {
   try {
     if (fs.existsSync(SECURITY_LOGS_FILE)) {
@@ -2553,6 +2579,7 @@ app.use((req, res, next) => {
     req.path.startsWith('/api/auth/') ||
     req.path === '/api/beta/request' ||
     req.path === '/api/license/request-pro' ||
+    req.path === '/api/feedback' ||
     req.path === '/api/admin/storage/status' ||
     req.path.startsWith('/public') ||
     req.path.startsWith('/download') ||
@@ -15918,6 +15945,100 @@ app.get('/api/admin/pro-requests', async (req, res) => {
   }
   const requests = loadProRequests();
   res.json(requests);
+});
+
+// 4.1 Envío de Feedback de Usuario (Web y APK)
+app.post('/api/feedback', authRateLimitMiddleware, async (req, res) => {
+  const { rating, category, message, name, contact, hwid, source } = req.body || {};
+  const cleanRating = Math.min(5, Math.max(1, parseInt(rating, 10) || 5));
+  let cleanMsg = String(message || '').trim();
+  
+  if (!cleanMsg) {
+    cleanMsg = `Calificación de ${cleanRating} estrellas enviada directamente desde la aplicación móvil.`;
+  } else if (cleanMsg.length > 2500) {
+    return res.status(400).json({ success: false, error: 'El mensaje de feedback excede el límite permitido (2500 caracteres).' });
+  }
+
+  const validCategories = ['general', 'feature', 'bug', 'server', 'opinion'];
+  const cleanCategory = validCategories.includes(String(category).toLowerCase()) ? String(category).toLowerCase() : 'general';
+  const cleanName = String(name || '').trim().slice(0, 100) || 'Anónimo';
+  const cleanContact = String(contact || '').trim().slice(0, 150) || 'Sin contacto';
+  const cleanHwid = String(hwid || '').trim().slice(0, 100) || 'N/A';
+  const cleanSource = String(source || '').trim().slice(0, 80) || 'web';
+
+  const clientIp = getClientIp(req);
+  const feedbacks = loadFeedbacks();
+
+  const newFeedback = {
+    id: 'fb_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    rating: cleanRating,
+    category: cleanCategory,
+    message: cleanMsg,
+    name: cleanName,
+    contact: cleanContact,
+    hwid: cleanHwid,
+    source: cleanSource,
+    ip: clientIp,
+    createdAt: new Date().toISOString()
+  };
+
+  feedbacks.unshift(newFeedback);
+  if (feedbacks.length > 1000) {
+    feedbacks.splice(1000);
+  }
+  saveFeedbacks(feedbacks);
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
+
+  addAuditLog('FEEDBACK_RECEIVED', cleanHwid !== 'N/A' ? cleanHwid : 'WEB', clientIp, `Nuevo feedback (${cleanRating}★ - ${cleanCategory}): "${cleanMsg.slice(0, 60)}..." de ${cleanName}`);
+
+  return res.json({
+    success: true,
+    message: '¡Muchas gracias por tu feedback! Tu opinión nos ayuda directamente a seguir forjando la herramienta.'
+  });
+});
+
+// 4.2 Listar Feedbacks para el Panel Web
+app.get('/api/admin/feedbacks', async (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
+  }
+  const feedbacks = loadFeedbacks();
+  res.json({ success: true, feedbacks });
+});
+
+// 4.3 Eliminar Feedback Individual
+app.delete('/api/admin/feedback/:id', async (req, res) => {
+  const adminKey = req.headers['x-admin-key'];
+  if (!isValidAdminKey(adminKey)) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ success: false, error: 'ID_REQUERIDO' });
+
+  const feedbacks = loadFeedbacks();
+  const index = feedbacks.findIndex(f => f.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, error: 'Feedback no encontrado' });
+  }
+
+  const removed = feedbacks.splice(index, 1)[0];
+  saveFeedbacks(feedbacks);
+
+  if (typeof flushCloudWrites === 'function') {
+    await flushCloudWrites();
+  }
+
+  const clientIp = getClientIp(req);
+  addAuditLog('FEEDBACK_DELETED', 'ADMIN', clientIp, `Feedback ${id} (${removed.rating}★ de ${removed.name}) eliminado por el administrador.`);
+
+  return res.json({ success: true, message: 'Feedback eliminado correctamente.' });
 });
 
 // 5. Acción sobre Solicitud PRO (Aprobar con tiempo, Contactar, Descartar, Reabrir)

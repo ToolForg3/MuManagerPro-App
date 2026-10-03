@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHeroParticles();
   initClassShowcase();
   initCookieConsent();
+  initFeedbackForm();
 });
 
 // 1. Barra de Progreso de Lectura
@@ -89,14 +90,26 @@ function initCopyButtons() {
       const textToCopy = btn.getAttribute('data-copy');
       const label = btn.getAttribute('data-label') || 'Texto';
 
+      const updateBtnText = () => {
+        const textSpan = btn.querySelector('#copy-btn-text') || btn.querySelector('span');
+        if (textSpan) {
+          const original = textSpan.textContent;
+          textSpan.textContent = '¡Copiado!';
+          setTimeout(() => { textSpan.textContent = original; }, 2200);
+        }
+      };
+
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(textToCopy).then(() => {
           showToast(`✓ ${label} copiado al portapapeles`);
+          updateBtnText();
         }).catch(() => {
           fallbackCopy(textToCopy, label);
+          updateBtnText();
         });
       } else {
         fallbackCopy(textToCopy, label);
+        updateBtnText();
       }
     });
   });
@@ -385,6 +398,209 @@ function initCookieConsent() {
       localStorage.setItem('mu_technical_storage_ack', 'true');
     } catch (e) {}
     banner.style.display = 'none';
+  });
+}
+
+// 13. Manejador del Sistema de Feedback & Calificación de la Comunidad
+function initFeedbackForm() {
+  const form = document.getElementById('feedback-form');
+  if (!form) return;
+
+  const starsContainer = document.getElementById('fb-stars-container');
+  const starBtns = document.querySelectorAll('.fb-star-btn');
+  const ratingInput = document.getElementById('fb-rating-value');
+  const ratingLabel = document.getElementById('fb-rating-label');
+  const chips = document.querySelectorAll('.fb-chip');
+  const categoryInput = document.getElementById('fb-category-value');
+  const nameInput = document.getElementById('fb-name');
+  const contactInput = document.getElementById('fb-contact');
+  const messageInput = document.getElementById('fb-message');
+  const hwidInput = document.getElementById('fb-hwid');
+  const sourceInput = document.getElementById('fb-source');
+  const submitBtn = document.getElementById('fb-submit-btn');
+  const spinner = document.getElementById('fb-btn-spinner');
+  const btnText = document.getElementById('fb-btn-text');
+  const resultBanner = document.getElementById('fb-result');
+  const contextBanner = document.getElementById('fb-context-banner');
+
+  const ratingDescriptions = {
+    1: 'Muy Insatisfecho (1/5)',
+    2: 'Regular / Requiere Mejoras (2/5)',
+    3: 'Aceptable (3/5)',
+    4: 'Muy Bueno (4/5)',
+    5: '¡Excelente! (5/5)'
+  };
+
+  // 13.1 Detección de parámetros URL (redirección desde APK al expirar demo o prueba PRO)
+  try {
+    let queryStr = window.location.search;
+    if (!queryStr && window.location.hash.includes('?')) {
+      queryStr = '?' + window.location.hash.split('?')[1];
+    }
+    if (queryStr) {
+      const params = new URLSearchParams(queryStr);
+      const sourceParam = params.get('source');
+      const hwidParam = params.get('hwid');
+
+      if (sourceParam) {
+        if (sourceInput) sourceInput.value = sourceParam;
+        if (contextBanner) {
+          contextBanner.style.display = 'flex';
+          const bannerP = contextBanner.querySelector('p');
+          if (bannerP) {
+            if (sourceParam === 'quick_demo_expired') {
+              bannerP.textContent = 'Notamos que concluyó tu sesión de prueba rápida en la app. ¿Qué te pareció la herramienta? Tu opinión nos ayuda directamente a mejorar.';
+            } else if (sourceParam === 'pro_trial_expired') {
+              bannerP.textContent = 'Notamos que finalizó tu período de prueba PRO de 24 horas. Tu cuenta sigue activa en Modo DEMO Vitalicio. Cuéntanos qué tal fue tu experiencia.';
+            }
+          }
+        }
+        setTimeout(() => {
+          const feedbackSec = document.getElementById('feedback');
+          if (feedbackSec) feedbackSec.scrollIntoView({ behavior: 'smooth' });
+        }, 400);
+      }
+
+      if (hwidParam && hwidInput) {
+        hwidInput.value = hwidParam;
+      }
+    }
+  } catch (err) {
+    console.warn('Error leyendo parámetros de feedback:', err);
+  }
+
+  // 13.2 Control de Calificación por Estrellas
+  const setStarRating = (val) => {
+    const num = Math.max(1, Math.min(5, parseInt(val, 10) || 5));
+    if (ratingInput) ratingInput.value = num;
+    if (ratingLabel) ratingLabel.textContent = ratingDescriptions[num] || `${num}/5`;
+    starBtns.forEach(btn => {
+      const btnVal = parseInt(btn.getAttribute('data-val'), 10);
+      if (btnVal <= num) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  };
+
+  starBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const val = btn.getAttribute('data-val');
+      setStarRating(val);
+    });
+    btn.addEventListener('mouseenter', () => {
+      const val = parseInt(btn.getAttribute('data-val'), 10);
+      starBtns.forEach(b => {
+        const bVal = parseInt(b.getAttribute('data-val'), 10);
+        if (bVal <= val) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+      if (ratingLabel) ratingLabel.textContent = ratingDescriptions[val] || `${val}/5`;
+    });
+  });
+
+  if (starsContainer) {
+    starsContainer.addEventListener('mouseleave', () => {
+      const current = ratingInput ? ratingInput.value : 5;
+      setStarRating(current);
+    });
+  }
+
+  // 13.3 Selector de Categorías (Chips)
+  chips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const cat = chip.getAttribute('data-cat') || 'general';
+      if (categoryInput) categoryInput.value = cat;
+    });
+  });
+
+  // 13.4 Manejador de Envío Asíncrono
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const rating = ratingInput ? parseInt(ratingInput.value, 10) : 5;
+    const category = categoryInput ? categoryInput.value : 'general';
+    const message = messageInput ? messageInput.value.trim() : '';
+    const name = nameInput ? nameInput.value.trim() : '';
+    const contact = contactInput ? contactInput.value.trim() : '';
+    const hwid = hwidInput ? hwidInput.value.trim() : '';
+    const source = sourceInput ? sourceInput.value.trim() : 'web';
+
+    if (!message || message.length < 5) {
+      if (resultBanner) {
+        resultBanner.className = 'fb-result-banner error';
+        resultBanner.style.display = 'flex';
+        resultBanner.innerHTML = '⚠️ Por favor escribe al menos 5 caracteres en tu opinión o sugerencia.';
+      }
+      if (messageInput) messageInput.focus();
+      return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (spinner) spinner.style.display = 'inline-block';
+    if (btnText) btnText.textContent = 'Enviando...';
+    if (resultBanner) resultBanner.style.display = 'none';
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rating,
+          category,
+          message,
+          name,
+          contact,
+          hwid,
+          source
+        })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        if (resultBanner) {
+          resultBanner.className = 'fb-result-banner success';
+          resultBanner.style.display = 'flex';
+          resultBanner.innerHTML = `⚔️ <strong>¡Muchas gracias por tu feedback!</strong> ${data.message || 'Tu opinión ha sido registrada exitosamente para el equipo de desarrollo.'}`;
+        }
+        if (messageInput) messageInput.value = '';
+        if (nameInput) nameInput.value = '';
+        if (contactInput) contactInput.value = '';
+        setStarRating(5);
+        chips.forEach((c, idx) => {
+          if (idx === 0) c.classList.add('active');
+          else c.classList.remove('active');
+        });
+        if (categoryInput) categoryInput.value = 'general';
+      } else {
+        if (resultBanner) {
+          resultBanner.className = 'fb-result-banner error';
+          resultBanner.style.display = 'flex';
+          resultBanner.innerHTML = `❌ ${data.error || 'Ocurrió un error al enviar tu comentario. Intenta nuevamente.'}`;
+        }
+      }
+    } catch (netErr) {
+      if (resultBanner) {
+        resultBanner.className = 'fb-result-banner error';
+        resultBanner.style.display = 'flex';
+        resultBanner.innerHTML = '❌ Error de conexión al enviar el feedback. Verifica tu conexión a Internet.';
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (spinner) spinner.style.display = 'none';
+      if (btnText) btnText.textContent = 'Enviar Feedback';
+    }
   });
 }
 

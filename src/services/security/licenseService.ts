@@ -1,8 +1,10 @@
+import { Linking } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import { SecurityService } from './securityService';
 import { SecureStorage } from './secureStorage';
 import { SqlClient, TelemetryPingResult } from '../database/sqlClient';
 import { RemoteConfigService } from './remoteConfigService';
+import { FeedbackService } from '../feedback/feedbackService';
 
 export interface LicenseStatus {
   isActivated: boolean;
@@ -383,9 +385,24 @@ export class LicenseService {
         this.notifyListeners();
         // Notificación al APK cuando la prueba concluye o la licencia es revocada (PRO -> DEMO)
         Alert.alert(
-          'Acceso en Modo DEMO',
-          'Tu licencia PRO o período de prueba ha finalizado o ha sido revocado. Tu dispositivo continúa activo en Modo DEMO permanente con sus funciones básicas.',
-          [{ text: 'Entendido' }]
+          'Período PRO Finalizado',
+          'Tu período de prueba PRO ha concluido. Tu dispositivo continúa activo en Modo DEMO permanente para lectura y auditoría SQL.\n\n¿Qué te pareció la aplicación? Tu opinión nos ayuda directamente a mejorar.',
+          [
+            {
+              text: '⭐ Calificar Experiencia',
+              onPress: () => {
+                FeedbackService.show({
+                  source: 'pro_trial_expired',
+                  title: '⭐ CALIFICAR PRUEBA PRO',
+                  subtitle: 'Tu período de 24 horas concluyó. Cuéntanos qué tal fue tu experiencia con las herramientas PRO.',
+                });
+              },
+            },
+            {
+              text: 'Continuar en DEMO',
+              style: 'cancel',
+            },
+          ]
         );
       }
     }

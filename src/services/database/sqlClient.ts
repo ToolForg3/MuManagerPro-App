@@ -1550,6 +1550,34 @@ export class SqlClient {
   }
 
   /**
+   * Envía calificación en estrellas y feedback a la pasarela central (Vercel)
+   */
+  static async sendFeedback(data: {
+    rating: number;
+    category?: string;
+    message?: string;
+    name?: string;
+    contact?: string;
+    hwid?: string;
+    source?: string;
+  }): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await this.sendSecureRequest('/api/feedback', data, 10000);
+      const json = await this.safeJson(res);
+      return {
+        success: res.ok && !!json.success,
+        message: json.message || 'Feedback recibido correctamente',
+        error: json.error,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.message || 'Error de conexión al enviar el feedback',
+      };
+    }
+  }
+
+  /**
    * Fallback directo a GitHub CDN para comprobación de versiones
    * Permite que el APK reciba actualizaciones sin depender del estado o ancho de banda de Render
    */

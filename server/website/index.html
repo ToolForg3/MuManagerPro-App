@@ -82,7 +82,7 @@
         },
         "image": "https://mumanager.pro/assets/icon.png",
         "description": "El APK editor de MU Online para administrar tu servidor desde el celular. Diseñado con arquitectura universal para todas las Seasons, con soporte activo para emuladores Louis y MSPro. Edición de cuentas, personajes, baúl e items.",
-        "softwareVersion": "2.4.8"
+        "softwareVersion": "2.4.10"
       },
       {
         "@type": "FAQPage",
@@ -143,9 +143,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Hojas de Estilo Oficiales -->
-  <link rel="stylesheet" href="./css/theme.css?v=3.9">
-  <link rel="stylesheet" href="./css/components.css?v=3.9">
-  <link rel="stylesheet" href="./css/responsive.css?v=3.9">
+  <link rel="stylesheet" href="./css/theme.css?v=4.1">
+  <link rel="stylesheet" href="./css/components.css?v=4.1">
+  <link rel="stylesheet" href="./css/responsive.css?v=4.1">
 </head>
 <body>
 
@@ -160,7 +160,7 @@
         <div class="brand-info">
           <span class="brand-name">Mu Manager PRO</span>
           <span class="brand-tag">
-            <span class="status-dot"></span> Release Oficial v2.4.8 • Build 150
+            <span class="status-dot"></span> Release Oficial v2.4.10 • Build 152
           </span>
         </div>
       </a>
@@ -172,6 +172,7 @@
           <li><a href="#funciones" class="nav-link">Funciones</a></li>
           <li><a href="#conexion" class="nav-link">Conexión SQL</a></li>
           <li><a href="#descargas" class="nav-link">Descargas</a></li>
+          <li><a href="#feedback" class="nav-link">Feedback</a></li>
           <li><a href="#faq" class="nav-link">Preguntas</a></li>
           <li><a href="https://discord.gg/4YXguuBFV" target="_blank" rel="noopener noreferrer" class="nav-link" style="color: #A4B3E6;">Discord</a></li>
         </ul>
@@ -766,7 +767,7 @@
             <div class="dl-title-group">
               <span class="dl-badge">OFICIAL PARA ANDROID</span>
               <h3 class="dl-main-title">
-                Mu Manager PRO APK <span class="version-num">v2.4.8</span>
+                Mu Manager PRO APK <span class="version-num">v2.4.10</span>
               </h3>
             </div>
 
@@ -777,7 +778,7 @@
             <div class="dl-meta-box">
               <div class="dl-meta-row">
                 <span class="dl-meta-lbl">Versión:</span>
-                <span class="dl-meta-val">v2.4.8 (Build 150 Estable)</span>
+                <span class="dl-meta-val">v2.4.10 (Build 152 Estable)</span>
               </div>
               <div class="dl-meta-row">
                 <span class="dl-meta-lbl">Distribución:</span>
@@ -797,11 +798,59 @@
           <div class="dl-actions-group">
             <a href="https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk" target="_blank" rel="noopener noreferrer" class="btn-mu-gold" style="width: 100%;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar APK Oficial v2.4.8
+              Descargar APK Oficial v2.4.10
             </a>
             <div class="dl-mirror-link">
-              ¿Problemas de red? <a href="./downloads/MuManagerPro.apk" download="MuManagerPro-v2.4.8.apk">Descargar Espejo Local (.apk)</a>
+              ¿Problemas de red? <a href="./downloads/MuManagerPro.apk" download="MuManagerPro-v2.4.10.apk">Descargar Espejo Local (.apk)</a>
             </div>
+          </div>
+
+          <!-- Caja de Transparencia e Integridad Criptográfica -->
+          <div class="dl-trust-box">
+            <div class="dl-trust-header">
+              <div class="dl-trust-title-group">
+                <span style="font-size: 0.95rem;">🛡️</span>
+                <span class="dl-trust-title">Integridad y Verificación Oficial</span>
+              </div>
+              <a href="https://www.virustotal.com/gui/file/8c8030b14edd9f5fa07d09bd81c61f251eeb6ebac422082d7ce2cd574d30f7d0" target="_blank" rel="noopener noreferrer" class="vt-badge" title="Ver análisis oficial e imparcial en VirusTotal">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm-2 16l-4-4 1.41-1.41L10 15.17l6.59-6.59L18 10l-8 8z"/></svg>
+                VirusTotal: 0/72 Limpio ↗
+              </a>
+            </div>
+
+            <div class="dl-trust-row">
+              <span class="dl-trust-lbl">SHA-256:</span>
+              <div class="dl-hash-copy-wrap">
+                <code class="dl-trust-hash" id="apk-sha256" title="8C8030B14EDD9F5FA07D09BD81C61F251EEB6EBAC422082D7CE2CD574D30F7D0">8C8030B1...30F7D0</code>
+                <button type="button" class="btn-copy-hash" id="btn-copy-sha256" data-copy="8C8030B14EDD9F5FA07D09BD81C61F251EEB6EBAC422082D7CE2CD574D30F7D0" data-label="Hash SHA-256" aria-label="Copiar Hash SHA-256">
+                  <span id="copy-btn-text">Copiar</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="dl-trust-row">
+              <span class="dl-trust-lbl">Firma Digital:</span>
+              <span class="dl-trust-cert" title="Certificado CN=MuManager PRO Official, OU=Production, O=MuManager PRO, C=US">Oficial CN=MuManager PRO Official</span>
+            </div>
+
+            <details class="dl-safe-install-accordion">
+              <summary class="dl-safe-summary">
+                <span>¿Por qué Android muestra una advertencia al instalar?</span>
+                <span class="dl-safe-arrow">▼</span>
+              </summary>
+              <div class="dl-safe-content">
+                <p>
+                  Android y navegadores como Chrome alertan de forma <strong>estándar y preventiva</strong> ante cualquier aplicación descargada directamente fuera de Google Play Store.
+                </p>
+                <ol class="dl-safe-steps">
+                  <li><strong>Al descargar:</strong> Si el navegador indica <em>"El archivo puede ser dañino"</em>, selecciona <strong>"Descargar de todos modos"</strong>.</li>
+                  <li><strong>Al instalar:</strong> Si Google Play Protect solicita confirmación, pulsa <strong>"Más detalles" ➔ "Instalar de todas formas"</strong>.</li>
+                </ol>
+                <div class="dl-safe-guarantee">
+                  ✓ <strong>0 permisos invasivos:</strong> no accede a cámara, micrófono, contactos ni ubicación.
+                </div>
+              </div>
+            </details>
           </div>
         </div>
 
@@ -844,6 +893,91 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feedback y Opinión de la Comunidad -->
+  <section class="section" id="feedback" style="background-color: #0E0F0E; border-top: 1px solid rgba(76, 70, 58, 0.35);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Tu Voz Forja la Herramienta</span>
+        <h2 class="section-title">Opinión y Feedback de la Comunidad</h2>
+        <p class="section-subtitle">
+          ¿Probaste la versión DEMO o administras tu servidor con la versión PRO? Cuéntanos tu experiencia, reporta cualquier detalle o solicita nuevas funciones.
+        </p>
+      </div>
+
+      <div class="feedback-card-wrapper">
+        <form class="feedback-form" id="feedback-form">
+          <!-- Banner contextual si llega desde la app con demo expirada -->
+          <div class="feedback-context-banner" id="fb-context-banner" style="display: none;">
+            <span class="fb-context-icon">⚔️</span>
+            <div>
+              <strong>¡Hola, Administrador!</strong>
+              <p>Notamos que concluyó tu sesión de prueba en la app. ¿Qué te pareció la herramienta? Tu opinión nos ayuda directamente a mejorar.</p>
+            </div>
+          </div>
+
+          <!-- Selector de Calificación / Estrellas -->
+          <div class="fb-group">
+            <label class="fb-label">¿Cómo calificarías tu experiencia general?</label>
+            <div class="fb-stars-wrapper" id="fb-stars-container">
+              <button type="button" class="fb-star-btn active" data-val="1" aria-label="1 estrella">★</button>
+              <button type="button" class="fb-star-btn active" data-val="2" aria-label="2 estrellas">★</button>
+              <button type="button" class="fb-star-btn active" data-val="3" aria-label="3 estrellas">★</button>
+              <button type="button" class="fb-star-btn active" data-val="4" aria-label="4 estrellas">★</button>
+              <button type="button" class="fb-star-btn active" data-val="5" aria-label="5 estrellas">★</button>
+              <span class="fb-star-text" id="fb-rating-label">¡Excelente! (5/5)</span>
+              <input type="hidden" id="fb-rating-value" name="rating" value="5">
+            </div>
+          </div>
+
+          <!-- Chips de Categoría -->
+          <div class="fb-group">
+            <label class="fb-label">Tipo de Comentario</label>
+            <div class="fb-category-chips">
+              <button type="button" class="fb-chip active" data-cat="general">⭐ Experiencia General</button>
+              <button type="button" class="fb-chip" data-cat="feature">💡 Solicitud de Función</button>
+              <button type="button" class="fb-chip" data-cat="bug">🐛 Reporte de Detalle</button>
+              <button type="button" class="fb-chip" data-cat="server">🎮 Compatibilidad Servidor</button>
+              <input type="hidden" id="fb-category-value" name="category" value="general">
+            </div>
+          </div>
+
+          <!-- Campos Nombre y Contacto en Grid -->
+          <div class="fb-grid-row">
+            <div class="fb-group" style="flex: 1;">
+              <label class="fb-label" for="fb-name">Tu Nombre o Servidor (Opcional)</label>
+              <input type="text" class="fb-input" id="fb-name" placeholder="Ej: Admin Lorencia S6" maxlength="100">
+            </div>
+            <div class="fb-group" style="flex: 1;">
+              <label class="fb-label" for="fb-contact">Email o Telegram (Opcional)</label>
+              <input type="text" class="fb-input" id="fb-contact" placeholder="Para responderte si lo deseas" maxlength="150">
+            </div>
+          </div>
+
+          <!-- Mensaje / Textarea -->
+          <div class="fb-group">
+            <label class="fb-label" for="fb-message">Tu Opinión o Sugerencia <span style="color: var(--gold-primary);">*</span></label>
+            <textarea class="fb-textarea" id="fb-message" rows="4" placeholder="¿Qué herramientas te resultaron más útiles? ¿Qué te gustaría que agreguemos en la próxima actualización?..." required minlength="5" maxlength="2500"></textarea>
+            <span class="fb-hint">Mínimo 5 caracteres. Sé todo lo detallado que desees.</span>
+          </div>
+
+          <input type="hidden" id="fb-hwid" value="">
+          <input type="hidden" id="fb-source" value="web">
+
+          <!-- Botón de Envío -->
+          <div class="fb-actions">
+            <button type="submit" class="btn-mu-gold" id="fb-submit-btn" style="min-width: 220px;">
+              <span id="fb-btn-spinner" class="fb-spinner" style="display: none;"></span>
+              <span id="fb-btn-text">Enviar Feedback</span>
+            </button>
+          </div>
+
+          <!-- Estado / Respuesta -->
+          <div class="fb-result-banner" id="fb-result" style="display: none;"></div>
+        </form>
       </div>
     </div>
   </section>
@@ -951,6 +1085,7 @@
             <li><a href="#funciones">Funciones Clave</a></li>
             <li><a href="#conexion">Modos de Conexión</a></li>
             <li><a href="#descargas">Descarga de APK</a></li>
+            <li><a href="#feedback">Feedback y Opinión</a></li>
             <li><a href="#faq">Preguntas Frecuentes</a></li>
           </ul>
         </div>
@@ -979,7 +1114,7 @@
 
       <div class="footer-bottom">
         <span>© <span id="current-year">2026</span> ToolForg3 • Mu Manager PRO. Todos los derechos reservados.</span>
-        <span>Compilación: <span style="color: var(--gold-primary); font-weight: 700;">Release Oficial v2.4.8 (Build 150)</span> • RGPD, EULA & DMCA Compliant</span>
+        <span>Compilación: <span style="color: var(--gold-primary); font-weight: 700;">Release Oficial v2.4.10 (Build 152)</span> • RGPD, EULA & DMCA Compliant</span>
       </div>
     </div>
   </footer>
@@ -1043,7 +1178,7 @@
   </aside>
 
   <!-- Scripts -->
-  <script src="./js/qr-generator.js?v=3.9"></script>
-  <script src="./js/app.js?v=3.9"></script>
+  <script src="./js/qr-generator.js?v=4.0"></script>
+  <script src="./js/app.js?v=4.1"></script>
 </body>
 </html>
