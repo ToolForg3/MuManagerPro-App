@@ -382,7 +382,8 @@ export class SqlClient {
       const bodyStr = JSON.stringify(effectivePayload);
       const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
 
-      const bridgeUrl = this.getBridgeUrl();
+      const isAuthEndpoint = endpoint.startsWith('/api/auth/');
+      const bridgeUrl = isAuthEndpoint ? this.DEFAULT_CLOUD_GATEWAY : this.getBridgeUrl();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 

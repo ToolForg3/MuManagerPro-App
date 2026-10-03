@@ -258,6 +258,14 @@
   .qr-card-box {
     flex-direction: column;
     text-align: center;
+    gap: 16px;
+  }
+
+  .qr-code-wrapper {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    padding: 12px;
   }
 
   .support-banner {

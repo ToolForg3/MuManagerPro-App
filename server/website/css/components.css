@@ -1447,31 +1447,42 @@
 .qr-card-box {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .qr-code-wrapper {
-  background: #FFF;
-  padding: 8px;
+  background: #FFFFFF;
+  padding: 12px;
   border-radius: var(--radius-sm);
-  box-shadow: 0 0 14px rgba(0, 0, 0, 0.95);
+  border: 2px solid var(--gold-dark);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.95), 0 0 10px rgba(239, 210, 141, 0.2);
   flex-shrink: 0;
-  width: 140px;
-  height: 140px;
+  width: 175px;
+  height: 175px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.qr-code-wrapper:hover {
+  transform: scale(1.02);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 26px rgba(0, 0, 0, 0.98), 0 0 16px rgba(239, 210, 141, 0.35);
 }
 
 .qr-code-wrapper svg {
   width: 100% !important;
   height: 100% !important;
+  display: block;
 }
 
 .qr-info-text {
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   color: var(--text-silver);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 /* ==========================================================================

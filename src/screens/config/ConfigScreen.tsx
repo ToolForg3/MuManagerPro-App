@@ -522,7 +522,7 @@ export const ConfigScreen = () => {
 
     setIsChangingPw(true);
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = SqlClient.DEFAULT_CLOUD_GATEWAY;
       const token = await SqlClient.getSessionToken();
       const res = await fetch(`${bridgeUrl}/api/auth/change-password`, {
         method: 'POST',

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.6",
+  "version": "2.4.7",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-02T23:15:00.000Z",
+  "publishedAt": "2026-10-02T23:45:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 148,
+  "build": 149,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.6 (Build 148) - Conectividad Universal Conector HTTP:\n• RESOLUCIÓN DEFINITIVA DE CONECTOR: Corrección del protocolo de transporte en la app móvil; el conector local y VPS ahora enlaza limpiamente por HTTP en el puerto 3001 sin forzar SSL ni provocar errores de apretón de manos.\n• COMPATIBILIDAD MULTI-HOSTING: Enlace garantizado para servidores locales, VPS en la nube (OVH, Contabo, AWS, etc.) sin requerir configuraciones adicionales en SQL Server Configuration Manager."
+  "changelog": "MuManager PRO v2.4.7 (Build 149) - Enrutamiento Cloud Exclusivo de Autenticación y Conector VPS:\n• BLINDAJE DE AUTENTICACIÓN: Enrutamiento absoluto y desacoplado del inicio de sesión, registro, recuperación y verificación de cuentas de usuario exclusivamente hacia la pasarela oficial en la nube (mumanager.pro), evitando que configuraciones locales o de VPS desvíen el login al conector.\n• CONECTIVIDAD UNIVERSAL SQL HTTP: Enlace directo por HTTP en el puerto 3001 para el conector local y VPS sin interferencias con el módulo de cuentas de usuario."
 }

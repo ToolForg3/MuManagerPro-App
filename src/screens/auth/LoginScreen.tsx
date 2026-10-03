@@ -199,7 +199,7 @@ export const LoginScreen = () => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active' && verifyModalVisible && verifyEmail.trim()) {
         try {
-          const bridgeUrl = SqlClient.getBridgeUrl();
+          const bridgeUrl = SqlClient.DEFAULT_CLOUD_GATEWAY;
           const target = encodeURIComponent(verifyEmail.trim().toLowerCase());
           const resp = await fetch(`${bridgeUrl}/api/auth/check-status?email=${target}`);
           if (resp.ok) {
@@ -296,7 +296,7 @@ export const LoginScreen = () => {
     }
     setForgotLoading(true);
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = SqlClient.DEFAULT_CLOUD_GATEWAY;
       const res = await fetch(`${bridgeUrl}/api/auth/forgot-password/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -352,7 +352,7 @@ export const LoginScreen = () => {
 
     setForgotLoading(true);
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = SqlClient.DEFAULT_CLOUD_GATEWAY;
       const payload = {
         email: cleanMail,
         code: cleanCode,
@@ -522,7 +522,7 @@ export const LoginScreen = () => {
     try {
       setGoogleLoading(true);
       const hwid = await SecurityService.getDeviceHwid().catch(() => '');
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = SqlClient.DEFAULT_CLOUD_GATEWAY;
       const authUrl = `${bridgeUrl}/api/auth/oauth/google?hwid=${encodeURIComponent(hwid)}`;
       const supported = await Linking.canOpenURL(authUrl);
       if (supported) {

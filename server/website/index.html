@@ -141,8 +141,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Domine:wght@600;700&family=JetBrains+Mono:wght@400;500;700&family=Roboto+Flex:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Hoja de Estilos Oficial Unificada y Minificada (Anti-Render-Blocking) -->
-  <link rel="stylesheet" href="./css/bundle.min.css?v=3.7">
+  <!-- Hojas de Estilo Oficiales -->
+  <link rel="stylesheet" href="./css/theme.css?v=3.9">
+  <link rel="stylesheet" href="./css/components.css?v=3.9">
+  <link rel="stylesheet" href="./css/responsive.css?v=3.9">
 </head>
 <body>
 
@@ -157,7 +159,7 @@
         <div class="brand-info">
           <span class="brand-name">Mu Manager PRO</span>
           <span class="brand-tag">
-            <span class="status-dot"></span> Release Oficial v2.4.6 • Build 148
+            <span class="status-dot"></span> Release Oficial v2.4.7 • Build 149
           </span>
         </div>
       </a>
@@ -218,7 +220,7 @@
         <div class="hero-actions">
           <a href="#descargas" class="btn-mu-gold">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Descargar APK v2.4.6
+            Descargar APK v2.4.7
           </a>
           <a href="#conexion" class="btn-mu-stone">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -763,7 +765,7 @@
             <div class="dl-title-group">
               <span class="dl-badge">OFICIAL PARA ANDROID</span>
               <h3 class="dl-main-title">
-                Mu Manager PRO APK <span class="version-num">v2.4.6</span>
+                Mu Manager PRO APK <span class="version-num">v2.4.7</span>
               </h3>
             </div>
 
@@ -774,7 +776,7 @@
             <div class="dl-meta-box">
               <div class="dl-meta-row">
                 <span class="dl-meta-lbl">Versión:</span>
-                <span class="dl-meta-val">v2.4.6 (Build 148 Estable)</span>
+                <span class="dl-meta-val">v2.4.7 (Build 149 Estable)</span>
               </div>
               <div class="dl-meta-row">
                 <span class="dl-meta-lbl">Distribución:</span>
@@ -794,10 +796,10 @@
           <div class="dl-actions-group">
             <a href="https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk" target="_blank" rel="noopener noreferrer" class="btn-mu-gold" style="width: 100%;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar APK Oficial v2.4.6
+              Descargar APK Oficial v2.4.7
             </a>
             <div class="dl-mirror-link">
-              ¿Problemas de red? <a href="./downloads/MuManagerPro.apk" download="MuManagerPro-v2.4.6.apk">Descargar Espejo Local (.apk)</a>
+              ¿Problemas de red? <a href="./downloads/MuManagerPro.apk" download="MuManagerPro-v2.4.7.apk">Descargar Espejo Local (.apk)</a>
             </div>
           </div>
         </div>
@@ -828,12 +830,15 @@
           <!-- Escáner QR Móvil -->
           <div class="dl-card-sub">
             <div class="qr-card-box">
-              <div class="qr-code-wrapper" id="qrcode-container"></div>
+              <a href="https://mumanager.pro/downloads/MuManagerPro.apk" class="qr-code-wrapper" id="qrcode-container" title="Escanear o Tocar para Descargar APK"></a>
               <div class="qr-info-text">
-                <strong style="color: var(--gold-primary); display: block; margin-bottom: 4px; font-family: var(--font-display); text-transform: uppercase;">
+                <strong style="color: var(--gold-primary); display: block; margin-bottom: 6px; font-family: var(--font-display); text-transform: uppercase;">
                   📱 Escanea con tu Celular
                 </strong>
                 Apunta la cámara de tu teléfono a este código para iniciar la descarga del APK directamente sin necesidad de cables.
+                <div style="margin-top: 8px; font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono);">
+                  URL: mumanager.pro/downloads/MuManagerPro.apk
+                </div>
               </div>
             </div>
           </div>
@@ -973,7 +978,7 @@
 
       <div class="footer-bottom">
         <span>© <span id="current-year">2026</span> ToolForg3 • Mu Manager PRO. Todos los derechos reservados.</span>
-        <span>Compilación: <span style="color: var(--gold-primary); font-weight: 700;">Release Oficial v2.4.6 (Build 148)</span> • RGPD, EULA & DMCA Compliant</span>
+        <span>Compilación: <span style="color: var(--gold-primary); font-weight: 700;">Release Oficial v2.4.7 (Build 149)</span> • RGPD, EULA & DMCA Compliant</span>
       </div>
     </div>
   </footer>
@@ -1037,7 +1042,7 @@
   </aside>
 
   <!-- Scripts -->
-  <script src="./js/qr-generator.js?v=3.5"></script>
-  <script src="./js/app.js?v=3.5"></script>
+  <script src="./js/qr-generator.js?v=3.9"></script>
+  <script src="./js/app.js?v=3.9"></script>
 </body>
 </html>

@@ -8,6 +8,10 @@ import { LicenseService } from '../services/security/licenseService';
 import { SecureStorage } from '../services/security/secureStorage';
 import { RemoteConfigService } from '../services/security/remoteConfigService';
 
+// Las rutas de autenticación de usuario (login, registro, OTP, Google OAuth)
+// residen exclusivamente en la pasarela en la nube y nunca deben desviarse al conector local/VPS.
+const AUTH_GATEWAY_URL = SqlClient.DEFAULT_CLOUD_GATEWAY;
+
 interface AuthContextType {
   isAuthenticated: boolean;
   userEmail: string;
@@ -141,7 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               const hwid = await SecurityService.getDeviceHwid().catch(() => '');
               if (hwid) {
                 await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
-                const bridgeUrl = SqlClient.getBridgeUrl();
+                const bridgeUrl = AUTH_GATEWAY_URL;
                 fetch(`${bridgeUrl}/api/auth/demo-quick-consumed`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -166,7 +170,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             let isValidSession = false;
             if (token) {
               try {
-                const bridgeUrl = SqlClient.getBridgeUrl();
+                const bridgeUrl = AUTH_GATEWAY_URL;
                 const hwid = await SecurityService.getDeviceHwid();
                 const valRes = await fetch(`${bridgeUrl}/api/auth/validate-session`, {
                   method: 'POST',
@@ -296,7 +300,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const hwid = await SecurityService.getDeviceHwid().catch(() => '');
           if (hwid) {
             await AsyncStorage.setItem(`${QUICK_DEMO_CONSUMED_KEY_PREFIX}${hwid}`, 'true');
-            const bridgeUrl = SqlClient.getBridgeUrl();
+            const bridgeUrl = AUTH_GATEWAY_URL;
             fetch(`${bridgeUrl}/api/auth/demo-quick-consumed`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -383,7 +387,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let resolvedEmail = cleanUser.includes('@') ? cleanUser : '';
 
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = AUTH_GATEWAY_URL;
       const hwid = await SecurityService.getDeviceHwid();
       const meta = SecurityService.getDeviceMetadata();
       const res = await fetch(`${bridgeUrl}/api/auth/login`, {
@@ -549,7 +553,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
       }
 
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = AUTH_GATEWAY_URL;
       const meta = SecurityService.getDeviceMetadata();
       let token = '';
       try {
@@ -643,7 +647,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const cleanPass = pass.trim();
 
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = AUTH_GATEWAY_URL;
       const hwid = await SecurityService.getDeviceHwid();
       const meta = SecurityService.getDeviceMetadata();
       const res = await fetch(`${bridgeUrl}/api/auth/register`, {
@@ -691,7 +695,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = AUTH_GATEWAY_URL;
       const hwid = await SecurityService.getDeviceHwid();
       const res = await fetch(`${bridgeUrl}/api/auth/verify-registration`, {
         method: 'POST',
@@ -743,7 +747,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!cleanEmail) return { success: false, error: 'Correo requerido.' };
 
     try {
-      const bridgeUrl = SqlClient.getBridgeUrl();
+      const bridgeUrl = AUTH_GATEWAY_URL;
       const hwid = await SecurityService.getDeviceHwid();
       const res = await fetch(`${bridgeUrl}/api/auth/resend-verification`, {
         method: 'POST',
