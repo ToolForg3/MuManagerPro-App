@@ -382,7 +382,7 @@ export class SqlClient {
       const bodyStr = JSON.stringify(effectivePayload);
       const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
 
-      const isAuthEndpoint = endpoint.startsWith('/api/auth/');
+      const isAuthEndpoint = endpoint.startsWith('/api/auth/') || endpoint.startsWith('/api/feedback');
       const bridgeUrl = isAuthEndpoint ? this.DEFAULT_CLOUD_GATEWAY : this.getBridgeUrl();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -1562,7 +1562,31 @@ export class SqlClient {
     source?: string;
   }): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
-      const res = await this.sendSecureRequest('/api/feedback', data, 10000);
+      const hwid = data.hwid || (await SecurityService.getDeviceHwid());
+      const payload = { ...data, hwid };
+      const bodyStr = JSON.stringify(payload);
+      const secHeaders = SecurityService.generateRequestHeaders(hwid, bodyStr);
+      let res: Response | null = null;
+      try {
+        const cloudUrl = `${this.DEFAULT_CLOUD_GATEWAY}/api/feedback`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        res = await fetch(cloudUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-App-Version': APP_VERSION,
+            ...secHeaders,
+          },
+          body: bodyStr,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (_) {
+        res = await this.sendSecureRequest('/api/feedback', payload, 10000);
+      }
+
+      if (!res) throw new Error('No se pudo establecer conexión con el servidor.');
       const json = await this.safeJson(res);
       return {
         success: res.ok && !!json.success,
