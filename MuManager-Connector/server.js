@@ -1159,11 +1159,46 @@ app.get(['/download/:filename', '/downloads/:filename'], (req, res) => {
 });
 
 // BUG-17: Protección estricta de rutas administrativas /api/admin/*
+// Rate limiter dedicado para intentos fallidos de autenticación administrativa (10 fallos / 15 min bloqueo)
+const adminFailedAttempts = new Map(); // ip -> { count, lockedUntil }
+if (typeof setInterval === 'function') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, rec] of adminFailedAttempts.entries()) {
+      if (rec.lockedUntil && rec.lockedUntil < now && (now - rec.lockedUntil > 15 * 60 * 1000)) {
+        adminFailedAttempts.delete(ip);
+      }
+    }
+  }, 30 * 60 * 1000).unref?.();
+}
+
 app.use('/api/admin', (req, res, next) => {
+  const clientIp = getClientIp(req);
+  const now = Date.now();
+
+  const failRecord = adminFailedAttempts.get(clientIp);
+  if (failRecord && failRecord.lockedUntil && failRecord.lockedUntil > now) {
+    const remainingMin = Math.ceil((failRecord.lockedUntil - now) / 60000);
+    return res.status(429).json({
+      error: `Demasiados intentos fallidos. Acceso administrativo bloqueado temporalmente por ${remainingMin} minuto(s).`
+    });
+  }
+
   const adminKey = req.headers['x-admin-key'];
   if (isValidAdminKey(adminKey)) {
+    if (failRecord) adminFailedAttempts.delete(clientIp);
     return next();
   }
+
+  // Intento fallido
+  const currentFails = (failRecord ? failRecord.count : 0) + 1;
+  if (currentFails >= 10) {
+    adminFailedAttempts.set(clientIp, { count: currentFails, lockedUntil: now + 15 * 60 * 1000 });
+    addAuditLog('ADMIN_BRUTE_FORCE_BLOCKED', 'ANONYMOUS', clientIp, 'IP bloqueada por 15 min tras 10 intentos fallidos de Admin-Key', 'BLOCKED');
+  } else {
+    adminFailedAttempts.set(clientIp, { count: currentFails, lockedUntil: 0 });
+  }
+
   return res.status(401).json({ error: 'No autorizado. Se requiere clave de administrador válida.' });
 });
 
@@ -9557,7 +9592,7 @@ app.post('/api/telemetry/ping', (req, res) => {
       isEmulator: !!devices[hwid].isEmulator,
       deviceModel: devices[hwid].deviceModel || '',
       deviceBrand: devices[hwid].deviceBrand || '',
-      demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+      demoRemainingHours: (devices[hwid] && devices[hwid].expiresAt) ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
       authRevision: Number(devices[hwid].authRevision) || 1,
       authUpdatedAt: Number(devices[hwid].authUpdatedAt) || Date.now(),
       serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'conn_default')
@@ -9603,7 +9638,7 @@ app.post('/api/telemetry/ping', (req, res) => {
     isEmulator: !!devices[hwid].isEmulator,
     deviceModel: devices[hwid].deviceModel || '',
     deviceBrand: devices[hwid].deviceBrand || '',
-    demoRemainingHours: devices[hwid].expiresAt ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
+    demoRemainingHours: (devices[hwid] && devices[hwid].expiresAt) ? Math.max(0, Math.round((new Date(devices[hwid].expiresAt).getTime() - Date.now()) / 3600000)) : null,
     authRevision: Number(devices[hwid].authRevision) || 1,
     authUpdatedAt: Number(devices[hwid].authUpdatedAt) || Date.now(),
     serverId: (typeof SERVER_INSTANCE_ID !== 'undefined' ? SERVER_INSTANCE_ID : 'conn_default')
@@ -10602,41 +10637,50 @@ app.get('/api/admin/devices', (req, res) => {
 // Bloquear / Desbloquear celular con motivo y auditoría
 app.post('/api/admin/device/toggle-block', (req, res) => {
   const { hwid, reason } = req.body;
+  if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || cleanHwid;
+  const dev = devices[targetKey] || devices[cleanHwid] || devices[hwid];
+  if (!dev) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
-  devices[hwid].blocked = !devices[hwid].blocked;
-  if (devices[hwid].blocked) {
-    devices[hwid].blockReason = reason || 'Acceso revocado por el administrador.';
-    addAuditLog('BLOCK', hwid, devices[hwid].ip, `Celular BLOQUEADO: ${devices[hwid].blockReason}`);
-    sendWhatsAppAlert('deviceBlocked', 'CELULAR BLOQUEADO', `Dispositivo ${hwid} bloqueado. Motivo: ${devices[hwid].blockReason}`, hwid, devices[hwid].ip);
+  dev.blocked = !dev.blocked;
+  if (dev.blocked) {
+    dev.blockReason = reason || 'Acceso revocado por el administrador.';
+    addAuditLog('BLOCK', cleanHwid, dev.ip, `Celular BLOQUEADO: ${dev.blockReason}`);
+    sendWhatsAppAlert('deviceBlocked', 'CELULAR BLOQUEADO', `Dispositivo ${cleanHwid} bloqueado. Motivo: ${dev.blockReason}`, cleanHwid, dev.ip);
   } else {
-    devices[hwid].blockReason = '';
-    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid);
-    addAuditLog('UNBLOCK', hwid, devices[hwid].ip, 'Celular DESBLOQUEADO.');
-    sendWhatsAppAlert('deviceBlocked', 'CELULAR DESBLOQUEADO', `Dispositivo ${hwid} reactivado por el administrador.`, hwid, devices[hwid].ip);
+    dev.blockReason = '';
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(cleanHwid);
+    addAuditLog('UNBLOCK', cleanHwid, dev.ip, 'Celular DESBLOQUEADO.');
+    sendWhatsAppAlert('deviceBlocked', 'CELULAR DESBLOQUEADO', `Dispositivo ${cleanHwid} reactivado por el administrador.`, cleanHwid, dev.ip);
   }
-  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-  devices[hwid].authUpdatedAt = Date.now();
-  devices[hwid].authAction = devices[hwid].blocked ? 'BLOCK' : 'UNBLOCK';
+  dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+  dev.authUpdatedAt = Date.now();
+  dev.authAction = dev.blocked ? 'BLOCK' : 'UNBLOCK';
+  devices[targetKey] = dev;
   saveDevices(devices);
-  res.json({ success: true, blocked: devices[hwid].blocked, reason: devices[hwid].blockReason, hwid });
+  res.json({ success: true, blocked: dev.blocked, reason: dev.blockReason, hwid: cleanHwid });
 });
 
 // Asignar o extender expiración de prueba (en minutos, horas o días)
 app.post('/api/admin/device/set-expiration', (req, res) => {
   const { hwid, minutes, hours, days, durationType, isLifetime: isExplicitReq, unblock } = req.body;
+  if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || cleanHwid;
+  const dev = devices[targetKey] || devices[cleanHwid] || devices[hwid];
+  if (!dev) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
   const isExplicitLifetime = durationType === 'LIFETIME' || req.body.lifetime === true || isExplicitReq === true || hours === 0 || hours === '0';
 
   if (isExplicitLifetime) {
-    devices[hwid].expiresAt = null;
-    devices[hwid].isLifetime = true;
-    devices[hwid].blocked = false;
-    devices[hwid].blockReason = '';
-    addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Licencia fijada como PERMANENTE/VITALICIA.');
+    dev.expiresAt = null;
+    dev.isLifetime = true;
+    dev.blocked = false;
+    dev.blockReason = '';
+    addAuditLog('EXPIRATION_SET', cleanHwid, dev.ip, 'Licencia fijada como PERMANENTE/VITALICIA.');
   } else {
     let addMs = 0;
     let label = '';
@@ -10653,40 +10697,46 @@ app.post('/api/admin/device/set-expiration', (req, res) => {
 
     if (addMs > 0) {
       const expDate = new Date(Date.now() + addMs);
-      devices[hwid].expiresAt = expDate.toISOString();
-      devices[hwid].isLifetime = false;
-      devices[hwid].blocked = false;
-      devices[hwid].blockReason = '';
-      addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, `Vigencia configurada por ${label} (Vence: ${expDate.toLocaleString()})`);
+      dev.expiresAt = expDate.toISOString();
+      dev.isLifetime = false;
+      dev.blocked = false;
+      dev.blockReason = '';
+      addAuditLog('EXPIRATION_SET', cleanHwid, dev.ip, `Vigencia configurada por ${label} (Vence: ${expDate.toLocaleString()})`);
     } else {
-      devices[hwid].expiresAt = null;
-      devices[hwid].isLifetime = false;
-      addAuditLog('EXPIRATION_SET', hwid, devices[hwid].ip, 'Vigencia removida / sin vigencia fijada.');
+      dev.expiresAt = null;
+      dev.isLifetime = false;
+      addAuditLog('EXPIRATION_SET', cleanHwid, dev.ip, 'Vigencia removida / sin vigencia fijada.');
     }
   }
 
-  if (unblock || devices[hwid].mode === 'PRO') {
-    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid);
+  if (unblock || dev.mode === 'PRO') {
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(cleanHwid);
   }
 
-  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-  devices[hwid].authUpdatedAt = Date.now();
-  devices[hwid].authAction = 'SET_EXPIRATION';
+  dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+  dev.authUpdatedAt = Date.now();
+  dev.authAction = 'SET_EXPIRATION';
 
+  devices[targetKey] = dev;
   saveDevices(devices);
-  res.json({ success: true, hwid, expiresAt: devices[hwid].expiresAt, isLifetime: !!devices[hwid].isLifetime });
+  res.json({ success: true, hwid: cleanHwid, expiresAt: dev.expiresAt, isLifetime: !!dev.isLifetime });
 });
 
 // Actualizar nota o nombre de cliente
 app.post('/api/admin/device/update-note', (req, res) => {
   const { hwid, note } = req.body;
+  if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ error: 'Dispositivo no encontrado' });
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || cleanHwid;
+  const dev = devices[targetKey] || devices[cleanHwid] || devices[hwid];
+  if (!dev) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
-  devices[hwid].note = (note || '').trim();
+  dev.note = (note || '').trim();
+  devices[targetKey] = dev;
   saveDevices(devices);
-  addAuditLog('NOTE_UPDATE', hwid, devices[hwid].ip, `Nota de cliente actualizada: "${devices[hwid].note}"`);
-  res.json({ success: true, hwid, note: devices[hwid].note });
+  addAuditLog('NOTE_UPDATE', cleanHwid, dev.ip, `Nota de cliente actualizada: "${dev.note}"`);
+  res.json({ success: true, hwid: cleanHwid, note: dev.note });
 });
 
 // Eliminar dispositivo del registro
@@ -10705,18 +10755,21 @@ app.post('/api/admin/device/delete', (req, res) => {
 app.post('/api/admin/device/generate-key', (req, res) => {
   const { hwid, plan, durationType, durationDays, days, hours, minutes } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const targetPlan = plan || 'PRO';
-  const key = generateKey(hwid, targetPlan);
+  const key = generateKey(cleanHwid, targetPlan);
 
   if (targetPlan === 'PRO') {
-    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid, { key });
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(cleanHwid, { key });
   }
 
   const devices = loadDevices();
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || cleanHwid;
+  let dev = devices[targetKey] || devices[cleanHwid] || devices[hwid];
   const now = new Date().toISOString();
-  if (!devices[hwid]) {
-    devices[hwid] = {
-      hwid,
+  if (!dev) {
+    dev = {
+      hwid: cleanHwid,
       mode: targetPlan,
       licenseKey: key,
       generatedKey: key,
@@ -10735,16 +10788,17 @@ app.post('/api/admin/device/generate-key', (req, res) => {
       forceDemo: false,
       isEmulator: false
     };
+    devices[cleanHwid] = dev;
   } else {
-    devices[hwid].generatedKey = key;
-    devices[hwid].licenseKey = key;
-    devices[hwid].mode = targetPlan;
-    devices[hwid].blocked = false;
-    devices[hwid].blockReason = '';
-    devices[hwid].forceDemo = false;
-    devices[hwid].sessionInvalidated = false;
-    devices[hwid].forceWipe = false;
-    devices[hwid].forceWipeKey = false;
+    dev.generatedKey = key;
+    dev.licenseKey = key;
+    dev.mode = targetPlan;
+    dev.blocked = false;
+    dev.blockReason = '';
+    dev.forceDemo = false;
+    dev.sessionInvalidated = false;
+    dev.forceWipe = false;
+    dev.forceWipeKey = false;
   }
 
   if (targetPlan === 'PRO') {
@@ -10754,29 +10808,30 @@ app.post('/api/admin/device/generate-key', (req, res) => {
     const totalMs = (numMin * 60 + numHours * 3600 + numDays * 86400) * 1000;
 
     if (durationType === 'LIFETIME' || durationDays === 0) {
-      devices[hwid].isLifetime = true;
-      devices[hwid].expiresAt = null;
+      dev.isLifetime = true;
+      dev.expiresAt = null;
     } else if (totalMs > 0) {
-      devices[hwid].isLifetime = false;
-      devices[hwid].expiresAt = new Date(Date.now() + totalMs).toISOString();
+      dev.isLifetime = false;
+      dev.expiresAt = new Date(Date.now() + totalMs).toISOString();
     } else {
-      devices[hwid].isLifetime = false;
-      devices[hwid].expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
+      dev.isLifetime = false;
+      dev.expiresAt = new Date(Date.now() + 30 * 86400 * 1000).toISOString();
     }
   }
-  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-  devices[hwid].authUpdatedAt = Date.now();
-  devices[hwid].authAction = 'GENERATE_KEY';
+  dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+  dev.authUpdatedAt = Date.now();
+  dev.authAction = 'GENERATE_KEY';
+  devices[targetKey] = dev;
   saveDevices(devices);
 
-  addAuditLog('KEYGEN', hwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${targetPlan} generada`);
+  addAuditLog('KEYGEN', cleanHwid, req.socket.remoteAddress || '127.0.0.1', `Clave ${targetPlan} generada`);
   res.json({
     success: true,
-    hwid,
+    hwid: cleanHwid,
     key,
     plan: targetPlan,
-    expiresAt: (devices[hwid] && devices[hwid].expiresAt) || null,
-    isLifetime: !!(devices[hwid] && devices[hwid].isLifetime === true && !devices[hwid].expiresAt)
+    expiresAt: (dev && dev.expiresAt) || null,
+    isLifetime: !!(dev && dev.isLifetime === true && !dev.expiresAt)
   });
 });
 
@@ -10784,13 +10839,16 @@ app.post('/api/admin/device/generate-key', (req, res) => {
 app.post('/api/admin/device/toggle-plan', (req, res) => {
   const { hwid, plan, durationType, durationDays, days, hours, minutes } = req.body;
   if (!hwid) return res.status(400).json({ error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const targetPlan = (plan === 'PRO') ? 'PRO' : 'DEMO';
 
   const devices = loadDevices();
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || cleanHwid;
+  let dev = devices[targetKey] || devices[cleanHwid] || devices[hwid];
   const now = new Date().toISOString();
-  if (!devices[hwid]) {
-    devices[hwid] = {
-      hwid,
+  if (!dev) {
+    dev = {
+      hwid: cleanHwid,
       mode: targetPlan,
       licenseKey: '',
       generatedKey: '',
@@ -10809,26 +10867,27 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
       forceDemo: false,
       isEmulator: false
     };
+    devices[cleanHwid] = dev;
   }
 
-  devices[hwid].mode = targetPlan;
+  dev.mode = targetPlan;
   let durationText = '30 Días';
 
   if (targetPlan === 'PRO') {
-    const key = generateKey(hwid, 'PRO');
-    devices[hwid].generatedKey = key;
-    devices[hwid].licenseKey = key;
+    const key = generateKey(cleanHwid, 'PRO');
+    dev.generatedKey = key;
+    dev.licenseKey = key;
 
     // Revocar incondicionalmente cualquier bloqueo, exclusión o impedimento
-    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(hwid, { key });
+    if (typeof revokeAllImpediments === 'function') revokeAllImpediments(cleanHwid, { key });
 
-    devices[hwid].forceDemo = false;
-    devices[hwid].forceWipe = false;
-    devices[hwid].forceWipeKey = false;
-    devices[hwid].sessionInvalidated = false;
-    devices[hwid].sessionInvalidatedReason = '';
-    devices[hwid].blocked = false;
-    devices[hwid].blockReason = '';
+    dev.forceDemo = false;
+    dev.forceWipe = false;
+    dev.forceWipeKey = false;
+    dev.sessionInvalidated = false;
+    dev.sessionInvalidatedReason = '';
+    dev.blocked = false;
+    dev.blockReason = '';
 
     const numDays = parseFloat(days !== undefined ? days : durationDays) || 0;
     const numHours = parseFloat(hours) || 0;
@@ -10836,59 +10895,60 @@ app.post('/api/admin/device/toggle-plan', (req, res) => {
     const totalMs = (numMin * 60 + numHours * 3600 + numDays * 86400) * 1000;
 
     if (durationType === 'LIFETIME' || durationDays === 0) {
-      devices[hwid].isLifetime = true;
-      devices[hwid].expiresAt = null;
+      dev.isLifetime = true;
+      dev.expiresAt = null;
       durationText = 'Vitalicia (Permanente)';
     } else if (totalMs > 0) {
-      devices[hwid].isLifetime = false;
-      devices[hwid].expiresAt = new Date(Date.now() + totalMs).toISOString();
+      dev.isLifetime = false;
+      dev.expiresAt = new Date(Date.now() + totalMs).toISOString();
       if (numDays > 0) durationText = `${numDays} Días`;
       else if (numHours > 0) durationText = `${numHours} Horas`;
       else durationText = `${numMin} Minutos`;
     } else {
-      devices[hwid].isLifetime = false;
-      devices[hwid].expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
+      dev.isLifetime = false;
+      dev.expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
       durationText = '30 Días';
     }
   } else {
-    devices[hwid].mode = 'DEMO';
-    devices[hwid].forceDemo = true;
-    devices[hwid].licenseKey = '';
-    devices[hwid].generatedKey = '';
-    devices[hwid].isLifetime = false;
+    dev.mode = 'DEMO';
+    dev.forceDemo = true;
+    dev.licenseKey = '';
+    dev.generatedKey = '';
+    dev.isLifetime = false;
   }
 
-  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-  devices[hwid].authUpdatedAt = Date.now();
-  devices[hwid].authAction = targetPlan === 'PRO' ? 'ACTIVATE_PRO' : 'REVOKE_PRO';
+  dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+  dev.authUpdatedAt = Date.now();
+  dev.authAction = targetPlan === 'PRO' ? 'ACTIVATE_PRO' : 'REVOKE_PRO';
 
+  devices[targetKey] = dev;
   saveDevices(devices);
-  addAuditLog('PLAN_TOGGLE', hwid, req.socket.remoteAddress || '127.0.0.1', `Plan cambiado a ${targetPlan} con 1 clic (${durationText})`);
+  addAuditLog('PLAN_TOGGLE', cleanHwid, req.socket.remoteAddress || '127.0.0.1', `Plan cambiado a ${targetPlan} con 1 clic (${durationText})`);
 
   if (targetPlan === 'PRO') {
     sendWhatsAppAlert(
       'proAssigned',
       '🌟 LICENCIA PRO ASIGNADA (ADMIN PANEL) 🌟',
-      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Vigencia: ${durationText}\n🔑 Clave: \`${devices[hwid].licenseKey}\`\n🛡️ Estado: PRO Oficial Activado`,
-      hwid,
+      `📱 Dispositivo: ${dev.deviceBrand || ''} ${dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: ${durationText}\n🔑 Clave: \`${dev.licenseKey}\`\n🛡️ Estado: PRO Oficial Activado`,
+      cleanHwid,
       req.socket.remoteAddress || '127.0.0.1'
     ).catch(() => {});
   } else {
     sendWhatsAppAlert(
       'demoAssigned',
       '🎮 MODO DEMO ASIGNADO (ADMIN PANEL) 🎮',
-      `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Vigencia: ${durationText}\n🛡️ Estado: Modo DEMO (Lectura y Diagnóstico)`,
-      hwid,
+      `📱 Dispositivo: ${dev.deviceBrand || ''} ${dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Vigencia: ${durationText}\n🛡️ Estado: Modo DEMO (Lectura y Diagnóstico)`,
+      cleanHwid,
       req.socket.remoteAddress || '127.0.0.1'
     ).catch(() => {});
   }
   res.json({
     success: true,
-    hwid,
+    hwid: cleanHwid,
     mode: targetPlan,
-    licenseKey: devices[hwid].licenseKey || '',
-    expiresAt: devices[hwid].expiresAt || null,
-    isLifetime: !!devices[hwid].isLifetime,
+    licenseKey: dev.licenseKey || '',
+    expiresAt: dev.expiresAt || null,
+    isLifetime: !!dev.isLifetime,
     durationText
   });
 });
@@ -10901,33 +10961,37 @@ app.post('/api/admin/device/extend-demo', (req, res) => {
   }
   const { hwid, hours } = req.body;
   if (!hwid) return res.status(400).json({ success: false, error: 'HWID requerido' });
+  const cleanHwid = String(hwid).trim().toUpperCase();
   const hoursToAdd = Number(hours) || 24;
 
   const devices = loadDevices();
-  if (!devices[hwid]) return res.status(404).json({ success: false, error: 'Dispositivo no encontrado' });
+  const targetKey = Object.keys(devices).find(h => h.toUpperCase() === cleanHwid) || cleanHwid;
+  const dev = devices[targetKey] || devices[cleanHwid] || devices[hwid];
+  if (!dev) return res.status(404).json({ success: false, error: 'Dispositivo no encontrado' });
 
-  const currentExpires = devices[hwid].expiresAt ? new Date(devices[hwid].expiresAt).getTime() : Date.now();
+  const currentExpires = dev.expiresAt ? new Date(dev.expiresAt).getTime() : Date.now();
   const baseTime = Math.max(Date.now(), currentExpires);
   const newExpires = new Date(baseTime + hoursToAdd * 3600 * 1000).toISOString();
 
-  devices[hwid].expiresAt = newExpires;
-  devices[hwid].demoExtendedHours = (devices[hwid].demoExtendedHours || 0) + hoursToAdd;
-  if (devices[hwid].blocked && devices[hwid].blockReason?.includes('Período de prueba')) {
-    devices[hwid].blocked = false;
-    devices[hwid].blockReason = '';
+  dev.expiresAt = newExpires;
+  dev.demoExtendedHours = (dev.demoExtendedHours || 0) + hoursToAdd;
+  if (dev.blocked && dev.blockReason?.includes('Período de prueba')) {
+    dev.blocked = false;
+    dev.blockReason = '';
   }
-  devices[hwid].authRevision = (Number(devices[hwid].authRevision) || 0) + 1;
-  devices[hwid].authUpdatedAt = Date.now();
-  devices[hwid].authAction = 'EXTEND_DEMO';
+  dev.authRevision = (Number(dev.authRevision) || 0) + 1;
+  dev.authUpdatedAt = Date.now();
+  dev.authAction = 'EXTEND_DEMO';
+  devices[targetKey] = dev;
   saveDevices(devices);
 
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
-  addAuditLog('EXTEND_DEMO', hwid, clientIp, `Tiempo DEMO extendido +${hoursToAdd}h para ${hwid}. Vence: ${newExpires}`);
+  addAuditLog('EXTEND_DEMO', cleanHwid, clientIp, `Tiempo DEMO extendido +${hoursToAdd}h para ${cleanHwid}. Vence: ${newExpires}`);
   sendWhatsAppAlert(
     'demoAssigned',
     '🎮 TIEMPO DEMO EXTENDIDO (ADMIN PANEL) 🎮',
-    `📱 Dispositivo: ${devices[hwid].deviceBrand || ''} ${devices[hwid].deviceModel || 'Android'}\n📱 HWID: \`${hwid}\`\n⏳ Extensión: +${hoursToAdd}h\n📅 Nuevo Vencimiento: ${new Date(newExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}`,
-    hwid,
+    `📱 Dispositivo: ${dev.deviceBrand || ''} ${dev.deviceModel || 'Android'}\n📱 HWID: \`${cleanHwid}\`\n⏳ Extensión: +${hoursToAdd}h\n📅 Nuevo Vencimiento: ${new Date(newExpires).toLocaleString('es-ES', { timeZone: 'America/Sao_Paulo' })}`,
+    cleanHwid,
     clientIp
   ).catch(() => {});
 

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.8",
+  "version": "2.4.9",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-03T16:20:00.000Z",
+  "publishedAt": "2026-10-03T17:45:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 150,
+  "build": 151,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.8 (Build 150) - Sesión Persistente y Blindaje de Licencias:\n• RENOVACIÓN TRANSPARENTE DE SESIÓN: Implementación de sesión deslizante (Sliding Session) con ventana de gracia criptográfica de 30 días y renovación automática en segundo plano (Heartbeat), eliminando la necesidad de volver a iniciar sesión tras actualizar la APK.\n• BLINDAJE ANTIFLAPPING DE LICENCIAS: Eliminación definitiva de la intermitencia de licencias PRO al arrancar la aplicación, garantizando sincronización atómica con AES-256 en SecureStorage y protegiendo contra degradaciones no autorizadas por respuestas desfasadas.\n• PARIDAD Y PERSISTENCIA GATEWAY/CONECTOR: Sincronización completa de la pasarela y conector local con persistencia de secretos para evitar desconexiones accidentales por reinicios."
+  "changelog": "MuManager PRO v2.4.9 (Build 151) - Blindaje de Seguridad y Control de Licencias:\n• BLINDAJE ANTI-BRUTE FORCE EN RECUPERACIÓN: Bloqueo estricto tras 5 intentos fallidos en todas las rutas de restablecimiento de contraseña y purga automática de tokens expirados.\n• PARIDAD EN TASA DE PETICIONES ADMINISTRATIVAS: Rate limiting de fuerza bruta en rutas /api/admin/* para el conector local y pasarela central con bloqueo de 15 minutos ante 10 intentos fallidos.\n• RESILIENCIA TOTAL DE DISPOSITIVOS Y TELEMETRÍA: Normalización de HWID contra discrepancias de mayúsculas/minúsculas y resolución defensiva contra bloqueos o fallos en telemetría.\n• ESTABILIDAD OPERATIVA: Control de licencias y panel administrativo 100% blindado sin afectación a bases de datos ni servicios activos."
 }
