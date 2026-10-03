@@ -413,7 +413,7 @@ async function sendWhatsAppAlert(eventKey, title, details, hwid = 'N/A', ip = '1
 
     const dispatches = activeChannels.map(channel => {
       if (channel === 'telegram') return dispatchTelegramAlert(wa, messageText, httpsMod);
-      if (channel === 'discord') return dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, httpMod);
+      if (channel === 'discord') return dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, httpMod, eventKey);
       if (channel === 'callmebot') return dispatchCallMeBotAlert(wa, phone, messageText, httpsMod);
       if (channel === 'webhook') return dispatchWebhookAlert(wa, eventKey, title, details, hwid, ip, messageText, httpsMod, httpMod);
       return Promise.resolve({ success: false, channel, error: `Canal desconocido: ${channel}` });
@@ -490,9 +490,25 @@ function dispatchTelegramAlert(wa, messageText, httpsMod) {
   });
 }
 
-function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, httpMod) {
+function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, httpMod, eventKey = '') {
   return new Promise((resolve) => {
-    const discordUrl = String(wa.discordWebhookUrl || process.env.DISCORD_WEBHOOK_URL || '').trim();
+    let discordUrl = '';
+    const isProEvent = eventKey === 'proRequest' || eventKey === 'proAssigned' || title.includes('PRUEBA PRO') || title.includes('LICENCIA PRO') || title.includes('SOLICITUD DE LICENCIA');
+    const isSecurityEvent = eventKey === 'sqlExploit' || eventKey === 'tamper' || eventKey === 'bruteForce' || eventKey === 'deviceBlocked' || title.includes('ATAQUE') || title.includes('TAMPER') || title.includes('BLOQUEADO');
+    const isFeedbackEvent = eventKey === 'feedback' || title.includes('FEEDBACK') || title.includes('SUGERENCIA') || title.includes('OPINIÓN');
+
+    if (isProEvent) {
+      discordUrl = String(wa.discordProWebhookUrl || process.env.DISCORD_PRO_WEBHOOK_URL || '').trim();
+    } else if (isSecurityEvent) {
+      discordUrl = String(wa.discordSecurityWebhookUrl || process.env.DISCORD_SECURITY_WEBHOOK_URL || '').trim();
+    } else if (isFeedbackEvent) {
+      discordUrl = String(wa.discordFeedbackWebhookUrl || process.env.DISCORD_FEEDBACK_WEBHOOK_URL || '').trim();
+    }
+
+    if (!discordUrl) {
+      discordUrl = String(wa.discordWebhookUrl || process.env.DISCORD_WEBHOOK_URL || '').trim();
+    }
+
     if (!discordUrl) {
       return resolve({ success: false, channel: 'discord', error: 'Falta la URL del Webhook de Discord' });
     }
@@ -506,6 +522,8 @@ function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, h
         embedColor = 65407; // Verde esmeralda (#00FF7F)
       } else if (title.includes('DEMO') || title.includes('ACCESO RÁPIDO')) {
         embedColor = 5089023; // Azul brillante (#4DA6FF)
+      } else if (title.includes('💡') || title.includes('FEEDBACK') || title.includes('SUGERENCIA')) {
+        embedColor = 16766720; // Oro radiante (#FFD700)
       } else if (!formattedTitle.startsWith('🚨')) {
         formattedTitle = `🚨 ${formattedTitle}`;
       }
@@ -523,7 +541,11 @@ function dispatchDiscordAlert(wa, title, details, hwid, ip, timeStr, httpsMod, h
               { name: '🌐 IP Cliente', value: `\`${ip}\``, inline: true },
               { name: '⏰ Hora (Sao Paulo)', value: timeStr, inline: false }
             ],
-            footer: { text: 'MU Manager PRO Shield • Telemetría y Licencias' },
+            footer: {
+              text: (title.includes('💡') || title.includes('FEEDBACK') || title.includes('SUGERENCIA'))
+                ? 'MU Manager PRO • Feedback & Sugerencias de la Comunidad'
+                : 'MU Manager PRO Shield • Telemetría y Licencias'
+            },
             timestamp: new Date().toISOString()
           }
         ]
@@ -1452,18 +1474,25 @@ function saveProRequests(data) {
 }
 
 function loadFeedbacks() {
+  if (inMemoryFallback[FEEDBACK_FILE] && Array.isArray(inMemoryFallback[FEEDBACK_FILE])) {
+    return inMemoryFallback[FEEDBACK_FILE];
+  }
   try {
     if (fs.existsSync(FEEDBACK_FILE)) {
       const parsed = safeJsonParse(fs.readFileSync(FEEDBACK_FILE, 'utf8'), []);
-      return Array.isArray(parsed) ? parsed : [];
+      const arr = Array.isArray(parsed) ? parsed : [];
+      inMemoryFallback[FEEDBACK_FILE] = arr;
+      return arr;
     }
   } catch (e) {
     console.error('Error reading feedback data', e);
   }
-  return [];
+  inMemoryFallback[FEEDBACK_FILE] = inMemoryFallback[FEEDBACK_FILE] || [];
+  return inMemoryFallback[FEEDBACK_FILE];
 }
 
 function saveFeedbacks(data) {
+  inMemoryFallback[FEEDBACK_FILE] = data;
   if (!safeAtomicWriteJson(FEEDBACK_FILE, data)) {
     throw new Error("Disk error saving feedback");
   }
@@ -1530,7 +1559,8 @@ async function syncCloudStorage(force = false) {
         'mumanager:tombstones',
         'mumanager:proRequests',
         'mumanager:securityLogs',
-        'mumanager:auditLogs'
+        'mumanager:auditLogs',
+        'mumanager:feedback'
       ];
       const data = await CLOUD_STORAGE.mget(keys);
       lastCloudSyncTime = Date.now();
@@ -1828,6 +1858,25 @@ async function syncCloudStorage(force = false) {
       mergedAudit.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
       auditLogs.length = 0;
       mergedAudit.slice(0, MAX_AUDIT_LOGS).forEach(l => auditLogs.push(l));
+    }
+
+    // 8. FEEDBACKS: Conciliación bidireccional (La nube es autoritativa)
+    const cloudFeedbacks = data['mumanager:feedback'];
+    if (cloudFeedbacks && Array.isArray(cloudFeedbacks)) {
+      const currentFeedbacks = inMemoryFallback[FEEDBACK_FILE] || loadFeedbacks();
+      const idSet = new Set();
+      const mergedFb = [];
+      [...cloudFeedbacks, ...currentFeedbacks].forEach(f => {
+        if (!f) return;
+        const id = f.id || (f.createdAt + '-' + (f.hwid || ''));
+        if (!idSet.has(id)) {
+          idSet.add(id);
+          mergedFb.push(f);
+        }
+      });
+      mergedFb.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      inMemoryFallback[FEEDBACK_FILE] = mergedFb;
+      safeAtomicWriteJson(FEEDBACK_FILE, mergedFb);
     }
 
     cloudStorageInitialized = true;
@@ -15949,6 +15998,10 @@ app.get('/api/admin/pro-requests', async (req, res) => {
 
 // 4.1 Envío de Feedback de Usuario (Web y APK)
 app.post('/api/feedback', authRateLimitMiddleware, async (req, res) => {
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
+  }
+
   const { rating, category, message, name, contact, hwid, source } = req.body || {};
   const cleanRating = Math.min(5, Math.max(1, parseInt(rating, 10) || 5));
   let cleanMsg = String(message || '').trim();
@@ -15991,8 +16044,27 @@ app.post('/api/feedback', authRateLimitMiddleware, async (req, res) => {
   if (typeof flushCloudWrites === 'function') {
     await flushCloudWrites();
   }
+  if (CLOUD_STORAGE.enabled) {
+    try {
+      await CLOUD_STORAGE.set('mumanager:feedback', feedbacks);
+    } catch (_) {}
+  }
 
   addAuditLog('FEEDBACK_RECEIVED', cleanHwid !== 'N/A' ? cleanHwid : 'WEB', clientIp, `Nuevo feedback (${cleanRating}★ - ${cleanCategory}): "${cleanMsg.slice(0, 60)}..." de ${cleanName}`);
+
+  try {
+    const stars = '⭐'.repeat(cleanRating);
+    const categoryLabels = {
+      feature: '💡 Nueva Función / Sugerencia',
+      bug: '🐛 Reporte de Bug / Fallo',
+      server: '🖥️ Servidor / Conector SQL',
+      opinion: '💬 Opinión General',
+      general: '📝 Comentario'
+    };
+    const categoryLabel = categoryLabels[cleanCategory] || cleanCategory.toUpperCase();
+    const feedbackDetails = `⭐ Calificación: ${stars} (${cleanRating}/5)\n🏷️ Categoría: ${categoryLabel}\n👤 Autor: ${cleanName}\n📱 Origen: ${cleanSource.toUpperCase()}\n📬 Contacto: ${cleanContact}\n\n💬 Mensaje:\n"${cleanMsg}"`;
+    sendWhatsAppAlert('feedback', '💡 NUEVO FEEDBACK / SUGERENCIA RECIBIDA', feedbackDetails, cleanHwid, clientIp).catch(() => {});
+  } catch (_) {}
 
   return res.json({
     success: true,
@@ -16009,8 +16081,18 @@ app.get('/api/admin/feedbacks', async (req, res) => {
   if (typeof syncCloudStorage === 'function') {
     await syncCloudStorage(false);
   }
-  const feedbacks = loadFeedbacks();
-  res.json({ success: true, feedbacks });
+  let feedbacks = loadFeedbacks();
+  if ((!feedbacks || feedbacks.length === 0) && CLOUD_STORAGE.enabled) {
+    try {
+      const directCloud = await CLOUD_STORAGE.get('mumanager:feedback');
+      if (Array.isArray(directCloud) && directCloud.length > 0) {
+        feedbacks = directCloud;
+        inMemoryFallback[FEEDBACK_FILE] = directCloud;
+        safeAtomicWriteJson(FEEDBACK_FILE, directCloud);
+      }
+    } catch (_) {}
+  }
+  res.json({ success: true, feedbacks: feedbacks || [] });
 });
 
 // 4.3 Eliminar Feedback Individual
@@ -16021,6 +16103,10 @@ app.delete('/api/admin/feedback/:id', async (req, res) => {
   }
   const { id } = req.params;
   if (!id) return res.status(400).json({ success: false, error: 'ID_REQUERIDO' });
+
+  if (typeof syncCloudStorage === 'function') {
+    await syncCloudStorage(false);
+  }
 
   const feedbacks = loadFeedbacks();
   const index = feedbacks.findIndex(f => f.id === id);
@@ -16033,6 +16119,11 @@ app.delete('/api/admin/feedback/:id', async (req, res) => {
 
   if (typeof flushCloudWrites === 'function') {
     await flushCloudWrites();
+  }
+  if (CLOUD_STORAGE.enabled) {
+    try {
+      await CLOUD_STORAGE.set('mumanager:feedback', feedbacks);
+    } catch (_) {}
   }
 
   const clientIp = getClientIp(req);

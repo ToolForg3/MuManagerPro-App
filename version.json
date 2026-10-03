@@ -1,10 +1,10 @@
 {
-  "version": "2.4.10",
+  "version": "2.4.11",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-03T19:05:00.000Z",
+  "publishedAt": "2026-10-03T22:30:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 152,
+  "build": 153,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.10 (Build 152) - Sistema de Calificaciones Interactivo & Módulo de Feedback:\n• MODAL DE ESTRELLAS INTERACTIVO EN APK: Calificación de 5 estrellas con descriptores dinámicos, categorías temáticas (Experiencia, Sugerencia, Bug, Servidor) y comentario opcional bajo diseño Stitch Approved Ironforge.\n• DISPARADORES INTELIGENTES DE FEEDBACK: Activación automática de calificación al expirar la Prueba PRO de 24 horas, al concluir la Demo Rápida de 10 minutos y acceso manual permanente desde el panel de Ajustes.\n• MÓDULO VISUAL DE FEEDBACK EN PANEL WEB: Gestión administrativa completa en tiempo real con promedio general, tasa de satisfacción, filtros por estrellas y categorías, búsqueda y borrado seguro.\n• TRANSPARENCIA Y CONFIANZA CRIPTOGRÁFICA: Verificación oficial de integridad en portal web con hash SHA-256, certificado de firma y enlace directo a análisis de VirusTotal."
+  "changelog": "MuManager PRO v2.4.11 (Build 153) - Sistema de Calificaciones Interactivo & Módulo de Feedback:\n• MODAL DE ESTRELLAS INTERACTIVO EN APK: Calificación de 5 estrellas con descriptores dinámicos, categorías temáticas (Experiencia, Sugerencia, Bug, Servidor) y comentario opcional bajo diseño Stitch Approved Ironforge.\n• DISPARADORES INTELIGENTES DE FEEDBACK: Activación automática de calificación al expirar la Prueba PRO de 24 horas, al concluir la Demo Rápida de 10 minutos y acceso manual permanente desde el panel de Ajustes.\n• MÓDULO VISUAL DE FEEDBACK EN PANEL WEB: Gestión administrativa completa en tiempo real con promedio general, tasa de satisfacción, filtros por estrellas y categorías, búsqueda y borrado seguro.\n• TRANSPARENCIA Y CONFIANZA CRIPTOGRÁFICA: Verificación oficial de integridad en portal web con hash SHA-256, certificado de firma y enlace directo a análisis de VirusTotal."
 }
