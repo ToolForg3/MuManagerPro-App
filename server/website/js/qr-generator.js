@@ -1297,6 +1297,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var qrContainer = document.getElementById('qrcode-container');
   if (qrContainer) {
     var downloadUrl = 'https://mumanager.pro/downloads/MuManagerPro.apk';
-    qrContainer.innerHTML = QRCodeLite.generateSvg(downloadUrl, 6, 4);
+    qrContainer.innerHTML = QRCodeLite.generateSvg(downloadUrl, 7, 3);
   }
 });

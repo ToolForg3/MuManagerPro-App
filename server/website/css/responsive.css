@@ -262,10 +262,10 @@
   }
 
   .qr-code-wrapper {
-    width: 200px;
-    height: 200px;
+    width: 230px;
+    height: 230px;
     margin: 0 auto;
-    padding: 12px;
+    padding: 14px;
   }
 
   .support-banner {

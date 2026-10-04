@@ -1638,13 +1638,13 @@ details[open] .dl-safe-arrow {
 
 .qr-code-wrapper {
   background: #FFFFFF;
-  padding: 12px;
+  padding: 14px;
   border-radius: var(--radius-sm);
   border: 2px solid var(--gold-dark);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.95), 0 0 10px rgba(239, 210, 141, 0.2);
   flex-shrink: 0;
-  width: 175px;
-  height: 175px;
+  width: 220px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
