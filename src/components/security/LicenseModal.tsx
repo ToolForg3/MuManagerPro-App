@@ -23,6 +23,7 @@ import { RemoteConfigService, RemoteConfigState } from '../../services/security/
 import { SecurityService } from '../../services/security/securityService';
 import { SqlClient } from '../../services/database/sqlClient';
 import { APP_VERSION, DISCORD_URL, TELEGRAM_URL } from '../../constants/appVersion';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface LicenseModalProps {
   visible: boolean;
@@ -31,6 +32,7 @@ interface LicenseModalProps {
 }
 
 export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) => {
+  const { t } = useLanguage();
   const [status, setStatus] = useState<LicenseStatus>(LicenseService.getStatus());
   const [inputKey, setInputKey] = useState('');
   const [loading, setLoading] = useState(false);
@@ -199,11 +201,11 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
   const isPro = status.plan === 'PRO';
   const licenseBadgeText = isPro
     ? status.isLifetime || !status.expiresAt
-      ? 'LICENCIA PRO (VITALICIA)'
+      ? t('licenseProLifetime')
       : status.timeRemainingFormatted
-        ? `PRUEBA PRO (${status.timeRemainingFormatted})`
-        : `LICENCIA PRO (${status.daysRemaining !== undefined && status.daysRemaining > 0 ? `${status.daysRemaining}D` : `${status.hoursRemaining || 24}H`})`
-    : 'MODO DEMO (VITALICIO)';
+        ? t('licenseProTrial').replace('{time}', status.timeRemainingFormatted)
+        : t('licenseProStandard').replace('{days}', status.daysRemaining !== undefined && status.daysRemaining > 0 ? `${status.daysRemaining}D` : `${status.hoursRemaining || 24}H`)
+    : t('licenseDemoLifetime');
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose} statusBarTranslucent>
@@ -228,7 +230,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
 
             {/* Header Title Section */}
             <Text style={styles.windowTitle}>
-              MU MANAGER PRO · LICENCIA Y ACTUALIZACIONES
+              {t('modalTitle_licenseAndUpdates')}
             </Text>
           </View>
 
@@ -247,14 +249,14 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               {/* Section Header with Diamonds & Ornamental Divider */}
               <View style={styles.sectionHeaderRow}>
                 <View style={styles.diamond} />
-                <Text style={styles.sectionTitle}>GESTIÓN DE LICENCIA</Text>
+                <Text style={styles.sectionTitle}>{t('licenseManageTitle')}</Text>
                 <View style={styles.diamond} />
               </View>
               <View style={styles.goldDivider} />
 
               {/* License Status Display */}
               <View style={styles.statusDisplayRow}>
-                <Text style={styles.statusTitleLabel}>ESTADO DE LICENCIA:</Text>
+                <Text style={styles.statusTitleLabel}>{t('licenseStatusTitle')}</Text>
                 <View style={[styles.statusPill, isPro ? styles.statusPillPro : styles.statusPillDemo]}>
                   <Text style={[styles.statusPillText, isPro ? styles.statusPillTextPro : styles.statusPillTextDemo]}>
                     {licenseBadgeText}
@@ -266,7 +268,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               <View style={styles.fieldBlock}>
                 <View style={styles.fieldLabelRow}>
                   <MuIcon name="lock" size={13} color="#9AA0A6" />
-                  <Text style={styles.fieldLabel}>IDENTIFICADOR DEL DISPOSITIVO (HWID)</Text>
+                  <Text style={styles.fieldLabel}>{t('deviceIdTitle')}</Text>
                 </View>
                 <View style={styles.texturedInputContainer}>
                   <Text style={styles.hwidText} selectable={true}>
@@ -280,21 +282,21 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                   onPress={handleCopyHwid}
                   activeOpacity={0.8}
                   accessibilityRole="button"
-                  accessibilityLabel="Copiar HWID"
+                  accessibilityLabel={t('btnCopyHwid')}
                 >
                   <ImageBackground
                     source={STITCH_ASSETS.tabs.tabModeInactive}
                     style={styles.bigBtnWrap}
                     resizeMode="stretch"
                   >
-                    <Text style={styles.bigBtnTextGold}>COPIAR HWID</Text>
+                    <Text style={styles.bigBtnTextGold}>{t('btnCopyHwid')}</Text>
                   </ImageBackground>
                 </TouchableOpacity>
               </View>
 
               {/* Soporte Técnico Oficial */}
               <View style={[styles.fieldBlock, styles.supportBlock]}>
-                <Text style={styles.fieldLabel}>SOPORTE TÉCNICO OFICIAL</Text>
+                <Text style={styles.fieldLabel}>{t('officialSupport')}</Text>
                 <View style={styles.dualButtonRow}>
                   <TouchableOpacity
                     style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
@@ -332,7 +334,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                 </View>
               </View>
 
-              {/* Mode Native Tabs (Tengo una Clave vs Solicitar PRO) */}
+              {/* Mode Native Tabs (TENGO UNA CLAVE vs SOLICITAR PRO / SOLICITUD DIRECTA) */}
               <View style={styles.tabsRow}>
                 <TouchableOpacity
                   style={styles.tabItem}
@@ -347,7 +349,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     resizeMode="stretch"
                   >
                     <Text style={[styles.tabText, modeTab === 'key' ? styles.tabTextActive : styles.tabTextInactive]}>
-                      TENGO UNA CLAVE
+                      {t('tabHaveKey')}
                     </Text>
                   </ImageBackground>
                 </TouchableOpacity>
@@ -365,7 +367,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     resizeMode="stretch"
                   >
                     <Text style={[styles.tabText, modeTab === 'request' ? styles.tabTextActive : styles.tabTextInactive]}>
-                      SOLICITAR PRO
+                      {t('tabRequestPro')}
                     </Text>
                   </ImageBackground>
                 </TouchableOpacity>
@@ -374,7 +376,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               {/* Contenido según pestaña seleccionada */}
               {modeTab === 'key' ? (
                 <View style={styles.activationFormContainer}>
-                  <Text style={styles.fieldLabel}>CLAVE DE ACTIVACIÓN</Text>
+                  <Text style={styles.fieldLabel}>{t('activationKeyLabel')}</Text>
                   <View style={styles.texturedInputContainer}>
                     <TextInput
                       style={styles.keyTextInput}
@@ -394,7 +396,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     disabled={loading}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Activar Licencia"
+                    accessibilityLabel={t('btnActivateLicense')}
                   >
                     <ImageBackground
                       source={STITCH_ASSETS.tabs.tabModeActive}
@@ -402,7 +404,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       resizeMode="stretch"
                     >
                       <Text style={styles.bigBtnTextGold}>
-                        {loading ? 'VERIFICANDO...' : 'ACTIVAR LICENCIA'}
+                        {loading ? t('btnVerifying') : t('btnActivateLicense')}
                       </Text>
                     </ImageBackground>
                   </TouchableOpacity>
@@ -412,14 +414,14 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     onPress={handleResetToDemo}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Volver a Modo Demo"
+                    accessibilityLabel={t('btnBackToDemo')}
                   >
                     <ImageBackground
                       source={STITCH_ASSETS.tabs.tabModeInactive}
                       style={styles.secondaryBtnWrap}
                       resizeMode="stretch"
                     >
-                      <Text style={styles.bigBtnTextSilver}>VOLVER A MODO DEMO</Text>
+                      <Text style={styles.bigBtnTextSilver}>{t('btnBackToDemo')}</Text>
                     </ImageBackground>
                   </TouchableOpacity>
                 </View>
@@ -432,7 +434,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     disabled={sendingReq}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Enviar Solicitud Directa (1 Clic)"
+                    accessibilityLabel={t('btnSendDirectRequest')}
                   >
                     <ImageBackground
                       source={STITCH_ASSETS.tabs.tabModeActive}
@@ -440,7 +442,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       resizeMode="stretch"
                     >
                       <Text style={styles.bigBtnTextGold}>
-                        {sendingReq ? 'ENVIANDO...' : '⚡ ENVIAR SOLICITUD DIRECTA (1 CLIC)'}
+                        {sendingReq ? t('btnSending') : t('btnSendDirectRequest')}
                       </Text>
                     </ImageBackground>
                   </TouchableOpacity>
@@ -448,12 +450,12 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
                     <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
                     <Text style={{ marginHorizontal: 8, fontSize: 10, color: THEME.colors.textoSecundarioLuminoso, fontWeight: '700' }}>
-                      O PERSONALIZAR DATOS (OPCIONAL)
+                      {t('orCustomizeData')}
                     </Text>
                     <View style={{ flex: 1, height: 1, backgroundColor: THEME.colors.borde }} />
                   </View>
 
-                  <Text style={styles.fieldLabel}>TU NOMBRE / ALIAS (OPCIONAL)</Text>
+                  <Text style={styles.fieldLabel}>{t('yourNameOptional')}</Text>
                   <View style={styles.texturedInputContainer}>
                     <TextInput
                       style={styles.formTextInput}
@@ -464,7 +466,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     />
                   </View>
 
-                  <Text style={styles.fieldLabel}>WHATSAPP / TELÉFONO (OPCIONAL)</Text>
+                  <Text style={styles.fieldLabel}>{t('yourPhoneOptional')}</Text>
                   <View style={styles.texturedInputContainer}>
                     <TextInput
                       style={styles.formTextInput}
@@ -476,7 +478,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     />
                   </View>
 
-                  <Text style={styles.fieldLabel}>CORREO ELECTRÓNICO (OPCIONAL)</Text>
+                  <Text style={styles.fieldLabel}>{t('yourEmailOptional')}</Text>
                   <View style={styles.texturedInputContainer}>
                     <TextInput
                       style={styles.formTextInput}
@@ -489,7 +491,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     />
                   </View>
 
-                  <Text style={styles.fieldLabel}>NOMBRE DE TU SERVIDOR (OPCIONAL)</Text>
+                  <Text style={styles.fieldLabel}>{t('serverNameOptional')}</Text>
                   <View style={styles.texturedInputContainer}>
                     <TextInput
                       style={styles.formTextInput}
@@ -500,7 +502,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     />
                   </View>
 
-                  <Text style={styles.fieldLabel}>MENSAJE / CONSULTA</Text>
+                  <Text style={styles.fieldLabel}>{t('messageNotes')}</Text>
                   <View style={[styles.texturedInputContainer, { minHeight: 65 }]}>
                     <TextInput
                       style={[styles.formTextInput, { minHeight: 55, textAlignVertical: 'top' }]}
@@ -518,7 +520,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                     disabled={sendingReq}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Enviar Solicitud Personalizada"
+                    accessibilityLabel={t('btnSendCustomRequest')}
                   >
                     <ImageBackground
                       source={STITCH_ASSETS.tabs.tabModeInactive}
@@ -526,7 +528,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       resizeMode="stretch"
                     >
                       <Text style={styles.bigBtnTextSilver}>
-                        {sendingReq ? 'ENVIANDO...' : 'ENVIAR SOLICITUD PERSONALIZADA'}
+                        {sendingReq ? t('btnSending') : t('btnSendCustomRequest')}
                       </Text>
                     </ImageBackground>
                   </TouchableOpacity>
@@ -543,7 +545,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               {/* Section Header with Cog & Ornamental Divider */}
               <View style={styles.sectionHeaderRow}>
                 <MuIcon name="tools" size={16} color="#EFD28D" />
-                <Text style={styles.sectionTitle}>ACTUALIZACIONES DEL SISTEMA</Text>
+                <Text style={styles.sectionTitle}>{t('sysUpdatesTitle')}</Text>
                 <MuIcon name="tools" size={16} color="#EFD28D" />
               </View>
               <View style={styles.goldDivider} />
@@ -551,19 +553,19 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               {/* Version Compare Panel */}
               <View style={styles.versionCompareBox}>
                 <View style={styles.versionCol}>
-                  <Text style={styles.versionColLabel}>INSTALADA</Text>
+                  <Text style={styles.versionColLabel}>{t('updateInstalledLabel')}</Text>
                   <Text style={styles.versionColValCurrent}>v{APP_VERSION}</Text>
                 </View>
                 <View style={styles.versionColDivider} />
                 <View style={styles.versionCol}>
-                  <Text style={styles.versionColLabelGold}>ÚLTIMA DISPONIBLE</Text>
+                  <Text style={styles.versionColLabelGold}>{t('updateLatestLabel')}</Text>
                   <Text style={styles.versionColValLatest}>v{latestVersion}</Text>
                 </View>
               </View>
 
               {/* Notas de Versión */}
               <View style={styles.fieldBlock}>
-                <Text style={styles.fieldLabel}>NOTAS DE VERSIÓN</Text>
+                <Text style={styles.fieldLabel}>{t('versionNotes')}</Text>
                 <View style={styles.changelogBox}>
                   <ScrollView style={styles.changelogScroll} nestedScrollEnabled={true}>
                     <Text style={styles.changelogText}>{changelogContent}</Text>
@@ -575,7 +577,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
               <View style={styles.variantsBlock}>
                 {/* Variante Recomendada (Normal) */}
                 <View style={styles.variantGroup}>
-                  <Text style={styles.variantGroupTitleGold}>VARIANTE RECOMENDADA (NORMAL)</Text>
+                  <Text style={styles.variantGroupTitleGold}>{t('recommendedVariant')}</Text>
                   <View style={styles.dualButtonRow}>
                     <TouchableOpacity
                       style={{ flex: 1, borderRadius: 2, overflow: 'hidden' }}
@@ -589,7 +591,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.halfBtnGoldWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={styles.mediumBtnTextGoldSmall}>DESCARGAR E INSTALAR</Text>
+                        <Text style={styles.mediumBtnTextGoldSmall}>{t('btnDownloadAndInstall')}</Text>
                       </ImageBackground>
                     </TouchableOpacity>
 
@@ -605,7 +607,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.halfBtnWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={styles.mediumBtnTextWhiteSmall}>RECORDARME MÁS TARDE</Text>
+                        <Text style={styles.mediumBtnTextWhiteSmall}>{t('btnRemindLaterUpper')}</Text>
                       </ImageBackground>
                     </TouchableOpacity>
                   </View>
@@ -613,7 +615,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
 
                 {/* Variante Experimental (Beta) */}
                 <View style={styles.variantGroup}>
-                  <Text style={styles.variantGroupTitleMuted}>VARIANTE EXPERIMENTAL (BETA)</Text>
+                  <Text style={styles.variantGroupTitleMuted}>{t('experimentalBetaVariant')}</Text>
                   <TouchableOpacity
                     style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
                     onPress={() => handleDownload(updateInfo?.apkUrl)}
@@ -626,7 +628,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                       style={styles.secondaryBtnWrap}
                       resizeMode="stretch"
                     >
-                      <Text style={styles.bigBtnTextSilver}>DESCARGAR BETA</Text>
+                      <Text style={styles.bigBtnTextSilver}>{t('btnDownloadBeta')}</Text>
                     </ImageBackground>
                   </TouchableOpacity>
                 </View>
@@ -634,7 +636,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                 {/* Actualización Obligatoria (Crimson Button 1:1) */}
                 {forceUpdate && (
                   <View style={styles.variantGroup}>
-                    <Text style={styles.variantGroupTitleCrimson}>ACTUALIZACIÓN OBLIGATORIA</Text>
+                    <Text style={styles.variantGroupTitleCrimson}>{t('forcedUpdateVariant')}</Text>
                     <TouchableOpacity
                       style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => handleDownload()}
@@ -647,16 +649,15 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.crimsonBtnWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={styles.crimsonBtnText}>DESCARGAR E INSTALAR</Text>
+                        <Text style={styles.crimsonBtnText}>{t('btnDownloadAndInstall')}</Text>
                       </ImageBackground>
                     </TouchableOpacity>
                   </View>
                 )}
 
-                {/* Restauración de Sistema (Rollback) */}
                 {isRollback && (
                   <View style={styles.variantGroup}>
-                    <Text style={styles.variantGroupTitleMuted}>RESTAURACIÓN DE SISTEMA</Text>
+                    <Text style={styles.variantGroupTitleMuted}>{t('systemRollbackVariant')}</Text>
                     <TouchableOpacity
                       style={{ width: '100%', borderRadius: 2, overflow: 'hidden' }}
                       onPress={() => handleDownload()}
@@ -669,7 +670,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.secondaryBtnWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={styles.bigBtnTextSilver}>REVERTIR A VERSIÓN PREVIA</Text>
+                        <Text style={styles.bigBtnTextSilver}>{t('btnRevertPrevious')}</Text>
                       </ImageBackground>
                     </TouchableOpacity>
                   </View>
@@ -681,7 +682,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                 <View style={styles.downloadFailureBox}>
                   <View style={styles.failureTitleRow}>
                     <MuIcon name="alert-triangle" size={14} color="#FFB4AB" />
-                    <Text style={styles.failureTitleText}>ESTADO DE FALLO EN DESCARGA</Text>
+                    <Text style={styles.failureTitleText}>{t('downloadFailureTitle')}</Text>
                   </View>
                   <Text style={styles.failureMessageText}>{downloadError}</Text>
                   <View style={styles.dualButtonRow}>
@@ -697,7 +698,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         style={styles.halfBtnGoldWrap}
                         resizeMode="stretch"
                       >
-                        <Text style={styles.mediumBtnTextGold}>REINTENTAR</Text>
+                        <Text style={styles.mediumBtnTextGold}>{t('btnRetryUpper')}</Text>
                       </ImageBackground>
                     </TouchableOpacity>
 
@@ -714,7 +715,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ visible, onClose }) 
                         resizeMode="stretch"
                       >
                         <Text style={styles.mediumBtnTextWhite}>
-                          {copiedLink ? '¡COPIADO!' : 'COPIAR ENLACE'}
+                          {copiedLink ? t('linkCopiedUpper') : t('btnCopyLinkUpper')}
                         </Text>
                       </ImageBackground>
                     </TouchableOpacity>

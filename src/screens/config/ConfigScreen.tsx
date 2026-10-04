@@ -720,9 +720,9 @@ export const ConfigScreen = () => {
       {/* Selector de Secciones Temáticas con Texturas Nativas MU Season 6 */}
       <View style={styles.sectionTabRow}>
         {[
-          { id: 'server', label: 'SERVIDOR', icon: 'server-network' },
-          { id: 'security', label: 'SEGURIDAD', icon: 'shield-lock' },
-          { id: 'system', label: 'SISTEMA', icon: 'cog' },
+          { id: 'server', label: t('tabServer'), icon: 'server-network' },
+          { id: 'security', label: t('tabSecurity'), icon: 'shield-lock' },
+          { id: 'system', label: t('tabSystem'), icon: 'cog' },
         ].map((tab) => {
           const isSel = activeSection === tab.id;
           return (
@@ -756,10 +756,10 @@ export const ConfigScreen = () => {
         <View style={styles.heroBanner}>
           <View style={styles.heroBannerHeader}>
             <View style={styles.goldDiamond} />
-            <Text style={styles.heroBannerTitle}>CONFIGURACIÓN GENERAL</Text>
+            <Text style={styles.heroBannerTitle}>{t('configTitle') || 'CONFIGURACIÓN GENERAL'}</Text>
           </View>
           <Text style={styles.heroBannerSubtitle}>
-            Panel de enlace central, licencias y protección de nodo
+            {t('configSubtitle') || 'Panel de enlace central, licencias y protección de nodo'}
           </Text>
         </View>
 
@@ -771,7 +771,7 @@ export const ConfigScreen = () => {
             {/* Real SQL Session Card */}
             <Panel variant="box" style={styles.card}>
               <MuCornerOrnaments size={12} />
-              <Text style={styles.sectionTitle}>Sesión SQL Server</Text>
+              <Text style={styles.sectionTitle}>{t('sqlSection')}</Text>
               <View style={styles.profileRow}>
                 <View style={[styles.profileAvatar, { backgroundColor: isConnected ? 'rgba(46, 125, 50, 0.15)' : 'rgba(211, 47, 47, 0.15)' }]}>
                   <MuIcon
@@ -782,7 +782,7 @@ export const ConfigScreen = () => {
                 </View>
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileEmail}>
-                    {isConnected ? `${config.user || 'sa'} @ ${config.database || 'MuOnline'}` : 'Sin Conexión Activa'}
+                    {isConnected ? `${config.user || 'sa'} @ ${config.database || 'MuOnline'}` : (t('noConnection') || 'Sin Conexión Activa')}
                   </Text>
                   <Text style={styles.profileRole}>
                     {isConnected ? `Host: ${config.host}:${config.port} (TDS 1433)` : 'Configura la IP y presiona Conectar'}
@@ -1042,7 +1042,7 @@ export const ConfigScreen = () => {
                   style={{ flex: 2 }}
                 />
                 <BotonPiedra
-                  titulo="Limpiar"
+                  titulo={t('clear') || 'Limpiar'}
                   onPress={handleClearConfig}
                   altura={48}
                   style={{ flex: 1, marginLeft: 8 }}
@@ -1054,7 +1054,7 @@ export const ConfigScreen = () => {
             <Panel variant="box" style={styles.card}>
               <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.sectionTitle}>PERFILES DE SERVIDOR (MAX 5)</Text>
+                <Text style={styles.sectionTitle}>{t('profilesTitle') || 'PERFILES DE SERVIDOR (MAX 5)'}</Text>
                 <View style={styles.versionPill}>
                   <Text style={styles.versionPillText}>{serverProfiles.length} / 5 Guardados</Text>
                 </View>
@@ -1095,7 +1095,7 @@ export const ConfigScreen = () => {
                     </View>
                     <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                       <MuButton
-                        titulo="Cargar"
+                        titulo={t('load', 'Cargar')}
                         onPress={() => handleLoadProfile(p)}
                         icono="cloud-upload-outline"
                         altura={34}
@@ -1122,7 +1122,7 @@ export const ConfigScreen = () => {
               )}
 
               <BotonPiedra
-                titulo="Guardar Configuración Actual como Perfil"
+                titulo={t('btnSaveProfile') || 'Guardar Configuración Actual como Perfil'}
                 icono="content-save"
                 onPress={() => {
                   if (serverProfiles.length >= 5) {
@@ -1158,7 +1158,7 @@ export const ConfigScreen = () => {
             <Panel variant="box" style={styles.card}>
               <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.sectionTitle}>SEGURIDAD DE ACCESO (PIN)</Text>
+                <Text style={styles.sectionTitle}>{t('pinProtectionTitle') || 'SEGURIDAD DE ACCESO (PIN)'}</Text>
                 <View style={[
                   styles.versionPill,
                   hasPinConfigured ? styles.pinPillActive : styles.pinPillInactive
@@ -1167,19 +1167,19 @@ export const ConfigScreen = () => {
                     styles.versionPillText,
                     hasPinConfigured ? styles.pinPillTextActive : styles.pinPillTextInactive
                   ]}>
-                    {hasPinConfigured ? 'PROTEGIDO CON PIN' : 'SIN PIN'}
+                    {hasPinConfigured ? (t('pinProtected', 'PROTEGIDO CON PIN')) : (t('noPin', 'SIN PIN'))}
                   </Text>
                 </View>
               </View>
               <Text style={styles.settingDescText}>
-                Solicita un PIN numérico de 4 dígitos cada vez que se abra la aplicación para evitar accesos no autorizados a la base de datos.
+                {t('pinProtectionDesc') || 'Solicita un PIN numérico de 4 dígitos cada vez que se abra la aplicación para evitar accesos no autorizados a la base de datos.'}
               </Text>
 
               <View style={styles.pinActionRow}>
                 {hasPinConfigured ? (
                   <>
                     <BotonOro
-                      titulo="Cambiar PIN"
+                      titulo={t('btnChangePin', 'Cambiar PIN')}
                       icono="lock-reset"
                       onPress={() => {
                         setNewPinInput('');
@@ -1190,7 +1190,7 @@ export const ConfigScreen = () => {
                       style={{ flex: 1 }}
                     />
                     <BotonBrasa
-                      titulo="Desactivar"
+                      titulo={t('btnDisablePin') || 'Desactivar'}
                       icono="lock-open-variant-outline"
                       onPress={handleDisablePin}
                       altura={44}
@@ -1199,7 +1199,7 @@ export const ConfigScreen = () => {
                   </>
                 ) : (
                   <BotonOro
-                    titulo="Activar Bloqueo por PIN (4 Dígitos)"
+                    titulo={t('btnConfigurePin') || 'Activar Bloqueo por PIN (4 Dígitos)'}
                     icono="shield-lock-outline"
                     onPress={() => {
                       setNewPinInput('');
@@ -1217,7 +1217,7 @@ export const ConfigScreen = () => {
             <Panel variant="box" style={styles.card}>
               <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.sectionTitle}>CONTROL DE LÍMITE DE IP</Text>
+                <Text style={styles.sectionTitle}>{t('ipLimitTitle') || 'CONTROL DE LÍMITE DE IP'}</Text>
                 <Switch
                   value={ipLimitEnabled}
                   onValueChange={(val) => handleSaveIpLimit(val, ipLimitMax, ipLimitAction)}
@@ -1225,7 +1225,7 @@ export const ConfigScreen = () => {
                 />
               </View>
               <Text style={styles.settingDescText}>
-                Detecta o desconecta jugadores que excedan el límite de clientes simultáneos desde la misma dirección IP.
+                {t('ipLimitDesc') || 'Detecta o desconecta jugadores que excedan el límite de clientes simultáneos desde la misma dirección IP.'}
               </Text>
 
               {ipLimitEnabled && (
@@ -1288,7 +1288,7 @@ export const ConfigScreen = () => {
                           style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.ipActionBtnText, ipLimitAction === 'LOG' && styles.ipActionBtnTextActive]}>
-                          Solo Registrar (Log)
+                          {t('ipLimitActionLog') || 'Solo Registrar (Log)'}
                         </Text>
                       </ImageBackground>
                     </TouchableOpacity>
@@ -1309,7 +1309,7 @@ export const ConfigScreen = () => {
                           style={{ marginRight: 6 }}
                         />
                         <Text style={[styles.ipActionBtnText, ipLimitAction === 'DISCONNECT' && styles.ipActionBtnTextActive]}>
-                          Desconectar Excedentes
+                          {t('ipLimitActionDisconnect') || 'Desconectar Excedentes'}
                         </Text>
                       </ImageBackground>
                     </TouchableOpacity>
@@ -1319,8 +1319,8 @@ export const ConfigScreen = () => {
                   <MuButton
                     titulo={
                       ipLimitAction === 'DISCONNECT'
-                        ? 'Chequear y Desconectar Excedentes Ahora'
-                        : 'Escanear y Reportar IPs Excedidas Ahora'
+                        ? (t('ipLimitDisconnectNow', 'Chequear y Desconectar Excedentes Ahora'))
+                        : (t('btnRunIpCheckNow') || 'Escanear y Reportar IPs Excedidas Ahora')
                     }
                     icono={ipLimitAction === 'DISCONNECT' ? 'shield-account' : 'shield-search'}
                     onPress={() => handleRunIpLimitNow()}
@@ -1337,11 +1337,11 @@ export const ConfigScreen = () => {
             {/* License & Activation Section */}
             <Panel variant="box" style={styles.card}>
               <MuCornerOrnaments size={12} />
-              <Text style={styles.sectionTitle}>LICENCIA Y SEGURIDAD</Text>
+              <Text style={styles.sectionTitle}>{t('licenseSectionTitle') || 'LICENCIA Y SEGURIDAD'}</Text>
               <View style={styles.licenseRow}>
                 <View style={{ flex: 1 }}>
                   <View style={styles.licenseBadgeRow}>
-                    <Text style={styles.licenseTitle}>Estado:</Text>
+                    <Text style={styles.licenseTitle}>{t('status') || 'Estado'}:</Text>
                     <View style={[styles.licensePill, licenseStatus.plan === 'PRO' ? styles.pillPro : styles.pillDemo]}>
                       <Text style={[styles.licensePillText, licenseStatus.plan === 'PRO' ? styles.pillTextPro : styles.pillTextDemo]}>
                         {licenseStatus.plan === 'PRO'
@@ -1352,7 +1352,7 @@ export const ConfigScreen = () => {
                                   : (licenseStatus.daysRemaining !== undefined
                                       ? `PRO (${licenseStatus.daysRemaining}d)`
                                       : 'PRO ACTIVA')))
-                          : 'MODO DEMO'}
+                          : (t('licenseStatusDemo') || 'MODO DEMO')}
                       </Text>
                     </View>
                   </View>
@@ -1363,7 +1363,7 @@ export const ConfigScreen = () => {
                   </TouchableOpacity>
                 </View>
                 <BotonOro
-                  titulo={licenseStatus.plan === 'PRO' ? 'Ver Licencia' : 'Activar PRO'}
+                  titulo={licenseStatus.plan === 'PRO' ? (t('viewLicense', 'Ver Licencia')) : (t('btnActivatePro') || 'Activar PRO')}
                   onPress={() => setLicenseModalVisible(true)}
                   altura={40}
                   style={{ minWidth: 120 }}
@@ -1382,7 +1382,7 @@ export const ConfigScreen = () => {
             <Panel variant="box" style={styles.card}>
               <MuCornerOrnaments size={12} />
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.sectionTitle}>ACTUALIZACIONES Y SISTEMA</Text>
+                <Text style={styles.sectionTitle}>{t('updateCheckSection') || 'ACTUALIZACIONES Y SISTEMA'}</Text>
                 <View style={styles.versionPill}>
                   <Text style={styles.versionPillText}>v{APP_VERSION} (TEST)</Text>
                 </View>
@@ -1413,7 +1413,7 @@ export const ConfigScreen = () => {
 
                 <View style={styles.updateButtonsRow}>
                   <BotonPiedra
-                    titulo="Buscar Actualizaciones"
+                    titulo={t('btnCheckUpdates') || 'Buscar Actualizaciones'}
                     icono="sync"
                     onPress={handleCheckUpdatesManually}
                     disabled={isCheckingUpdate}
@@ -1525,7 +1525,7 @@ export const ConfigScreen = () => {
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <MuIcon name="account-circle" size={24} color={THEME.colors.primaryOrange} />
-                  <Text style={styles.sectionTitle}>Cuenta de Usuario</Text>
+                  <Text style={styles.sectionTitle}>{t('adminProfileSection') || 'Cuenta de Usuario'}</Text>
                 </View>
                 <View style={{ backgroundColor: 'rgba(63, 207, 142, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 2, borderWidth: 1, borderColor: 'rgba(63, 207, 142, 0.3)' }}>
                   <Text style={{ color: THEME.colors.jade, fontSize: 10, fontWeight: '700' }}>SESIÓN ACTIVA</Text>
@@ -1539,7 +1539,7 @@ export const ConfigScreen = () => {
 
               {/* Botón Cambiar Contraseña */}
               <BotonOro
-                titulo="Cambiar Mi Contraseña"
+                titulo={t('changeUserPasswordBtn') || 'Cambiar Mi Contraseña'}
                 icono="lock-reset"
                 onPress={() => setChangePwModalVisible(true)}
                 altura={44}
@@ -1548,7 +1548,7 @@ export const ConfigScreen = () => {
 
               {/* Botón Ver Términos y Condiciones */}
               <BotonPiedra
-                titulo="Ver Términos y Condiciones"
+                titulo={t('btnViewTerms') || 'Ver Términos y Condiciones'}
                 icono="file-document-outline"
                 onPress={() => setTermsModalVisible(true)}
                 altura={44}
@@ -1556,16 +1556,16 @@ export const ConfigScreen = () => {
               />
 
               <BotonBrasa
-                titulo="Cerrar Sesión"
+                titulo={t('btnSignOut') || 'Cerrar Sesión'}
                 icono="logout"
                 onPress={() => {
                   Alert.alert(
-                    'Cerrar Sesión',
-                    '¿Estás seguro de que deseas cerrar tu sesión en este celular?',
+                    t('signOutConfirmTitle') || 'Cerrar Sesión',
+                    t('signOutConfirmMsg') || '¿Estás seguro de que deseas cerrar tu sesión en este celular?',
                     [
-                      { text: 'Cancelar', style: 'cancel' },
+                      { text: t('cancel') || 'Cancelar', style: 'cancel' },
                       {
-                        text: 'Cerrar Sesión',
+                        text: t('btnSignOut') || 'Cerrar Sesión',
                         style: 'destructive',
                         onPress: async () => {
                           await logout();

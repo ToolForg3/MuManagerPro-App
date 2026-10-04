@@ -5,6 +5,7 @@ import { THEME } from '../../../constants/theme';
 import { Panel, MuButton } from '../../../components/ui';
 import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface GuildsTabProps {
   guildsList: any[];
@@ -25,6 +26,8 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
   handleOpenGuildMembers,
   handleDeleteGuild,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <ErrorBoundary tabName="Gestión de Clanes">
       <View style={styles.tabContent}>
@@ -32,14 +35,14 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>
-              Clanes Registrados ({guildsList.length})
+              {t('guildsHeaderTitle', { count: guildsList.length })}
             </Text>
             <Text style={styles.headerSub}>
-              Gestión directa en tabla Guild & GuildMember (SQL Server)
+              {t('guildsHeaderSub')}
             </Text>
           </View>
           <MuButton
-            titulo="Actualizar"
+            titulo={t('refresh')}
             icono="refresh"
             variante="primary"
             onPress={loadGuilds}
@@ -55,7 +58,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
           <MuIcon name="tools" size={18} />
           <TextInput
             style={styles.textInput}
-            placeholder="Buscar clan por nombre o Guild Master..."
+            placeholder={t('guildsSearchPlaceholder')}
             placeholderTextColor={THEME.colors.textMuted}
             value={guildSearch}
             onChangeText={setGuildSearch}
@@ -73,7 +76,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
           <View style={styles.emptyWrap}>
             <MuIcon name="shield" size={44} />
             <Text style={styles.emptyText}>
-              No se encontraron clanes registrados en el servidor.
+              {t('guildsEmpty')}
             </Text>
           </View>
         ) : (
@@ -100,14 +103,14 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
                           <Text style={styles.guildName}>{gName}</Text>
                         </View>
                         <Text style={styles.masterText}>
-                          Master: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{gMaster}</Text>
+                          {t('guildMaster')}: <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>{gMaster}</Text>
                         </Text>
                         <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
                           <Text style={styles.statBlue}>
-                            Miembros: <Text style={{ fontWeight: 'bold' }}>{memberCount}</Text>
+                            {t('guildMembers')}: <Text style={{ fontWeight: 'bold' }}>{memberCount}</Text>
                           </Text>
                           <Text style={styles.statJade}>
-                            Score: <Text style={{ fontWeight: 'bold' }}>{gScore}</Text>
+                            {t('guildScore')}: <Text style={{ fontWeight: 'bold' }}>{gScore}</Text>
                           </Text>
                         </View>
                         {gNotice && String(gNotice).trim() !== '' && String(gNotice).trim() !== '0' ? (
@@ -119,7 +122,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
 
                       <View style={styles.actionCol}>
                         <MuButton
-                          titulo="Miembros"
+                          titulo={t('btnGuildMembers')}
                           icono="user"
                           variante="primary"
                           onPress={() => handleOpenGuildMembers(g)}
@@ -128,7 +131,7 @@ export const GuildsTab: React.FC<GuildsTabProps> = ({
                         />
 
                         <MuButton
-                          titulo="Disolver"
+                          titulo={t('btnGuildDissolve')}
                           icono="delete"
                           variante="danger"
                           onPress={() => handleDeleteGuild(gName)}

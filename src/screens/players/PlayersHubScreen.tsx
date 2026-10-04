@@ -19,12 +19,14 @@ import { CharacterListScreen } from '../characters/CharacterListScreen';
 import { ToolsScreen } from '../tools/ToolsScreen';
 import { MuHeaderBanner } from '../../components/ui/MuHeaderBanner';
 import { MuSideMoldings } from '../../components/ui/MuSideMoldings';
+import { useLanguage } from '../../context/LanguageContext';
 
 export type PlayerSubTab = 'cuentas' | 'personajes' | 'online' | 'bans' | 'clanes' | 'pk' | 'gm';
 
 interface SubTabOption {
   id: PlayerSubTab;
-  label: string;
+  labelKey: string;
+  defaultLabel: string;
   icon?: MuIconName;
   imageIcon?: any;
   badgeDot?: string;
@@ -32,16 +34,17 @@ interface SubTabOption {
 }
 
 const SUB_TABS: SubTabOption[] = [
-  { id: 'cuentas', label: 'Cuentas', icon: 'account-multiple' },
-  { id: 'personajes', label: 'Personajes', icon: 'character' },
-  { id: 'online', label: 'Online', icon: 'sync', badgeDot: THEME.colors.jade },
-  { id: 'bans', label: 'Baneados', icon: 'gavel', customColor: THEME.colors.brasa },
-  { id: 'clanes', label: 'Clanes', icon: 'guild' },
-  { id: 'pk', label: 'PK', icon: 'skull', customColor: THEME.colors.brasa },
-  { id: 'gm', label: 'Staff GM', icon: 'shield-crown', customColor: THEME.colors.oroClaro },
+  { id: 'cuentas', labelKey: 'subTabAccounts', defaultLabel: 'Cuentas', icon: 'account-multiple' },
+  { id: 'personajes', labelKey: 'subTabCharacters', defaultLabel: 'Personajes', icon: 'character' },
+  { id: 'online', labelKey: 'subTabOnline', defaultLabel: 'Online', icon: 'sync', badgeDot: THEME.colors.jade },
+  { id: 'bans', labelKey: 'subTabBans', defaultLabel: 'Baneados', icon: 'gavel', customColor: THEME.colors.brasa },
+  { id: 'clanes', labelKey: 'subTabGuilds', defaultLabel: 'Clanes', icon: 'guild' },
+  { id: 'pk', labelKey: 'subTabPk', defaultLabel: 'PK', icon: 'skull', customColor: THEME.colors.brasa },
+  { id: 'gm', labelKey: 'subTabGm', defaultLabel: 'Staff GM', icon: 'shield-crown', customColor: THEME.colors.oroClaro },
 ];
 
 export const PlayersHubScreen = ({ route, navigation }: any) => {
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const topInset = Math.max(
     insets.top,
@@ -68,8 +71,8 @@ export const PlayersHubScreen = ({ route, navigation }: any) => {
       {/* Cornisa Gótica Superior Stitch 02 */}
       <View style={styles.headerWrapper}>
         <MuHeaderBanner
-          title="MU MANAGER PRO · JUGADORES Y CUENTAS"
-          subtitle="PADRÓN Y GESTIÓN DE USUARIOS"
+          title={t('playersHubTitle')}
+          subtitle={t('playersHubSubtitle')}
         />
       </View>
 
@@ -120,7 +123,7 @@ export const PlayersHubScreen = ({ route, navigation }: any) => {
                       isSelected && styles.subTabTextActive,
                     ]}
                   >
-                    {tab.label}
+                    {t(tab.labelKey, tab.defaultLabel)}
                   </Text>
                 </ImageBackground>
               </TouchableOpacity>

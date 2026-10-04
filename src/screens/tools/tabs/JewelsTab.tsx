@@ -26,6 +26,7 @@ import { SqlClient } from '../../../services/database/sqlClient';
 import { JewelAuditResult, JewelPurgeResult } from '../../../types/admin';
 import { DEFAULT_ITEM_CATALOG } from '../../../services/parser/itemDatabase';
 import { JEWEL_ASSET_IMAGES, getJewelImageByGroupIndex } from '../../../constants/jewelAssets';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface JewelsTabProps {
   fixesCharSuggestions?: string[];
@@ -38,8 +39,10 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
   fixesAccountSuggestions = [],
   catalogSuggestions = [],
 }) => {
+  const { t } = useLanguage();
+
   const JEWEL_PRESETS = useMemo(() => [
-    { id: 'all_jewels', label: 'Todas las Joyas', icon: 'diamond-stone', color: '#E0C380' },
+    { id: 'all_jewels', label: t('jewelsAllJewels'), icon: 'diamond-stone', color: '#E0C380' },
     { id: 'bless', label: 'Bless', group: 14, index: 13, icon: 'diamond', color: '#3FCF8E' },
     { id: 'soul', label: 'Soul', group: 14, index: 14, icon: 'diamond', color: '#5B8DEF' },
     { id: 'chaos', label: 'Chaos', group: 12, index: 15, icon: 'fire', color: '#E2703A' },
@@ -48,9 +51,9 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
     { id: 'harmony', label: 'Harmony', group: 14, index: 42, icon: 'star', color: '#EFD28D' },
     { id: 'guardian', label: 'Guardian', group: 14, index: 31, icon: 'shield', color: '#CDC6B9' },
     { id: 'gemstone', label: 'Gemstone', group: 14, index: 41, icon: 'gift', color: '#5B8DEF' },
-    { id: 'custom_jewels', label: 'Joyas Custom', icon: 'crown', color: '#E0C380' },
-    { id: 'all_items', label: 'Cualquier Ítem', icon: 'cube-outline', color: '#CDC6B9' },
-  ], []);
+    { id: 'custom_jewels', label: t('jewelsCustomJewels'), icon: 'crown', color: '#E0C380' },
+    { id: 'all_items', label: t('jewelsAnyItem'), icon: 'cube-outline', color: '#CDC6B9' },
+  ], [t]);
 
   const [jewelScope, setJewelScope] = useState<'all' | 'character' | 'account'>('all');
   const [jewelTargetName, setJewelTargetName] = useState<string>('');
@@ -197,15 +200,15 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           <View style={styles.cardHeader}>
             <MuIcon name="diamond-stone" size={24} color={THEME.colors.oroClaro} />
             <Text style={styles.cardTitle}>
-              Gestor & Depurador de Joyas
+              {t('jewelsManagerTitle')}
             </Text>
           </View>
           <Text style={styles.cardDesc}>
-            Audita la economía de joyas o depura excedentes en inventarios y baúles con máxima seguridad SQL.
+            {t('jewelsManagerDesc')}
           </Text>
 
           {/* 1. Selector de Ámbito */}
-          <Text style={[styles.label, { marginTop: 10 }]}>1. Ámbito de Búsqueda:</Text>
+          <Text style={[styles.label, { marginTop: 10 }]}>{t('jewelsScopeTitle')}</Text>
           <View style={styles.pillsRow}>
             {(['all', 'character', 'account'] as const).map((sc) => {
               const isScActive = jewelScope === sc;
@@ -221,7 +224,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     resizeMode="stretch"
                   >
                     <Text style={[styles.filterPillText, isScActive ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
-                      {sc === 'all' ? '[TODO] Servidor Completo' : sc === 'character' ? '[PJ] Por Personaje' : '[CUENTA] Por Cuenta'}
+                      {sc === 'all' ? t('jewelsScopeAll') : sc === 'character' ? t('jewelsScopeChar') : t('jewelsScopeAcc')}
                     </Text>
                   </ImageBackground>
                 </TouchableOpacity>
@@ -233,7 +236,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           {jewelScope !== 'all' && (
             <View style={{ marginTop: 10 }}>
               <Text style={styles.label}>
-                {jewelScope === 'character' ? 'Nombre del Personaje:' : 'Usuario / AccountID:'}
+                {jewelScope === 'character' ? t('jewelsCharNameLabel') : t('jewelsAccountLabel')}
               </Text>
               <AutocompleteInput
                 value={jewelTargetName}
@@ -248,7 +251,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           )}
 
           {/* 2. Selector de Ubicaciones */}
-          <Text style={[styles.label, { marginTop: 14 }]}>2. Ubicaciones a Incluir:</Text>
+          <Text style={[styles.label, { marginTop: 14 }]}>{t('jewelsLocationsTitle')}</Text>
           <View style={styles.wrapRow}>
             <TouchableOpacity
               style={{ borderRadius: 2, overflow: 'hidden' }}
@@ -265,7 +268,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                   color={jewelIncInventory ? '#FEDF99' : THEME.colors.textoSecundario}
                 />
                 <Text style={[styles.filterPillText, jewelIncInventory ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
-                  Inventarios
+                  {t('jewelsLocInventory')}
                 </Text>
               </ImageBackground>
             </TouchableOpacity>
@@ -285,7 +288,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                   color={jewelIncWarehouse ? '#FEDF99' : THEME.colors.textoSecundario}
                 />
                 <Text style={[styles.filterPillText, jewelIncWarehouse ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
-                  Baúl Principal (0)
+                  {t('jewelsLocVaultMain')}
                 </Text>
               </ImageBackground>
             </TouchableOpacity>
@@ -305,14 +308,14 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                   color={jewelIncExtWarehouse ? '#FEDF99' : THEME.colors.textoSecundario}
                 />
                 <Text style={[styles.filterPillText, jewelIncExtWarehouse ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }, { marginLeft: 4 }]}>
-                  Baúles Ext (1..N)
+                  {t('jewelsLocVaultExt')}
                 </Text>
               </ImageBackground>
             </TouchableOpacity>
           </View>
 
           {/* 3. Selección de Joya / Ítem */}
-          <Text style={[styles.label, { marginTop: 14 }]}>3. Joya o Ítem Objetivo:</Text>
+          <Text style={[styles.label, { marginTop: 14 }]}>{t('jewelsTargetTitle')}</Text>
           <View style={styles.wrapRow}>
             {JEWEL_PRESETS.map((preset) => {
               const isSelected = jewelFilterType === preset.id;
@@ -347,7 +350,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           {/* Si se selecciona 'Cualquier Ítem' */}
           {jewelFilterType === 'all_items' && (
             <View style={{ marginTop: 10 }}>
-              <Text style={styles.label}>Buscar Ítem Específico por Nombre (Opcional):</Text>
+              <Text style={styles.label}>{t('jewelsSearchSpecific')}</Text>
               <AutocompleteInput
                 value={jewelSpecificName}
                 onChangeText={setJewelSpecificName}
@@ -360,7 +363,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           )}
 
           {/* 4. Protecciones de Seguridad */}
-          <Text style={[styles.label, { marginTop: 14 }]}>4. Protecciones de Seguridad SQL:</Text>
+          <Text style={[styles.label, { marginTop: 14 }]}>{t('jewelsSecurityTitle')}</Text>
           <View style={{ gap: 8, marginTop: 4 }}>
             <TouchableOpacity
               style={[styles.shieldCheckRow, jewelProtectEquipment && styles.shieldCheckRowActive]}
@@ -373,10 +376,10 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
               />
               <View style={{ flex: 1, marginLeft: 10 }}>
                 <Text style={[styles.shieldCheckTitle, jewelProtectEquipment && { color: THEME.colors.jade }]}>
-                  Proteger Equipamiento Puesto (Slots 0 al 11)
+                  {t('jewelsProtectEquip')}
                 </Text>
                 <Text style={styles.shieldCheckDesc}>
-                  Evita tocar armas, alas, pendientes o armaduras puestas en el cuerpo del personaje.
+                  {t('jewelsProtectEquipDesc')}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -392,23 +395,23 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
               />
               <View style={{ flex: 1, marginLeft: 10 }}>
                 <Text style={[styles.shieldCheckTitle, jewelSkipOnline && { color: THEME.colors.jade }]}>
-                  Omitir Cuentas Conectadas al Juego (Anti-Rollback RAM)
+                  {t('jewelsSkipOnline')}
                 </Text>
                 <Text style={styles.shieldCheckDesc}>
-                  Las cuentas online son protegidas para que el GameServer no sobreescriba datos de la RAM.
+                  {t('jewelsSkipOnlineDesc')}
                 </Text>
               </View>
             </TouchableOpacity>
           </View>
 
           {/* 5. Selector de Acción: Auditoría o Depuración */}
-          <Text style={[styles.label, { marginTop: 16 }]}>5. Operación a Ejecutar:</Text>
+          <Text style={[styles.label, { marginTop: 16 }]}>{t('jewelsActionTitle')}</Text>
           <View style={styles.pillsRow}>
             {[
-              { id: 'audit', label: '[AUDITAR] Solo Auditar' },
-              { id: 'cap_target', label: '[TOPE] Por PJ / Baúl' },
-              { id: 'cap_server', label: '[TOPE] Servidor' },
-              { id: 'purge_all', label: '[DEPURAR] Depurar Todo' },
+              { id: 'audit', label: t('jewelsActAudit') },
+              { id: 'cap_target', label: t('jewelsActCapTarget') },
+              { id: 'cap_server', label: t('jewelsActCapServer') },
+              { id: 'purge_all', label: t('jewelsActPurgeAll') },
             ].map((act) => {
               const isActActive = jewelActionMode === act.id;
               return (
@@ -436,8 +439,8 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
             <View style={styles.capSettingsBox}>
               <Text style={styles.label}>
                 {jewelActionMode === 'cap_server'
-                  ? 'Tope Máximo Global en Todo el Servidor:'
-                  : 'Tope Máximo a Dejar por Personaje / Baúl:'}
+                  ? t('jewelsCapServerLabel')
+                  : t('jewelsCapTargetLabel')}
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 4 }}>
                 <TextInput
@@ -472,7 +475,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 </View>
               </View>
 
-              <Text style={[styles.label, { marginTop: 10 }]}>Contar por:</Text>
+              <Text style={[styles.label, { marginTop: 10 }]}>{t('jewelsCountByLabel')}</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                 <TouchableOpacity
                   style={{ borderRadius: 2, overflow: 'hidden' }}
@@ -484,7 +487,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     resizeMode="stretch"
                   >
                     <Text style={[styles.filterPillText, jewelCountBy === 'units' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
-                      Unidades Reales (Desempaqueta Bundles x10, x20, x30)
+                      {t('jewelsCountUnits')}
                     </Text>
                   </ImageBackground>
                 </TouchableOpacity>
@@ -498,7 +501,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                     resizeMode="stretch"
                   >
                     <Text style={[styles.filterPillText, jewelCountBy === 'slots' ? { color: '#FEDF99', fontWeight: 'bold' } : { color: THEME.colors.textoSecundarioLuminoso }]}>
-                      Slots Físicos (1 slot = 1 unidad)
+                      {t('jewelsCountSlots')}
                     </Text>
                   </ImageBackground>
                 </TouchableOpacity>
@@ -510,7 +513,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
             <View style={{ flex: 1 }}>
               <MuButton
-                titulo="Auditar / Censar"
+                titulo={t('btnAuditJewels')}
                 icono="chart-bar"
                 variante="primary"
                 onPress={handleAuditJewels}
@@ -523,7 +526,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
             {jewelActionMode !== 'audit' && (
               <View style={{ flex: 1 }}>
                 <MuButton
-                  titulo="Simular (Test)"
+                  titulo={t('btnSimulatePurge')}
                   icono="test-tube"
                   variante="secondary"
                   onPress={() => handleExecutePurgeAction(true)}
@@ -537,7 +540,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
             {jewelActionMode !== 'audit' && (
               <View style={{ flex: 1.2 }}>
                 <MuButton
-                  titulo={jewelActionMode === 'purge_all' ? 'Depurar Todo' : 'Aplicar Tope'}
+                  titulo={jewelActionMode === 'purge_all' ? t('btnPurgeAll') : t('btnApplyCap')}
                   icono="fire"
                   variante="danger"
                   onPress={() => setShowJewelConfirmModal(true)}
@@ -552,21 +555,21 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
         {/* Resultados de la Auditoría */}
         {jewelAuditResult && (
           <Panel tipo="gold" conEsquineros={true} style={styles.resultsCard}>
-            <Text style={styles.cardTitle}>Resultados del Censo de Joyas / Ítems</Text>
+            <Text style={styles.cardTitle}>{t('jewelsAuditResultsTitle')}</Text>
             <View style={styles.totalBadge}>
-              <Text style={styles.totalBadgeLabel}>Stock Total Encontrado:</Text>
+              <Text style={styles.totalBadgeLabel}>{t('jewelsTotalStock')}</Text>
               <Text style={styles.totalBadgeValue}>
-                {jewelAuditResult.totalUnits.toLocaleString()} unidades
+                {jewelAuditResult.totalUnits.toLocaleString()} {t('jewelsUnits')}
               </Text>
               <Text style={styles.totalBadgeSub}>
-                ({jewelAuditResult.totalSlots} slots)
+                ({jewelAuditResult.totalSlots} {t('jewelsSlots')})
               </Text>
             </View>
 
             {/* Desglose por tipo */}
             {jewelAuditResult.summaryByType.length > 0 ? (
               <View style={{ marginTop: 12 }}>
-                <Text style={styles.label}>Desglose por Tipo de Joya:</Text>
+                <Text style={styles.label}>{t('jewelsBreakdown')}</Text>
                 <View style={styles.wrapRow}>
                   {jewelAuditResult.summaryByType.map((tItem) => {
                     const jewelImg = tItem.group !== undefined && tItem.index !== undefined
@@ -582,7 +585,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                         <View style={{ marginLeft: 6 }}>
                           <Text style={styles.typeItemName}>{tItem.name}:</Text>
                           <Text style={styles.typeItemCount}>
-                            {tItem.totalUnits.toLocaleString()} u. ({tItem.totalSlots} slots)
+                            {tItem.totalUnits.toLocaleString()} u. ({tItem.totalSlots} {t('jewelsSlots')})
                           </Text>
                         </View>
                       </View>
@@ -596,7 +599,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
             {jewelAuditResult.owners.length > 0 && (
               <View style={{ marginTop: 14 }}>
                 <Text style={styles.label}>
-                  Distribución por Jugadores / Baúles ({jewelAuditResult.owners.length}):
+                  {t('jewelsDistribution').replace('{count}', String(jewelAuditResult.owners.length))}
                 </Text>
                 {jewelAuditResult.owners.slice(0, 15).map((ow, oIdx) => (
                   <View key={`owner_${ow.ownerKey}_${oIdx}`} style={styles.ownerRow}>
@@ -609,8 +612,8 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.ownerUnits}>{ow.unitsCount.toLocaleString()} unidades</Text>
-                      <Text style={styles.ownerSlots}>({ow.slotsCount} slots)</Text>
+                      <Text style={styles.ownerUnits}>{ow.unitsCount.toLocaleString()} {t('jewelsUnits')}</Text>
+                      <Text style={styles.ownerSlots}>({ow.slotsCount} {t('jewelsSlots')})</Text>
                     </View>
                   </View>
                 ))}
@@ -640,16 +643,16 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 <View style={styles.modalHeader}>
                   <MuIcon name="alert-octagon" size={26} color={THEME.colors.brasa} />
                   <Text style={styles.modalTitle}>
-                    Confirmar Depuración SQL
+                    {t('jewelsConfirmModalTitle')}
                   </Text>
                 </View>
 
                 <Text style={styles.modalWarningText}>
-                  Estás a punto de modificar directamente la base de datos SQL Server.
+                  {t('jewelsConfirmWarning')}
                 </Text>
 
                 <View style={styles.summaryBox}>
-                  <Text style={styles.summaryTitle}>Resumen de Operación:</Text>
+                  <Text style={styles.summaryTitle}>{t('jewelsConfirmSummaryTitle')}</Text>
                   <Text style={styles.summaryText}>
                     • Acción: {jewelActionMode === 'purge_all' ? 'Vaciar / Eliminar 100%' : jewelActionMode === 'cap_server' ? `Dejar hasta ${jewelCapAmount} en todo el server` : `Dejar hasta ${jewelCapAmount} por PJ/Baúl`}
                   </Text>
@@ -668,14 +671,14 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 </View>
 
                 <Text style={styles.confirmPromptText}>
-                  Para proceder, escribe <Text style={{ color: THEME.colors.oroClaro, fontWeight: 'bold' }}>DEPURAR</Text> en el recuadro inferior:
+                  {t('jewelsConfirmPrompt')}
                 </Text>
 
                 <TextInput
                   style={styles.confirmInput}
                   value={jewelConfirmText}
                   onChangeText={setJewelConfirmText}
-                  placeholder="Escribe DEPURAR para confirmar"
+                  placeholder={t('jewelsConfirmPlaceholder')}
                   placeholderTextColor={THEME.colors.textMuted}
                   autoCapitalize="characters"
                 />
@@ -683,7 +686,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
                   <View style={{ flex: 1 }}>
                     <MuButton
-                      titulo="Cancelar"
+                      titulo={t('cancel')}
                       variante="secondary"
                       onPress={() => {
                         setShowJewelConfirmModal(false);
@@ -695,7 +698,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
 
                   <View style={{ flex: 1.4 }}>
                     <MuButton
-                      titulo="Confirmar Purga"
+                      titulo={t('btnConfirmPurge')}
                       icono="fire"
                       variante="danger"
                       onPress={() => handleExecutePurgeAction(false)}

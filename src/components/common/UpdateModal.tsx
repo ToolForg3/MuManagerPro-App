@@ -20,6 +20,7 @@ import { RemoteConfigService } from '../../services/security/remoteConfigService
 import { Panel } from '../ui/Panel';
 import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { MuButton } from '../ui/MuButton';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface UpdateModalProps {
   visible: boolean;
@@ -27,6 +28,7 @@ interface UpdateModalProps {
 }
 
 export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo }) => {
+  const { t } = useLanguage();
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadStarted, setDownloadStarted] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
@@ -40,7 +42,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
     const url = updateInfo?.apkUrl;
     if (!url || !url.trim()) {
       if (typeof setDownloadError === 'function') {
-        setDownloadError('No se encontró una dirección de descarga válida.');
+        setDownloadError(typeof t === 'function' ? t('downloadErrorNoUrl') : 'No se encontró una dirección de descarga válida.');
       }
       return;
     }
@@ -52,7 +54,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
     } catch (e: any) {
       console.warn('Could not open APK URL', e);
       if (typeof setDownloadError === 'function') {
-        setDownloadError('No se pudo abrir el enlace automáticamente. Puedes reintentar o copiar el enlace directo.');
+        setDownloadError(typeof t === 'function' ? t('downloadErrorOpen') : 'No se pudo abrir el enlace automáticamente. Puedes reintentar o copiar el enlace directo.');
       }
     }
   };
@@ -93,43 +95,43 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
             </View>
 
             <Text style={[styles.title, isRollback && { color: THEME.colors.brasa }]}>
-              {isRollback ? 'Directiva de Rollback' : isBeta ? 'Nueva Versión Beta Disponible' : 'Actualización Disponible'}
+              {isRollback ? t('rollbackTitle') : isBeta ? t('betaTitle') : t('updateTitle')}
             </Text>
 
             {/* Version Compare Panel (Stitch 08) */}
             <View style={styles.versionCompareRow}>
               <View style={styles.versionCompareCol}>
-                <Text style={styles.versionCompareLabel}>INSTALADA</Text>
+                <Text style={styles.versionCompareLabel}>{t('updateInstalledLabel')}</Text>
                 <Text style={styles.versionCompareValCurrent}>v{updateInfo.currentVersion}</Text>
               </View>
               <View style={styles.versionCompareDivider} />
               <View style={styles.versionCompareCol}>
-                <Text style={styles.versionCompareLabel}>ÚLTIMA DISPONIBLE</Text>
+                <Text style={styles.versionCompareLabel}>{t('updateLatestLabel')}</Text>
                 <Text style={styles.versionCompareValLatest}>v{updateInfo.latestVersion}</Text>
               </View>
             </View>
 
             {isRollback ? (
               <View style={[styles.forcedBanner, { borderColor: THEME.colors.brasa, backgroundColor: 'rgba(226, 112, 58, 0.12)' }]}>
-                <Text style={[styles.forcedText, { color: THEME.colors.brasa }]}>ROLLBACK PREVENTIVO OBLIGATORIO</Text>
+                <Text style={[styles.forcedText, { color: THEME.colors.brasa }]}>{t('rollbackBannerTitle')}</Text>
                 <Text style={styles.forcedSub}>
-                  Se ha detectado una incidencia en la versión actual (v{updateInfo.currentVersion}). Se ordena reinstalar la versión certificada anterior para proteger la base de datos y tus cuentas.
+                  {t('rollbackBannerDesc', { version: updateInfo.currentVersion })}
                 </Text>
               </View>
             ) : updateInfo.forceUpdate ? (
               <View style={styles.forcedBanner}>
-                <Text style={styles.forcedText}>Actualización Obligatoria</Text>
-                <Text style={styles.forcedSub}>Debes instalar esta versión para seguir utilizando Mu Manager PRO.</Text>
+                <Text style={styles.forcedText}>{t('forcedUpdateTitle')}</Text>
+                <Text style={styles.forcedSub}>{t('forcedUpdateDesc')}</Text>
               </View>
             ) : (
               <Text style={styles.subtitle}>
-                {isBeta ? 'Hay una nueva compilación de pruebas disponible en el Canal Beta.' : 'Hay una versión más reciente con nuevas mejoras y correcciones.'}
+                {isBeta ? t('updateBetaSubtitle') : t('updateSubtitle')}
               </Text>
             )}
 
             {!!updateInfo.changelog && (
               <View style={styles.changelogBox}>
-                <Text style={styles.changelogTitle}>{isRollback ? 'Motivo del Rollback:' : 'Novedades de esta versión:'}</Text>
+                <Text style={styles.changelogTitle}>{isRollback ? t('rollbackReason') : t('updateChangelogTitle')}</Text>
                 <ScrollView style={styles.changelogScroll} nestedScrollEnabled>
                   <Text style={styles.changelogText}>{updateInfo.changelog}</Text>
                 </ScrollView>
@@ -141,7 +143,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
               <View style={styles.errorBox}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                   <MuIcon name="shield-alert" size={18} style={{ marginRight: 6 }} />
-                  <Text style={styles.errorBoxTitle}>Error al iniciar descarga</Text>
+                  <Text style={styles.errorBoxTitle}>{t('updateErrorTitle')}</Text>
                 </View>
                 <Text style={styles.errorBoxMsg}>{downloadError}</Text>
                 <View style={styles.errorActionsRow}>
@@ -150,7 +152,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
                     onPress={handleDownload}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel="Reintentar descarga"
+                    accessibilityLabel={t('btnRetry')}
                   >
                     <ImageBackground
                       source={STITCH_ASSETS.tabs.tabModeInactive}
@@ -158,7 +160,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
                       resizeMode="stretch"
                     >
                       <MuIcon name="refresh" size={16} color="#E0C380" style={{ marginRight: 4 }} />
-                      <Text style={styles.retryActionText}>Reintentar</Text>
+                      <Text style={styles.retryActionText}>{t('btnRetry')}</Text>
                     </ImageBackground>
                   </TouchableOpacity>
                   {!!updateInfo.apkUrl && (
@@ -167,7 +169,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
                       onPress={handleCopyLink}
                       activeOpacity={0.8}
                       accessibilityRole="button"
-                      accessibilityLabel="Copiar enlace de descarga"
+                      accessibilityLabel={t('btnCopyLink')}
                     >
                       <ImageBackground
                         source={STITCH_ASSETS.tabs.tabModeInactive}
@@ -181,7 +183,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
                           style={{ marginRight: 4 }}
                         />
                         <Text style={[styles.copyActionText, copied && { color: THEME.colors.jade }]}>
-                          {copied ? '¡Copiado!' : 'Copiar Enlace'}
+                          {copied ? t('linkCopied') : t('btnCopyLink')}
                         </Text>
                       </ImageBackground>
                     </TouchableOpacity>
@@ -195,41 +197,41 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({ visible, updateInfo })
               <View style={styles.instructionBox}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                   <MuIcon name="tools" size={18} style={{ marginRight: 6 }} />
-                  <Text style={styles.instructionTitle}>Pasos para Completar la Instalación</Text>
+                  <Text style={styles.instructionTitle}>{t('instructionTitle')}</Text>
                 </View>
                 <Text style={styles.instructionMsg}>
-                  La descarga se ha iniciado en tu navegador. Para que la actualización tome efecto:
+                  {t('instructionMsg')}
                 </Text>
-                <Text style={styles.instructionStep}>1. Desliza la barra superior de Android o entra a tu app "Descargas".</Text>
-                <Text style={styles.instructionStep}>2. Toca "MuManagerPro.apk" y selecciona "Actualizar" o "Instalar".</Text>
-                <Text style={styles.instructionStep}>3. Abre la app al terminar para ingresar a la nueva versión v{updateInfo.latestVersion}.</Text>
+                <Text style={styles.instructionStep}>{t('instructionStep1')}</Text>
+                <Text style={styles.instructionStep}>{t('instructionStep2')}</Text>
+                <Text style={styles.instructionStep}>{t('instructionStep3', { version: updateInfo.latestVersion })}</Text>
               </View>
             )}
 
             <MuButton
               titulo={
                 isRollback
-                  ? 'Reinstalar Versión Anterior'
+                  ? t('btnReinstallPrevious')
                   : isBeta
-                  ? 'Instalar Versión Beta'
-                  : 'Descargar e Instalar Ahora'
+                  ? t('btnInstallBeta')
+                  : t('btnDownloadNow')
               }
               icono="download"
               variante={updateInfo.forceUpdate || isRollback ? 'danger' : 'primary'}
               altura={48}
               onPress={handleDownload}
               style={{ width: '100%', marginBottom: 10 }}
-              accessibilityLabel={isRollback ? 'Reinstalar Versión Anterior' : 'Descargar e Instalar Ahora'}
+              accessibilityLabel={isRollback ? t('btnReinstallPrevious') : t('btnDownloadNow')}
             />
 
             {!updateInfo.forceUpdate && !isRollback && (
               <MuButton
-                titulo="Recordarme más tarde"
+                titulo={t('btnRemindLater')}
                 variante="secondary"
                 altura={44}
                 onPress={handleDismiss}
                 style={{ width: '100%', marginTop: 2 }}
-                accessibilityLabel="Recordarme más tarde"
+                accessibilityLabel={t('btnRemindLater')}
               />
             )}
 

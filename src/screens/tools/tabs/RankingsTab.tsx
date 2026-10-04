@@ -6,6 +6,7 @@ import { STITCH_ASSETS } from '../../../constants/stitchAssets';
 import { Panel, MuButton } from '../../../components/ui';
 import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface RankingsTabProps {
   rankType: 'resets' | 'mresets' | 'pk' | 'guilds';
@@ -24,16 +25,18 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
   rankingsList,
   getMuClassInfo,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <ErrorBoundary tabName="Rankings">
       <View style={styles.tabContent}>
         {/* Sub-Tabs con texturas nativas MU */}
         <View style={styles.rankPillsContainer}>
           {[
-            { id: 'resets', label: 'Top Resets', icon: 'refresh' },
-            { id: 'mresets', label: 'Master Resets', icon: 'crown' },
-            { id: 'pk', label: 'Top Asesinos (PK)', icon: 'sword' },
-            { id: 'guilds', label: 'Top Guilds', icon: 'shield' },
+            { id: 'resets', label: t('rankTopResets'), icon: 'refresh' },
+            { id: 'mresets', label: t('rankMasterResets'), icon: 'crown' },
+            { id: 'pk', label: t('rankTopPk'), icon: 'sword' },
+            { id: 'guilds', label: t('rankTopGuilds'), icon: 'shield' },
           ].map((sub) => {
             const isSel = rankType === sub.id;
             return (
@@ -72,7 +75,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
 
         {/* Refresh button */}
         <MuButton
-          titulo="Actualizar Ranking"
+          titulo={t('btnRefreshRanking')}
           icono="refresh"
           variante="primary"
           onPress={() => loadRankings(rankType)}
@@ -101,12 +104,12 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
                     <View style={{ flex: 1, marginLeft: 12 }}>
                       <Text style={styles.rankName}>{entry.G_Name}</Text>
                       <Text style={styles.rankSub}>
-                        Master: {entry.G_Master} • Miembros: {entry.G_Count}
+                        {t('rankMaster')}: {entry.G_Master} • {t('rankMembers')}: {entry.G_Count}
                       </Text>
                     </View>
                     <View style={styles.rankScoreWrap}>
                       <Text style={styles.rankScoreVal}>{entry.G_Score}</Text>
-                      <Text style={styles.rankScoreLabel}>Puntos</Text>
+                      <Text style={styles.rankScoreLabel}>{t('rankPoints')}</Text>
                     </View>
                   </Panel>
                 );
@@ -120,7 +123,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
                 scoreLabel = 'M.Resets';
               } else if (rankType === 'pk') {
                 scoreVal = entry.PkCount ?? 0;
-                scoreLabel = 'Muertes';
+                scoreLabel = t('rankKills');
               }
 
               return (
@@ -139,7 +142,7 @@ export const RankingsTab: React.FC<RankingsTabProps> = ({
                       </View>
                     </View>
                     <Text style={styles.rankSub}>
-                      Nivel {entry.cLevel ?? 400} • Cuenta: {entry.AccountID}
+                      {t('rankLevel')} {entry.cLevel ?? 400} • {t('rankAccount')}: {entry.AccountID}
                     </Text>
                   </View>
                   <View style={styles.rankScoreWrap}>

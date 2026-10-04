@@ -20,6 +20,7 @@ import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { MuButton } from '../ui/MuButton';
 import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { isJewelBundle, getBundleQuantity, isItemStackable } from '../../constants/jewelAssets';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ItemActionModalProps {
   visible: boolean;
@@ -46,6 +47,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
   onDuplicate,
   onUpdateItem,
 }) => {
+  const { t } = useLanguage();
   if (!visible || !item) return null;
 
   const excList = item.category === 'weapon' ? EXCELLENT_OPTIONS_WEAPON : EXCELLENT_OPTIONS_ARMOR;
@@ -54,12 +56,12 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
 
   const handleDeletePress = () => {
     Alert.alert(
-      'Eliminar Ítem',
-      `¿Confirmas que deseas eliminar "${item.name}" del slot #${slotIndex}?`,
+      t('itemDeleteConfirmTitle'),
+      t('itemDeleteConfirmMsg', { name: item.name, slot: String(slotIndex) }),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('btnDelete'),
           style: 'destructive',
           onPress: () => {
             onDelete(slotIndex);
@@ -125,13 +127,13 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
 
           {/* Listado de Atributos: Sección Básico */}
           <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
-            <Text style={styles.sectionHeader}>Básico</Text>
+            <Text style={styles.sectionHeader}>{t('itemBasic')}</Text>
             
             <View style={styles.attrList}>
               {isJewelBundle(item.group, item.index, item.name) ? (
                 <>
                   <Text style={[styles.attrLine, { color: THEME.colors.oroClaro, fontWeight: 'bold' }]}>
-                    • Paquete (Bundle): {getBundleQuantity(item.level, item.durability)} Joyas
+                    {t('itemBundleLabel', { count: String(getBundleQuantity(item.level, item.durability)) })}
                   </Text>
                   <Text style={styles.attrLine}>• Nivel del Paquete: +{item.level} (x{getBundleQuantity(item.level, item.durability)})</Text>
                   <Text style={styles.attrLine}>• Durabilidad: {item.durability}</Text>
@@ -139,7 +141,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
               ) : isItemStackable(item.group, item.index, item.category) ? (
                 <>
                   <Text style={[styles.attrLine, { color: THEME.colors.oroClaro, fontWeight: 'bold' }]}>
-                    • Cantidad en Pila: {item.durability ?? 1} / 255 unidades
+                    {t('itemStackQty', { qty: String(item.durability ?? 1) })}
                   </Text>
                   {item.level > 0 && <Text style={styles.attrLine}>• Nivel / Grado: +{item.level}</Text>}
                 </>
@@ -150,8 +152,8 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
                   <Text style={styles.attrLine}>• Durability: {item.durability}</Text>
                 </>
               )}
-              {item.luck ? <Text style={styles.attrLine}>• Luck (Suerte)</Text> : null}
-              {item.skill ? <Text style={styles.attrLine}>• Skill (Habilidad)</Text> : null}
+              {item.luck ? <Text style={styles.attrLine}>{t('itemLuckOpt')}</Text> : null}
+              {item.skill ? <Text style={styles.attrLine}>{t('itemSkillOpt')}</Text> : null}
             </View>
 
             {/* Control Rápido de Cantidad en Pila (Pociones / Consumibles) */}
@@ -365,7 +367,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
               {onQuickMax && (
                 <View style={{ flex: 1 }}>
                   <MuButton
-                    titulo="Full Exc +15"
+                    titulo={t('btnFullExc')}
                     variante="primary"
                     altura={38}
                     compacto
@@ -379,7 +381,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
               {onDuplicate && (
                 <View style={{ flex: 1 }}>
                   <MuButton
-                    titulo="Duplicar"
+                    titulo={t('btnDuplicate')}
                     variante="secondary"
                     altura={38}
                     compacto
@@ -397,7 +399,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
           <View style={{ flexDirection: 'row', gap: 6, marginTop: 14 }}>
             <View style={{ flex: 1 }}>
               <MuButton
-                titulo="OK"
+                titulo={t('btnOk')}
                 variante="secondary"
                 altura={38}
                 compacto
@@ -408,7 +410,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
             {onMove && (
               <View style={{ flex: 1 }}>
                 <MuButton
-                  titulo="MOVER"
+                  titulo={t('btnMove')}
                   variante="primary"
                   altura={38}
                   compacto
@@ -419,7 +421,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
 
             <View style={{ flex: 1 }}>
               <MuButton
-                titulo="EDITAR"
+                titulo={t('btnEdit')}
                 variante="primary"
                 altura={38}
                 compacto
@@ -429,7 +431,7 @@ export const ItemActionModal: React.FC<ItemActionModalProps> = ({
 
             <View style={{ flex: 1 }}>
               <MuButton
-                titulo="BORRAR"
+                titulo={t('btnDelete')}
                 variante="danger"
                 altura={38}
                 compacto

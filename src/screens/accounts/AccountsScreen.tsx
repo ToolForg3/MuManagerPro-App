@@ -1890,7 +1890,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
           <TextInput
             value={search}
             onChangeText={handleSearch}
-            placeholder="Buscar cuenta o [MEMB_INFO]..."
+            placeholder={t('searchAccountPlaceholder')}
             placeholderTextColor={THEME.colors.textMuted}
             style={styles.stitchSearchInput}
             autoCapitalize="none"
@@ -1903,20 +1903,20 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
           )}
         </View>
         <MuButton
-          titulo="NUEVA CUENTA"
+          titulo={t('btnNewAccount')}
           icono="plus"
           variante="primary"
           compacto={true}
           altura={44}
           onPress={() => setCreateModalVisible(true)}
           style={{ minWidth: 124 }}
-          accessibilityLabel="Crear Nueva Cuenta"
+          accessibilityLabel={t('btnNewAccount')}
         />
       </View>
 
       {/* Chips de Filtros Rápidos (Stitch 02) */}
       <View style={styles.stitchFilterChipsRow}>
-        <Text style={styles.stitchFilterLabel}>FILTROS:</Text>
+        <Text style={styles.stitchFilterLabel}>{t('filter').toUpperCase()}:</Text>
         <TouchableOpacity
           style={styles.stitchFilterChipTouchable}
           onPress={() => handleStatusFilterChange('todos')}
@@ -1929,7 +1929,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             imageStyle={{ borderRadius: 2 }}
           >
             <Text style={[styles.stitchFilterChipText, statusFilter === 'todos' && styles.stitchFilterChipTextActive]}>
-              Todos
+              {t('all')}
             </Text>
           </ImageBackground>
         </TouchableOpacity>
@@ -1946,7 +1946,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             imageStyle={{ borderRadius: 2 }}
           >
             <Text style={[styles.stitchFilterChipText, statusFilter === 'activas' ? styles.stitchFilterChipTextActive : { color: THEME.colors.jade }]}>
-              Activas
+              {t('active')}
             </Text>
           </ImageBackground>
         </TouchableOpacity>
@@ -1965,7 +1965,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <MuIcon name="lock" size={11} color={statusFilter === 'bloqueadas' ? '#EFD28D' : '#FFB4AB'} />
               <Text style={[styles.stitchFilterChipText, statusFilter === 'bloqueadas' ? styles.stitchFilterChipTextActive : { color: '#FFB4AB' }]}>
-                Bloqueadas
+                {t('filterTabBanned')}
               </Text>
             </View>
           </ImageBackground>
@@ -1994,10 +1994,10 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         <MuCornerOrnaments size={10} />
         <View style={styles.stitchTableHeaderLeft}>
           <MuIcon name="database" size={16} color={THEME.colors.oroClaro} />
-          <Text style={styles.stitchTableHeaderTitle}>TABLA DE CUENTAS (MEMB_INFO)</Text>
+          <Text style={styles.stitchTableHeaderTitle}>{t('accountsTableTitle')}</Text>
         </View>
         <View style={styles.stitchTableHeaderCountBadge}>
-          <Text style={styles.stitchTableHeaderCountText}>Total: {filtered.length}</Text>
+          <Text style={styles.stitchTableHeaderCountText}>{t('total')}: {filtered.length}</Text>
         </View>
       </View>
 
@@ -2128,7 +2128,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                         : { color: THEME.colors.jade },
                     ]}
                   >
-                    {isBlocked ? 'Bloqueada' : isOnline ? 'Online' : 'Activa'}
+                    {isBlocked ? t('accStatusBanned') : isOnline ? t('online') : t('accStatusActive')}
                   </Text>
                 </View>
               </View>
@@ -2137,7 +2137,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               <View style={styles.stitchDataGrid}>
                 <View style={styles.stitchDataItem}>
                   <MuIcon name="character" size={13} color={THEME.colors.oroClaro} />
-                  <Text style={styles.stitchDataText}>PJs: {item.CharCount ?? 0} / 5</Text>
+                  <Text style={styles.stitchDataText}>{t('accCardCharacters')}: {item.CharCount ?? 0} / 5</Text>
                 </View>
                 <View style={styles.stitchDataItem}>
                   <MuIcon
@@ -2151,7 +2151,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       { color: isBlocked ? THEME.colors.brasa : THEME.colors.jade },
                     ]}
                   >
-                    Bloqueo: {isBlocked ? 'Sí' : 'No'}
+                    {t('accCardBlock')}: {isBlocked ? t('yes') : t('no')}
                   </Text>
                 </View>
                 {!!item.IP && (
@@ -2169,38 +2169,38 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 <View style={styles.stitchActionRow}>
                   {/* 1. Detalle: Botón Primario Forjado */}
                   <MuButton
-                    titulo="Detalle"
+                    titulo={t('details')}
                     icono="eye"
                     variante="primary"
                     compacto={true}
                     altura={36}
                     onPress={() => openAccountDetails(item)}
                     style={{ flex: 1.2 }}
-                    accessibilityLabel="Ver Detalle y Editar Cuenta"
+                    accessibilityLabel={t('details')}
                   />
 
                   {/* 2. Baúl: Botón Secundario Forjado */}
                   <MuButton
-                    titulo="Baúl"
+                    titulo={t('accBtnVault')}
                     icono="treasure-chest"
                     variante="secondary"
                     compacto={true}
                     altura={36}
                     onPress={() => openWarehouseForAccount(item.memb___id)}
                     style={{ flex: 1 }}
-                    accessibilityLabel="Ver Baúl y Almacén"
+                    accessibilityLabel={t('accBtnVault')}
                   />
 
                   {/* 3. Bloquear/Activar: Toggle Compacto */}
                   <MuButton
-                    titulo={isBlocked ? 'Activar' : 'Bloquear'}
+                    titulo={isBlocked ? t('accBtnUnban') : t('accBtnBan')}
                     icono={isBlocked ? 'lock-open' : 'lock'}
                     variante={isBlocked ? 'success' : 'danger'}
                     compacto={true}
                     altura={36}
                     onPress={() => handleToggleBlock(item)}
                     style={{ flex: 1.1 }}
-                    accessibilityLabel={isBlocked ? "Desbloquear Cuenta" : "Bloquear Cuenta"}
+                    accessibilityLabel={isBlocked ? t('accBtnUnban') : t('accBtnBan')}
                   />
 
                   {/* 4. Eliminar: Acción Peligro Compacta */}
@@ -2212,7 +2212,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     altura={36}
                     onPress={() => promptDeleteAccountDirect(item)}
                     style={{ width: 38 }}
-                    accessibilityLabel="Eliminar Cuenta"
+                    accessibilityLabel={t('accBtnDelete')}
                   />
                 </View>
               </View>
@@ -2269,14 +2269,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                           color: selectedAccount?.ConnectStat === 1 ? THEME.colors.jade : THEME.colors.textoSecundario,
                         }}
                       >
-                        {selectedAccount?.ConnectStat === 1 ? 'ONLINE' : 'OFFLINE'}
+                        {selectedAccount?.ConnectStat === 1 ? t('online') : t('offline')}
                       </Text>
                     </View>
                   </View>
-                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>Editar Información de Cuenta</Text>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11 }}>{t('accModalEditTitle', 'Editar Información de Cuenta')}</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => setAccountDetailVisible(false)} style={styles.closeModalBtn}>
+              <TouchableOpacity onPress={() => setAccountDetailVisible(false)} style={styles.closeModalBtn} accessibilityLabel={t('cancel', 'Cerrar')}>
                 <MuIcon name="close" size={22} color={THEME.colors.textoSecundario} />
               </TouchableOpacity>
             </View>
@@ -2528,14 +2528,14 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       { color: String(selectedAccount?.bloc_code) === '1' ? '#FF5252' : THEME.colors.jade },
                     ]}
                   >
-                    {String(selectedAccount?.bloc_code) === '1' ? 'Cuenta Bloqueada (Baneada)' : 'Cuenta Activa (Desbloqueada)'}
+                    {String(selectedAccount?.bloc_code) === '1' ? t('accStatusBanned') : t('accStatusActive')}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               {/* Botón Guardar Cambios en SQL Server */}
               <BotonOro
-                titulo="GUARDAR CAMBIOS EN SQL SERVER"
+                titulo={t('btnSaveSql', 'GUARDAR CAMBIOS EN SQL SERVER')}
                 icono="content-save-check"
                 cargando={savingAccount}
                 disabled={savingAccount}
@@ -2546,7 +2546,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
               {/* Botón Desconectar Cuenta Trabada (Unstick) */}
               <BotonPiedra
-                titulo="DESCONECTAR CUENTA TRABADA (UNSTICK)"
+                titulo={t('accBtnUnstick', 'DESCONECTAR CUENTA TRABADA (UNSTICK)')}
                 icono="power-plug-off"
                 cargando={disconnectingAccount}
                 disabled={disconnectingAccount}
@@ -2557,7 +2557,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
               {/* Botón Eliminar Cuenta Completa de SQL */}
               <BotonBrasa
-                titulo="ELIMINAR CUENTA COMPLETA DE SQL"
+                titulo={t('accBtnDeleteSql', 'ELIMINAR CUENTA COMPLETA DE SQL')}
                 icono="trash-can-outline"
                 cargando={deletingAccount}
                 disabled={deletingAccount}
@@ -2569,7 +2569,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               {/* Sección Personajes de la Cuenta */}
               <View style={styles.charSectionBox}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <Text style={styles.fieldLabel}>Personajes ({accountChars.length}/5)</Text>
+                  <Text style={styles.fieldLabel}>{t('characters')} ({accountChars.length}/5)</Text>
                   {accountChars.length > 0 && (
                     <Text style={{ color: '#29B6F6', fontSize: 11, fontWeight: 'bold' }}>
                       {accountChars.length} {accountChars.length === 1 ? 'personaje' : 'personajes'}
@@ -2629,7 +2629,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 <View style={styles.detailActionButtonsRow}>
                   <View style={{ flex: 1 }}>
                     <MuButton
-                      titulo="VER PERSONAJES"
+                      titulo={t('accBtnViewChars', 'VER PERSONAJES')}
                       icono="sword-cross"
                       variante="secondary"
                       altura={42}
@@ -2644,7 +2644,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
                   <View style={{ flex: 1 }}>
                     <MuButton
-                      titulo="BAÚL (/WARE)"
+                      titulo={t('accBtnVaultWare', 'BAÚL (/WARE)')}
                       icono="package-variant-closed"
                       variante="primary"
                       altura={42}
@@ -2661,7 +2661,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                 <View style={styles.detailActionButtonsRow}>
                   <View style={{ flex: 1 }}>
                     <MuButton
-                      titulo="BÓVEDA EXTRA"
+                      titulo={t('accBtnVaultExt', 'BÓVEDA EXTRA')}
                       icono="safe"
                       variante="secondary"
                       altura={42}
@@ -2675,7 +2675,7 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
 
                   <View style={{ flex: 1 }}>
                     <MuButton
-                      titulo="BANCO JOYAS"
+                      titulo={t('accBtnJewelBank', 'BANCO JOYAS')}
                       icono="diamond-stone"
                       variante="primary"
                       altura={42}

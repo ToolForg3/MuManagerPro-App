@@ -22,28 +22,15 @@ import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { SecurityService } from '../../services/security/securityService';
 import { SqlClient } from '../../services/database/sqlClient';
 import { FeedbackService, FeedbackModalOptions } from '../../services/feedback/feedbackService';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface CategoryOption {
   key: string;
   label: string;
 }
 
-const CATEGORIES: CategoryOption[] = [
-  { key: 'general', label: '⭐ Experiencia' },
-  { key: 'feature', label: '💡 Sugerencia' },
-  { key: 'bug', label: '🐛 Detalle' },
-  { key: 'server', label: '🎮 Servidor' },
-];
-
-const RATING_DESCRIPTIONS: Record<number, string> = {
-  1: 'Muy Insatisfecho (1/5)',
-  2: 'Requiere Mejoras (2/5)',
-  3: 'Aceptable (3/5)',
-  4: 'Muy Bueno (4/5)',
-  5: '¡Excelente! (5/5)',
-};
-
 export const FeedbackModal: React.FC = () => {
+  const { t } = useLanguage();
   const [options, setOptions] = useState<FeedbackModalOptions | null>(null);
   const [rating, setRating] = useState<number>(5);
   const [category, setCategory] = useState<string>('general');
@@ -52,6 +39,21 @@ export const FeedbackModal: React.FC = () => {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hwid, setHwid] = useState<string>('');
+
+  const CATEGORIES: CategoryOption[] = React.useMemo(() => [
+    { key: 'general', label: t('categoryGeneral') },
+    { key: 'feature', label: t('categoryFeature') },
+    { key: 'bug', label: t('categoryBug') },
+    { key: 'server', label: t('categoryServer') },
+  ], [t]);
+
+  const RATING_DESCRIPTIONS: Record<number, string> = React.useMemo(() => ({
+    1: t('feedbackRating1'),
+    2: t('feedbackRating2'),
+    3: t('feedbackRating3'),
+    4: t('feedbackRating4'),
+    5: t('feedbackRating5'),
+  }), [t]);
 
   useEffect(() => {
     const unsub = FeedbackService.subscribe((opts) => {
@@ -104,10 +106,10 @@ export const FeedbackModal: React.FC = () => {
           handleClose();
         }, 2200);
       } else {
-        setErrorMsg(res.error || 'No se pudo enviar la calificación.');
+        setErrorMsg(res.error || t('feedbackErrSend'));
       }
     } catch (e: any) {
-      setErrorMsg(e.message || 'Error de conexión.');
+      setErrorMsg(e.message || t('feedbackErrConn'));
     } finally {
       setLoading(false);
     }
@@ -144,10 +146,10 @@ export const FeedbackModal: React.FC = () => {
                 {/* Cabecera Gótica */}
                 <View style={styles.header}>
                   <Text style={styles.headerTitle}>
-                    {options.title || '⭐ CALIFICAR EXPERIENCIA'}
+                    {options.title || t('rateExpTitle')}
                   </Text>
                   <Text style={styles.headerSubtitle}>
-                    {options.subtitle || 'Tu opinión forja las próximas herramientas de Mu Manager PRO.'}
+                    {options.subtitle || t('rateExpSub')}
                   </Text>
                 </View>
 
@@ -155,12 +157,12 @@ export const FeedbackModal: React.FC = () => {
                   /* Vista de Éxito */
                   <View style={styles.successContainer}>
                     <Text style={styles.successIcon}>⚔️</Text>
-                    <Text style={styles.successTitle}>¡Muchas Gracias!</Text>
+                    <Text style={styles.successTitle}>{t('feedbackThankYou')}</Text>
                     <Text style={styles.successDesc}>
-                      Tu calificación de {rating} estrellas ha sido enviada con éxito al equipo de desarrollo.
+                      {t('feedbackThankYouDesc').replace('{rating}', String(rating))}
                     </Text>
                     <MuButton
-                      titulo="ACEPTAR"
+                      titulo={t('ok').toUpperCase()}
                       onPress={handleClose}
                       variante="primary"
                       altura={40}
@@ -234,7 +236,7 @@ export const FeedbackModal: React.FC = () => {
                     <View style={styles.inputWrapper}>
                       <TextInput
                         style={styles.textInput}
-                        placeholder="¿Qué te pareció la herramienta? ¿Alguna sugerencia? (Opcional)"
+                        placeholder={t('feedbackInputPlaceholder')}
                         placeholderTextColor="#78736B"
                         value={message}
                         onChangeText={setMessage}
@@ -253,7 +255,7 @@ export const FeedbackModal: React.FC = () => {
                     {/* 4. Botones de Acción */}
                     <View style={styles.actionsContainer}>
                       <MuButton
-                        titulo={loading ? 'ENVIANDO...' : 'ENVIAR OPINIÓN'}
+                        titulo={loading ? t('btnSending') : t('btnSubmitFeedback')}
                         onPress={handleSubmit}
                         variante="primary"
                         cargando={loading}
@@ -267,7 +269,7 @@ export const FeedbackModal: React.FC = () => {
                           style={styles.linkTouchable}
                           activeOpacity={0.7}
                         >
-                          <Text style={styles.webLinkText}>🌐 Ver en mumanager.pro</Text>
+                          <Text style={styles.webLinkText}>{t('viewOnWeb')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -275,7 +277,7 @@ export const FeedbackModal: React.FC = () => {
                           style={styles.dismissTouchable}
                           activeOpacity={0.7}
                         >
-                          <Text style={styles.dismissText}>Más tarde</Text>
+                          <Text style={styles.dismissText}>{t('btnFeedbackLater')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>

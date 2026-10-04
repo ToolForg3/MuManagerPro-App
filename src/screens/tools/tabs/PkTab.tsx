@@ -6,6 +6,7 @@ import { Panel, MuButton } from '../../../components/ui';
 import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { PkPlayerEntry } from '../../../types/admin';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface PkTabProps {
   pkList: PkPlayerEntry[];
@@ -28,6 +29,8 @@ export const PkTab: React.FC<PkTabProps> = ({
   getPkBadge,
   getMuClassInfo,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <ErrorBoundary tabName="Limpieza de PK">
       <View style={styles.tabContent}>
@@ -38,11 +41,11 @@ export const PkTab: React.FC<PkTabProps> = ({
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <MuIcon name="sword" size={22} color={THEME.colors.brasa} />
               <Text style={styles.bannerTitle}>
-                Asesinos Activos ({pkList.length})
+                {t('pkActiveKillers', { count: pkList.length })}
               </Text>
             </View>
             <MuButton
-              titulo="Actualizar"
+              titulo={t('refresh')}
               icono="refresh"
               variante="primary"
               onPress={loadPkList}
@@ -53,11 +56,11 @@ export const PkTab: React.FC<PkTabProps> = ({
             />
           </View>
           <Text style={styles.bannerDesc}>
-            Limpia el estado PK de personajes individuales o ejecuta un perdón masivo para todo el servidor restableciendo PkLevel a 3 (Común).
+            {t('pkBannerDesc')}
           </Text>
 
           <MuButton
-            titulo="Limpiar Todos los Asesinos (Server)"
+            titulo={t('btnClearAllPk')}
             icono="sword"
             variante="danger"
             onPress={() => handleClearPkTab()}
@@ -72,7 +75,7 @@ export const PkTab: React.FC<PkTabProps> = ({
           <MuIcon name="tools" size={18} />
           <TextInput
             style={styles.textInput}
-            placeholder="Buscar por PJ o Cuenta..."
+            placeholder={t('pkSearchPlaceholder')}
             placeholderTextColor={THEME.colors.textMuted}
             value={pkSearch}
             onChangeText={setPkSearch}
@@ -90,10 +93,10 @@ export const PkTab: React.FC<PkTabProps> = ({
           <View style={styles.emptyWrap}>
             <MuIcon name="check" size={44} />
             <Text style={styles.emptyTitle}>
-              ¡Servidor Libre de Asesinos!
+              {t('pkCleanServerTitle')}
             </Text>
             <Text style={styles.emptySub}>
-              No hay personajes con PkLevel mayor a 3 o muertes pendientes.
+              {t('pkCleanServerSub')}
             </Text>
           </View>
         ) : (
@@ -130,20 +133,20 @@ export const PkTab: React.FC<PkTabProps> = ({
                           </View>
                         </View>
                         <Text style={styles.charSub}>
-                          Cuenta: {accountId} • {className} • Lv {cLevel}
+                          {t('pkAccount')}: {accountId} • {className} • Lv {cLevel}
                         </Text>
                         <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
                           <Text style={styles.statRed}>
-                            Asesinatos: <Text style={{ fontWeight: 'bold' }}>{pkCount}</Text>
+                            {t('pkKills')}: <Text style={{ fontWeight: 'bold' }}>{pkCount}</Text>
                           </Text>
                           <Text style={styles.statMuted}>
-                            Tiempo PK: {pkTime}s
+                            {t('pkTime')}: {pkTime}s
                           </Text>
                         </View>
                       </View>
 
                       <MuButton
-                        titulo="Limpiar PK"
+                        titulo={t('btnClearPk')}
                         icono="check"
                         variante="success"
                         onPress={() => handleClearPkTab(charName)}

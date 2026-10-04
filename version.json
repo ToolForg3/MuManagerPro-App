@@ -1,10 +1,10 @@
 {
-  "version": "2.4.12",
+  "version": "2.4.13",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-03T23:30:00.000Z",
+  "publishedAt": "2026-10-04T00:00:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 154,
+  "build": 155,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.12 (Build 154) - Optimización Visual, Nitidez y Adaptabilidad Multi-Resolución:\n• ADAPTABILIDAD MULTI-RESOLUCIÓN EN CELULARES: Optimización integral en todas las pantallas y modales para dispositivos desde 320dp hasta 480dp+. Cero anchos desbordados o recortes de información.\n• BLINDAJE DE CABECERAS Y MODALES: Ajuste dinámico de cabeceras compactas para evitar aplastamiento de controles. Integración de ScrollView y evasión de teclado (KeyboardAvoidingView) en todos los modales administrativos y de herramientas.\n• MÁXIMA NITIDEZ Y CONTRASTE WCAG AAA: Sombra tipográfica profunda sobre texturas oscuras y metálicas de MU Season 6, garantizando legibilidad nítida cristalina en botones, chips y selectores.\n• RECORTES PRECISOS ANTI-SANGRADO: Blindaje de contenedores táctiles en botones y pestañas con recorte de esquinas, eliminando cualquier halo, distorsión o sangrado en densidades DPI altas."
+  "changelog": "MuManager PRO v2.4.13 (Build 155) - Soporte Integral Multi-Idioma (i18n) y Pulido de Interfaz:\n• SOPORTE MULTI-IDIOMA TOTAL (ES / EN / PT): Cobertura del 100% en toda la aplicación (Mochila, Baúl, Herramientas, Modales, Alertas y Ajustes). Cambio de idioma en tiempo real con paridad absoluta de claves.\n• LOCALIZACIÓN DE HERRAMIENTAS Y MODALES: Traducción completa de las pestañas de Joyas, Anti-Dupe, Rankings, Parsers, Clanes y PK, además de modales de Licencia, Actualización, Feedback y Acciones de Items.\n• PULIDO VISUAL STITCH APPROVED IRONFORGE: Sombra tipográfica de alto contraste WCAG AAA sobre texturas nativas MU Season 6 y acabados biselados chiseled.\n• ESTABILIDAD Y RENDIMIENTO: Cero parpadeos en sincronización de datos y navegación fluida entre pestañas."
 }

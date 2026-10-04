@@ -2632,11 +2632,11 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
         <Header
           title={
             currentMode === 'objects'
-              ? 'MU MANAGER PRO · OBJETOS'
+              ? `MU MANAGER PRO · ${(t('tabObjects') || 'OBJETOS').toUpperCase()}`
               : currentMode === 'players'
-              ? 'MU MANAGER PRO · JUGADORES'
+              ? `MU MANAGER PRO · ${(t('tabPlayers') || 'JUGADORES').toUpperCase()}`
               : currentMode === 'tools'
-              ? 'MU MANAGER PRO · HERRAMIENTAS'
+              ? `MU MANAGER PRO · ${(t('tabTools') || 'HERRAMIENTAS').toUpperCase()}`
               : (t('toolsTitle') || 'MU MANAGER PRO')
           }
           subtitle={
@@ -2675,16 +2675,17 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
             allowedTabs.length <= 4 && { flexGrow: 1, justifyContent: 'space-around' }
           ]}
         >
-          {TOOL_TABS_CONFIG.map((t) => {
-            if (!allowedTabs.includes(t.id)) return null;
-            const isTabActive = activeTab === t.id;
+          {TOOL_TABS_CONFIG.map((tabItem) => {
+            if (!allowedTabs.includes(tabItem.id)) return null;
+            const isTabActive = activeTab === tabItem.id;
+            const tabLabel = t(`toolTab_${tabItem.id}` as any, tabItem.label);
             return (
-              <React.Fragment key={t.id}>
-                {currentMode === 'all' && t.id === 'players' && (
+              <React.Fragment key={tabItem.id}>
+                {currentMode === 'all' && tabItem.id === 'players' && (
                   <View style={{ width: 1, height: 24, backgroundColor: '#4C463A', alignSelf: 'center', marginHorizontal: 4 }} />
                 )}
                 <TouchableOpacity
-                  onPress={() => setActiveTab(t.id)}
+                  onPress={() => setActiveTab(tabItem.id)}
                   activeOpacity={0.8}
                   style={styles.tabTouch}
                 >
@@ -2694,12 +2695,12 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
                     resizeMode="stretch"
                   >
                     <MuIcon
-                      name={t.icon as any}
+                      name={tabItem.icon as any}
                       size={16}
                       color={isTabActive ? '#EFD28D' : '#CDC6B9'}
                     />
                     <Text style={[styles.tabButtonText, isTabActive && styles.tabButtonTextActive]}>
-                      {t.label}
+                      {tabLabel}
                     </Text>
                   </ImageBackground>
                 </TouchableOpacity>

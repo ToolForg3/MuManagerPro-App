@@ -58,7 +58,7 @@ type TabType = 'Stats' | 'Progreso' | 'Skills' | 'Inventario' | 'Ubicacion' | 'Q
 type InventorySubTab = 'equip' | 'main' | 'ext1' | 'ext2' | 'store';
 
 export const CharacterEditScreen = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const route = useRoute<any>();
   const navigation = useNavigation();
   const charName = route.params?.characterName || '';
@@ -1397,7 +1397,7 @@ export const CharacterEditScreen = () => {
           {/* Botones SYNC y BORRAR */}
           <View style={[styles.stitchHeaderRightActions, isCompactHeader && { gap: 4 }]}>
             <MuButton
-              titulo={isCompactHeader ? '' : 'SYNC'}
+              titulo={isCompactHeader ? '' : t('btnSync')}
               icono="refresh"
               variante="primary"
               compacto={true}
@@ -1406,10 +1406,10 @@ export const CharacterEditScreen = () => {
               onPress={() => loadCharacter(true)}
               disabled={isRefreshing}
               cargando={isRefreshing}
-              accessibilityLabel="Sincronizar Datos"
+              accessibilityLabel={t('btnSync')}
             />
             <MuButton
-              titulo={isCompactHeader ? '' : 'BORRAR'}
+              titulo={isCompactHeader ? '' : t('btnDelete')}
               icono="close"
               variante="danger"
               compacto={true}
@@ -1418,7 +1418,7 @@ export const CharacterEditScreen = () => {
               onPress={promptDeleteCurrentCharacter}
               disabled={isDeletingChar}
               cargando={isDeletingChar}
-              accessibilityLabel="Eliminar Personaje"
+              accessibilityLabel={t('btnDelete')}
             />
           </View>
         </View>
@@ -1441,12 +1441,12 @@ export const CharacterEditScreen = () => {
         />
         <View style={{ flex: 1 }}>
           <Text style={[styles.statusBannerTitle, { color: isCharacterOnline ? '#FF7043' : THEME.colors.jade }]}>
-            {isCharacterOnline ? '[ONLINE] PERSONAJE EN JUEGO (EN LÍNEA)' : '[OFFLINE] DESCONECTADO • SEGURO'}
+            {isCharacterOnline ? `[${t('online').toUpperCase()}] ${t('online').toUpperCase()}` : `[${t('offline').toUpperCase()}] ${t('offline').toUpperCase()}`}
           </Text>
           <Text style={styles.statusBannerSubtitle}>
             {isCharacterOnline
-              ? 'El jugador está conectado. Pídele salir a "Cambiar de Personaje" para guardar. Toca para re-verificar.'
-              : 'El jugador está fuera del servidor. Puedes guardar cambios con total tranquilidad.'}
+              ? (language === 'pt' ? 'O jogador está conectado. Peça para sair para salvar.' : language === 'en' ? 'The player is currently online. Ask them to switch character to save.' : 'El jugador está conectado. Pídele salir a "Cambiar de Personaje" para guardar.')
+              : (language === 'pt' ? 'O jogador está desconectado. Pode salvar com segurança.' : language === 'en' ? 'The player is safely offline. You can save changes now.' : 'El jugador está fuera del servidor. Puedes guardar cambios con total tranquilidad.')}
           </Text>
         </View>
         {isCheckingStatus ? (
@@ -1478,13 +1478,20 @@ export const CharacterEditScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.stitchSubNavScroll}
         >
-          {(['Stats', 'Progreso', 'Skills', 'Inventario', 'Ubicacion', 'Quest'] as TabType[]).map((tab) => {
-            const isActive = activeTab === tab;
+          {([
+            { key: 'Stats' as TabType, label: t('tabStats') },
+            { key: 'Progreso' as TabType, label: t('tabProgress') },
+            { key: 'Skills' as TabType, label: t('tabSkills') },
+            { key: 'Inventario' as TabType, label: t('tabInventory') },
+            { key: 'Ubicacion' as TabType, label: t('tabLocation') },
+            { key: 'Quest' as TabType, label: t('tabQuest') },
+          ]).map((tab) => {
+            const isActive = activeTab === tab.key;
             return (
               <TouchableOpacity
-                key={tab}
+                key={tab.key}
                 style={styles.stitchSubNavBtnTouchable}
-                onPress={() => setActiveTab(tab)}
+                onPress={() => setActiveTab(tab.key)}
                 activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isActive }}
@@ -1501,7 +1508,7 @@ export const CharacterEditScreen = () => {
                       isActive && styles.stitchSubNavBtnTextActive,
                     ]}
                   >
-                    {tab.toUpperCase()}
+                    {tab.label.toUpperCase()}
                   </Text>
                 </ImageBackground>
               </TouchableOpacity>
@@ -3007,7 +3014,7 @@ export const CharacterEditScreen = () => {
       {/* Botón Sticky Fijo Inferior Guardar Cambios */}
       <View style={[styles.stickyBottomBar, { paddingBottom: Math.max(14, insets.bottom + 4) }]}>
         <BotonOro
-          titulo={isSavingAny ? (t('saving') || 'GUARDANDO...') : 'GUARDAR CAMBIOS'}
+          titulo={isSavingAny ? t('saving').toUpperCase() : `${t('save').toUpperCase()} ${language === 'pt' ? 'ALTERAÇÕES' : language === 'en' ? 'CHANGES' : 'CAMBIOS'}`}
           onPress={handleSaveCurrentTab}
           cargando={isSavingAny}
           altura={56}

@@ -40,7 +40,7 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
           <MuCornerOrnaments size={12} />
           <Text style={styles.sectionTitle}>{t('configureItems')}</Text>
           <Text style={styles.sectionDesc}>
-            Carga los archivos .txt de la carpeta Data/Item de tu servidor de MU Online para sincronizar nombres, tamaños y atributos exactos:
+            {t('configureItemsDesc')}
           </Text>
 
           {/* Item.txt */}
@@ -58,7 +58,7 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
                 <MuIcon name="file-document-outline" size={24} color={THEME.colors.primaryOrange} />
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileTitle}>Item.txt</Text>
-                  <Text style={styles.fileSub}>Base de datos principal de armas, armaduras y joyas</Text>
+                  <Text style={styles.fileSub}>{t('itemTxtDesc')}</Text>
                 </View>
               </View>
               <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
@@ -80,7 +80,7 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
                 <MuIcon name="numeric-3-circle-outline" size={24} color={THEME.colors.item380} />
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileTitle}>380ItemType.txt</Text>
-                  <Text style={styles.fileSub}>Opciones adicionales de nivel 380 (PvP)</Text>
+                  <Text style={styles.fileSub}>{t('item380TxtDesc')}</Text>
                 </View>
               </View>
               <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
@@ -102,7 +102,7 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
                 <MuIcon name="hexagon-multiple-outline" size={24} color={THEME.colors.itemSocket} />
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileTitle}>SocketItemType.txt</Text>
-                  <Text style={styles.fileSub}>Ítems con ranuras para Seeds y Spheres</Text>
+                  <Text style={styles.fileSub}>{t('socketTxtDesc')}</Text>
                 </View>
               </View>
               <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
@@ -124,7 +124,7 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
                 <MuIcon name="shield-star-outline" size={24} color={THEME.colors.itemAncient} />
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileTitle}>SetItemType.txt</Text>
-                  <Text style={styles.fileSub}>Ítems Ancient y sets de temporada</Text>
+                  <Text style={styles.fileSub}>{t('setItemTxtDesc')}</Text>
                 </View>
               </View>
               <MuIcon name="upload" size={20} color={THEME.colors.textoSecundario} />
@@ -133,7 +133,7 @@ export const ParsersTab: React.FC<ParsersTabProps> = ({
 
           {/* Reset to defaults button */}
           <MuButton
-            titulo="Restaurar Catálogo Predeterminado"
+            titulo={t('btnResetCatalog')}
             icono="refresh"
             variante="secondary"
             onPress={onResetDefaults}

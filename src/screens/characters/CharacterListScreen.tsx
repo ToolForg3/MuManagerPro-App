@@ -235,12 +235,12 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
 
   const promptDeleteCharacter = (char: CharacterSummary) => {
     Alert.alert(
-      'Eliminar Personaje',
-      `¿Estás seguro de que deseas eliminar permanentemente a "${char.Name}" (${char.AccountID})?\n\nEsta acción borrará el personaje de la base de datos, limpiará su slot en la cuenta y eliminará sus ítems, misiones y habilidades.`,
+      t('charDeleteConfirmTitle'),
+      t('charDeleteConfirmMsg', { name: char.Name, account: char.AccountID }),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('delete'),
           style: 'destructive',
           onPress: () => performDeleteCharacter(char.Name, char.AccountID, false),
         },
@@ -263,12 +263,12 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
       if (!res.success) {
         if (res.message && res.message.includes('ONLINE_WARNING')) {
           Alert.alert(
-            '⚠️ Personaje Conectado',
-            `El personaje "${charName}" o su cuenta se encuentra actualmente ONLINE en el servidor de juego.\n\nEliminarlo mientras juega puede causar desincronización en la memoria del GameServer.\n\n¿Deseas forzar la eliminación de todos modos?`,
+            t('charOnlineWarningTitle'),
+            t('charOnlineWarningMsg', { name: charName }),
             [
-              { text: 'Cancelar', style: 'cancel' },
+              { text: t('cancel'), style: 'cancel' },
               {
-                text: 'Forzar Eliminación',
+                text: t('forceDeleteBtn'),
                 style: 'destructive',
                 onPress: () => performDeleteCharacter(charName, accountId, true),
               },
@@ -314,15 +314,15 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
     const mapName = MU_MAPS[item.MapNumber ?? 0] || `Mapa ${item.MapNumber ?? 0}`;
     const pkLvl = item.PkLevel ?? 3;
 
-    let pkLabel = 'Ciudadano';
+    let pkLabel = t('citizen');
     let pkColor = THEME.colors.jade;
     let pkIcon = 'shield-check';
     if (pkLvl <= 2) {
-      pkLabel = 'Héroe';
+      pkLabel = t('hero');
       pkColor = THEME.colors.arcano;
       pkIcon = 'star-circle';
     } else if (pkLvl === 4) {
-      pkLabel = 'Phono';
+      pkLabel = t('phono');
       pkColor = THEME.colors.oroClaro;
       pkIcon = 'alert-circle';
     } else if (pkLvl >= 5) {
@@ -388,7 +388,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                   fontWeight: '700',
                 }}
               >
-                {isOnline ? 'ONLINE' : 'OFFLINE'}
+                {isOnline ? t('online').toUpperCase() : t('offline').toUpperCase()}
               </Text>
             </View>
           </View>
@@ -454,13 +454,14 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
         </View>
 
         {/* Botón Táctil para Ver Detalle / Stats con texturas nativas MU */}
+        {/* Botón Táctil para Ver Detalle / Stats con texturas nativas MU */}
         <MuButton
-          titulo="VER STATS Y GESTIONAR"
+          titulo={t('charBtnStats')}
           icono="edit"
           variante="primary"
           altura={40}
           onPress={() => navigation.navigate('CharacterEdit', { characterName: item.Name })}
-          accessibilityLabel={`Gestionar stats de ${item.Name}`}
+          accessibilityLabel={`${t('charBtnStats')} ${item.Name}`}
           style={{ marginTop: 8 }}
         />
       </View>
@@ -481,7 +482,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
           <TextInput
             value={searchQuery}
             onChangeText={handleSearchChange}
-            placeholder="Buscar personaje o cuenta..."
+            placeholder={t('searchCharPlaceholder')}
             placeholderTextColor={THEME.colors.textMuted}
             style={styles.stitchSearchInput}
             autoCapitalize="none"
@@ -494,13 +495,13 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
           )}
         </View>
         <MuButton
-          titulo="NUEVO PJ"
+          titulo={t('btnNewChar')}
           icono="plus"
           variante="primary"
           compacto={true}
           altura={48}
           onPress={() => openCreateModal(accountFilter || undefined)}
-          accessibilityLabel="Crear Nuevo Personaje"
+          accessibilityLabel={t('btnNewChar')}
         />
       </View>
 
@@ -510,7 +511,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
             <MuIcon name="search" size={16} color={THEME.colors.arcano} />
             <Text style={styles.activeFilterText} numberOfLines={1}>
-              Filtrando cuenta: <Text style={{ fontWeight: 'bold' }}>{accountFilter}</Text>
+              {t('filteringByAccount', { account: accountFilter })}
             </Text>
           </View>
           <TouchableOpacity onPress={clearAccountFilter} style={styles.clearFilterBtn}>
@@ -524,10 +525,10 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
         <MuCornerOrnaments size={10} />
         <View style={styles.stitchTableHeaderLeft}>
           <MuIcon name="character" size={16} color={THEME.colors.oroClaro} />
-          <Text style={styles.stitchTableHeaderTitle}>TABLA DE PERSONAJES (Character)</Text>
+          <Text style={styles.stitchTableHeaderTitle}>{t('charsTableTitle')}</Text>
         </View>
         <View style={styles.stitchTableHeaderCountBadge}>
-          <Text style={styles.stitchTableHeaderCountText}>Total: {filteredChars.length}</Text>
+          <Text style={styles.stitchTableHeaderCountText}>{t('total')}: {filteredChars.length}</Text>
         </View>
       </View>
 
@@ -631,8 +632,8 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                     <MuIcon name="shield-account" size={20} color="#FFD700" />
                   </View>
                   <View>
-                    <Text style={styles.modalHeaderTitle}>Nuevo Personaje</Text>
-                    <Text style={styles.modalHeaderSub}>Creación Universal de Personaje</Text>
+                    <Text style={styles.modalHeaderTitle}>{t('createCharModalTitle')}</Text>
+                    <Text style={styles.modalHeaderSub}>{t('createCharModalSubtitle')}</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -656,14 +657,14 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                     suggestions={[...new Set(characters.map((c) => c.AccountID))]}
                     placeholder="AccountID..."
                     icon="account"
-                    label="Cuenta (AccountID)"
+                    label={t('inputAccountId')}
                     clearable={true}
                   />
                 </View>
 
                 {/* Campo Nombre de Personaje */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Nombre del Personaje (Name)</Text>
+                  <Text style={styles.fieldLabel}>{t('charName')}</Text>
                   <View style={styles.inputBox}>
                     <TextInput
                       style={styles.textInput}
@@ -680,7 +681,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
 
                 {/* Selector de Raza Base */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Clase Base (Raza)</Text>
+                  <Text style={styles.fieldLabel}>{t('selectRace')}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.raceScroll}>
                     {MU_BASE_RACES.map((race, idx) => {
                       const isSelected = selectedRaceIndex === idx;
@@ -718,15 +719,15 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
 
                 {/* Selector de Evolución (Tier 1, 2, 3) */}
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Evolución de Clase ({currentRace.name})</Text>
+                  <Text style={styles.fieldLabel}>{t('selectTier')} ({currentRace.name})</Text>
                   <View style={styles.tierRow}>
-                    {currentRace.tiers.map((t) => {
-                      const isTierSelected = selectedTier === t.tier;
+                    {currentRace.tiers.map((tItem) => {
+                      const isTierSelected = selectedTier === tItem.tier;
                       return (
                         <TouchableOpacity
-                          key={t.classId}
+                          key={tItem.classId}
                           style={{ flex: 1 }}
-                          onPress={() => setSelectedTier(t.tier)}
+                          onPress={() => setSelectedTier(tItem.tier)}
                           activeOpacity={0.7}
                         >
                           <ImageBackground
@@ -738,9 +739,9 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                             resizeMode="stretch"
                           >
                             <Text style={[styles.tierBtnName, isTierSelected && { color: '#EFD28D', fontWeight: 'bold' }]}>
-                              {t.name}
+                              {tItem.name}
                             </Text>
-                            <Text style={[styles.tierBtnSub, isTierSelected && { color: '#EFD28D' }]}>Tier {t.tier}</Text>
+                            <Text style={[styles.tierBtnSub, isTierSelected && { color: '#EFD28D' }]}>Tier {tItem.tier}</Text>
                           </ImageBackground>
                         </TouchableOpacity>
                       );
@@ -751,7 +752,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                 {/* Nivel y Resets */}
                 <View style={styles.rowFields}>
                   <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>Nivel Inicial (1 - 400)</Text>
+                    <Text style={styles.fieldLabel}>{t('initialLevel')}</Text>
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
@@ -765,7 +766,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                   </View>
 
                   <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>Resets Iniciales</Text>
+                    <Text style={styles.fieldLabel}>{t('initialResets')}</Text>
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
@@ -782,7 +783,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                 {/* Zen y Puntos */}
                 <View style={styles.rowFields}>
                   <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>Zen</Text>
+                    <Text style={styles.fieldLabel}>{t('initialZen')}</Text>
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
@@ -796,7 +797,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
                   </View>
 
                   <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>Puntos (Stats)</Text>
+                    <Text style={styles.fieldLabel}>{t('initialPoints')}</Text>
                     <View style={styles.inputBox}>
                       <TextInput
                         style={styles.textInput}
@@ -812,7 +813,7 @@ export const CharacterListScreen: React.FC<CharacterListScreenProps> = (props) =
 
                 {/* Botón Crear Personaje (Stitch Texture) */}
                 <MuButton
-                  titulo="Crear Personaje en SQL Server"
+                  titulo={isCreatingChar ? t('creatingChar') : t('btnCreateChar')}
                   icono="sword"
                   variante="primary"
                   altura={48}

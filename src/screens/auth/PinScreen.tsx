@@ -21,6 +21,7 @@ import {
   Panel,
 } from '../../components/ui';
 import { STITCH_ASSETS } from '../../constants/stitchAssets';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface PinScreenProps {
   onSuccess: () => void;
@@ -31,6 +32,7 @@ const MAX_ATTEMPTS = 3;
 const LOCKOUT_SECONDS = 30;
 
 export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
+  const { t } = useLanguage();
   const [pin, setPin] = useState<string>('');
   const [attempts, setAttempts] = useState<number>(0);
   const [lockoutTimer, setLockoutTimer] = useState<number>(0);
@@ -145,11 +147,11 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.title}>PIN DE SEGURIDAD</Text>
+          <Text style={styles.title}>{t('pinTitle') || 'PIN DE SEGURIDAD'}</Text>
           <Text style={styles.subtitle}>
             {lockoutTimer > 0
-              ? `Bloqueado temporalmente (${lockoutTimer}s)`
-              : 'Introduce el código maestro de 4 cifras'}
+              ? (t('pinLocked', { sec: lockoutTimer }) || `Bloqueado temporalmente (${lockoutTimer}s)`)
+              : (t('pinSubtitle') || 'Introduce el código maestro de 4 cifras')}
           </Text>
         </View>
 
@@ -183,13 +185,13 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
           {lockoutTimer > 0 ? (
             <View style={styles.warningLocked}>
               <Text style={styles.warningLockedText}>
-                Restricción temporal activa: [bloqueo: {lockoutTimer}s]
+                {t('pinLockedNotice', { sec: lockoutTimer }) || `Restricción temporal activa: [bloqueo: ${lockoutTimer}s]`}
               </Text>
             </View>
           ) : (
             <View style={styles.warningNotice}>
               <Text style={styles.warningNoticeText}>
-                Bloqueo tras {MAX_ATTEMPTS} intentos fallidos · Intento {attempts}/{MAX_ATTEMPTS}
+                {t('pinAttemptsNotice', { attempt: attempts }) || `Bloqueo tras ${MAX_ATTEMPTS} intentos fallidos · Intento ${attempts}/${MAX_ATTEMPTS}`}
               </Text>
             </View>
           )}
@@ -255,14 +257,14 @@ export const PinScreen: React.FC<PinScreenProps> = ({ onSuccess }) => {
               disabled={lockoutTimer > 0}
               onPress={handleDelete}
               activeOpacity={0.7}
-              accessibilityLabel="Borrar dígito"
+              accessibilityLabel={t('pinKeypadDelete') || 'Borrar dígito'}
             >
               <ImageBackground
                 source={STITCH_ASSETS.buttons.small}
                 style={[styles.keyButtonWrap, styles.keyButtonDelete]}
                 resizeMode="stretch"
               >
-                <Text style={styles.deleteText}>BORRAR</Text>
+                <Text style={styles.deleteText}>{t('pinKeypadDelete') || 'BORRAR'}</Text>
               </ImageBackground>
             </TouchableOpacity>
           </View>

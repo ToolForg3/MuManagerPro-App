@@ -16,6 +16,7 @@ import { AutocompleteInput } from '../../../components/common/AutocompleteInput'
 import { ItemImage } from '../../../components/common/ItemImage';
 import { Panel, MuButton, Chip } from '../../../components/ui';
 import { MuCornerOrnaments } from '../../../components/ui/MuCornerOrnaments';
+import { useLanguage } from '../../../context/LanguageContext';
 
 interface AntiDupeTabProps {
   searchQuery: string;
@@ -46,21 +47,23 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
   dupesResults,
   searchResults,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <ErrorBoundary tabName="Anti-Dupe">
       <View style={styles.tabContent}>
         {/* Search & Dupe Controls */}
         <Panel variant="box" style={[styles.card, { zIndex: 10 }]}>
           <MuCornerOrnaments size={12} />
-          <Text style={styles.cardTitle}>Buscador Global de Ítems</Text>
+          <Text style={styles.cardTitle}>{t('antiDupeTitle')}</Text>
           <Text style={styles.cardDesc}>
-            Busca cualquier ítem por nombre o número de serial en baúles e inventarios de todo el servidor:
+            {t('antiDupeDesc')}
           </Text>
           <AutocompleteInput
             value={searchQuery}
             onChangeText={setSearchQuery}
             suggestions={catalogSuggestions}
-            placeholder="Ej: Bone Blade o 12345678"
+            placeholder={t('antiDupePlaceholder')}
             icon="magnify"
             maxSuggestions={6}
           />
@@ -71,7 +74,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
               <Chip
                 key={`search_mode_${mode}`}
                 activo={searchFilter === mode}
-                etiqueta={mode === 'all' ? 'Todos' : mode === 'warehouse' ? 'Solo Baúles' : 'Solo Inventarios'}
+                etiqueta={mode === 'all' ? t('filterAll') : mode === 'warehouse' ? t('filterOnlyWarehouses') : t('filterOnlyInventories')}
                 onPress={() => setSearchFilter(mode)}
               />
             ))}
@@ -80,7 +83,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
           <View style={styles.btnRow}>
             <View style={{ flex: 1 }}>
               <MuButton
-                titulo="Buscar"
+                titulo={t('btnSearch')}
                 icono="magnify"
                 variante="primary"
                 onPress={handleSearchItems}
@@ -92,7 +95,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
 
             <View style={{ flex: 1 }}>
               <MuButton
-                titulo="Escanear Dupeos"
+                titulo={t('btnScanDupes')}
                 icono="shield-alert"
                 variante="danger"
                 onPress={() => handleScanDupes(false)}
@@ -114,20 +117,20 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.dupeBannerTitle}>
                 {dupesResults.length > 0
-                  ? `¡ATENCIÓN! Se detectaron ${dupesResults.length} ítems clonados`
-                  : '¡Servidor Limpio! No hay ítems duplicados'}
+                  ? t('dupeBannerAlert', { count: dupesResults.length })
+                  : t('dupeBannerClean')}
               </Text>
               <Text style={styles.dupeBannerSub}>
                 {dupesResults.length > 0
-                  ? 'Revisa la lista a continuación para auditar las cuentas involucradas.'
-                  : 'Todos los seriales registrados en baúles e inventarios son únicos.'}
+                  ? t('dupeBannerSubAlert')
+                  : t('dupeBannerSubClean')}
               </Text>
             </View>
             <TouchableOpacity
               onPress={() => handleScanDupes(true)}
               disabled={isScanningDupes}
               style={styles.refreshIconBtn}
-              accessibilityLabel="Forzar Re-Escaneo"
+              accessibilityLabel={t('forceRescan')}
             >
               <MuIcon name="refresh" size={20} />
             </TouchableOpacity>
@@ -145,7 +148,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
                   Serial: {dupe.serial} (0x{dupe.serialHex})
                 </Text>
                 <Text style={styles.dupeCountText}>
-                  {dupe.count} copias detectadas
+                  {t('dupeCopiesDetected', { count: dupe.count })}
                 </Text>
               </View>
             </View>
@@ -166,7 +169,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
                     <TouchableOpacity
                       onPress={async () => {
                         await Clipboard.setStringAsync(it.hex);
-                        Alert.alert('Copiado', `Hex de ${it.name} copiado.`);
+                        Alert.alert(t('copiedHex'), t('copiedHexMsg', { name: it.name }));
                       }}
                     >
                       <Text style={styles.hexText}>
@@ -185,7 +188,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
         {!hasScannedDupes && searchResults.length > 0 && (
           <Panel variant="box" style={styles.card}>
             <MuCornerOrnaments size={12} />
-            <Text style={styles.cardTitle}>Resultados ({searchResults.length}):</Text>
+            <Text style={styles.cardTitle}>{t('dupeSearchResults', { count: searchResults.length })}</Text>
             {searchResults.map((it, idx) => (
               <View key={`search_res_${idx}`} style={styles.dupeItemRow}>
                 <ItemImage itemName={it.name} size={32} fallbackColor={THEME.colors.oroClaro} />
@@ -205,7 +208,7 @@ export const AntiDupeTab: React.FC<AntiDupeTabProps> = ({
                     <TouchableOpacity
                       onPress={async () => {
                         await Clipboard.setStringAsync(it.hex);
-                        Alert.alert('Copiado', `Hex de ${it.name} copiado.`);
+                        Alert.alert(t('copiedHex'), t('copiedHexMsg', { name: it.name }));
                       }}
                     >
                       <Text style={styles.hexText}>

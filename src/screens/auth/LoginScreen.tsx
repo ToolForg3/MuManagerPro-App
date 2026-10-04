@@ -705,15 +705,15 @@ export const LoginScreen = () => {
         <Panel variant="box" style={styles.card}>
           <MuCornerOrnaments size={12} />
           <TituloSeccion
-            titulo={isRegisterMode ? 'Crear Nueva Cuenta' : 'Autenticación de Cuenta'}
-            subtitulo={isRegisterMode ? 'Creación de credenciales para el servidor' : 'Acceso administrativo al servidor de juego'}
+            titulo={isRegisterMode ? (t('createAccountModalTitle') || 'Crear Nueva Cuenta') : (t('signIn') || 'Autenticación de Cuenta')}
+            subtitulo={isRegisterMode ? (t('createAccountModalSubtitle') || 'Creación de credenciales para el servidor') : (t('appSubtitle') || 'Acceso administrativo al servidor de juego')}
             style={{ marginVertical: 8 }}
           />
 
           {/* Username Input */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
-              {isRegisterMode ? 'Nombre de Usuario (Para Iniciar Sesión)' : 'Usuario o Correo Electrónico'}
+              {isRegisterMode ? `${t('username')} (Para Iniciar Sesión)` : (t('userOrEmail', 'Usuario o Correo Electrónico'))}
             </Text>
             <View style={styles.inputWrapper}>
               <MuIcon
@@ -724,7 +724,7 @@ export const LoginScreen = () => {
               />
               <TextInput
                 style={styles.input}
-                placeholder={isRegisterMode ? 'Ej: admin_mu' : 'Ingresa tu usuario o correo'}
+                placeholder={isRegisterMode ? 'admin_mu' : (t('userOrEmailPlaceholder') || 'Ingresa tu usuario o correo')}
                 placeholderTextColor={THEME.colors.textoSecundario}
                 value={username}
                 onChangeText={setUsername}
@@ -736,7 +736,7 @@ export const LoginScreen = () => {
           {/* Email Input (Register Mode Only) */}
           {isRegisterMode && (
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Correo Electrónico (Para Validación y Recuperación)</Text>
+              <Text style={styles.label}>{`${t('email')} (Para Validación y Recuperación)`}</Text>
               <View style={styles.inputWrapper}>
                 <MuIcon
                   name="mail"
@@ -746,7 +746,7 @@ export const LoginScreen = () => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="ejemplo@correo.com"
+                  placeholder={t('emailPlaceholder') || 'ejemplo@correo.com'}
                   placeholderTextColor={THEME.colors.textoSecundario}
                   value={email}
                   onChangeText={setEmail}
@@ -791,7 +791,7 @@ export const LoginScreen = () => {
           {/* Confirm Password Input (Register Mode Only) */}
           {isRegisterMode && (
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirmar Contraseña</Text>
+              <Text style={styles.label}>{t('confirmPassword') || 'Confirmar Contraseña'}</Text>
               <View style={styles.inputWrapper}>
                 <MuIcon
                   name="check-circle"
@@ -849,7 +849,7 @@ export const LoginScreen = () => {
                 activeOpacity={0.7}
               >
                 <Text style={{ color: THEME.colors.arcano, fontSize: 12, fontWeight: '700' }}>
-                  ¿Olvidaste tu contraseña?
+                  {t('forgotPassword') || '¿Olvidaste tu contraseña?'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -857,7 +857,7 @@ export const LoginScreen = () => {
 
           {/* Submit Button (Botón Oro de 52 dp) */}
           <BotonOro
-            titulo={isRegisterMode ? 'CREAR CUENTA' : (t('signIn') || 'INICIAR SESIÓN')}
+            titulo={isRegisterMode ? (t('register') || 'CREAR CUENTA') : (t('signIn') || 'INICIAR SESIÓN')}
             onPress={handleSubmit}
             cargando={loading}
             icono={isRegisterMode ? 'user-plus' : 'log-in'}
@@ -868,7 +868,7 @@ export const LoginScreen = () => {
           {/* En modo Registro: Botón Secundario Volver */}
           {isRegisterMode && (
             <BotonPiedra
-              titulo="VOLVER A INICIAR SESIÓN"
+              titulo={t('backToLogin', 'VOLVER A INICIAR SESIÓN')}
               onPress={() => {
                 setIsRegisterMode(false);
                 setPassword('');
@@ -885,7 +885,7 @@ export const LoginScreen = () => {
             <>
               {/* Botón Iniciar Sesión con Google OAuth */}
               <MuButton
-                titulo="Continuar con Google"
+                titulo={t('continueWithGoogle', 'Continuar con Google')}
                 icono="google"
                 variante="secondary"
                 altura={48}
@@ -893,12 +893,12 @@ export const LoginScreen = () => {
                 disabled={googleLoading}
                 cargando={googleLoading}
                 style={{ marginTop: 12 }}
-                accessibilityLabel="Continuar con Google"
+                accessibilityLabel={t('continueWithGoogle', 'Continuar con Google')}
               />
 
               {/* Acceso Rápido Modo Prueba (Botón Piedra de 48 dp) */}
               <BotonPiedra
-                titulo="Acceso Rápido (Demo 10 min)"
+                titulo={t('quickDemo') || 'Acceso Rápido (Demo 10 min)'}
                 onPress={handleDemoAccess}
                 cargando={loadingDemo}
                 icono="zap"
@@ -920,9 +920,9 @@ export const LoginScreen = () => {
           >
             <Text style={styles.toggleModeText}>
               {isRegisterMode ? (
-                <>¿Ya tienes cuenta? <Text style={styles.toggleModeHighlight}>Inicia Sesión</Text></>
+                <>{t('alreadyHaveAccount', '¿Ya tienes cuenta?')} <Text style={styles.toggleModeHighlight}>{t('signIn') || 'Inicia Sesión'}</Text></>
               ) : (
-                <>¿No tienes cuenta? <Text style={styles.toggleModeHighlight}>Regístrate aquí</Text></>
+                <>{t('dontHaveAccount', '¿No tienes cuenta?')} <Text style={styles.toggleModeHighlight}>{t('registerHere', 'Regístrate aquí')}</Text></>
               )}
             </Text>
           </TouchableOpacity>

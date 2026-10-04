@@ -21,7 +21,7 @@ interface LanguageModalProps {
 
 export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const { language, setLanguage, currentFlag } = useLanguage();
+  const { language, setLanguage, currentFlag, t } = useLanguage();
 
   const handleSelect = (code: LanguageCode) => {
     setLanguage(code);
@@ -35,7 +35,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
         accessibilityRole="button"
-        accessibilityLabel="Cambiar idioma"
+        accessibilityLabel={t('changeLanguage') || 'Cambiar idioma'}
       >
         <ImageBackground
           source={STITCH_ASSETS.tabs.tabModeInactive}
@@ -57,13 +57,13 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ floating = false }
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
           <Panel style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Seleccionar Idioma</Text>
+              <Text style={styles.modalTitle}>{t('selectLanguage') || 'Seleccionar Idioma'}</Text>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={styles.closeBtn}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 accessibilityRole="button"
-                accessibilityLabel="Cerrar selección de idioma"
+                accessibilityLabel={t('cancel') || 'Cerrar'}
               >
                 <MuIcon name="close" size={18} />
               </TouchableOpacity>

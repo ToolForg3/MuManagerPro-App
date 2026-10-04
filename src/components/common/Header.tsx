@@ -6,6 +6,7 @@ import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { THEME } from '../../constants/theme';
 import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { useDatabase } from '../../context/DatabaseContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { maskHost } from '../../services/maskUtils';
 
 interface HeaderProps {
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   rightAction,
 }) => {
   const { isConnected, config } = useDatabase();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const isCompact = windowWidth < 385;
@@ -58,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
               style={[styles.backButtonWrap, isCompact && { marginRight: 4 }]}
               activeOpacity={0.82}
               accessibilityRole="button"
-              accessibilityLabel="Atrás"
+              accessibilityLabel={t('back') || 'Atrás'}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <ImageBackground
@@ -68,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <View style={styles.backButtonContent}>
                   <MuIcon name="arrow-left" size={13} color="#E4E2E0" containerStyle={{ marginRight: isCompact ? 0 : 3 }} />
-                  {!isCompact && <Text style={styles.backButtonText}>Atrás</Text>}
+                  {!isCompact && <Text style={styles.backButtonText}>{t('back') || 'Atrás'}</Text>}
                 </View>
               </ImageBackground>
             </TouchableOpacity>
@@ -92,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {title}
                   </Text>
                   <View style={[styles.nativoBadge, isCompact && { paddingHorizontal: 4, paddingVertical: 1 }]}>
-                    <Text style={[styles.nativoBadgeText, isCompact && { fontSize: 7.5 }]}>NATIVO</Text>
+                    <Text style={[styles.nativoBadgeText, isCompact && { fontSize: 7.5 }]}>{t('native') || 'NATIVO'}</Text>
                   </View>
                 </View>
                 {subtitle && (
@@ -123,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <View style={styles.jewelGlance} />
                   </View>
                   <Text style={[styles.badgeText, isCompact && { fontSize: 9.5 }]} numberOfLines={1} ellipsizeMode="tail">
-                    {isConnected ? (maskHost(config.host) || 'MU REALM') : (isCompact ? 'OFFLINE' : 'SIN CONEXIÓN')}
+                    {isConnected ? (maskHost(config.host) || 'MU REALM') : (isCompact ? 'OFFLINE' : (t('noConnection') || 'SIN CONEXIÓN'))}
                   </Text>
                 </View>
               </ImageBackground>
@@ -137,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onPress={rightAction.onPress}
                 activeOpacity={0.82}
                 accessibilityRole="button"
-                accessibilityLabel="Actualizar"
+                accessibilityLabel={t('refresh') || 'Actualizar'}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <ImageBackground
@@ -153,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
                       containerStyle={(isCompact || (showConnectionBadge && windowWidth < 415)) ? undefined : { marginRight: 4 }}
                     />
                     {!(isCompact || (showConnectionBadge && windowWidth < 415)) && (
-                      <Text style={styles.refreshButtonText}>Actualizar</Text>
+                      <Text style={styles.refreshButtonText}>{t('refresh') || 'Actualizar'}</Text>
                     )}
                   </View>
                 </ImageBackground>
