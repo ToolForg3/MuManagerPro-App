@@ -11,8 +11,12 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
+  KeyboardAvoidingView,
+  ImageBackground,
 } from 'react-native';
 import { THEME } from '../../constants/theme';
+import { STITCH_ASSETS } from '../../constants/stitchAssets';
 import { MuButton } from '../ui/MuButton';
 import { MuCornerOrnaments } from '../ui/MuCornerOrnaments';
 import { SecurityService } from '../../services/security/securityService';
@@ -125,147 +129,161 @@ export const FeedbackModal: React.FC = () => {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
-          <View style={styles.dialogCard}>
-            <MuCornerOrnaments size={16} />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.keyboardAvoid}
+          >
+            <View style={styles.dialogCard}>
+              <MuCornerOrnaments size={16} />
 
-            {/* Cabecera Gótica */}
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>
-                {options.title || '⭐ CALIFICAR EXPERIENCIA'}
-              </Text>
-              <Text style={styles.headerSubtitle}>
-                {options.subtitle || 'Tu opinión forja las próximas herramientas de Mu Manager PRO.'}
-              </Text>
-            </View>
-
-            {submitted ? (
-              /* Vista de Éxito */
-              <View style={styles.successContainer}>
-                <Text style={styles.successIcon}>⚔️</Text>
-                <Text style={styles.successTitle}>¡Muchas Gracias!</Text>
-                <Text style={styles.successDesc}>
-                  Tu calificación de {rating} estrellas ha sido enviada con éxito al equipo de desarrollo.
-                </Text>
-                <MuButton
-                  titulo="ACEPTAR"
-                  onPress={handleClose}
-                  variante="primary"
-                  altura={40}
-                  style={{ marginTop: 16, width: '100%' }}
-                />
-              </View>
-            ) : (
-              /* Formulario Interactivo */
-              <View style={styles.body}>
-                {/* 1. Selector de 5 Estrellas */}
-                <View style={styles.starsRow}>
-                  {[1, 2, 3, 4, 5].map((starVal) => {
-                    const isActive = starVal <= rating;
-                    return (
-                      <TouchableOpacity
-                        key={starVal}
-                        onPress={() => handleSelectStar(starVal)}
-                        activeOpacity={0.7}
-                        style={styles.starTouchable}
-                        accessibilityLabel={`${starVal} estrellas`}
-                      >
-                        <Text
-                          style={[
-                            styles.starText,
-                            isActive ? styles.starTextActive : styles.starTextInactive,
-                          ]}
-                        >
-                          ★
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* Etiqueta de la Calificación */}
-                <Text style={styles.ratingLabelText}>
-                  {RATING_DESCRIPTIONS[rating] || `${rating}/5`}
-                </Text>
-
-                {/* 2. Selector de Categorías (Chips) */}
-                <View style={styles.chipsContainer}>
-                  {CATEGORIES.map((cat) => {
-                    const isSelected = category === cat.key;
-                    return (
-                      <TouchableOpacity
-                        key={cat.key}
-                        onPress={() => setCategory(cat.key)}
-                        activeOpacity={0.8}
-                        style={[
-                          styles.chipButton,
-                          isSelected && styles.chipButtonSelected,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.chipText,
-                            isSelected && styles.chipTextSelected,
-                          ]}
-                        >
-                          {cat.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* 3. Mensaje Opcional */}
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="¿Qué te pareció la herramienta? ¿Alguna sugerencia? (Opcional)"
-                    placeholderTextColor="#78736B"
-                    value={message}
-                    onChangeText={setMessage}
-                    multiline
-                    numberOfLines={3}
-                    maxLength={1000}
-                  />
-                </View>
-
-                {errorMsg && (
-                  <Text style={styles.errorText}>
-                    ⚠️ {errorMsg}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.scrollContent}
+              >
+                {/* Cabecera Gótica */}
+                <View style={styles.header}>
+                  <Text style={styles.headerTitle}>
+                    {options.title || '⭐ CALIFICAR EXPERIENCIA'}
                   </Text>
-                )}
-
-                {/* 4. Botones de Acción */}
-                <View style={styles.actionsContainer}>
-                  <MuButton
-                    titulo={loading ? 'ENVIANDO...' : 'ENVIAR OPINIÓN'}
-                    onPress={handleSubmit}
-                    variante="primary"
-                    cargando={loading}
-                    altura={42}
-                    style={{ width: '100%', marginBottom: 8 }}
-                  />
-
-                  <View style={styles.secondaryActionsRow}>
-                    <TouchableOpacity
-                      onPress={handleOpenWeb}
-                      style={styles.linkTouchable}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.webLinkText}>🌐 Ver en mumanager.pro</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={handleClose}
-                      style={styles.dismissTouchable}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.dismissText}>Más tarde</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <Text style={styles.headerSubtitle}>
+                    {options.subtitle || 'Tu opinión forja las próximas herramientas de Mu Manager PRO.'}
+                  </Text>
                 </View>
-              </View>
-            )}
-          </View>
+
+                {submitted ? (
+                  /* Vista de Éxito */
+                  <View style={styles.successContainer}>
+                    <Text style={styles.successIcon}>⚔️</Text>
+                    <Text style={styles.successTitle}>¡Muchas Gracias!</Text>
+                    <Text style={styles.successDesc}>
+                      Tu calificación de {rating} estrellas ha sido enviada con éxito al equipo de desarrollo.
+                    </Text>
+                    <MuButton
+                      titulo="ACEPTAR"
+                      onPress={handleClose}
+                      variante="primary"
+                      altura={40}
+                      style={{ marginTop: 16, width: '100%' }}
+                    />
+                  </View>
+                ) : (
+                  /* Formulario Interactivo */
+                  <View style={styles.body}>
+                    {/* 1. Selector de 5 Estrellas */}
+                    <View style={styles.starsRow}>
+                      {[1, 2, 3, 4, 5].map((starVal) => {
+                        const isActive = starVal <= rating;
+                        return (
+                          <TouchableOpacity
+                            key={starVal}
+                            onPress={() => handleSelectStar(starVal)}
+                            activeOpacity={0.7}
+                            style={styles.starTouchable}
+                            accessibilityLabel={`${starVal} estrellas`}
+                          >
+                            <Text
+                              style={[
+                                styles.starText,
+                                isActive ? styles.starTextActive : styles.starTextInactive,
+                              ]}
+                            >
+                              ★
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {/* Etiqueta de la Calificación */}
+                    <Text style={styles.ratingLabelText}>
+                      {RATING_DESCRIPTIONS[rating] || `${rating}/5`}
+                    </Text>
+
+                    {/* 2. Selector de Categorías (Chips con texturas nativas MU) */}
+                    <View style={styles.chipsContainer}>
+                      {CATEGORIES.map((cat) => {
+                        const isSelected = category === cat.key;
+                        return (
+                          <TouchableOpacity
+                            key={cat.key}
+                            onPress={() => setCategory(cat.key)}
+                            activeOpacity={0.8}
+                            style={styles.chipTouchable}
+                          >
+                            <ImageBackground
+                              source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                              resizeMode="stretch"
+                              style={styles.chipBg}
+                            >
+                              <Text
+                                style={[
+                                  styles.chipText,
+                                  isSelected && styles.chipTextSelected,
+                                ]}
+                              >
+                                {cat.label}
+                              </Text>
+                            </ImageBackground>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {/* 3. Mensaje Opcional */}
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="¿Qué te pareció la herramienta? ¿Alguna sugerencia? (Opcional)"
+                        placeholderTextColor="#78736B"
+                        value={message}
+                        onChangeText={setMessage}
+                        multiline
+                        numberOfLines={3}
+                        maxLength={1000}
+                      />
+                    </View>
+
+                    {errorMsg && (
+                      <Text style={styles.errorText}>
+                        ⚠️ {errorMsg}
+                      </Text>
+                    )}
+
+                    {/* 4. Botones de Acción */}
+                    <View style={styles.actionsContainer}>
+                      <MuButton
+                        titulo={loading ? 'ENVIANDO...' : 'ENVIAR OPINIÓN'}
+                        onPress={handleSubmit}
+                        variante="primary"
+                        cargando={loading}
+                        altura={42}
+                        style={{ width: '100%', marginBottom: 8 }}
+                      />
+
+                      <View style={styles.secondaryActionsRow}>
+                        <TouchableOpacity
+                          onPress={handleOpenWeb}
+                          style={styles.linkTouchable}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.webLinkText}>🌐 Ver en mumanager.pro</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={handleClose}
+                          style={styles.dismissTouchable}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.dismissText}>Más tarde</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
@@ -280,9 +298,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
   },
-  dialogCard: {
+  keyboardAvoid: {
     width: '100%',
     maxWidth: 380,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dialogCard: {
+    width: '100%',
+    maxHeight: '92%',
     backgroundColor: '#131413',
     borderWidth: 1,
     borderColor: '#3E392F',
@@ -291,8 +315,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#201E1A',
     borderRightColor: '#201E1A',
     borderRadius: 3,
-    padding: 18,
     position: 'relative',
+    overflow: 'hidden',
     ...Platform.select({
       android: { elevation: 12 },
       ios: {
@@ -302,6 +326,10 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
       },
     }),
+  },
+  scrollContent: {
+    padding: 18,
+    flexGrow: 0,
   },
   header: {
     alignItems: 'center',
@@ -378,31 +406,28 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     width: '100%',
   },
-  chipButton: {
+  chipTouchable: {
+    borderRadius: 2,
+    overflow: 'hidden',
     height: 32,
-    paddingHorizontal: 10,
-    backgroundColor: '#1A1C1A',
-    borderWidth: 1,
-    borderColor: '#38342B',
-    borderRadius: 16,
+    marginBottom: 4,
+  },
+  chipBg: {
+    height: 32,
+    paddingHorizontal: 12,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  chipButtonSelected: {
-    backgroundColor: 'rgba(239, 210, 141, 0.18)',
-    borderColor: '#EFD28D',
   },
   chipText: {
     color: '#A8A296',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: THEME.typography.fontBody || 'sans-serif',
   },
   chipTextSelected: {
     color: '#FEDF99',
-    fontWeight: '800',
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
+    fontWeight: '900',
+    ...THEME.effects.textShadowHigh,
   },
   inputWrapper: {
     width: '100%',

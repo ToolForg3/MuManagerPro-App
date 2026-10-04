@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Modal,
   ImageBackground,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -6525,63 +6526,74 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
       {/* Modal Nivel GM */}
       <Modal visible={gmModalVisible} transparent animationType="fade" onRequestClose={() => setGmModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <Panel variant="box" style={{ width: '92%', maxWidth: 420, maxHeight: '90%', padding: 0, overflow: 'hidden' }}>
-            <MuCornerOrnaments size={12} />
-            <View style={{ padding: 18 }}>
-              <TituloSeccion titulo="ASIGNAR RANGO GM" subtitulo="Control de privilegios Season 6" />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Panel variant="box" style={{ width: '92%', maxWidth: 420, maxHeight: '90%', padding: 0, overflow: 'hidden' }}>
+              <MuCornerOrnaments size={12} />
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 18 }}>
+                <TituloSeccion titulo="ASIGNAR RANGO GM" subtitulo="Control de privilegios Season 6" />
 
-              <Text style={[styles.label, { marginTop: 12 }]}>Nombre del Personaje:</Text>
-              <View style={{ zIndex: 10 }}>
-                <AutocompleteInput
-                  value={gmCharNameInput}
-                  onChangeText={setGmCharNameInput}
-                  suggestions={fixesCharSuggestions}
-                  placeholder="Nombre exacto del PJ"
-                  icon="account"
-                  maxSuggestions={5}
-                />
-              </View>
-
-              <Text style={[styles.label, { marginTop: 14 }]}>Rango Administrativo:</Text>
-              <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
-                {([0, 1, 2, 3] as const).map((lvl) => (
-                  <TouchableOpacity
-                    key={`gm_level_opt_${lvl}`}
-                    style={[
-                      styles.subTabBtn,
-                      selectedGmLevel === lvl && styles.subTabBtnActive,
-                      { flex: 1, paddingVertical: 8 },
-                    ]}
-                    onPress={() => setSelectedGmLevel(lvl)}
-                  >
-                    <Text style={[styles.subTabBtnText, selectedGmLevel === lvl && styles.subTabBtnTextActive]}>
-                      {lvl === 0 ? 'Normal' : lvl === 1 ? 'Helper' : lvl === 2 ? 'GM' : 'Admin'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
-                <View style={{ flex: 1 }}>
-                  <BotonPiedra
-                    titulo="CANCELAR"
-                    altura={42}
-                    onPress={() => setGmModalVisible(false)}
+                <Text style={[styles.label, { marginTop: 12 }]}>Nombre del Personaje:</Text>
+                <View style={{ zIndex: 10 }}>
+                  <AutocompleteInput
+                    value={gmCharNameInput}
+                    onChangeText={setGmCharNameInput}
+                    suggestions={fixesCharSuggestions}
+                    placeholder="Nombre exacto del PJ"
+                    icon="account"
+                    maxSuggestions={5}
                   />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <BotonOro
-                    titulo="APLICAR"
-                    icono="shield"
-                    altura={42}
-                    cargando={savingGmLevel}
-                    disabled={savingGmLevel}
-                    onPress={handleSaveGmLevelSubmit}
-                  />
+
+                <Text style={[styles.label, { marginTop: 14 }]}>Rango Administrativo:</Text>
+                <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
+                  {([0, 1, 2, 3] as const).map((lvl) => {
+                    const isAct = selectedGmLevel === lvl;
+                    return (
+                      <TouchableOpacity
+                        key={`gm_level_opt_${lvl}`}
+                        style={{ flex: 1, height: 36, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setSelectedGmLevel(lvl)}
+                        activeOpacity={0.8}
+                      >
+                        <ImageBackground
+                          source={isAct ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={[styles.subTabBtn, isAct && styles.subTabBtnActive, { height: 36, paddingVertical: 0 }]}
+                          resizeMode="stretch"
+                        >
+                          <Text style={[styles.subTabBtnText, isAct && styles.subTabBtnTextActive]}>
+                            {lvl === 0 ? 'Normal' : lvl === 1 ? 'Helper' : lvl === 2 ? 'GM' : 'Admin'}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-              </View>
-            </View>
-          </Panel>
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+                  <View style={{ flex: 1 }}>
+                    <BotonPiedra
+                      titulo="CANCELAR"
+                      altura={42}
+                      onPress={() => setGmModalVisible(false)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <BotonOro
+                      titulo="APLICAR"
+                      icono="shield"
+                      altura={42}
+                      cargando={savingGmLevel}
+                      disabled={savingGmLevel}
+                      onPress={handleSaveGmLevelSubmit}
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            </Panel>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -6913,124 +6925,140 @@ const getInitialPrizePresets = (): PrizePresetItem[] => [
       </Modal>
 
       {/* Modal Banear Únicamente Personaje */}
-      <Modal visible={charBanModalVisible} transparent animationType="fade">
+      <Modal visible={charBanModalVisible} transparent animationType="fade" onRequestClose={() => setCharBanModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <Panel variant="box" style={[styles.modalContent, { maxHeight: '90%', padding: 18 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <MuIcon name="gavel" size={20} color="#EFD28D" />
-              <Text style={[styles.modalTitle, { color: '#EFD28D', marginBottom: 0 }]}>Banear Personaje</Text>
-            </View>
-            <Text style={styles.label}>Nombre del Personaje:</Text>
-            <View style={{ zIndex: 10, marginTop: 4 }}>
-              <AutocompleteInput
-                value={banCharNameInput}
-                onChangeText={setBanCharNameInput}
-                suggestions={Array.from(new Set([...playersList.map((p) => p.charName), ...fixesCharSuggestions]))}
-                placeholder="Nombre del Personaje..."
-                icon="account-outline"
-                autoCapitalize="none"
-                maxSuggestions={5}
-              />
-            </View>
-            <Text style={[styles.label, { marginTop: 12 }]}>Motivo del Baneo:</Text>
-            <TextInput
-              style={{
-                height: 44,
-                backgroundColor: THEME.colors.deepForge,
-                borderColor: THEME.colors.borde,
-                borderWidth: 1,
-                borderRadius: THEME.shapes.radioEsquina,
-                paddingHorizontal: 12,
-                color: THEME.colors.texto,
-                fontSize: 13,
-                marginTop: 6,
-              }}
-              value={banCharReasonInput}
-              onChangeText={setBanCharReasonInput}
-              placeholder="Ej: Infracción de reglas de personaje"
-              placeholderTextColor={THEME.colors.textMuted}
-            />
-            <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
-              <View style={{ flex: 1 }}>
-                <BotonPiedra
-                  titulo="CANCELAR"
-                  altura={42}
-                  onPress={() => setCharBanModalVisible(false)}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Panel variant="box" style={[styles.modalContent, { maxHeight: '90%', padding: 18, overflow: 'hidden' }]}>
+              <MuCornerOrnaments size={12} />
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 0 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <MuIcon name="gavel" size={20} color="#EFD28D" />
+                  <Text style={[styles.modalTitle, { color: '#EFD28D', marginBottom: 0 }]}>Banear Personaje</Text>
+                </View>
+                <Text style={styles.label}>Nombre del Personaje:</Text>
+                <View style={{ zIndex: 10, marginTop: 4 }}>
+                  <AutocompleteInput
+                    value={banCharNameInput}
+                    onChangeText={setBanCharNameInput}
+                    suggestions={Array.from(new Set([...playersList.map((p) => p.charName), ...fixesCharSuggestions]))}
+                    placeholder="Nombre del Personaje..."
+                    icon="account-outline"
+                    autoCapitalize="none"
+                    maxSuggestions={5}
+                  />
+                </View>
+                <Text style={[styles.label, { marginTop: 12 }]}>Motivo del Baneo:</Text>
+                <TextInput
+                  style={{
+                    height: 44,
+                    backgroundColor: THEME.colors.deepForge,
+                    borderColor: THEME.colors.borde,
+                    borderWidth: 1,
+                    borderRadius: THEME.shapes.radioEsquina,
+                    paddingHorizontal: 12,
+                    color: THEME.colors.texto,
+                    fontSize: 13,
+                    marginTop: 6,
+                  }}
+                  value={banCharReasonInput}
+                  onChangeText={setBanCharReasonInput}
+                  placeholder="Ej: Infracción de reglas de personaje"
+                  placeholderTextColor={THEME.colors.textMuted}
                 />
-              </View>
-              <View style={{ flex: 1 }}>
-                <BotonBrasa
-                  titulo="BANEAR PJ"
-                  icono="gavel"
-                  altura={42}
-                  cargando={savingCharBan}
-                  disabled={savingCharBan}
-                  onPress={handleSaveCharBanSubmit}
-                />
-              </View>
-            </View>
-          </Panel>
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+                  <View style={{ flex: 1 }}>
+                    <BotonPiedra
+                      titulo="CANCELAR"
+                      altura={42}
+                      onPress={() => setCharBanModalVisible(false)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <BotonBrasa
+                      titulo="BANEAR PJ"
+                      icono="gavel"
+                      altura={42}
+                      cargando={savingCharBan}
+                      disabled={savingCharBan}
+                      onPress={handleSaveCharBanSubmit}
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            </Panel>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
       {/* Modal Bloquear Cuenta */}
-      <Modal visible={banModalVisible} transparent animationType="fade">
+      <Modal visible={banModalVisible} transparent animationType="fade" onRequestClose={() => setBanModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <Panel variant="box" style={[styles.modalContent, { maxHeight: '90%', padding: 18 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <MuIcon name="lock" size={20} color="#E2703A" />
-              <Text style={[styles.modalTitle, { color: '#E2703A', marginBottom: 0 }]}>Bloquear Cuenta</Text>
-            </View>
-            <Text style={styles.label}>AccountID a Bloquear:</Text>
-            <View style={{ zIndex: 10, marginTop: 4 }}>
-              <AutocompleteInput
-                value={banAccountInput}
-                onChangeText={setBanAccountInput}
-                suggestions={fixesAccountSuggestions}
-                placeholder="AccountID"
-                icon="account"
-                autoCapitalize="none"
-                maxSuggestions={5}
-              />
-            </View>
-            <Text style={[styles.label, { marginTop: 12 }]}>Motivo del Bloqueo:</Text>
-            <TextInput
-              style={{
-                height: 44,
-                backgroundColor: THEME.colors.deepForge,
-                borderColor: THEME.colors.borde,
-                borderWidth: 1,
-                borderRadius: THEME.shapes.radioEsquina,
-                paddingHorizontal: 12,
-                color: THEME.colors.texto,
-                fontSize: 13,
-                marginTop: 6,
-              }}
-              value={banReasonInput}
-              onChangeText={setBanReasonInput}
-              placeholder="Ej: Uso de programas ilegales"
-              placeholderTextColor={THEME.colors.textMuted}
-            />
-            <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
-              <View style={{ flex: 1 }}>
-                <BotonPiedra
-                  titulo="CANCELAR"
-                  altura={42}
-                  onPress={() => setBanModalVisible(false)}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Panel variant="box" style={[styles.modalContent, { maxHeight: '90%', padding: 18, overflow: 'hidden' }]}>
+              <MuCornerOrnaments size={12} />
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 0 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <MuIcon name="lock" size={20} color="#E2703A" />
+                  <Text style={[styles.modalTitle, { color: '#E2703A', marginBottom: 0 }]}>Bloquear Cuenta</Text>
+                </View>
+                <Text style={styles.label}>AccountID a Bloquear:</Text>
+                <View style={{ zIndex: 10, marginTop: 4 }}>
+                  <AutocompleteInput
+                    value={banAccountInput}
+                    onChangeText={setBanAccountInput}
+                    suggestions={fixesAccountSuggestions}
+                    placeholder="AccountID"
+                    icon="account"
+                    autoCapitalize="none"
+                    maxSuggestions={5}
+                  />
+                </View>
+                <Text style={[styles.label, { marginTop: 12 }]}>Motivo del Bloqueo:</Text>
+                <TextInput
+                  style={{
+                    height: 44,
+                    backgroundColor: THEME.colors.deepForge,
+                    borderColor: THEME.colors.borde,
+                    borderWidth: 1,
+                    borderRadius: THEME.shapes.radioEsquina,
+                    paddingHorizontal: 12,
+                    color: THEME.colors.texto,
+                    fontSize: 13,
+                    marginTop: 6,
+                  }}
+                  value={banReasonInput}
+                  onChangeText={setBanReasonInput}
+                  placeholder="Ej: Uso de programas ilegales"
+                  placeholderTextColor={THEME.colors.textMuted}
                 />
-              </View>
-              <View style={{ flex: 1 }}>
-                <BotonBrasa
-                  titulo="BLOQUEAR"
-                  icono="lock"
-                  altura={42}
-                  cargando={savingBan}
-                  disabled={savingBan}
-                  onPress={handleSaveBanSubmit}
-                />
-              </View>
-            </View>
-          </Panel>
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+                  <View style={{ flex: 1 }}>
+                    <BotonPiedra
+                      titulo="CANCELAR"
+                      altura={42}
+                      onPress={() => setBanModalVisible(false)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <BotonBrasa
+                      titulo="BLOQUEAR"
+                      icono="lock"
+                      altura={42}
+                      cargando={savingBan}
+                      disabled={savingBan}
+                      onPress={handleSaveBanSubmit}
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            </Panel>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 

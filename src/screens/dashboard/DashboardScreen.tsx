@@ -112,13 +112,13 @@ export const DashboardScreen = () => {
   const getPlanBadge = (level: number) => {
     switch (level) {
       case 3:
-        return { label: 'Oro', color: '#FFD700', bg: 'rgba(255, 215, 0, 0.15)' };
+        return { label: t('planGold'), color: '#FFD700', bg: 'rgba(255, 215, 0, 0.15)' };
       case 2:
-        return { label: 'Plata', color: '#B0BEC5', bg: 'rgba(176, 190, 197, 0.15)' };
+        return { label: t('planSilver'), color: '#B0BEC5', bg: 'rgba(176, 190, 197, 0.15)' };
       case 1:
-        return { label: 'Bronce', color: '#CD7F32', bg: 'rgba(205, 127, 50, 0.15)' };
+        return { label: t('planBronze'), color: '#CD7F32', bg: 'rgba(205, 127, 50, 0.15)' };
       default:
-        return { label: 'Free', color: THEME.colors.textoSecundario, bg: 'rgba(200, 190, 175, 0.15)' };
+        return { label: t('planFree'), color: THEME.colors.textoSecundario, bg: 'rgba(200, 190, 175, 0.15)' };
     }
   };
 
@@ -131,7 +131,7 @@ export const DashboardScreen = () => {
     >
       <Header
         title="Mu Manager PRO"
-        subtitle="Panel de Control Principal"
+        subtitle={t('dashboardSubtitle')}
         showConnectionBadge={true}
         rightAction={{
           icon: 'refresh',
@@ -158,36 +158,36 @@ export const DashboardScreen = () => {
           <View style={styles.boxHeaderRow}>
             <View style={styles.rowAlign}>
               <View style={[styles.jewelDot, isConnected ? styles.jewelDotOnline : styles.jewelDotOffline]} />
-              <Text style={styles.boxHeaderTitle}>PANEL DE CONEXIÓN</Text>
+              <Text style={styles.boxHeaderTitle}>{t('connectionPanelTitle')}</Text>
             </View>
             <Text style={[styles.boxHeaderStatus, isConnected ? styles.textJade : styles.textBrasa]}>
-              {isConnected ? 'ONLINE' : 'DESCONECTADO'}
+              {isConnected ? t('online').toUpperCase() : t('disconnected')}
             </Text>
           </View>
 
           <View style={styles.connectionGrid}>
             <View style={styles.connectionCell}>
-              <Text style={styles.cellLabel}>HOST</Text>
+              <Text style={styles.cellLabel}>{t('cellHost')}</Text>
               <Text style={styles.cellValueGold} numberOfLines={1}>
                 {config?.host ? maskHost(config.host) : '127.0.0.1'}
               </Text>
             </View>
             <View style={styles.connectionCell}>
-              <Text style={styles.cellLabel}>BASE DE DATOS</Text>
+              <Text style={styles.cellLabel}>{t('cellDatabase')}</Text>
               <Text style={styles.cellValueGold} numberOfLines={1}>
                 {config?.database || 'MuOnline'}
               </Text>
             </View>
             <View style={styles.connectionCell}>
-              <Text style={styles.cellLabel}>CONEXIÓN</Text>
+              <Text style={styles.cellLabel}>{t('cellConnection')}</Text>
               <Text style={[styles.cellValue, isConnected ? styles.textJade : styles.textBrasa]} numberOfLines={1}>
-                {isConnected ? 'ONLINE' : 'OFFLINE'}
+                {isConnected ? t('online').toUpperCase() : t('offline').toUpperCase()}
               </Text>
             </View>
             <View style={styles.connectionCell}>
-              <Text style={styles.cellLabel}>TIPO DE CUENTA</Text>
+              <Text style={styles.cellLabel}>{t('cellAccountType')}</Text>
               <Text style={styles.cellValueGold} numberOfLines={1}>
-                {isConnected ? (metrics?.accountType || 'VIP PRO') : 'OFFLINE'}
+                {isConnected ? (metrics?.accountType || 'VIP PRO') : t('offline').toUpperCase()}
               </Text>
             </View>
           </View>
@@ -198,7 +198,7 @@ export const DashboardScreen = () => {
           <View style={styles.boxHeaderRow}>
             <View style={styles.rowAlign}>
               <MuIcon name="sword-cross" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
-              <Text style={styles.boxHeaderTitle}>ESTADO GENERAL DEL REINO</Text>
+              <Text style={styles.boxHeaderTitle}>{t('realmStatusTitle')}</Text>
             </View>
           </View>
 
@@ -210,7 +210,7 @@ export const DashboardScreen = () => {
               onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas' })}
             >
               <View style={styles.kpiBox}>
-                <Text style={styles.kpiLabel}>CUENTAS TOTALES</Text>
+                <Text style={styles.kpiLabel}>{t('metricAccounts').toUpperCase()}</Text>
                 <Text style={styles.kpiValueGold}>{metrics?.Cuentas || 0}</Text>
               </View>
             </TouchableOpacity>
@@ -222,7 +222,7 @@ export const DashboardScreen = () => {
               onPress={() => navigation.navigate('Jugadores', { subTab: 'personajes' })}
             >
               <View style={styles.kpiBox}>
-                <Text style={styles.kpiLabel}>PERSONAJES</Text>
+                <Text style={styles.kpiLabel}>{t('metricCharacters').toUpperCase()}</Text>
                 <Text style={styles.kpiValueGold}>{metrics?.Personajes || 0}</Text>
               </View>
             </TouchableOpacity>
@@ -234,7 +234,7 @@ export const DashboardScreen = () => {
               onPress={() => navigation.navigate('Jugadores', { subTab: 'online' })}
             >
               <View style={styles.kpiBox}>
-                <Text style={styles.kpiLabel}>ONLINE</Text>
+                <Text style={styles.kpiLabel}>{t('metricOnline').toUpperCase()}</Text>
                 <Text style={[styles.kpiValueGold, styles.textJade]}>{metrics?.Online || 0}</Text>
               </View>
             </TouchableOpacity>
@@ -246,7 +246,7 @@ export const DashboardScreen = () => {
               onPress={() => navigation.navigate('Jugadores', { subTab: 'cuentas', filter: 'vip' })}
             >
               <View style={styles.kpiBox}>
-                <Text style={styles.kpiLabel}>VIP ACTIVAS</Text>
+                <Text style={styles.kpiLabel}>{t('metricVip').toUpperCase()}</Text>
                 <Text style={styles.kpiValueGold}>{metrics?.VIP || 0}</Text>
               </View>
             </TouchableOpacity>
@@ -258,7 +258,7 @@ export const DashboardScreen = () => {
               onPress={() => navigation.navigate('Jugadores', { subTab: 'clanes' })}
             >
               <View style={styles.kpiBoxFull}>
-                <Text style={styles.kpiLabel}>CLANES / GUILDS</Text>
+                <Text style={styles.kpiLabel}>{t('metricGuilds').toUpperCase()}</Text>
                 <Text style={styles.kpiValueGold}>{metrics?.Guilds || 0}</Text>
               </View>
             </TouchableOpacity>
@@ -269,9 +269,9 @@ export const DashboardScreen = () => {
         <View style={styles.sectionHeaderRow}>
           <View style={styles.rowAlign}>
             <MuIcon name="flash" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
-            <Text style={styles.sectionTitleText}>ACCIONES DE COMANDO</Text>
+            <Text style={styles.sectionTitleText}>{t('commandActionsTitle')}</Text>
           </View>
-          <Text style={styles.sectionSubTitleText}>OPERACIONES</Text>
+          <Text style={styles.sectionSubTitleText}>{t('commandActionsSubtitle')}</Text>
         </View>
         <Image
           source={STITCH_ASSETS.decorations.goldDividerLine}
@@ -294,8 +294,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="shield-lock" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Seguridad</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>BLOQUEOS / PIN</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdSecurity')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdSecuritySub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -314,8 +314,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="account-search" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Buscar cuenta</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>LOCALIZAR REGISTRO</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdSearchAccount')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdSearchAccountSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -334,8 +334,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="account-group" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Ver personajes</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>LISTA HÉROES</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdViewCharacters')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdViewCharactersSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -354,8 +354,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="cog" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Ajustes</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>CONFIGURACIÓN</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdSettings')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdSettingsSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -365,9 +365,9 @@ export const DashboardScreen = () => {
         <View style={styles.sectionHeaderRow}>
           <View style={styles.rowAlign}>
             <MuIcon name="crown" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
-            <Text style={styles.sectionTitleText}>COMANDOS IMPERIALES ADMIN</Text>
+            <Text style={styles.sectionTitleText}>{t('imperialCommandsTitle')}</Text>
           </View>
-          <Text style={styles.sectionSubTitleText}>ADMIN</Text>
+          <Text style={styles.sectionSubTitleText}>{t('imperialCommandsSubtitle')}</Text>
         </View>
         <Image
           source={STITCH_ASSETS.decorations.goldDividerLine}
@@ -390,8 +390,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="treasure-chest" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Premios</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>ENTREGAR LOOT</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdPrizes')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdPrizesSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -410,8 +410,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="sword-cross" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Clanes</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>GESTIÓN GUILDS</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdGuilds')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdGuildsSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -430,8 +430,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="package-variant-closed" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Starter Kit</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>PACKS NOVATO</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdStarterKit')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdStarterKitSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -450,8 +450,8 @@ export const DashboardScreen = () => {
                 <MuIcon name="shield-crown" size={22} color={THEME.colors.oroClaro} />
               </View>
               <View style={styles.commandTextWrap}>
-                <Text style={styles.commandTitle} numberOfLines={1}>Staff GM</Text>
-                <Text style={styles.commandSub} numberOfLines={1}>GAME MASTERS</Text>
+                <Text style={styles.commandTitle} numberOfLines={1}>{t('cmdStaffGm')}</Text>
+                <Text style={styles.commandSub} numberOfLines={1}>{t('cmdStaffGmSub')}</Text>
               </View>
             </ImageBackground>
           </TouchableOpacity>
@@ -461,7 +461,7 @@ export const DashboardScreen = () => {
         <View style={styles.sectionHeaderRow}>
           <View style={styles.rowAlign}>
             <MuIcon name="book-open-page-variant" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
-            <Text style={styles.sectionTitleText}>PADRÓN DE CIUDADANOS RECIENTES</Text>
+            <Text style={styles.sectionTitleText}>{t('recentAccounts').toUpperCase()}</Text>
           </View>
           <Text style={styles.sectionSubTitleText}>REGISTROS</Text>
         </View>
@@ -474,11 +474,11 @@ export const DashboardScreen = () => {
         <Panel tipo="box" conEsquineros style={styles.accountsListCard}>
           {recentAccounts.length === 0 ? (
             <View style={styles.emptyStateBox}>
-              <Text style={styles.emptyStateText}>Sin cuentas recientes registradas</Text>
+              <Text style={styles.emptyStateText}>{t('noRecentAccounts')}</Text>
               <View style={styles.emptyStateCols}>
-                <Text style={styles.colHeaderGold}>Cuenta</Text>
-                <Text style={styles.colHeaderMuted}>Estado</Text>
-                <Text style={styles.colHeaderMuted}>Fecha</Text>
+                <Text style={styles.colHeaderGold}>{t('accId')}</Text>
+                <Text style={styles.colHeaderMuted}>{t('status')}</Text>
+                <Text style={styles.colHeaderMuted}>{t('accCreatedDate')}</Text>
               </View>
             </View>
           ) : (
@@ -507,7 +507,7 @@ export const DashboardScreen = () => {
                       <View style={styles.accStatusRow}>
                         <View style={[styles.accStatusDot, { backgroundColor: acc.online ? THEME.colors.jade : THEME.colors.textoSecundario }]} />
                         <Text style={[styles.accStatusText, acc.online ? styles.textJade : styles.textMuted]}>
-                          {acc.online ? 'CIUDADANO EN LÍNEA' : 'DESCONECTADO'}
+                          {acc.online ? t('online').toUpperCase() : t('offline').toUpperCase()}
                         </Text>
                       </View>
                     </View>
@@ -526,7 +526,7 @@ export const DashboardScreen = () => {
         <View style={styles.sectionHeaderRow}>
           <View style={styles.rowAlign}>
             <MuIcon name="shield-check" size={14} color={THEME.colors.oroClaro} containerStyle={{ marginRight: 4 }} />
-            <Text style={styles.sectionTitleText}>CRÓNICA DE ACCIONES ADMIN</Text>
+            <Text style={styles.sectionTitleText}>{t('cmdAuditLogsSub')}</Text>
           </View>
           <Text style={styles.sectionSubTitleText}>AUDIT</Text>
         </View>
@@ -539,11 +539,11 @@ export const DashboardScreen = () => {
         <Panel tipo="box" conEsquineros style={styles.logsCard}>
           {adminLogs.length === 0 ? (
             <View style={styles.emptyStateBox}>
-              <Text style={styles.emptyStateText}>Sin registros de auditoría recientes</Text>
+              <Text style={styles.emptyStateText}>{t('auditLogsSub')}</Text>
               <View style={styles.emptyStateCols}>
-                <Text style={styles.colHeaderGold}>Evento</Text>
-                <Text style={styles.colHeaderMuted}>Operador</Text>
-                <Text style={styles.colHeaderMuted}>Hora</Text>
+                <Text style={styles.colHeaderGold}>{t('actions')}</Text>
+                <Text style={styles.colHeaderMuted}>{t('rankPlayer')}</Text>
+                <Text style={styles.colHeaderMuted}>{t('pkTimeLabel')}</Text>
               </View>
             </View>
           ) : (
@@ -574,12 +574,12 @@ export const DashboardScreen = () => {
           )}
 
           <MuButton
-            titulo="VER TODO EL HISTORIAL"
+            titulo={t('view') + ' ' + t('all') + ' ' + t('details')}
             icono="history"
             variante="primary"
             altura={44}
             onPress={handleOpenAllLogs}
-            accessibilityLabel="Ver todo el historial"
+            accessibilityLabel={t('view') + ' ' + t('all')}
             style={{ marginTop: 8 }}
           />
         </Panel>
@@ -588,7 +588,7 @@ export const DashboardScreen = () => {
         <Image
           source={STITCH_ASSETS.decorations.gothicFooterBanner}
           style={styles.windowFooterOrnament}
-          resizeMode="contain"
+          resizeMode="stretch"
         />
       </ScrollView>
 

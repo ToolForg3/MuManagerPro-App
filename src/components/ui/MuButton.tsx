@@ -202,6 +202,8 @@ const styles = StyleSheet.create({
   touchable: {
     justifyContent: 'center',
     alignItems: 'stretch',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
   buttonFrame: {
     width: '100%',

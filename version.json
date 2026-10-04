@@ -1,10 +1,10 @@
 {
-  "version": "2.4.11",
+  "version": "2.4.12",
   "minRequiredVersion": "2.0.8",
   "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "publishedAt": "2026-10-03T22:30:00.000Z",
+  "publishedAt": "2026-10-03T23:30:00.000Z",
   "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
-  "build": 153,
+  "build": 154,
   "forceUpdate": false,
-  "changelog": "MuManager PRO v2.4.11 (Build 153) - Persistencia de Sesión y Resiliencia en Actualizaciones:\n• PERSISTENCIA DE SESIÓN AL ACTUALIZAR: Corrección definitiva del cierre de sesión tras actualizar el APK. Los tokens de autenticación se cargan y sincronizan atómicamente antes de cada consulta SQL.\n• REVALIDACIÓN TRANSPARENTE EN SEGUNDO PLANO: Recuperación silenciosa ante respuestas 401 mediante la ventana de gracia criptográfica de sesión deslizante (30 días), sin interrumpir al usuario ni exigir reautenticación.\n• ERRADICACIÓN DE AVISOS DUPLICADOS: Sistema anti-ráfaga con debounce de 3 segundos en avisos de sesión finalizada, eliminando modales repetidos ante consultas concurrentes de métricas y cuentas.\n• PROTECCIÓN DE CREDENCIALES OFFLINE: Modo offline resiliente con hash PBKDF2/SHA-256 en SecureStorage, impidiendo desconexiones accidentales por latencia o micro-cortes de red."
+  "changelog": "MuManager PRO v2.4.12 (Build 154) - Optimización Visual, Nitidez y Adaptabilidad Multi-Resolución:\n• ADAPTABILIDAD MULTI-RESOLUCIÓN EN CELULARES: Optimización integral en todas las pantallas y modales para dispositivos desde 320dp hasta 480dp+. Cero anchos desbordados o recortes de información.\n• BLINDAJE DE CABECERAS Y MODALES: Ajuste dinámico de cabeceras compactas para evitar aplastamiento de controles. Integración de ScrollView y evasión de teclado (KeyboardAvoidingView) en todos los modales administrativos y de herramientas.\n• MÁXIMA NITIDEZ Y CONTRASTE WCAG AAA: Sombra tipográfica profunda sobre texturas oscuras y metálicas de MU Season 6, garantizando legibilidad nítida cristalina en botones, chips y selectores.\n• RECORTES PRECISOS ANTI-SANGRADO: Blindaje de contenedores táctiles en botones y pestañas con recorte de esquinas, eliminando cualquier halo, distorsión o sangrado en densidades DPI altas."
 }

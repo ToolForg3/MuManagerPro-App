@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   Linking,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../components/common/GothicAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1665,99 +1667,111 @@ export const ConfigScreen = () => {
       </ScrollView>
 
       {/* Modal Guardar Perfil */}
-      <Modal visible={saveProfileModalVisible} transparent animationType="fade">
+      <Modal visible={saveProfileModalVisible} transparent animationType="fade" onRequestClose={() => setSaveProfileModalVisible(false)}>
         <View style={styles.adminModalOverlay}>
-          <View style={styles.adminModalContent}>
-            <View style={styles.adminModalHeader}>
-              <View style={styles.adminModalIconWrap}>
-                <MuIcon name="server-plus" size={24} color={THEME.colors.primaryOrange} />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={styles.adminModalContent}>
+              <View style={styles.adminModalHeader}>
+                <View style={styles.adminModalIconWrap}>
+                  <MuIcon name="server-plus" size={24} color={THEME.colors.primaryOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.adminModalTitle}>Guardar Perfil</Text>
+                  <Text style={styles.adminModalSubtitle}>Conexión Actual ({host}:{port})</Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminModalTitle}>Guardar Perfil</Text>
-                <Text style={styles.adminModalSubtitle}>Conexión Actual ({host}:{port})</Text>
+              <Text style={styles.adminModalDesc}>
+                Asigna un nombre para identificar este servidor en tu lista rápida:
+              </Text>
+              <TextInput
+                style={styles.adminModalInput}
+                placeholder="Ej: Servidor VPS Producción"
+                placeholderTextColor={THEME.colors.textMuted}
+                value={newProfileName}
+                onChangeText={setNewProfileName}
+                maxLength={30}
+                autoFocus
+              />
+              <View style={styles.adminModalButtons}>
+                <BotonPiedra
+                  titulo="Cancelar"
+                  onPress={() => setSaveProfileModalVisible(false)}
+                  altura={38}
+                  style={{ minWidth: 90 }}
+                />
+                <BotonOro
+                  titulo="Guardar"
+                  onPress={handleSaveProfile}
+                  altura={38}
+                  style={{ minWidth: 90 }}
+                />
               </View>
             </View>
-            <Text style={styles.adminModalDesc}>
-              Asigna un nombre para identificar este servidor en tu lista rápida:
-            </Text>
-            <TextInput
-              style={styles.adminModalInput}
-              placeholder="Ej: Servidor VPS Producción"
-              placeholderTextColor={THEME.colors.textMuted}
-              value={newProfileName}
-              onChangeText={setNewProfileName}
-              maxLength={30}
-              autoFocus
-            />
-            <View style={styles.adminModalButtons}>
-              <BotonPiedra
-                titulo="Cancelar"
-                onPress={() => setSaveProfileModalVisible(false)}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
-              <BotonOro
-                titulo="Guardar"
-                onPress={handleSaveProfile}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
-            </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
       {/* Modal Configurar PIN */}
-      <Modal visible={pinModalVisible} transparent animationType="fade">
+      <Modal visible={pinModalVisible} transparent animationType="fade" onRequestClose={() => setPinModalVisible(false)}>
         <View style={styles.adminModalOverlay}>
-          <View style={styles.adminModalContent}>
-            <View style={styles.adminModalHeader}>
-              <View style={styles.adminModalIconWrap}>
-                <MuIcon name="shield-key" size={24} color={THEME.colors.primaryOrange} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminModalTitle}>Establecer PIN</Text>
-                <Text style={styles.adminModalSubtitle}>Bloqueo de Seguridad (4 dígitos)</Text>
-              </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={styles.adminModalContent}>
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 0 }}>
+                <View style={styles.adminModalHeader}>
+                  <View style={styles.adminModalIconWrap}>
+                    <MuIcon name="shield-key" size={24} color={THEME.colors.primaryOrange} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.adminModalTitle}>Establecer PIN</Text>
+                    <Text style={styles.adminModalSubtitle}>Bloqueo de Seguridad (4 dígitos)</Text>
+                  </View>
+                </View>
+                <Text style={styles.adminModalDesc}>
+                  Ingresa el nuevo código PIN numérico de 4 dígitos:
+                </Text>
+                <TextInput
+                  style={styles.adminModalInput}
+                  placeholder="Nuevo PIN (4 dígitos)"
+                  placeholderTextColor={THEME.colors.textMuted}
+                  value={newPinInput}
+                  onChangeText={(v) => setNewPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  secureTextEntry
+                />
+                <TextInput
+                  style={styles.adminModalInput}
+                  placeholder="Confirmar PIN (4 dígitos)"
+                  placeholderTextColor={THEME.colors.textMuted}
+                  value={confirmPinInput}
+                  onChangeText={(v) => setConfirmPinInput(v.replace(/\D/g, '').slice(0, 4))}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  secureTextEntry
+                />
+                <View style={styles.adminModalButtons}>
+                  <BotonPiedra
+                    titulo="Cancelar"
+                    onPress={() => setPinModalVisible(false)}
+                    altura={38}
+                    style={{ minWidth: 90 }}
+                  />
+                  <BotonOro
+                    titulo="Guardar PIN"
+                    onPress={handleSavePin}
+                    altura={38}
+                    style={{ minWidth: 100 }}
+                  />
+                </View>
+              </ScrollView>
             </View>
-            <Text style={styles.adminModalDesc}>
-              Ingresa el nuevo código PIN numérico de 4 dígitos:
-            </Text>
-            <TextInput
-              style={styles.adminModalInput}
-              placeholder="Nuevo PIN (4 dígitos)"
-              placeholderTextColor={THEME.colors.textMuted}
-              value={newPinInput}
-              onChangeText={(v) => setNewPinInput(v.replace(/\D/g, '').slice(0, 4))}
-              keyboardType="numeric"
-              maxLength={4}
-              secureTextEntry
-            />
-            <TextInput
-              style={styles.adminModalInput}
-              placeholder="Confirmar PIN (4 dígitos)"
-              placeholderTextColor={THEME.colors.textMuted}
-              value={confirmPinInput}
-              onChangeText={(v) => setConfirmPinInput(v.replace(/\D/g, '').slice(0, 4))}
-              keyboardType="numeric"
-              maxLength={4}
-              secureTextEntry
-            />
-            <View style={styles.adminModalButtons}>
-              <BotonPiedra
-                titulo="Cancelar"
-                onPress={() => setPinModalVisible(false)}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
-              <BotonOro
-                titulo="Guardar PIN"
-                onPress={handleSavePin}
-                altura={38}
-                style={{ minWidth: 100 }}
-              />
-            </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -1774,148 +1788,160 @@ export const ConfigScreen = () => {
       />
 
       {/* Secret Admin Master Key Modal (Option B) */}
-      <Modal visible={adminAuthModalVisible} transparent animationType="fade">
+      <Modal visible={adminAuthModalVisible} transparent animationType="fade" onRequestClose={() => setAdminAuthModalVisible(false)}>
         <View style={styles.adminModalOverlay}>
-          <View style={styles.adminModalContent}>
-            <View style={styles.adminModalHeader}>
-              <View style={styles.adminModalIconWrap}>
-                <MuIcon name="shield-lock" size={26} color={THEME.colors.primaryOrange} />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={styles.adminModalContent}>
+              <View style={styles.adminModalHeader}>
+                <View style={styles.adminModalIconWrap}>
+                  <MuIcon name="shield-lock" size={26} color={THEME.colors.primaryOrange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.adminModalTitle}>Acceso Administrador</Text>
+                  <Text style={styles.adminModalSubtitle}>Consola de Control de Celulares</Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminModalTitle}>Acceso Administrador</Text>
-                <Text style={styles.adminModalSubtitle}>Consola de Control de Celulares</Text>
+              <Text style={styles.adminModalDesc}>
+                Ingresa la clave maestra del servidor para acceder a la gestión y telemetría de dispositivos:
+              </Text>
+              <TextInput
+                style={styles.adminModalInput}
+                placeholder="Clave Maestra de Administrador"
+                placeholderTextColor={THEME.colors.textMuted}
+                value={adminKeyInput}
+                onChangeText={setAdminKeyInput}
+                secureTextEntry
+                autoCapitalize="none"
+                autoFocus
+              />
+              <View style={styles.adminModalButtons}>
+                <BotonPiedra
+                  titulo="Cancelar"
+                  onPress={() => {
+                    setAdminAuthModalVisible(false);
+                    setAdminKeyInput('');
+                  }}
+                  altura={38}
+                  style={{ minWidth: 90 }}
+                />
+                <BotonOro
+                  titulo="Acceder"
+                  onPress={handleAdminAuthSubmit}
+                  disabled={verifyingAdminKey}
+                  cargando={verifyingAdminKey}
+                  altura={38}
+                  style={{ minWidth: 90 }}
+                />
               </View>
             </View>
-            <Text style={styles.adminModalDesc}>
-              Ingresa la clave maestra del servidor para acceder a la gestión y telemetría de dispositivos:
-            </Text>
-            <TextInput
-              style={styles.adminModalInput}
-              placeholder="Clave Maestra de Administrador"
-              placeholderTextColor={THEME.colors.textMuted}
-              value={adminKeyInput}
-              onChangeText={setAdminKeyInput}
-              secureTextEntry
-              autoCapitalize="none"
-              autoFocus
-            />
-            <View style={styles.adminModalButtons}>
-              <BotonPiedra
-                titulo="Cancelar"
-                onPress={() => {
-                  setAdminAuthModalVisible(false);
-                  setAdminKeyInput('');
-                }}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
-              <BotonOro
-                titulo="Acceder"
-                onPress={handleAdminAuthSubmit}
-                disabled={verifyingAdminKey}
-                cargando={verifyingAdminKey}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
-            </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
       {/* Modal Cambiar Contraseña del Usuario */}
       <Modal visible={changePwModalVisible} transparent animationType="fade" onRequestClose={() => setChangePwModalVisible(false)}>
         <View style={styles.adminModalOverlay}>
-          <View style={styles.adminModalContent}>
-            <View style={styles.adminModalHeader}>
-              <View style={styles.adminModalIconWrap}>
-                <MuIcon name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.adminModalTitle}>Cambiar Contraseña</Text>
-                <Text style={styles.adminModalSubtitle}>{userEmail || 'Cuenta de Administrador'}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setChangePwModalVisible(false)} style={{ padding: 4 }}>
-                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
-              </TouchableOpacity>
-            </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={styles.adminModalContent}>
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 0 }}>
+                <View style={styles.adminModalHeader}>
+                  <View style={styles.adminModalIconWrap}>
+                    <MuIcon name="lock-reset" size={24} color={THEME.colors.primaryOrange} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.adminModalTitle}>Cambiar Contraseña</Text>
+                    <Text style={styles.adminModalSubtitle}>{userEmail || 'Cuenta de Administrador'}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setChangePwModalVisible(false)} style={{ padding: 4 }}>
+                    <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
+                  </TouchableOpacity>
+                </View>
 
-            <Text style={styles.adminModalDesc}>
-              Ingresa tu contraseña actual y define una nueva clave de acceso de al menos 8 caracteres:
-            </Text>
+                <Text style={styles.adminModalDesc}>
+                  Ingresa tu contraseña actual y define una nueva clave de acceso de al menos 8 caracteres:
+                </Text>
 
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Contraseña Actual</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
-                <TextInput
-                  style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
-                  placeholder="Tu contraseña actual"
-                  placeholderTextColor={THEME.colors.textMuted}
-                  value={currentPwInput}
-                  onChangeText={setCurrentPwInput}
-                  secureTextEntry={!showCurrentPw}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={() => setShowCurrentPw(!showCurrentPw)} style={{ padding: 6 }}>
-                  <MuIcon name={showCurrentPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
-                </TouchableOpacity>
-              </View>
-            </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Contraseña Actual</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
+                    <TextInput
+                      style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
+                      placeholder="Tu contraseña actual"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={currentPwInput}
+                      onChangeText={setCurrentPwInput}
+                      secureTextEntry={!showCurrentPw}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity onPress={() => setShowCurrentPw(!showCurrentPw)} style={{ padding: 6 }}>
+                      <MuIcon name={showCurrentPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Nueva Contraseña (mínimo 8 caracteres)</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
-                <TextInput
-                  style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
-                  placeholder="Nueva contraseña"
-                  placeholderTextColor={THEME.colors.textMuted}
-                  value={newPwInput}
-                  onChangeText={setNewPwInput}
-                  secureTextEntry={!showNewPw}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={() => setShowNewPw(!showNewPw)} style={{ padding: 6 }}>
-                  <MuIcon name={showNewPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
-                </TouchableOpacity>
-              </View>
-            </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Nueva Contraseña (mínimo 8 caracteres)</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
+                    <TextInput
+                      style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
+                      placeholder="Nueva contraseña"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={newPwInput}
+                      onChangeText={setNewPwInput}
+                      secureTextEntry={!showNewPw}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity onPress={() => setShowNewPw(!showNewPw)} style={{ padding: 6 }}>
+                      <MuIcon name={showNewPw ? "eye-off" : "eye"} size={18} color={THEME.colors.textoSecundario} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
-            <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Confirmar Nueva Contraseña</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
-                <TextInput
-                  style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
-                  placeholder="Repite la nueva contraseña"
-                  placeholderTextColor={THEME.colors.textMuted}
-                  value={confirmPwInput}
-                  onChangeText={setConfirmPwInput}
-                  secureTextEntry={!showNewPw}
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ fontSize: 11, color: THEME.colors.textMuted, marginBottom: 4, textTransform: 'uppercase', fontWeight: '700' }}>Confirmar Nueva Contraseña</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: THEME.colors.casillaFondo, borderWidth: 1, borderColor: THEME.colors.borde, borderRadius: 2, paddingHorizontal: 10 }}>
+                    <TextInput
+                      style={{ flex: 1, color: THEME.colors.texto, paddingVertical: 8, fontSize: 14 }}
+                      placeholder="Repite la nueva contraseña"
+                      placeholderTextColor={THEME.colors.textMuted}
+                      value={confirmPwInput}
+                      onChangeText={setConfirmPwInput}
+                      secureTextEntry={!showNewPw}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                </View>
 
-            <View style={styles.adminModalButtons}>
-              <BotonPiedra
-                titulo="Cancelar"
-                onPress={() => {
-                  setChangePwModalVisible(false);
-                  setCurrentPwInput('');
-                  setNewPwInput('');
-                  setConfirmPwInput('');
-                }}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
-              <BotonOro
-                titulo="Guardar"
-                onPress={handleChangePassword}
-                disabled={isChangingPw}
-                cargando={isChangingPw}
-                altura={38}
-                style={{ minWidth: 90 }}
-              />
+                <View style={styles.adminModalButtons}>
+                  <BotonPiedra
+                    titulo="Cancelar"
+                    onPress={() => {
+                      setChangePwModalVisible(false);
+                      setCurrentPwInput('');
+                      setNewPwInput('');
+                      setConfirmPwInput('');
+                    }}
+                    altura={38}
+                    style={{ minWidth: 90 }}
+                  />
+                  <BotonOro
+                    titulo="Guardar"
+                    onPress={handleChangePassword}
+                    disabled={isChangingPw}
+                    cargando={isChangingPw}
+                    altura={38}
+                    style={{ minWidth: 90 }}
+                  />
+                </View>
+              </ScrollView>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 

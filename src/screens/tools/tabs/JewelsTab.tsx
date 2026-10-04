@@ -10,6 +10,8 @@ import {
   ScrollView,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { GothicAlert as Alert } from '../../../components/common/GothicAlert';
 import { MuIcon } from '../../../components/ui/MuIcon';
@@ -629,9 +631,12 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
           animationType="fade"
           onRequestClose={() => setShowJewelConfirmModal(false)}
         >
-          <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.modalOverlay}
+          >
             <Panel tipo="gold" conEsquineros={true} style={[styles.modalContent, { maxWidth: 420, maxHeight: '90%' }]}>
-              <ScrollView nestedScrollEnabled>
+              <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 <View style={styles.modalHeader}>
                   <MuIcon name="alert-octagon" size={26} color={THEME.colors.brasa} />
                   <Text style={styles.modalTitle}>
@@ -702,7 +707,7 @@ export const JewelsTab: React.FC<JewelsTabProps> = ({
                 </View>
               </ScrollView>
             </Panel>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     </ErrorBoundary>

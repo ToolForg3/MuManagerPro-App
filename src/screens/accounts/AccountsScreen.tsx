@@ -3838,26 +3838,37 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                       return (
                         <TouchableOpacity
                           key={`wh_cat_${cat.id}`}
-                          style={[
-                            styles.whCategoryPill,
-                            isSelected && styles.whCategoryPillActive,
-                          ]}
+                          style={{ height: 34, borderRadius: 2, overflow: 'hidden' }}
                           onPress={() => setCatalogCategory(cat.id)}
-                          activeOpacity={0.7}
+                          activeOpacity={0.8}
                         >
-                          <MuIcon
-                            name={cat.icon as any}
-                            size={16}
-                            color={isSelected ? '#000000' : '#FF9800'}
-                          />
-                          <Text
-                            style={[
-                              styles.whCategoryPillText,
-                              isSelected && styles.whCategoryPillTextActive,
-                            ]}
+                          <ImageBackground
+                            source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                            resizeMode="stretch"
+                            style={{
+                              height: 34,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingHorizontal: 12,
+                              gap: 6,
+                            }}
                           >
-                            {cat.name}
-                          </Text>
+                            <MuIcon
+                              name={cat.icon as any}
+                              size={15}
+                              color={isSelected ? '#FEDF99' : '#A8A296'}
+                            />
+                            <Text
+                              style={{
+                                color: isSelected ? '#FEDF99' : '#CDC6B9',
+                                fontWeight: isSelected ? '900' : '700',
+                                fontSize: 12,
+                                ...(isSelected ? THEME.effects.textShadowHigh : {}),
+                              }}
+                            >
+                              {cat.name}
+                            </Text>
+                          </ImageBackground>
                         </TouchableOpacity>
                       );
                     })}
@@ -4712,113 +4723,124 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
         onRequestClose={() => setShowUnlockModal(false)}
       >
         <View style={styles.detailModalOverlay}>
-          <View style={[styles.detailModalCard, { width: '90%', maxWidth: 360 }]}>
-            <View style={styles.detailHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MuIcon name="lock-open-outline" size={22} color="#FF9800" />
-                <Text style={styles.detailTitle}>Desbloquear Baúles</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowUnlockModal(false)} style={styles.closeModalBtn}>
-                <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginBottom: 14 }}>
-              Configura el número de baúles disponibles en <Text style={{ color: '#FFF', fontWeight: 'bold' }}>MEMB_INFO.WarehouseCount</Text> para la cuenta <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>{warehouseAccount}</Text>.
-            </Text>
-
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
-              {['5', '10', '20', '50'].map((preset) => {
-                const isAct = unlockCountInput === preset;
-                return (
-                  <TouchableOpacity
-                    key={`preset_${preset}`}
-                    style={{ flex: 1, height: 38, borderRadius: 2, overflow: 'hidden' }}
-                    onPress={() => setUnlockCountInput(preset)}
-                    activeOpacity={0.7}
-                  >
-                    <ImageBackground
-                      source={isAct ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
-                      style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
-                      resizeMode="stretch"
-                    >
-                      <Text
-                        style={[
-                          styles.presetPillText,
-                          isAct && styles.presetPillTextActive,
-                        ]}
-                      >
-                        {preset} Baúles
-                      </Text>
-                    </ImageBackground>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={[styles.detailModalCard, { width: '90%', maxWidth: 360, maxHeight: '90%' }]}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ flexGrow: 0 }}
+              >
+                <View style={styles.detailHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <MuIcon name="lock-open-outline" size={22} color="#FF9800" />
+                    <Text style={styles.detailTitle}>Desbloquear Baúles</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setShowUnlockModal(false)} style={styles.closeModalBtn}>
+                    <MuIcon name="close" size={20} color={THEME.colors.textoSecundario} />
                   </TouchableOpacity>
-                );
-              })}
-            </View>
+                </View>
 
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Total de Baúles (1 - 250)</Text>
-              <TextInput
-                style={styles.createInput}
-                value={unlockCountInput}
-                onChangeText={setUnlockCountInput}
-                keyboardType="number-pad"
-                placeholder="Ej: 20"
-                placeholderTextColor={THEME.colors.textMuted}
-                maxLength={3}
-              />
-            </View>
-
-            {/* Tarjeta de Expansión Oficial Season 6 (ExtWarehouse 1 y 2) */}
-            <View
-              style={{
-                backgroundColor: 'rgba(91, 141, 239, 0.06)',
-                borderRadius: THEME.shapes.radioEsquina,
-                padding: 10,
-                marginBottom: 10,
-                borderWidth: 1,
-                borderColor: 'rgba(91, 141, 239, 0.3)',
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <MuIcon name="arrow-expand-all" size={16} color={THEME.colors.arcano} />
-                <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
-                  Expansión de Baúl Oficial (ExtWarehouse)
+                <Text style={{ color: THEME.colors.textoSecundario, fontSize: 13, marginBottom: 14 }}>
+                  Configura el número de baúles disponibles en <Text style={{ color: '#FFF', fontWeight: 'bold' }}>MEMB_INFO.WarehouseCount</Text> para la cuenta <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>{warehouseAccount}</Text>.
                 </Text>
-              </View>
-              <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 8 }}>
-                Desbloquea las pestañas de Expansión 1 y 2 en el juego (<Text style={{ color: '#FFF' }}>AccountCharacter.ExtWarehouse = 2</Text>).
-              </Text>
-              <MuButton
-                variante="primary"
-                titulo="Activar Expansión 1 y 2 en Juego"
-                icono="lightning-bolt"
-                disabled={unlockingVaults}
-                onPress={handleActivateVaultExpansion}
-                compacto
-                altura={38}
-              />
-            </View>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-              <BotonPiedra
-                titulo="Cancelar"
-                onPress={() => setShowUnlockModal(false)}
-                disabled={unlockingVaults}
-                altura={42}
-                style={{ flex: 1 }}
-              />
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
+                  {['5', '10', '20', '50'].map((preset) => {
+                    const isAct = unlockCountInput === preset;
+                    return (
+                      <TouchableOpacity
+                        key={`preset_${preset}`}
+                        style={{ flex: 1, height: 38, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setUnlockCountInput(preset)}
+                        activeOpacity={0.7}
+                      >
+                        <ImageBackground
+                          source={isAct ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          resizeMode="stretch"
+                        >
+                          <Text
+                            style={[
+                              styles.presetPillText,
+                              isAct && styles.presetPillTextActive,
+                            ]}
+                          >
+                            {preset} Baúles
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
 
-              <BotonOro
-                titulo="Desbloquear"
-                onPress={handleUnlockWarehouses}
-                disabled={unlockingVaults}
-                cargando={unlockingVaults}
-                altura={42}
-                style={{ flex: 1 }}
-              />
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Total de Baúles (1 - 250)</Text>
+                  <TextInput
+                    style={styles.createInput}
+                    value={unlockCountInput}
+                    onChangeText={setUnlockCountInput}
+                    keyboardType="number-pad"
+                    placeholder="Ej: 20"
+                    placeholderTextColor={THEME.colors.textMuted}
+                    maxLength={3}
+                  />
+                </View>
+
+                {/* Tarjeta de Expansión Oficial Season 6 (ExtWarehouse 1 y 2) */}
+                <View
+                  style={{
+                    backgroundColor: 'rgba(91, 141, 239, 0.06)',
+                    borderRadius: THEME.shapes.radioEsquina,
+                    padding: 10,
+                    marginBottom: 10,
+                    borderWidth: 1,
+                    borderColor: 'rgba(91, 141, 239, 0.3)',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <MuIcon name="arrow-expand-all" size={16} color={THEME.colors.arcano} />
+                    <Text style={{ color: THEME.colors.arcano, fontWeight: 'bold', fontSize: 12 }}>
+                      Expansión de Baúl Oficial (ExtWarehouse)
+                    </Text>
+                  </View>
+                  <Text style={{ color: THEME.colors.textoSecundario, fontSize: 11, marginBottom: 8 }}>
+                    Desbloquea las pestañas de Expansión 1 y 2 en el juego (<Text style={{ color: '#FFF' }}>AccountCharacter.ExtWarehouse = 2</Text>).
+                  </Text>
+                  <MuButton
+                    variante="primary"
+                    titulo="Activar Expansión 1 y 2 en Juego"
+                    icono="lightning-bolt"
+                    disabled={unlockingVaults}
+                    onPress={handleActivateVaultExpansion}
+                    compacto
+                    altura={38}
+                  />
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                  <BotonPiedra
+                    titulo="Cancelar"
+                    onPress={() => setShowUnlockModal(false)}
+                    disabled={unlockingVaults}
+                    altura={42}
+                    style={{ flex: 1 }}
+                  />
+
+                  <BotonOro
+                    titulo="Desbloquear"
+                    onPress={handleUnlockWarehouses}
+                    disabled={unlockingVaults}
+                    cargando={unlockingVaults}
+                    altura={42}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </ScrollView>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -4859,25 +4881,39 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
                     { id: 'MG', label: 'Magocaballero' },
                     { id: 'DL', label: 'Dark Lord' },
                     { id: 'ACC', label: 'Ancient' },
-                  ].map((f) => (
-                    <TouchableOpacity
-                      key={`qs_vault_${f.id}`}
-                      style={[
-                        styles.whCategoryPill,
-                        quickSetVaultCategoryFilter === f.id && styles.whCategoryPillActive,
-                      ]}
-                      onPress={() => setQuickSetVaultCategoryFilter(f.id as any)}
-                    >
-                      <Text
-                        style={[
-                          styles.whCategoryPillText,
-                          quickSetVaultCategoryFilter === f.id && styles.whCategoryPillTextActive,
-                        ]}
+                  ].map((f) => {
+                    const isSelected = quickSetVaultCategoryFilter === f.id;
+                    return (
+                      <TouchableOpacity
+                        key={`qs_vault_${f.id}`}
+                        style={{ height: 32, borderRadius: 2, overflow: 'hidden' }}
+                        onPress={() => setQuickSetVaultCategoryFilter(f.id as any)}
+                        activeOpacity={0.8}
                       >
-                        {f.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <ImageBackground
+                          source={isSelected ? STITCH_ASSETS.tabs.tabModeActive : STITCH_ASSETS.tabs.tabModeInactive}
+                          resizeMode="stretch"
+                          style={{
+                            height: 32,
+                            paddingHorizontal: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: isSelected ? '#FEDF99' : '#CDC6B9',
+                              fontWeight: isSelected ? '900' : '700',
+                              fontSize: 12,
+                              ...(isSelected ? THEME.effects.textShadowHigh : {}),
+                            }}
+                          >
+                            {f.label}
+                          </Text>
+                        </ImageBackground>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </ScrollView>
 
@@ -5481,27 +5517,22 @@ export const AccountsScreen: React.FC<AccountsScreenProps> = (props) => {
               </View>
 
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-                <TouchableOpacity
-                  style={styles.detailModalBtnCancel}
+                <BotonPiedra
+                  titulo="Cancelar"
                   onPress={() => setCreateModalVisible(false)}
                   disabled={isCreating}
-                  activeOpacity={0.75}
-                >
-                  <Text style={styles.detailBtnTextCancel}>Cancelar</Text>
-                </TouchableOpacity>
+                  altura={42}
+                  style={{ flex: 1 }}
+                />
 
-                <TouchableOpacity
-                  style={styles.detailModalBtnSave}
+                <BotonOro
+                  titulo="Crear Cuenta"
                   onPress={handleCreateAccount}
+                  cargando={isCreating}
                   disabled={isCreating}
-                  activeOpacity={0.75}
-                >
-                  {isCreating ? (
-                    <ActivityIndicator size="small" color="#0D0E0D" />
-                  ) : (
-                    <Text style={styles.detailBtnTextSave}>Crear Cuenta</Text>
-                  )}
-                </TouchableOpacity>
+                  altura={42}
+                  style={{ flex: 1 }}
+                />
               </View>
             </ScrollView>
           </Panel>
