@@ -1,0 +1,10 @@
+{
+  "version": "2.4.22",
+  "minRequiredVersion": "2.0.8",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
+  "publishedAt": "2026-10-10T21:30:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
+  "build": 164,
+  "forceUpdate": false,
+  "changelog": "MuManager PRO v2.4.22 (Build 164) - Privacidad Integral, Cumplimiento Normativo y Perfección Visual:\n• AUTO-ELIMINACIÓN DE CUENTA (IN-APP Y WEB): Incorporación de la función de eliminación de cuenta de autoservicio en Configuración y portal web público (cumplimiento Google Play Store y RGPD/LGPD).\n• BLINDAJE DE SEGURIDAD Y REVOCACIÓN TOTAL: Confirmación explícita mediante contraseña PBKDF2 y palabra clave de seguridad, con revocación inmediata de sesiones activas, desvinculación de dispositivos y purga de credenciales.\n• ARMONÍA VISUAL IRONFORGE Y PERFECCIÓN DE BORDES: Erradicación de esquineros dobles y superposiciones, enrasado milimétrico de biseles 3D chiseled (overflow: hidden) y alturas estandarizadas en botones y modales.\n• INTEGRIDAD Y COMPATIBILIDAD: Mantenimiento íntegro de la compatibilidad universal Season 6 Louis & MSPro, blindaje anti-resurrección y sesiones deslizantes seguras."
+}
