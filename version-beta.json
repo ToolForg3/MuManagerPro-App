@@ -1,0 +1,11 @@
+{
+  "version": "2.3.9-beta.1",
+  "build": 141,
+  "versionCode": 141,
+  "isBeta": true,
+  "minRequiredVersion": "2.0.8",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro-Beta.apk",
+  "publishedAt": "2026-10-01T23:32:00.000Z",
+  "forceUpdate": false,
+  "changelog": "• Canal Beta: Pruebas de nuevas funciones y optimizaciones en vivo."
+}

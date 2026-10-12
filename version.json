@@ -1,0 +1,10 @@
+{
+  "version": "2.4.24",
+  "minRequiredVersion": "2.0.8",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
+  "publishedAt": "2026-10-11T23:30:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
+  "build": 166,
+  "forceUpdate": false,
+  "changelog": "MuManager PRO v2.4.24 (Build 166) - Armonización Visual Season 6, Iconografía Oficial y Resolución Integral:\n• SELECTOR DE IDIOMA Y MODALES METÁLICOS: Reemplazo integral de texturas estiradas por sprites nativos Season 6 (btn_big) con biseles chiseled 3D, erradicando cortes y distorsiones.\n• RESOLUCIÓN DE CLAVES DE TRADUCCIÓN: Incorporación nativa de aviso de red y cortafuegos en español, inglés y portugués con fallback resiliente.\n• EXPERIENCIA DE REGISTRO FLUIDA: Eliminación de alertas apiladas en el flujo de verificación y adopción de texturas oficiales en botones secundarios.\n• PÁGINA DE ACTIVACIÓN WEB IRONFORGE: Reestilizado completo de la landing de confirmación con gradientes metálicos y bisel dorado Season 6.\n• ICONOGRAFÍA OFICIAL DE SOPORTE: Glifos vectoriales de Discord y WhatsApp perfectamente centrados y nítidos sobre insignias de marca."
+}
