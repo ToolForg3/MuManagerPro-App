@@ -1,0 +1,21 @@
+# ============================================================================
+# MU MANAGER PRO — REPOSITORIO PÚBLICO DE DISTRIBUCIÓN BINARIA (ALLOWLIST)
+# POLÍTICA DE DENEGACIÓN POR DEFECTO: CERO CÓDIGO FUENTE Y CERO VERSIONES PASADAS
+# ============================================================================
+
+# 1. Bloquear por defecto ABSOLUTAMENTE TODO (carpetas de código, scripts, reglas, APKs versionados)
+*
+*/
+data/users.json
+data/devices.json
+*.env
+*.keystore
+
+# 2. Permitir ÚNICAMENTE los archivos compilados de la versión oficial vigente
+!/.gitignore
+!/README.md
+!/MuManagerPro.apk
+!/MuManager-Connector.zip
+!/version.json
+!/version-beta.json
+

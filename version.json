@@ -1,0 +1,10 @@
+{
+  "version": "2.4.25",
+  "minRequiredVersion": "2.4.25",
+  "githubReleaseUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
+  "publishedAt": "2026-11-02T23:55:00.000Z",
+  "downloadUrl": "https://github.com/ToolForg3/MuManagerPro-App/raw/main/MuManagerPro.apk",
+  "build": 167,
+  "forceUpdate": true,
+  "changelog": "MuManager PRO v2.4.25 (Build 167) - Hardening Nativo Defensivo y Blindaje de Telemetría:\n• BLINDAJE ANTI-FRIDA NATIVO: Detección pasiva en capa Kotlin (/proc/self/maps, worker threads de instrumentación y sondeo local a puerto 27042) para neutralizar hooks de ingeniería inversa automatizados y herramientas dinámicas.\n• ANTI-DEBUGGER Y ANTI-PTRACE: Supervisión activa de TracerPid en builds release para blindar el runtime contra depuradores externos.\n• INTEGRACIÓN ZERO-TRUST: Reporte transparente de anomalías y telemetría hacia la pasarela central con degradación segura sin interrupción de la interfaz para usuarios legítimos."
+}
